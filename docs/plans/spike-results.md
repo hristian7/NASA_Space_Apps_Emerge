@@ -95,3 +95,11 @@ Rules for the route:
 **Licences `[V]`:** the data is CC0-1.0 (NASA's data), the catalogue's code is Apache-2.0. This closes conflict 8 in the build plan.
 
 **Not checked (needs a deployment):** speed on the hosting plan's single core; the worst case (one year, 200 km, up to 100,000 rows); a stream larger than 4.5 MB; caching. **Fallback** if it fails there: a small static points file for Bulgaria and the USA, as the spec says.
+
+## (f) Driver layers
+
+- Soil moisture: `SMAP_L3_Passive_Enhanced_Day_Soil_Moisture`, latest `2026-11-11` [V], `GoogleMapsCompatible_Level6`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; gaps are satellite coverage.
+- Greenness: `VIIRS_NOAA20_NDVI_8Day`, latest `2026-11-13` [V], `GoogleMapsCompatible_Level8`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; this is NDVI, not an anomaly against normal.
+- Land cover: `MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual`, latest `2024-01-01` [V], `GoogleMapsCompatible_Level8`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; this is an annual product, outside the daily or monthly freshness criterion.
+- Air temperature: `AIRS_L2_Surface_Air_Temperature_Day`, latest `2026-11-14` [V], `GoogleMapsCompatible_Level6`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; swath coverage has gaps. The daily L3 alternative ends `2026-11-08` [V].
+- Source: [NASA GIBS WMTS capabilities](https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml) [V]. Tile pattern: `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{layer}/default/{date}/{matrix}/{z}/{y}/{x}.png`; checked at `2/1/2` [V]. Dates reflect the capabilities checked on `2026-11-14` [V].
