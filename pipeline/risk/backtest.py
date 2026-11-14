@@ -23,7 +23,7 @@ def aggregate(rows, methods):
     """Pool region-day counts, preserving a fire-weighted random expectation."""
     result = {'region_days': len(rows), 'new_fires': sum(r['new'] for r in rows),
               'continuing_fires': sum(r['continuing'] for r in rows), 'methods': {}}
-    expected = sum(r['new'] * min(5, r['n']) / r['n'] for r in rows)
+    expected = sum(r['new'] * min(5, r['n']) / r['n'] for r in rows if r['n'])
     for method in methods:
         captured = sum(r[f'capture_{method}'] for r in rows)
         hits = sum(r[f'hit_{method}'] for r in rows)
@@ -91,17 +91,27 @@ def selection_scores(con, selection, year, has_model=False):
       SELECT *, {', '.join(rankings)} FROM candidates
       WHERE fuel_class IN {classes} AND fwi IS NOT NULL AND hist_p IS NOT NULL {model_filter}
     """)
+    con.execute(f"""
+      CREATE OR REPLACE TEMP TABLE eligible_days AS
+      SELECT day,region_id,count(*) FILTER (WHERE label='new') AS new,
+             count(*) FILTER (WHERE label='continuing') AS continuing
+      FROM candidates WHERE fuel_class IN {classes} GROUP BY day,region_id
+      HAVING count(*) FILTER (WHERE label IN ('new','continuing'))>0
+    """)
     per_method = ', '.join(
         f"count(*) FILTER (WHERE label='new' AND rank_{m}<=5) AS capture_{m}, "
         f"(count(*) FILTER (WHERE label='new' AND rank_{m}<=5)>0)::INTEGER AS hit_{m}, "
         f"count(*) FILTER (WHERE label='continuing' AND rank_{m}<=5) AS continuing_{m}, "
         f"(count(*) FILTER (WHERE label='continuing' AND rank_{m}<=5)>0)::INTEGER AS continuing_hit_{m}" for m in methods)
+    selected = ', '.join(
+        f"coalesce(r.capture_{m},0) AS capture_{m}, coalesce(r.hit_{m},0) AS hit_{m}, "
+        f"coalesce(r.continuing_{m},0) AS continuing_{m}, coalesce(r.continuing_hit_{m},0) AS continuing_hit_{m}" for m in methods)
     query = con.execute(f"""
-      SELECT day, region_id, count(*) AS n,
-             count(*) FILTER (WHERE label='new') AS new,
-             count(*) FILTER (WHERE label='continuing') AS continuing, {per_method}
-      FROM ranked GROUP BY day,region_id HAVING count(*) FILTER (WHERE label IN ('new','continuing'))>0
-      ORDER BY day,region_id
+      WITH per_rank AS (SELECT day,region_id,count(*) AS n,{per_method}
+                        FROM ranked GROUP BY day,region_id)
+      SELECT e.day,e.region_id,coalesce(r.n,0) AS n,e.new,e.continuing,{selected}
+      FROM eligible_days e LEFT JOIN per_rank r USING(day,region_id)
+      ORDER BY e.day,e.region_id
     """)
     columns = [x[0] for x in query.description]
     all_fire_rows = [dict(zip(columns, row)) for row in query.fetchall()]
@@ -126,20 +136,20 @@ def selection_scores(con, selection, year, has_model=False):
                            **aggregate(items, methods)}
     result = {'coverage': dict(zip(['eligible_spot_days', 'scored_spot_days', 'eligible_new_fires', 'scored_new_fires'], coverage)),
               'pooled': aggregate(rows, methods), 'continuing': continuing,
+              'region_days_without_scores': sum(r['n'] == 0 for r in rows),
               'regions_under_20': aggregate(small, methods), 'regions_20_or_more': aggregate(large, methods),
               'regions': regions, 'months': {k: aggregate(v, methods) for k, v in sorted(by_month.items())},
               'bootstrap': bootstrap(rows, year, methods)}
     if has_model:
         # The same fire-positive region-days as the ranking are used for Brier and reliability.
         query = con.execute("""
-          WITH active AS (SELECT region_id,day FROM ranked GROUP BY 1,2
-                          HAVING count(*) FILTER (WHERE label='new')>0),
+          WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0),
           scored AS (SELECT r.*, (label='new')::INTEGER AS actual FROM ranked r JOIN active USING(region_id,day))
           SELECT count(*), avg(pow(p-actual,2)), avg(pow(hist_p-actual,2)) FROM scored
         """).fetchone()
         n, model_brier, history_brier = query
         bins = con.execute("""
-          WITH active AS (SELECT region_id,day FROM ranked GROUP BY 1,2 HAVING count(*) FILTER (WHERE label='new')>0)
+          WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0)
           SELECT least(9, floor(p*10)::INTEGER) AS bin, count(*) AS n, avg(p), avg((label='new')::INTEGER)
           FROM ranked JOIN active USING(region_id,day) GROUP BY 1 ORDER BY 1
         """).fetchall()
@@ -207,7 +217,7 @@ def main():
     card = {'schema': 'emerge-risk-baseline-scorecard-1', 'grid_g': 0.25,
             'scope': {'name': 'selected regions' if args.regions else 'Europe', 'bounds': None if args.regions else [-25,34,45,72], 'region_ids': args.regions.split(',') if args.regions else None},
             'seed': SEED, 'bootstrap_draws': DRAWS, 'years': {},
-            'notes': ['Scores use common available candidate spots; missing fire-weather or model scores are excluded.',
+            'notes': ['Rankings use common available candidate spots; all eligible fires on forecast days remain in the capture denominator, even when their spots have missing scores.',
                       'Fuel categories are 2021 majority land classes, not land-cover shares.',
                       'The 0.25 degree grid is a development grid and cannot support a shipped-grid claim.']}
     for year in args.year:

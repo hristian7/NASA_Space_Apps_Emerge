@@ -104,3 +104,13 @@ def test_small_region_classification_uses_all_land_spots(candidates):
     assert result['regions']['A']['land_spots'] == 26
     assert result['regions_20_or_more']['region_days'] == 1
     assert result['regions_under_20']['region_days'] == 1
+
+
+def test_missing_scores_do_not_remove_eligible_fires_from_capture(candidates):
+    result = risk.selection_scores(candidates, 'all_vegetation', 2025)
+    assert result['pooled']['new_fires'] == 3
+    assert result['pooled']['region_days'] == 3
+    assert result['region_days_without_scores'] == 1
+    assert result['pooled']['methods']['history']['captured_new'] == 2
+    assert result['pooled']['methods']['history']['capture_rate'] == pytest.approx(2/3)
+    assert result['regions']['C']['min_scored_spots'] == 0
