@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { openReport } from "./helpers";
-import { monthOf } from "./data";
+import { monthOf, readData } from "./data";
 
 /**
  * The monthly CSV is built in the browser and saved as a file, so the spec
@@ -22,7 +22,9 @@ test("the monthly CSV saves with its comment lines and its columns", async ({ pa
 
   expect(lines[0]).toBe("# Emerge: monthly fire numbers");
   expect(lines[1]).toContain("# Selection: Country Bulgaria");
-  expect(lines[2]).toContain("# Dates: Nov 2000 to Dec 2025");
+  const lastDay = new Date(`${readData<{ last_data_day: string }>("meta.json").last_data_day}T00:00:00Z`);
+  const lastMonth = lastDay.toLocaleString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" });
+  expect(lines[2]).toContain(`# Dates: Nov 2000 to ${lastMonth}`);
   expect(lines[3]).toContain("# Data date:");
   expect(lines[4]).toContain("# Sources:");
   expect(text).toContain("# empty = no measurement, 0 = no fire seen");
