@@ -18,6 +18,7 @@ import os
 import shutil
 import sys
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -30,6 +31,10 @@ SATS = ["Terra", "Aqua", "SNPP"]
 UNITS = ["cd", "hot"]
 GRIDS = ["q25", "d10"]
 GRIDS_IN_FILE = GRIDS + ["country"]
+WORLD_LABEL = "W"
+WORLD_MIN_NONZERO_MONTHS = 12
+WORLD_COVERAGE = (0.80, 0.97)
+WORLD_BATCH_ROWS = 4_000_000
 ADOPT_MIN_NOT_WORSE = 3
 ADOPT_COVERAGE = (0.80, 0.97)
 TESTS = ["t1", "t2", "t3"]
@@ -40,6 +45,7 @@ LEVEL_NAMES = {
     "b": "q25 cell x month",
     "c": "50 km circle x month",
     "a_joint": "country x month, jointly computed range (information)",
+    "w_country": "every country x month, world fit (information)",
     "c2": "50 km circle, overlap-weighted (information)",
     "d": "d10 cell x month (information)",
 }
@@ -525,6 +531,242 @@ def gate_checks(scores, winner, band, truth_ok):
     return checks
 
 
+# ---------------------------------------------------------------- world scope
+
+def build_world_truth(path):
+    """S-NPP country x month totals for every country, by protocol rules 1 to 3. Batches with pyarrow only."""
+    import pyarrow as pa
+    import pyarrow.compute as pc
+    import pyarrow.parquet as pq
+    gaps = pa.array([date.fromisoformat(d) for d in sorted(read_gap_days())], type=pa.date32())
+    pf = pq.ParquetFile(path)
+    parts = []
+    for batch in pf.iter_batches(batch_size=WORLD_BATCH_ROWS, columns=["sat", "country", "day", "detections"]):
+        t = pa.Table.from_batches([batch])
+        m = pc.equal(t["sat"], "SNPP")
+        m = pc.and_(m, pc.invert(pc.is_in(t["day"], value_set=gaps)))
+        yr, mo = pc.year(t["day"]), pc.month(t["day"])
+        m = pc.and_(m, pc.invert(pc.and_(pc.equal(yr, 2012), pc.equal(mo, 1))))
+        t = t.filter(m)
+        if t.num_rows == 0:
+            continue
+        ym = pc.add(pc.multiply(pc.year(t["day"]), 12), pc.subtract(pc.month(t["day"]), 1))
+        t = t.append_column("ym", ym)
+        g = t.group_by(["country", "ym"]).aggregate([("detections", "count", pc.CountOptions(mode="all")),
+                                                      ("detections", "sum")])
+        parts.append(g.to_pandas())
+    df = pd.concat(parts, ignore_index=True)
+    df = df.rename(columns={"detections_count": "cd", "detections_sum": "hot"})
+    df = df.groupby(["country", "ym"], as_index=False)[["cd", "hot"]].sum()
+    df["cd"] = df["cd"].astype(np.int64)
+    df["hot"] = df["hot"].astype(np.int64)
+    return df.sort_values(["country", "ym"]).reset_index(drop=True)
+
+
+def load_world_truth(data, use_cache=True):
+    """Country x month truth for all countries, cached under derived/bakeoff. Returns None when the file is absent."""
+    src = Path(data) / "derived" / "world" / "cell_days.parquet"
+    if not src.exists():
+        return None
+    cache_dir = Path(data) / "derived" / "bakeoff"
+    cache = cache_dir / "world_truth_country_month.parquet"
+    meta = cache_dir / "world_truth_country_month.json"
+    st = src.stat()
+    key = {"size": st.st_size, "mtime_ns": st.st_mtime_ns, "gap_days": sorted(read_gap_days()), "version": 1}
+    if use_cache and cache.exists() and meta.exists():
+        try:
+            if json.load(open(meta)) == key:
+                return pd.read_parquet(cache)
+        except (ValueError, OSError):
+            pass
+    df = build_world_truth(src)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(cache, index=False)
+    json.dump(key, open(meta, "w"))
+    return df
+
+
+def validate_world_truth(wtruth, truth):
+    """Bulgaria and the United States must equal the two-country truth for every month. Returns (lines, ok)."""
+    lines = []
+    ok = True
+    first, last = ym_of(2012, 2), ym_of(2025, 12)
+    ym = np.arange(first, last + 1)
+    for c in COUNTRIES:
+        w = wtruth[wtruth["country"] == c].set_index("ym")
+        t = truth.q25[c].groupby("ym")[["cd", "hot"]].sum()
+        wk = w[(w.index >= first) & (w.index <= last)]
+        for unit in UNITS:
+            a = w[unit].reindex(ym, fill_value=0).values.astype(np.int64)
+            b = t[unit].reindex(ym, fill_value=0).values.astype(np.int64)
+            same = bool((a == b).all())
+            ok &= same
+            lines.append("%s %s: %d months compared, %s (world total %d, two-country total %d)"
+                         % (c, unit, len(ym), "equal" if same else "DIFFERENT", int(a.sum()), int(b.sum())))
+            if not same:
+                bad = np.nonzero(a != b)[0][:5]
+                lines.append("  first differences at months %s: world %s, two-country %s"
+                             % ([("%d-%02d" % (int(ym[i]) // 12, int(ym[i]) % 12 + 1)) for i in bad],
+                                a[bad].tolist(), b[bad].tolist()))
+        extra = set(wk.index) - set(truth.q25[c]["ym"].unique())
+        if extra:
+            ok = False
+            lines.append("%s: %d months have world truth but no two-country truth" % (c, len(extra)))
+    return lines, ok
+
+
+def validate_world_pred(df):
+    """The world file: any country, grids country and q25. Returns the frame with a ym column."""
+    missing = [c for c in PRED_COLS if c not in df.columns]
+    if missing:
+        raise ValueError("W pred.parquet misses columns: %s" % missing)
+    df = df[PRED_COLS].copy()
+    for col, ok in (("test", TESTS), ("unit", UNITS), ("grid", ["country", "q25"])):
+        bad = ~df[col].isin(ok)
+        if bad.any():
+            raise ValueError("W column %s has values outside %s" % (col, ok))
+    if df["country"].isna().any():
+        raise ValueError("W has rows without a country")
+    for col in ("pred", "lo", "hi"):
+        if df[col].isna().any():
+            raise ValueError("W column %s has missing values" % col)
+    if (df[["pred", "lo", "hi"]] < 0).any().any():
+        raise ValueError("W has negative pred, lo or hi")
+    df["cell"] = df["cell"].astype(np.int64)
+    if (df.loc[df["grid"] == "country", "cell"] != 0).any():
+        raise ValueError("W rows with grid = country must have cell = 0")
+    df["year"] = df["year"].astype(np.int64)
+    df["month"] = df["month"].astype(np.int64)
+    if df.duplicated(["pipeline", "test", "unit", "country", "grid", "cell", "year", "month"]).any():
+        raise ValueError("W has duplicate rows")
+    df["ym"] = df["year"] * 12 + df["month"] - 1
+    return df
+
+
+def world_country_scores(wdf, wtruth, label=WORLD_LABEL, band=0.9):
+    """Level w_country: one row per country, test and unit from the country-month rows."""
+    rows = []
+    cr = wdf[(wdf["pipeline"] == label) & (wdf["grid"] == "country")]
+    tr = {c: g.set_index("ym") for c, g in wtruth.groupby("country")}
+    for test in TESTS:
+        months = test_months(test)
+        ym = np.array([ym_of(y, m) for y, m in months])
+        for unit in UNITS:
+            sub = cr[(cr["test"] == test) & (cr["unit"] == unit) & cr["ym"].isin(set(ym.tolist()))]
+            if len(sub) == 0:
+                continue
+            for country, g in sub.groupby("country"):
+                agg = g.groupby("ym")[["pred", "lo", "hi"]].sum().reindex(ym, fill_value=0.0)
+                tt = tr[country][unit].reindex(ym, fill_value=0).values.astype(float) if country in tr else np.zeros(len(ym))
+                m = measures(tt, agg["pred"].values, agg["lo"].values, agg["hi"].values)
+                m.update({"pipeline": label, "level": "w_country", "test": test, "country": country, "unit": unit,
+                          "grid": "country", "band": band, "mean_truth": float(tt.mean()),
+                          "nonzero_months": int((tt > 0).sum()),
+                          "scorable": bool((tt > 0).sum() >= WORLD_MIN_NONZERO_MONTHS)})
+                rows.append(m)
+    cols = SCORE_COLS + ["mean_truth", "nonzero_months", "scorable"]
+    return pd.DataFrame(rows, columns=cols) if rows else pd.DataFrame(columns=cols)
+
+
+def world_summary(pc, wdf, wtruth, label=WORLD_LABEL):
+    """Rows of the proof-page table for unit cd. pc = per-country scores. Returns (summary frame, too-little-fire lists)."""
+    out = []
+    little = {}
+    cr = wdf[(wdf["pipeline"] == label) & (wdf["grid"] == "country")]
+    for test in TESTS:
+        d = pc[(pc["test"] == test) & (pc["unit"] == "cd")]
+        if len(d) == 0:
+            continue
+        sc = d[d["scorable"]].sort_values(["mean_truth", "country"]).reset_index(drop=True)
+        little[test] = sorted(d.loc[~d["scorable"], "country"].tolist())
+        groups = [("all", sc)]
+        if len(sc):
+            parts = np.array_split(np.arange(len(sc)), 3)
+            for name, idx in zip(("small", "medium", "large"), parts):
+                groups.append((name, sc.iloc[idx]))
+        for name, g in groups:
+            row = {"test": test, "unit": "cd", "group": name, "n_countries": int(len(g)),
+                   "too_little_fire": len(little[test]) if name == "all" else float("nan")}
+            for col, tag in (("nrmse", "nrmse"), ("bias", "bias")):
+                v = g[col].dropna().values.astype(float)
+                row[tag + "_p50"] = float(np.percentile(v, 50)) if len(v) else float("nan")
+                row[tag + "_p10"] = float(np.percentile(v, 10)) if len(v) else float("nan")
+                row[tag + "_p90"] = float(np.percentile(v, 90)) if len(v) else float("nan")
+            cov = g["coverage"].values.astype(float)
+            row["coverage_in_range"] = float(((cov >= WORLD_COVERAGE[0]) & (cov <= WORLD_COVERAGE[1])).mean()) if len(cov) else float("nan")
+            row["mean_truth_min"] = float(g["mean_truth"].min()) if len(g) else float("nan")
+            row["mean_truth_max"] = float(g["mean_truth"].max()) if len(g) else float("nan")
+            out.append(row)
+        # pooled world total: every country added per month
+        months = test_months(test)
+        ym = np.array([ym_of(y, m) for y, m in months])
+        sub = cr[(cr["test"] == test) & (cr["unit"] == "cd") & cr["ym"].isin(set(ym.tolist()))]
+        pred = sub.groupby("ym")[["pred", "lo", "hi"]].sum().reindex(ym, fill_value=0.0)
+        tru = wtruth.groupby("ym")["cd"].sum().reindex(ym, fill_value=0).values.astype(float)
+        m = measures(tru, pred["pred"].values, pred["lo"].values, pred["hi"].values)
+        out.append({"test": test, "unit": "cd", "group": "pooled_world", "n_countries": int(sub["country"].nunique()),
+                    "pooled_nrmse": m["nrmse"], "pooled_bias": m["bias"], "pooled_r": m["r"]})
+    cols = ["test", "unit", "group", "n_countries", "too_little_fire", "nrmse_p50", "nrmse_p10", "nrmse_p90",
+            "bias_p50", "bias_p10", "bias_p90", "coverage_in_range", "mean_truth_min", "mean_truth_max",
+            "pooled_nrmse", "pooled_bias", "pooled_r"]
+    return pd.DataFrame(out, columns=cols), little
+
+
+def world_scope(data, truth, truth_ok, wdf_all, band, use_cache=True):
+    """Runs the world scope. Returns a dict for the report, and writes the two world CSV files."""
+    res = {"available": False, "message": "", "validation": [], "summary": None, "little": {}, "ok": False}
+    wt = load_world_truth(data, use_cache)
+    if wt is None:
+        res["message"] = "the world cell-days file is not available"
+        return res
+    lines, ok = validate_world_truth(wt, truth)
+    res["validation"] = lines + ["truth samples from the raw files: %s" % ("match" if truth_ok else "DO NOT MATCH")]
+    if not ok or not truth_ok:
+        res["message"] = "world truth failed validation, world scope not scored"
+        return res
+    pc = world_country_scores(wdf_all, wt, band=band)
+    summ, little = world_summary(pc, wdf_all, wt)
+    base = Path(data) / "derived" / "bakeoff"
+    pc.to_csv(base / "world_country_scores.csv", index=False)
+    summ.to_csv(base / "world_scores.csv", index=False)
+    res.update({"available": True, "summary": summ, "little": little, "ok": True, "per_country": pc,
+                "countries_in_truth": int(wt["country"].nunique())})
+    return res
+
+
+def world_section(world):
+    L = ["## World scope: the world fit on every country (information) [V]", ""]
+    if world is None:
+        L += ["not available (no W predictions).", ""]
+        return L
+    L.append("Pipeline label `W` is the model fitted on all countries. It is routed like a label starting with A: "
+             "its `q25` rows for Bulgaria and the United States go through levels (a), (b), (c) and (c2), with `q25` cells for the circles. "
+             "Its country-month rows (`grid` country) are scored for every country at level (w_country) against S-NPP truth "
+             "from the world cell-days file (rules 1 to 3 of the protocol, no hot-spot of any other sensor).")
+    L.append("")
+    L.append("Truth validation:")
+    for v in world["validation"]:
+        L.append("- " + v)
+    L.append("")
+    if not world["available"]:
+        L += ["Not scored: " + world["message"] + ".", ""]
+        return L
+    for n in world.get("notes", []):
+        L.append("- note: " + n)
+    summ = world["summary"]
+    L.append("Unit `cd`. Percentiles are across countries with at least %d months of non-zero truth in the test window [U]. "
+             "Groups are equal thirds of those countries by mean monthly truth. Coverage is the share of countries whose "
+             "coverage lies between %.2f and %.2f for the 0.9 band [U]. The pooled world total adds every country per month."
+             % (WORLD_MIN_NONZERO_MONTHS, WORLD_COVERAGE[0], WORLD_COVERAGE[1]))
+    L.append("")
+    L.append(md_table(summ))
+    L.append("")
+    for test, names in world["little"].items():
+        L.append("Too little fire to score, %s: %d countries (left out of the percentiles)." % (test, len(names)))
+    L.append("")
+    return L
+
+
 # ---------------------------------------------------------------- report
 
 def fmt(x, nd=4):
@@ -586,7 +828,7 @@ def adoption_section(scores, old="A2", new="A3"):
     return L
 
 
-def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_ok, skipped):
+def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_ok, skipped, world=None):
     L = []
     L.append("# Bake-off results: pipeline A vs pipeline B")
     L.append("")
@@ -680,6 +922,7 @@ def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_
         L.append(md_table(pd.DataFrame(side)))
     L.append("")
     L.extend(adoption_section(scores))
+    L.extend(world_section(world))
     L.append("## Full tables [V]")
     L.append("")
     L.append("Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE = mean absolute error, "
@@ -721,7 +964,23 @@ def run_scoring(data, truth, truth_ok, write_docs, docs_path=None):
         notes += ["pipeline %s: %s" % (folder, n) for n in nt]
         manifests[folder] = man
         frames.append((folder, df, man))
-    if not frames:
+    wdf = None
+    wband = 0.9
+    wnotes = []
+    wp = base / WORLD_LABEL / "pred.parquet"
+    if wp.exists():
+        try:
+            wdf = validate_world_pred(pd.read_parquet(wp))
+            wm = base / WORLD_LABEL / "manifest.json"
+            if wm.exists():
+                wband = json.load(open(wm)).get("band", 0.9)
+        except ValueError as e:
+            wnotes.append("W: %s" % e)
+            wdf = None
+    world_fail = None
+    if wp.exists() and wdf is None:
+        world_fail = {"available": False, "message": "; ".join(wnotes), "validation": [], "notes": []}
+    if not frames and wdf is None:
         print("No predictions found under %s. Nothing scored, no report written." % (base))
         for s in skipped:
             print("  skipped: " + s)
@@ -733,6 +992,21 @@ def run_scoring(data, truth, truth_ok, write_docs, docs_path=None):
             r, n = score_label(truth, df, label, band)
             rows += r
             notes += n
+    world = world_fail
+    if wdf is not None:
+        two = wdf[wdf["country"].isin(COUNTRIES)]
+        try:
+            w2, nt = validate_pred(two.drop(columns=["ym"]))
+        except ValueError as e:
+            w2, nt = None, ["W: %s" % e]
+        wnotes += nt
+        if w2 is not None and len(w2):
+            for label in sorted(w2["pipeline"].unique()):
+                r, n = score_label(truth, w2, label, wband)
+                rows += r
+                wnotes += n
+        world = world_scope(data, truth, truth_ok, wdf, wband)
+        world["notes"] = wnotes
     scores = pd.DataFrame(rows)[SCORE_COLS]
     scores.to_csv(base / "scores.csv", index=False)
     cdf = contests(scores)
@@ -742,7 +1016,7 @@ def run_scoring(data, truth, truth_ok, write_docs, docs_path=None):
     if winner is not None:
         d7 = d7_rule(cdf, winner)
         gate = gate_checks(scores, winner, manifests.get(winner, {}).get("band"), truth_ok)
-    report = build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_ok, skipped)
+    report = build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_ok, skipped, world)
     print(report)
     if write_docs:
         out = Path(docs_path) if docs_path else ROOT / "docs" / "research" / "bakeoff-results.md"
@@ -788,6 +1062,232 @@ def fake_pred(truth, label, mult, grids, lo_mult=None, hi_mult=None):
                         "lo": v * (mult if lo_mult is None else lo_mult),
                         "hi": v * (mult if hi_mult is None else hi_mult)}))
     return pd.concat(parts, ignore_index=True)
+
+
+SYN_SPEC = [
+    ("Alpha", lambda y, m: 3 * (1 + (y * 12 + m) % 3)),
+    ("Beta", lambda y, m: 5 * (1 + (y * 12 + m) % 3)),
+    ("Gamma", lambda y, m: 8 * (1 + (y * 12 + m) % 3)),
+    ("Delta", lambda y, m: 12 * (1 + (y * 12 + m) % 3)),
+    ("Zeta", lambda y, m: 20 * (1 + (y * 12 + m) % 3)),
+    ("Edge12", lambda y, m: 6 if y in (2013, 2019) else 0),
+    ("Quiet11", lambda y, m: 4 if (y in (2013, 2019) and m <= 11) else 0),
+    ("Tiny", lambda y, m: 2 if (y in (2013, 2019) and m <= 5) else 0),
+    ("Bulgaria", lambda y, m: 7 * (1 + (y + m) % 2)),
+    ("United_States", lambda y, m: 30 * (1 + (y * 12 + m) % 3)),
+]
+
+
+def syn_world():
+    """Synthetic world cell-days with answers known by construction. Returns (frame, expected {(country, ym): [cd, hot]})."""
+    gaps = read_gap_days()
+    rows = []
+    expect = {}
+    for ci, (name, fn) in enumerate(SYN_SPEC):
+        for y in range(2012, 2026):
+            for m in range(1, 13):
+                for j in range(fn(y, m)):
+                    d = date(y, m, 1 + (j % 27))
+                    det = 1 + j % 2
+                    counted = d.isoformat() not in gaps and not (y == 2012 and m == 1)
+                    for sat in ("SNPP", "Terra", "Aqua", "NOAA20"):
+                        rows.append({"sensor": "viirs", "sat": sat, "country": name, "day": d, "cy": 4000 + ci, "cx": ci * 1000 + j,
+                                     "detections": det, "frp": 1.0, "seen_day": True, "seen_night": False})
+                    if counted:
+                        e = expect.setdefault((name, ym_of(y, m)), [0, 0])
+                        e[0] += 1
+                        e[1] += det
+    return pd.DataFrame(rows), expect
+
+
+def ref_measures(t, p, lo, hi):
+    """Plain-Python reference of the measures, used only by the self-test."""
+    n = len(t)
+    mt = sum(t) / n
+    mp = sum(p) / n
+    out = {"nrmse": math.sqrt(sum((a - b) ** 2 for a, b in zip(p, t)) / n) / mt if mt > 0 else float("nan"),
+           "mae": sum(abs(a - b) for a, b in zip(p, t)) / n,
+           "bias": (sum(p) - sum(t)) / sum(t) if sum(t) > 0 else float("nan"),
+           "coverage": sum(1 for a, l, h in zip(t, lo, hi) if l <= a <= h) / n,
+           "mean_truth": mt}
+    vt = sum((a - mt) ** 2 for a in t)
+    vp = sum((b - mp) ** 2 for b in p)
+    cov = sum((a - mt) * (b - mp) for a, b in zip(t, p))
+    out["r"] = cov / math.sqrt(vt * vp) if vt > 0 and vp > 0 else float("nan")
+    return out
+
+
+def syn_pred(name, t):
+    if name == "Beta":
+        return 2.0 * t, 2.0 * t, 2.0 * t
+    if name == "Gamma":
+        return 0.5 * t, 0.5 * t, 0.5 * t
+    if name == "Zeta":
+        return 1.5 * t, 1.0 * t, 2.0 * t
+    return t, t, t
+
+
+def syn_pred_full(name, t, idx):
+    pr, lo, hi = syn_pred(name, t)
+    if name == "Delta":
+        if idx % 12 == 0 and t > 0:
+            return t + 5, t + 5, t + 5
+        return t, 0.5 * t, 1.5 * t
+    return pr, lo, hi
+
+
+def selftest_world(ck):
+    print("Self-test: world scope with a synthetic world")
+    wdf, expect = syn_world()
+    tmp = Path(tempfile.mkdtemp(prefix="bakeoff-world-selftest-"))
+    try:
+        (tmp / "derived" / "world").mkdir(parents=True)
+        base = tmp / "derived" / "bakeoff"
+        for f in ("A", "B", "W"):
+            (base / f).mkdir(parents=True)
+        wdf.to_parquet(tmp / "derived" / "world" / "cell_days.parquet")
+        two = wdf[wdf["country"].isin(COUNTRIES)].reset_index(drop=True)
+        st = Truth(two)
+        wt = load_world_truth(tmp)
+        got = {(r.country, int(r.ym)): [int(r.cd), int(r.hot)] for r in wt.itertuples()}
+        ck.ok(got == expect, "world truth equals the counts known by construction (%d country-months)" % len(expect))
+        ck.ok(not any(k[0] in ("Terra", "Aqua") for k in got) and len(set(k[0] for k in got)) == len(SYN_SPEC),
+              "all countries present, other sensors ignored")
+        ck.ok(all(k[1] >= ym_of(2012, 2) for k in got), "January 2012 is dropped")
+        gap_rows = wdf[(wdf.sat == "SNPP") & (wdf.day == date(2022, 7, 27))]
+        ck.ok(len(gap_rows) > 0 and got[("Zeta", ym_of(2022, 7))][0] == int(
+            ((wdf.sat == "SNPP") & (wdf.country == "Zeta") & (pd.to_datetime(wdf.day).dt.year == 2022)
+             & (pd.to_datetime(wdf.day).dt.month == 7) & (~wdf.day.astype(str).isin(read_gap_days()))).sum()),
+            "gap days are dropped from the world truth")
+        cache = base / "world_truth_country_month.parquet"
+        ck.ok(cache.exists(), "the truth is cached")
+        wt2 = load_world_truth(tmp)
+        ck.ok(wt2.equals(wt), "a cached read gives the same truth")
+        lines, ok = validate_world_truth(wt, st)
+        ck.ok(ok and len(lines) == 4, "Bulgaria and the United States equal the two-country truth for every month")
+        bad = wt.copy()
+        i = bad.index[(bad.country == "Bulgaria") & (bad.ym == ym_of(2020, 5))][0]
+        bad.loc[i, "cd"] += 1
+        ck.ok(not validate_world_truth(bad, st)[1], "a one-count difference in Bulgaria is caught")
+
+        # predictions
+        tr = {n: {} for n, _ in SYN_SPEC}
+        for (c, ym), (cd, hot) in expect.items():
+            tr[c][ym] = {"cd": cd, "hot": hot}
+        parts = []
+        for test in TESTS:
+            months = test_months(test)
+            for name, _ in SYN_SPEC:
+                for unit in UNITS:
+                    for idx, (yy, mm) in enumerate(months):
+                        t = float(tr[name].get(ym_of(yy, mm), {}).get(unit, 0))
+                        pr, lo, hi = syn_pred_full(name, t, idx)
+                        parts.append({"pipeline": "W", "test": test, "unit": unit, "country": name, "grid": "country",
+                                      "cell": 0, "year": yy, "month": mm, "pred": pr, "lo": lo, "hi": hi})
+        wp = pd.concat([pd.DataFrame(parts), fake_pred(st, "W", 1.0, ["q25"])], ignore_index=True)
+        # baseline run without W, then with W
+        A = fake_pred(st, "A", 1.0, ["q25"])
+        B = fake_pred(st, "B", 2.0, ["q25", "d10"], lo_mult=1.0, hi_mult=2.0)
+        A.to_parquet(base / "A" / "pred.parquet")
+        B.to_parquet(base / "B" / "pred.parquet")
+        json.dump({"band": 0.9}, open(base / "A" / "manifest.json", "w"))
+        json.dump({"band": 0.8}, open(base / "B" / "manifest.json", "w"))
+        d1, d2 = tmp / "docs1.md", tmp / "docs2.md"
+        run_quiet(lambda: run_scoring(tmp, st, True, True, d1))
+        sc1 = pd.read_csv(base / "scores.csv")
+        wp.to_parquet(base / "W" / "pred.parquet")
+        json.dump({"band": 0.9}, open(base / "W" / "manifest.json", "w"))
+        run_quiet(lambda: run_scoring(tmp, st, True, True, d2))
+        sc2 = pd.read_csv(base / "scores.csv")
+        ck.ok(sc2[sc2.pipeline != "W"].reset_index(drop=True).equals(sc1), "adding W leaves every A and B score row unchanged")
+        ck.ok("w_country" not in set(sc2.level), "w_country rows live in their own file, not in scores.csv")
+        for lv in ("a", "b", "c", "c2", "a_joint"):
+            ck.ok(len(sc2[(sc2.pipeline == "W") & (sc2.level == lv)]) > 0, "W has level %s rows" % lv)
+        wa = sc2[(sc2.pipeline == "W") & (sc2.level == "a") & (sc2.test == "t1") & (sc2.country == "Bulgaria") & (sc2.unit == "cd")].iloc[0]
+        ck.close(wa.nrmse, 0.0, "W q25 rows of Bulgaria are scored by level (a)")
+        ck.ok(sc2[(sc2.pipeline == "W") & (sc2.level == "c")].grid.eq("q25").all(), "W is routed to q25 for the circles")
+        t1, t2 = d1.read_text(), d2.read_text()
+        for h in ("## Summary", "## The 12 contests (rule 1) [V]", "## Default unit (rule 2, D-7) [V]",
+                  "## Gate to the whole world (rule 3) [V]"):
+            def sec(txt):
+                out, on = [], False
+                for ln in txt.split("\n"):
+                    if ln.startswith("## "):
+                        on = ln == h
+                    if on:
+                        out.append(ln)
+                return "\n".join(out)
+            ck.ok(sec(t1) == sec(t2), "pre-registered section unchanged with W: " + h)
+        # per-country scores against the plain-Python reference
+        pc = pd.read_csv(base / "world_country_scores.csv")
+        ck.ok(len(pc) == len(SYN_SPEC) * 3 * 2, "one w_country row per country, test and unit")
+        worst = 0.0
+        for test in TESTS:
+            months = test_months(test)
+            for name, _ in SYN_SPEC:
+                for unit in UNITS:
+                    t = [float(tr[name].get(ym_of(y, m), {}).get(unit, 0)) for y, m in months]
+                    sub = wp[(wp.country == name) & (wp.grid == "country") & (wp.test == test) & (wp.unit == unit)]
+                    sub = sub.assign(ym=sub.year * 12 + sub.month - 1).set_index("ym")
+                    keys = [ym_of(y, m) for y, m in months]
+                    p = [float(sub.loc[k, "pred"]) for k in keys]
+                    lo = [float(sub.loc[k, "lo"]) for k in keys]
+                    hi = [float(sub.loc[k, "hi"]) for k in keys]
+                    ref = ref_measures(t, p, lo, hi)
+                    row = pc[(pc.test == test) & (pc.country == name) & (pc.unit == unit)].iloc[0]
+                    for k in ("nrmse", "mae", "bias", "coverage", "mean_truth", "r"):
+                        a, b = float(row[k]), ref[k]
+                        if math.isnan(b):
+                            ck.ok(math.isnan(a), "%s %s %s %s is undefined" % (name, test, unit, k))
+                        else:
+                            worst = max(worst, abs(a - b) / max(1.0, abs(b)))
+                    ck.ok(int(row.n) == len(months) and int(row.nonzero_months) == sum(1 for v in t if v > 0),
+                          "months and non-zero months of %s %s %s" % (name, test, unit))
+        ck.ok(worst < 1e-9, "w_country measures equal the plain-Python reference (worst relative difference %.2e)" % worst)
+        ws = pd.read_csv(base / "world_scores.csv")
+        for test in ("t1", "t2"):
+            months = test_months(test)
+            d = pc[(pc.test == test) & (pc.unit == "cd")]
+            sc = d[d.scorable]
+            ck.ok(sorted(d[~d.scorable].country) == ["Quiet11", "Tiny"], "too little fire: Quiet11 and Tiny, not Edge12 (exactly 12) %s" % test)
+            ck.ok("Edge12" in set(sc.country), "a country with exactly 12 non-zero months is scored %s" % test)
+            order = sc.sort_values(["mean_truth", "country"]).country.tolist()
+            sizes = [3, 3, 2]
+            pos = 0
+            for gname, sz in zip(("small", "medium", "large"), sizes):
+                members = order[pos:pos + sz]
+                pos += sz
+                vals = pc[(pc.test == test) & (pc.unit == "cd") & pc.country.isin(members)]
+                row = ws[(ws.test == test) & (ws.group == gname)].iloc[0]
+                ck.ok(int(row.n_countries) == sz, "%s %s has %d countries" % (test, gname, sz))
+                ck.close(row.bias_p50, float(np.median(vals.bias)), "%s %s median bias" % (test, gname), 1e-9)
+                ck.close(row.nrmse_p90, float(np.percentile(vals.nrmse, 90)), "%s %s p90 nRMSE" % (test, gname), 1e-9)
+            allr = ws[(ws.test == test) & (ws.group == "all")].iloc[0]
+            ck.ok(int(allr.n_countries) == 8 and int(allr.too_little_fire) == 2, "%s all: 8 scored, 2 too little fire" % test)
+            ck.close(allr.bias_p10, float(np.percentile(sc.bias, 10)), "%s p10 bias" % test, 1e-9)
+            inside = [c for c in sc.coverage if 0.80 <= c <= 0.97]
+            ck.close(allr.coverage_in_range, len(inside) / len(sc), "%s share of countries with coverage in range" % test, 1e-12)
+            ck.ok(len(inside) == 1, "only Delta has coverage inside 0.80 to 0.97 %s" % test)
+            keys = [ym_of(y, m) for y, m in months]
+            tt = [float(sum(tr[c].get(k, {}).get("cd", 0) for c in tr)) for k in keys]
+            pp = [float(sum(syn_pred_full(c, float(tr[c].get(k, {}).get("cd", 0)), i)[0] for c in tr))
+                  for i, k in enumerate(keys)]
+            ref = ref_measures(tt, pp, pp, pp)
+            pw = ws[(ws.test == test) & (ws.group == "pooled_world")].iloc[0]
+            ck.close(pw.pooled_nrmse, ref["nrmse"], "%s pooled world nRMSE" % test, 1e-9)
+            ck.close(pw.pooled_bias, ref["bias"], "%s pooled world bias" % test, 1e-9)
+            ck.close(pw.pooled_r, ref["r"], "%s pooled world r" % test, 1e-9)
+        ck.ok("## World scope" in t2 and "Too little fire to score" in t2, "the report carries the world scope")
+        ck.ok("not available" in t1.split("## World scope")[1][:200], "without W the report says not available")
+        bad_w = wp.copy()
+        bad_w.loc[bad_w.grid == "country", "cell"] = 3
+        try:
+            validate_world_pred(bad_w)
+            ck.ok(False, "W country rows with cell other than 0 must be rejected")
+        except ValueError:
+            ck.ok(True, "W country rows with cell other than 0 rejected")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def selftest(data):
@@ -1042,6 +1542,8 @@ def selftest(data):
         ck.ok(cx_2010 not in sc_set, "a 2010 MODIS-only cell is not in the scored set")
         ck.ok(cx_2015 in sc_set, "a 2015 cell is in the scored set")
         ck.ok(cx_2023 not in sc_set, "a 2023-only cell is not in the scored set")
+
+        selftest_world(ck)
 
         print("Self-test: validation")
         bad = A.copy()
