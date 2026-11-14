@@ -14,12 +14,12 @@ The team's answers to [`interview-questions.md`](interview-questions.md), summar
 | B1 | Top tasks | Pick an area and dates; a world overview map; a **fire-risk outlook** for the coming days or months with a certainty level ("like a weather forecast for fires"); a heat map of risk zones with levels; a globe like Google Earth; a clean layer menu over a full-screen globe |
 | B2 | Decisions supported | Warn people in danger areas in advance; advise crews and volunteers on where and when to pre-position |
 | B3 | Language | **English and Bulgarian** |
-| B4 | Device | Desktop and mobile. **Decided 14 Nov: an installable PWA.** Push alerts added that evening as Should S11 |
+| B4 | Device | Desktop and mobile. **Decided 14 Nov: an installable PWA.** Push alerts added that evening as Should S11. **Both removed at 16:50 to save time**; the site still works on phones |
 | B5 | Expertise | Professionals and the general public: every term explained in plain language |
 | C1 | Geography | **Decided 14 Nov: the whole world.** Bulgaria and the USA are checked first and shown in the demo |
 | C2 | Time range | 2000–2025 for sure; research data after 2025 and before 2000 |
 | C3 | Resolution | Daily where the data allows |
-| C4 | MVP | MoSCoW feature list → [`features-moscow.md`](features-moscow.md). **Picked 14 Nov evening:** all Musts and Shoulds, plus push alerts (S11) |
+| C4 | MVP | MoSCoW feature list → [`features-moscow.md`](features-moscow.md). **Picked 14 Nov evening:** all Musts and Shoulds (push alerts, combined data and the installable app removed at 16:50) |
 | C6 | Out of scope | User accounts |
 | D1 | Sensors | MODIS (Terra, Aqua); VIIRS S-NPP 2012–2025; NOAA-20 2018 onwards; NOAA-21 for 2026. Research more sensors |
 | D2 | Filters | Defaults accepted (`type 0`; MODIS confidence ≥ 30; VIIRS `n` or `h`; day and night) |

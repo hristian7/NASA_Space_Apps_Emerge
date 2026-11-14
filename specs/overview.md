@@ -14,7 +14,7 @@ Worldwide, VIIRS records about **2.7 times** the fire activity of MODIS `[V]`. J
 
 ### Our answer: Emerge
 
-A free website and phone app that turns 25 years of NASA fire data into **one fair record** for any place on Earth:
+A free website, built for phones too, that turns 25 years of NASA fire data into **one fair record** for any place on Earth:
 1. Count hotspots, and also **fire days per small square**, which removes part of the instrument difference.
 2. Learn how MODIS numbers relate to VIIRS numbers from the years both flew, per region, land type and month.
 3. Convert the MODIS-only years into "what VIIRS would have seen", with an error range on every number.
@@ -27,7 +27,7 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 | **Fair 25-year record** | MODIS converted to VIIRS level, with error ranges |
 | **Whole world, ready in advance** | 461 million detections already processed `[V]`, so answers are instant |
 | **Choose a place** | A point plus a search distance (tap or type latitude/longitude), a drawn area, or a country |
-| **Choose dates, see the data** | Any range from Nov 2000; as rows, a table or a map, one data type or several together |
+| **Choose dates, see the data** | Any range from Nov 2000; as rows, a table or a map |
 | **"No data" is not "zero"** | Shown differently, so gaps are never mistaken for "no fire" |
 | **Fire calendar** | Years × months of hotspots, coloured so the worst months and years stand out |
 | **"Is this unusual?"** | This month vs the median and average of past years |
@@ -37,7 +37,7 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 | **Downloads** | Hotspots found (CSV), monthly numbers, a summary, charts as images |
 | **"How we know it's right"** | Test results, including weak spots; automatic tests on the main paths |
 | **Plain language, English and Bulgarian** | Every term explained |
-| **Phones, installable, public link** | https://emerge-beta-ten.vercel.app |
+| **Works on phones, public link** | https://emerge-beta-ten.vercel.app |
 | **Built to grow** | All data stored as points; one place can carry several data types; new maps and layers plug in without redesign |
 
 ### Should-haves (if the Musts are on track)
@@ -47,7 +47,6 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 | **3D globe** with a layer menu | Fires and fire danger on a spinning Earth; the 2D map is the fallback |
 | **Recent fires** | NASA detections from the last 24 hours and 7 days |
 | **Official fire danger** | Copernicus forecasts for 9 days (world), NIFC outlook for 4 months (USA) |
-| **Push alerts** | A phone notification when danger near a saved place turns high |
 | **Share links** | Send exactly what you see |
 | **Fire-intensity visuals** | How strong fires are (heat output), not just how many |
 | **Advice panel** | Plain hints for crews and volunteers |
@@ -89,4 +88,4 @@ The conversion must predict years it never learned from; the two VIIRS satellite
 - an offline field mode;
 - "new fire near you" alerts.
 
-**Not planned:** user accounts, an official warning service, app-store apps, sharpening satellite images, burned-area mapping.
+**Not this weekend:** push alerts, combined data tables and an installable app (removed to save time). **Not planned:** user accounts, an official warning service, app-store apps, sharpening satellite images, burned-area mapping.

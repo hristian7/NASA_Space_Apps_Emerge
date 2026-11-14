@@ -11,7 +11,8 @@
 **This file is the single authority on feature priority.** Research notes may suggest different priorities; changes are made here.
 
 **Team choices (14 Nov):**
-- All Musts and all Shoulds, plus push alerts (moved up from Could to Should, now **S11**). Hosting is Vercel.
+- All Musts and all Shoulds. Hosting is Vercel.
+- **Removed to save time (16:50):** push alerts (S11), combined data (M22) and the installable app (M15). They are listed under Won't.
 - **Suggestion 2 merged (evening):** [`features-moscow-suggestion-2.md`](features-moscow-suggestion-2.md) adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
 - **Every item on NASA's challenge page is a Must (evening):** added M27 and M28, and widened M3, M4, M5 and M11. The checklist is in [`specification.md`](specification.md), section 2 ("Challenge-page checklist").
 
@@ -20,7 +21,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 **Feature groups (from suggestion 2):**
 - **M23, Statistics and visualisation:** M1, M4, M5, M13.
 - **M24, Verification:** M6.
-- **"Using fetched data":** everything a user does with a selection (M3, M4, M5, M11, M13, S3, S8–S11, C2, C5, C6).
+- **"Using fetched data":** everything a user does with a selection (M3, M4, M5, M11, M13, S3, S8–S10, C2, C5, C6).
 
 ## Must have
 
@@ -36,7 +37,6 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M19 | **"No data" is not "zero"** | The app tells apart "measured, and no fire was seen" (zero) and "no measurement was made" (no data: before Nov 2000, or a satellite gap), and shows them differently | S |
 | M20 | **Several data types per point** | Every kind of data (fire, temperature, wind, humidity…) is stored as a point measurement, and one point can carry several at once, for example fire and temperature | S |
 | M21 | **Get simple data** | For the selected place and time range, from today back to the start of MODIS and VIIRS: show one data type as raw rows, as a table, or on the map | M |
-| M22 | **Get combined data** | The same, for several data types together, for example harmonized fire counts plus fire intensity plus official fire danger for one place and time range | M |
 
 ### Map and layers
 
@@ -61,7 +61,6 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M9 | **Works on phones** | The layout adapts to a phone screen, so people in the field can use it | S |
 | M10 | **Public web address** | The app runs online on **Vercel** at a link judges can open: https://emerge-beta-ten.vercel.app | S |
 | M12 | **Tests on the main paths** | Automatic tests for what users do most: choose a place (point + radius, area, country), load the calendar, convert numbers, export. They check against expected answers written before the code | M |
-| M15 | **Installable app (PWA)** | People can add Emerge to their phone's home screen like an app, and it opens quickly. Push alerts are S11 | S–M |
 
 ## Should have
 
@@ -74,7 +73,6 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | S8 | **Advice for crews and volunteers** | A plain panel: "High risk and historically active area: consider pre-positioning". Built from rules, with a clear disclaimer and links to official services | S–M |
 | S9 | **Fire-intensity visuals** | Shows how strong fires are (FRP, the fire's heat output), not just how many | S |
 | S10 | **Shareable links** | The link remembers the place, radius or area, dates and layers | S |
-| S11 | **Push alerts for people in danger areas** (was C1) | Phone notifications when the risk near a saved place becomes high. Design: [`../docs/research/push-alerts-summary.md`](../docs/research/push-alerts-summary.md). On iPhones only for apps added to the home screen, iOS 16.4+ `[V]`. Wording never copies official warnings | M–L |
 
 ## Could have
 
@@ -96,7 +94,10 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 |---|---|---|
 | W1 | **User accounts and login** | The team decided: out for now |
 | W2 | **An official warning service** | We are not an emergency agency. We point to official services and say so clearly |
-| W3 | **Native app-store apps** | The PWA covers phones without the app stores |
+| W3 | **Native app-store apps** | The website works on phones without the app stores |
+| W6 | **Push alerts** (was S11) | Removed 14 Nov to save time (6–10 h `[U]`). Design kept in [`../docs/research/push-alerts.md`](../docs/research/push-alerts.md) for later |
+| W7 | **Combined data** (was M22) | Several data types in one table. Removed 14 Nov to save time (3–5 h `[U]`) |
+| W8 | **Installable app (PWA)** (was M15) | Add to home screen. Removed 14 Nov to save time (2–3 h `[U]`); the site still works on phones (M9) |
 | W4 | **Making blurry images sharp** | Not needed: we convert fire counts statistically, not pictures (interview answer E3) |
 | W5 | **Burned-area mapping from imagery** | A different, much bigger problem |
 
@@ -104,13 +105,11 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 
 - **Before building:** freeze the data contract and run four short risk tests (see [`specification.md`](specification.md), sections 7 and 8).
 - **First, the core:** M2, M14, M18–M20 (data model), M25–M26 (room for more maps and layers), then M1, M3–M6, M11, M13, M27, M28 and the rest of the Musts.
-- **Then the Shoulds, in this order:** S6 → S1 → S5 → S3 → S11 → S10 → S9 → S8.
-- **Scope check:** suggestion 2 and the challenge-page items add about 15–22 hours of work `[U]`, spread across six parallel streams ([`specification.md`](specification.md), section 7). Push alerts are the biggest Should, at about 6–10 hours `[U]`.
+- **Then the Shoulds, in this order:** S6 → S1 → S5 → S3 → S10 → S9 → S8.
+- **Scope check:** suggestion 2 and the challenge-page items add about 15–22 hours of work (less about 11–18 h after the 16:50 removals) `[U]`, spread across six parallel streams ([`specification.md`](specification.md), section 7).
 - **First to cut if late, in order:**
   1. S8 advice;
   2. S9 intensity;
-  3. M22 combined data (keep simple data);
-  4. globe polish (the 2D map stays as the fallback);
-  5. push alerts, replaced by an in-app banner;
-  6. the raw-hotspots download, limited to Bulgaria and the USA.
+  3. globe polish (the 2D map stays as the fallback);
+  4. the raw-hotspots download, limited to Bulgaria and the USA.
 - **Never cut:** drawn areas and the latitude/longitude box (NASA's challenge page names them), and anything in the challenge-page checklist.
