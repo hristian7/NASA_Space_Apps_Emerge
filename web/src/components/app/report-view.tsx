@@ -12,6 +12,7 @@ import {
   ExtremesSummary,
   FireCalendar,
   Glossary,
+  OutsideLinks,
   ReportedCard,
   SatelliteTable,
   TrendChart,
@@ -495,6 +496,15 @@ function Report({
         scope={scope}
         locale={locale}
         unitShortKey={unitShortKey}
+      />
+
+      <OutsideLinks
+        selection={selection}
+        countryIso3={
+          selection.kind === "country" ? selection.iso3 : (data.reported?.iso3 ?? null)
+        }
+        countryBox={data.countryBox}
+        year={Number(data.meta.last_data_day.slice(0, 4))}
       />
 
       {mode === "sat" || data.satellites === null ? null : (
