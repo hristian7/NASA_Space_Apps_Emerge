@@ -83,3 +83,26 @@ export function monthIndex(months: MonthPoint[]): Map<string, MonthPoint> {
 export function monthKey(y: number, m: number): string {
   return `${y}-${m}`;
 }
+
+/** Cumulative totals require every month from January, including measured zeros. */
+export function cumulativeSeason(series: Series, year: number, lastDataDay: string) {
+  const [endYear, endMonth, endDay] = lastDataDay.split("-").map(Number);
+  const completeMonth = endDay >= new Date(Date.UTC(endYear, endMonth, 0)).getUTCDate() ? endMonth : endMonth - 1;
+  const limit = year < endYear ? 12 : year === endYear ? completeMonth : 0;
+  const index = monthIndex(series.months);
+  const pastYears = yearsOf(series.months).filter((y) => y < year);
+  const sums = new Map<number, number | null>();
+  for (const y of [year, ...pastYears]) sums.set(y, 0);
+  return Array.from({ length: Math.max(0, limit) }, (_, i) => {
+    const month = i + 1;
+    for (const y of sums.keys()) {
+      const previous = sums.get(y) ?? null;
+      const value = index.get(monthKey(y, month))?.value ?? null;
+      sums.set(y, previous === null || value === null ? null : previous + value);
+    }
+    const values = pastYears.map((y) => sums.get(y) ?? null).filter((v): v is number => v !== null).sort((a, b) => a - b);
+    const mid = Math.floor(values.length / 2);
+    const median = values.length === 0 ? null : values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+    return { month, current: sums.get(year) ?? null, median };
+  });
+}
