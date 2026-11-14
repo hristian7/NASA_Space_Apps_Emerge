@@ -106,9 +106,6 @@ interface CellSeries {
   group: string | null;
 }
 
-/** A tile cell carries its background group id; older files have none. */
-type GroupedCell = TileCell & { g?: string };
-
 function indexTiles(files: TileFile[]): Map<number, { cell: TileCell; flagLabels: FlagLabel[] }> {
   const byId = new Map<number, { cell: TileCell; flagLabels: FlagLabel[] }>();
   for (const file of files) {
@@ -152,7 +149,7 @@ export async function getSeries(
     if (!found) continue;
     const at = new Map<number, number>();
     found.cell.mi.forEach((mi, position) => at.set(mi, position));
-    const group = (found.cell as GroupedCell).g ?? null;
+    const group = found.cell.g ?? null;
     if (group === null) cellsWithoutGroup += 1;
     else if (background && !background.groups[group]) groupsNotFound.add(group);
     series.push({
