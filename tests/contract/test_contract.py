@@ -160,7 +160,7 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
 SENSOR_LABELS = ["terra", "aqua", "snpp"]
 # Levels the independent scorer reports. The last two are shown for information.
 VALIDATION_SCOPES = (
-    "country_month", "cell_month", "circle_month",
+    "country_month", "country_month_joint_range", "cell_month", "circle_month",
     "circle_month_weighted", "cell_month_0p1",
 )
 BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
@@ -940,7 +940,12 @@ def test_world_tiles():
             assert tile_key_of(cell["lat"], cell["lon"]) == key, where
             want = half_diagonal_km(cell["lat"])
             assert abs(cell["precision_radius_km"] - want) <= 0.01 * want, where
-            assert cell["g"] in groups, f"{where}: group {cell['g']} is not in background.json"
+            # The empty id is allowed: the conversion gave some cells no
+            # group, and such a cell simply gets no background and no scaling.
+            assert isinstance(cell["g"], str), where
+            assert cell["g"] == "" or cell["g"] in groups, (
+                f"{where}: group {cell['g']} is not in background.json"
+            )
             n = len(cell["mi"])
             assert cell["mi"] == sorted(cell["mi"]) and len(set(cell["mi"])) == n, where
             for name in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi",
@@ -1000,7 +1005,10 @@ def test_world_daily():
             check_point_head(cell, where, "cell")
             assert cell["id"] == cell_id_of(cell["lat"], cell["lon"]), where
             assert tile_key_of(cell["lat"], cell["lon"]) == key, where
-            assert cell["g"] in groups, f"{where}: group {cell['g']} is unknown"
+            assert isinstance(cell["g"], str), where
+            assert cell["g"] == "" or cell["g"] in groups, (
+                f"{where}: group {cell['g']} is unknown"
+            )
             assert cell["years"], where
             for block in cell["years"]:
                 w2 = f"{where} {block['y']}"

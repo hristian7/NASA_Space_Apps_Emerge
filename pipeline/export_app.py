@@ -259,6 +259,7 @@ def build_tiles(con: duckdb.DuckDBPyConnection, groups: dict[int, str], out: Pat
     """
     con.execute(CELLS_SQL)
     totals = {"cd": 0, "hot": 0, "rows": 0}
+    no_group: set[int] = set()
     yearly: dict[int, dict[int, dict]] = {}
     tiles: list[str] = []
 
@@ -271,7 +272,11 @@ def build_tiles(con: duckdb.DuckDBPyConnection, groups: dict[int, str], out: Pat
         if cell is None:
             return
         rec = cell_head(cell)
+        # An empty id means the conversion gave this cell no group: no
+        # background and no scaling. It is never a key in background.json.
         rec["g"] = groups.get(cell, "")
+        if not rec["g"]:
+            no_group.add(cell)
         rec["mi"] = [r["mi"] for r in series]
         for field in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi", "frp",
                       "src", "flags"):
@@ -332,7 +337,8 @@ def build_tiles(con: duckdb.DuckDBPyConnection, groups: dict[int, str], out: Pat
 
     close_cell()
     close_tile()
-    return {"tiles": sorted(tiles), "yearly": yearly, "totals": totals}
+    return {"tiles": sorted(tiles), "yearly": yearly, "totals": totals,
+            "no_group": len(no_group)}
 
 
 # ---------------------------------------------------------------------------
@@ -541,7 +547,7 @@ def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     """
     rows = con.execute(
         """
-        SELECT group_id, period, month, hot, hot_hi, cd, cd_hi
+        SELECT CAST(group_id AS VARCHAR), period, month, hot, hot_hi, cd, cd_hi
         FROM background ORDER BY group_id, period, month
         """
     ).fetchall()
@@ -559,7 +565,7 @@ def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
 
     for gid, period, month, k_hot, k_cd in con.execute(
         """
-        SELECT group_id, period, month, k_hot, k_cd
+        SELECT CAST(group_id AS VARCHAR), period, month, k_hot, k_cd
         FROM factors ORDER BY group_id, period, month
         """
     ).fetchall():
@@ -672,7 +678,7 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path,
         if cell is None or not per_year:
             return
         rec = cell_head(cell)
-        rec["g"] = groups[cell]
+        rec["g"] = groups.get(cell, "")
         rec["years"] = [
             {
                 "y": y,
@@ -730,7 +736,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path,
 # ---------------------------------------------------------------------------
 
 LEVEL_SCOPE = {
-    "a": "country_month", "b": "cell_month", "c": "circle_month",
+    "a": "country_month", "a_joint": "country_month_joint_range",
+    "b": "cell_month", "c": "circle_month",
     "c2": "circle_month_weighted", "d": "cell_month_0p1",
 }
 TEST_YEARS = {
@@ -738,16 +745,32 @@ TEST_YEARS = {
     "t2": ((2016, 2022), (2012, 2015)),
     "t3": ((2012, 2018), (2023, 2025)),
 }
-WINNER = "A"
+WINNER = "A3"
+MODEL_LABEL = "A3"
+FIT_YEARS = [2012, 2022]
+CONVERSION_RUN = "2026-11-14"
 
 LIMITS = [
     {"id": "cell-size",
      "text": "Harmonized numbers exist per 0.25 degree cell, about 28 km across. A smaller "
              "area still reports the whole cell, so it is labelled low confidence."},
     {"id": "tested-on-two-countries",
-     "text": "The conversion was tested on Bulgaria and the United States only. Every score "
-             "on this page comes from those two countries, and the rest of the world is "
-             "converted by the same method without a local test."},
+     "text": "The independent test covered Bulgaria and the United States, and it fitted the "
+             "conversion on those two countries alone. Every score on this page comes from "
+             "that test. The numbers in the app come from the same model fitted on all 235 "
+             "countries, and its own test is still being run, so treat the scores here as "
+             "evidence about the method rather than about every country."},
+    {"id": "small-countries-wide-ranges",
+     "text": "A small country has a wide range. Across Bulgaria's estimated months the upper "
+             "end sits about 3.8 times the value, while for the United States it is about "
+             "1.25 times. That is the model's honest spread once it is pooled across 235 "
+             "countries: fewer fires mean less to learn from, so the range widens. Nothing "
+             "has been narrowed to make it look better."},
+    {"id": "summed-ranges-are-too-wide",
+     "text": "A yearly or worldwide range is the sum of the monthly ranges underneath it. "
+             "Adding ranges that way assumes every month is wrong in the same direction at "
+             "once, which is unlikely, so a total's range is wider than the truth needs. "
+             "Read a total's range as an outer bound, not as a likely spread."},
     {"id": "one-gate-miss",
      "text": "One world-gate check was missed: the Bulgaria error on the first hold-out at "
              "country level is above the limit we set ourselves. It is reported here rather "
@@ -885,7 +908,12 @@ def build_validation(scores_csv: Path, results_md: Path, out: Path) -> None:
             "method": {
                 "grid_deg": CELL_DEG,
                 "time_step": "month",
-                "model": f"pipeline {WINNER}, ratio of sums with a zero term",
+                "model": MODEL_LABEL,
+                "model_note": "Ratio of sums of the reference sensor over the older one per "
+                              "country, 5 degree latitude band and calendar month, pulled "
+                              "towards the country and then the world average, plus a "
+                              "background term for cell-months where the older sensor saw "
+                              "nothing.",
                 "reference": "measured S-NPP",
                 "train_years": list(TEST_YEARS["t1"][0]),
                 "test_years": list(TEST_YEARS["t1"][1]),
@@ -893,8 +921,12 @@ def build_validation(scores_csv: Path, results_md: Path, out: Path) -> None:
                 "leakage_check": "no S-NPP row of a test's prediction years is used while "
                                  "fitting or predicting that test",
                 "tested_countries": ["Bulgaria", "United_States"],
-                "tested_countries_note": "The test covers two countries. The rest of the world "
-                                         "is converted by the same method, untested locally.",
+                "tested_countries_note": "The independent test covered two countries and "
+                                         "fitted on those two. The app's numbers come from "
+                                         "the same model fitted on all 235 countries, whose "
+                                         "own test is still being run.",
+                "world_fit_countries": 235,
+                "fit_months": "2012-02 to 2022-12",
             },
             "holdout": holdout,
             "slices": slices,
@@ -958,7 +990,8 @@ SOURCES = [
 
 
 def build_meta(out: Path, countries: list[str], reported: list[str],
-               tiles: list[str], daily: list[str], globe_years: list[int]) -> None:
+               tiles: list[str], daily: list[str], globe_years: list[int],
+               cells_without_a_group: int) -> None:
     start, end, years = daily_window()
     write_json(
         out / "meta.json",
@@ -968,6 +1001,14 @@ def build_meta(out: Path, countries: list[str], reported: list[str],
             "data_version": DATA_VERSION,
             "built": BUILT,
             "last_data_day": LAST_DATA_DAY.isoformat(),
+            "conversion": {
+                "model": MODEL_LABEL,
+                "run": CONVERSION_RUN,
+                "fit_years": FIT_YEARS,
+                "fit_months": "2012-02 to 2022-12",
+                "reference": "measured S-NPP",
+                "cells_without_a_group": cells_without_a_group,
+            },
             "first_month": "%04d-%02d" % FIRST_MONTH,
             "last_month": "%04d-%02d" % LAST_MONTH,
             "grid": {
@@ -1040,22 +1081,30 @@ def build_meta(out: Path, countries: list[str], reported: list[str],
 def main() -> None:
     here = Path(__file__).resolve().parent.parent
     ap = argparse.ArgumentParser(description="Export the world conversion for the app.")
-    ap.add_argument("--in", dest="inp", default=str(here / "data" / "derived" / "world" / "harmonized"))
+    ap.add_argument("--data", default=str(here / "data"),
+                    help="the data folder holding derived/world and derived/bakeoff. "
+                         "Everything else defaults inside it")
+    ap.add_argument("--in", dest="inp", default=None,
+                    help="the conversion's output; defaults to "
+                         "<data>/derived/world/harmonized")
     ap.add_argument("--cell-days", default=None,
                     help="the raw cell-day table; defaults to cell_days.parquet one level above --in")
-    ap.add_argument("--scores", default=str(here / "data" / "derived" / "bakeoff" / "scores.csv"))
+    ap.add_argument("--scores", default=None,
+                    help="defaults to <data>/derived/bakeoff/scores.csv")
     ap.add_argument("--results", default=str(here / "docs" / "research" / "bakeoff-results.md"))
     ap.add_argument("--out", default=str(here / "web" / "public" / "data"))
     ap.add_argument("--threads", type=int, default=6)
     args = ap.parse_args()
 
-    inp = Path(args.inp)
+    data = Path(args.data)
+    inp = Path(args.inp) if args.inp else data / "derived" / "world" / "harmonized"
+    scores = Path(args.scores) if args.scores else data / "derived" / "bakeoff" / "scores.csv"
     cell_days = Path(args.cell_days) if args.cell_days else inp.parent / "cell_days.parquet"
     out = Path(args.out)
     for path in (inp / "cells_monthly.parquet", inp / "countries_monthly.parquet",
                  inp / "cell_groups.parquet", inp / "background.parquet",
                  inp / "factors.parquet", cell_days,
-                 Path(args.scores), Path(args.results)):
+                 scores, Path(args.results)):
         if not path.is_file():
             raise SystemExit(
                 f"input not found: {path}\n"
@@ -1080,7 +1129,9 @@ def main() -> None:
     rows = con.execute(
         "SELECT cell, group_id, country FROM cell_groups ORDER BY cell"
     ).fetchall()
-    groups = {int(c): g for c, g, _ in rows}
+    # The conversion numbers its groups. JSON object keys are strings and the
+    # contract calls the id opaque, so it goes out as its string form.
+    groups = {int(c): str(g) for c, g, _ in rows}
     print(f"  {len(groups)} fire cells", flush=True)
 
     print("background ...", flush=True)
@@ -1128,9 +1179,10 @@ def main() -> None:
     print(f"  {len(daily)} tiles", flush=True)
 
     print("validation ...", flush=True)
-    build_validation(Path(args.scores), Path(args.results), out)
+    build_validation(scores, Path(args.results), out)
 
-    build_meta(out, countries, reported, built["tiles"], daily, globe_years)
+    build_meta(out, countries, reported, built["tiles"], daily, globe_years,
+               built["no_group"])
 
     print("\ncontrol totals", flush=True)
     want = con.execute(

@@ -22,7 +22,7 @@ Everything lives under `web/public/data/`, so the app fetches static files and d
 
 | Path | Holds | Example size `[V]` |
 |---|---|---|
-| `meta.json` | version, dates, grid rules, label meanings, no-data periods, which files exist, sources | 3.7 KB |
+| `meta.json` | version, dates, the conversion run, grid rules, label meanings, no-data periods, which files exist, sources | 4 KB |
 | `countries/<ISO3>.json` | one country's full monthly series | 56 to 63 KB |
 | `countries/index.json` | one line per country file, for the country search | 0.3 KB |
 | `background.json` | the value of a month before Feb 2012 that a cell does not list | 1.5 KB |
@@ -162,6 +162,7 @@ Read first. It tells the app which files exist, what the labels mean and where t
 | `data_version` | string | version of the data, not of the format |
 | `built` | `"YYYY-MM-DD"` | when the files were written |
 | `last_data_day` | `"YYYY-MM-DD"` | last day of satellite data in the set |
+| `conversion` | object | which conversion produced the numbers: `model` (its label, `A3` in the first world export), `run` (the date it was run), `fit_years` and `fit_months` (February 2012 to December 2022), `reference`, and `cells_without_a_group` |
 | `first_month`, `last_month` | `"YYYY-MM"` | range of the monthly files |
 | `grid` | object | `cell_deg`, `rows`, `cols`, `tile_deg`, `month_epoch` |
 | `units` | object | unit name per measurement field |
@@ -326,7 +327,9 @@ Read as: cell 264329, month index 25 (February 2002) had 3 harmonized hotspots i
 
 Before February 2012 the old sensors often saw nothing where the newer one would have seen fire. The conversion carries that as a small **background** value, and it is the same for every cell of a group in a given calendar month and period, so it is stored once per group rather than on every cell. Without it, a small selection before 2012 reads too low and the calendar shows a false rise in 2012. This matches ruling 10 of [`number-logic.md`](number-logic.md) section 9.
 
-**A group** is one country and one 5 degree latitude band. A tile cell names its group in `g`. **The group id is opaque**: the app looks it up and never takes it apart, because the pipeline owns its shape.
+**A group** is one country and one 5 degree latitude band. A tile cell names its group in `g`. **The group id is opaque**: the app looks it up and never takes it apart, because the pipeline owns its shape. In the world export it is a number written as a string, in the example set it reads `BGR_40`; neither shape means anything to the app.
+
+**A cell can have no group.** The conversion does not reach every cell, and such a cell carries `g` as the **empty string**, which is never a key in `background.json`. It then has no background, so an unlisted month before February 2012 counts as **0** rather than a background value, and its daily values before February 2012 cannot be scaled. The app reports both cases rather than hiding them. In the first world export 11,614 of 188,029 cells had no group `[V]`.
 
 | Field | Type | Notes |
 |---|---|---|
