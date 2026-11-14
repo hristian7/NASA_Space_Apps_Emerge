@@ -6,13 +6,11 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 
 | # | Name | Description |
 |---|---|---|
-| M16 | Multiple base maps | 2D or 3D base map — must support different base maps (NASA, OpenStreetMap, etc.) |
 | M25 | Extensible base maps | Written so that, in the future, it can support additional base maps without reworking the architecture |
-| M17 | Multiple data layers | Must support multiple different types of data to be seen, used, or visualised — MODIS, VIIRS, temperature, wind, etc. |
 | M26 | Extensible data layers | Written so that, in the future, it can support different data layers beyond MODIS or VIIRS without reworking the architecture |
-| M18 | Point + radius / polygon data model | Two selection shapes only: point + radius (a geodesic distance filter — not a buffered circle polygon, to avoid faceting error) and polygon (an enclosed area, drawn or predefined). No separate plain-point mode: a point is point + radius with radius → 0 |
+| M18 | Points-only data model | MODIS, VIIRS, and every other data type are stored and fetched only as points — never as polygons. Each point's `radius` field is the accuracy/precision of that measurement (e.g. the sensor's pixel footprint: ~1 km for MODIS, ~375 m for VIIRS), not a search parameter. Polygons are only built after data has already been fetched — for visualisation (e.g. a heatmap/choropleth grid) or other specific derived purposes (e.g. regional rollups, clustering) — never as the stored or fetched format itself |
 | M19 | No-data vs. zero | Difference between "nothing measured" and "no measurement made" |
-| M20 | Data types on point or polygon | Each data type (fire, temperature, wind, humidity, etc.) is applied to either a point (a raw source measurement) or a polygon (an aggregated or area measurement, e.g. a grid cell or region). A single point or polygon can carry more than one data type at once (e.g. fire and temperature on the same point) |
+| M20 | Multiple data types per point | Every data type (fire, temperature, wind, humidity, etc.) is stored as a point measurement. A single point can carry more than one data type at once (e.g. fire and temperature on the same point) |
 | M8 | English and Bulgarian interface | — |
 | M9 | Works on phones | — |
 | M10 | Public web address | — |
@@ -23,6 +21,8 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | C4 | Older or more satellites | Data before 2000 or from more satellites |
 | C7 | Support for different base maps | Actually offer more base maps than NASA/OpenStreetMap, not just leave room for them |
 | C8 | Support for different data layers | Actually add data layers beyond MODIS or VIIRS, not just leave room for them |
+| C9 | Multiple base maps | 2D or 3D base map — support different base maps (NASA, OpenStreetMap, etc.) |
+| C10 | Multiple data layers | Support multiple different types of data to be seen, used, or visualised — MODIS, VIIRS, temperature, wind, etc. |
 | M21 | Fetch simple data | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
 | M22 | Fetch complex data | In raw or table format, or visualised (same as simple data, combined) |
 
@@ -31,7 +31,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | # | Name | Description |
 |---|---|---|
 | M11 | Export to file | Export fetched data into a file |
-| M3 | Pick a country or a point | Using point + radius, or a polygon (a drawn area, or a predefined one like a country boundary) |
+| M3 | Pick a country or a point | Select by a point and a search distance, or by a polygon (drawn, or predefined like a country boundary) — the fetched result is always points, regardless of the selection shape used |
 | M7 | Plain-language explanations | — |
 | M12 | Tests on the main paths | — |
 | S1 | 3D globe view | A spinning Earth with fires and risk zones on it; the 2D map stays as the fast fallback |
