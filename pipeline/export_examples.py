@@ -494,9 +494,11 @@ REPORTED = {
                        "(CC BY 4.0), as stated on the EFFIS Data License page. "
                        "Copyright European Union, 1995-2025.",
             "covers": [2006, 2026],
-            "note": "Not a report. An estimate the agency makes by mapping "
-                    "burned areas in satellite images, and it maps mainly fires "
-                    "of about 30 hectares or more, so smaller fires are missing.",
+            "note": "Not a report. EFFIS, the European Forest Fire "
+                    "Information System, makes this estimate by mapping the "
+                    "burned area it can see in satellite images, and it maps "
+                    "mainly fires of about 30 hectares or more, so smaller "
+                    "fires are missing.",
         },
         "known": {2024: {"fires": 133, "burned_ha": 44745}},
     },
@@ -512,10 +514,12 @@ REPORTED = {
                        "federal interagency centre and the site links only a "
                        "disclaimer of liability, https://www.doi.gov/disclaimer.",
             "covers": [1983, 2025],
-            "note": "What the national coordination centre reported: all "
-                    "wildland fires and the area they burned. Acres in the "
-                    "source are converted to hectares, 1 acre = 0.40468564224 "
-                    "hectares.",
+            "note": "What the National Interagency Coordination Center "
+                    "reported: all wildland fires and the area they burned, "
+                    "counted from the records of the federal and state "
+                    "wildland fire agencies, so a fire none of them recorded "
+                    "is missing. Acres in the source are converted to "
+                    "hectares, 1 acre = 0.40468564224 hectares.",
         },
         "known": {2024: {"fires": 64897, "burned_ha": 3611772.4}},
     },

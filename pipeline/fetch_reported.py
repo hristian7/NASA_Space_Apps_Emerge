@@ -91,29 +91,36 @@ NIFC_LICENCE = (
 )
 
 EFFIS_NOTE = (
-    "Not a report. An estimate the agency makes by mapping burned areas in "
-    "satellite images, and it maps mainly fires of about 30 hectares or more, "
-    "so smaller fires are missing."
+    "Not a report. EFFIS, the European Forest Fire Information System, makes "
+    "this estimate by mapping the burned area it can see in satellite images, "
+    "and it maps mainly fires of about 30 hectares or more, so smaller fires "
+    "are missing."
 )
 GWIS_NOTE = (
-    "Not a report. An estimate the agency makes by mapping burned areas in "
-    "satellite images world-wide, so small fires are missing."
+    "Not a report. GWIS, the Global Wildfire Information System, makes this "
+    "estimate by mapping the burned area it can see in satellite images "
+    "world-wide, so small fires are missing."
 )
 NIFC_NOTE = (
-    "What the national coordination centre reported: all wildland fires and "
-    "the area they burned. Acres in the source are converted to hectares, "
-    "1 acre = 0.40468564224 hectares."
+    "What the National Interagency Coordination Center reported: all wildland "
+    "fires and the area they burned, counted from the records of the federal "
+    "and state wildland fire agencies, so a fire none of them recorded is "
+    "missing. Acres in the source are converted to hectares, 1 acre = "
+    "0.40468564224 hectares."
 )
 REPORT_TABLE1_NOTE = (
-    "One year only. The figure the country's own fire service reported for "
-    "2024, as the annual report's Table 1 prints it. Each country counts "
-    "fires and burned area by its own rules, so countries are not directly "
+    "One year only. What the country's own national fire service reported for "
+    "2024, from its own records, as Table 1 of the EFFIS annual report prints "
+    "it. Each country counts fires and burned area by its own rules, so a fire "
+    "its service does not record is missing and countries are not directly "
     "comparable."
 )
 REPORT_BULGARIA_NOTE = (
-    "What the Executive Forest Agency reported for forest fires: Table 2 of "
-    "the annual report. The report rounds burned area to whole hectares "
-    "except for 2024, where its Bulgaria chapter gives 17 116.4 hectares."
+    "What the Executive Forest Agency reported, from its own database of "
+    "forest fires, as Table 2 of the EFFIS annual report prints it. Forest "
+    "fires only, so fires on other land are missing. The report rounds burned "
+    "area to whole hectares except for 2024, where its Bulgaria chapter gives "
+    "17 116.4 hectares."
 )
 
 # The names Table 1 of the annual report prints, and the three-letter code for

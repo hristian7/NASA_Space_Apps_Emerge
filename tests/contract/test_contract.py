@@ -8,6 +8,7 @@ director's approval before this file moves.
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import glob
 import os
 import gzip
@@ -655,6 +656,19 @@ CONTROL_MONTHS = [(2019, 7), (2021, 8), (2024, 8)]
 PARQUET_TAIL = Path("derived") / "bg_us" / "cell_days.parquet"
 
 
+def find_coverage() -> dict:
+    """The conversion's own coverage file, beside the harmonized tables."""
+    hits = sorted(glob.glob(str(
+        find_parquet().parent.parent / "world" / "harmonized" / "coverage.json"
+    )))
+    if not hits:
+        hits = sorted(glob.glob(str(
+            find_parquet().parent.parent / "**" / "coverage.json"
+        ), recursive=True))
+    assert hits, "coverage.json not found beside the conversion's tables"
+    return json.loads(Path(hits[0]).read_text())
+
+
 def find_parquet() -> Path:
     import os
 
@@ -1190,3 +1204,57 @@ def test_world_validation_and_reported():
         "the export is missing a series that holds a verified figure: "
         f"{sorted(set(VERIFIED_REPORTED) - checked)}"
     )
+
+
+@world_only
+def test_no_global_no_data_period_overlaps_the_record():
+    """A global no-data period inside the record hides real months.
+
+    The app's series logic reads a global no-data period as "no measurement",
+    so a period that starts before the last data day turns months the country
+    and tile files actually hold into nulls. A fixed "stops on 31 December
+    2025" did exactly that to every 2026 month.
+    """
+    meta = read_json(WORLD / "meta.json")
+    first = dt.date.fromisoformat(meta["first_month"] + "-01")
+    last = dt.date.fromisoformat(meta["last_data_day"])
+    for period in meta["no_data"]:
+        if period["scope"] != "global":
+            continue
+        start = dt.date.fromisoformat(period["from"]) if period["from"] else dt.date.min
+        end = dt.date.fromisoformat(period["to"]) if period["to"] else dt.date.max
+        assert end < first or start > last, (
+            f"a global no-data period covers {start} to {end}, which overlaps the "
+            f"record from {first} to {last}: every month inside it would read as "
+            f"no measurement. Reason given: {period['reason']}"
+        )
+
+
+@world_only
+def test_meta_dates_come_from_the_conversion():
+    """meta.json must not carry a date of its own making."""
+    meta = read_json(WORLD / "meta.json")
+    coverage = find_coverage()
+    assert meta["last_data_day"] == coverage["last_day_of_the_record"]
+    assert meta["last_month"] == coverage["last_month"]
+    assert meta["coverage"]["snpp_last_day"] == coverage["snpp_last_day"]
+    assert meta["src_periods"] == coverage["src_periods"]
+
+
+@world_only
+def test_the_last_month_is_present_and_has_a_value():
+    """Three countries, read the way the app reads them."""
+    meta = read_json(WORLD / "meta.json")
+    last = dt.date.fromisoformat(meta["last_data_day"])
+    for iso3 in ("BGR", "USA", "AUS"):
+        doc = read_json(WORLD / "countries" / f"{iso3}.json")
+        assert doc["last_month"] == f"{last.year:04d}-{last.month:02d}", iso3
+        rec = doc["months"][-1]
+        assert (rec["y"], rec["m"]) == (last.year, last.month), iso3
+        for field in ("hot", "cd"):
+            assert rec[field] is not None, (
+                f"{iso3} {rec['y']}-{rec['m']:02d}: {field} is null in the last month"
+            )
+        assert "partial_month" in rec["flags"], (
+            f"{iso3}: the last month is a part month and must say so"
+        )
