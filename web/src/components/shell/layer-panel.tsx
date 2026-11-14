@@ -7,6 +7,7 @@ import { formatIsoDate, type ReportLocale } from "@/components/report/lib/format
 import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
 import { dangerClasses, dangerDate, dangerDays } from "@/lib/layers/danger";
+import DriverLegend from "./driver-legend";
 import { historyBreaks, historyRampTokens, historyYears } from "@/lib/layers/history";
 import { recentWindows, type RecentWindow } from "@/lib/layers/firms";
 import type { RecentPayload } from "@/lib/layers/recent";
@@ -236,17 +237,7 @@ export default function LayerPanel({
           </ul>
         );
       case "classes":
-        if (definition.id === "wind") return <p className="hint">➤ km/h</p>;
-        if (definition.id !== "fire-danger") {
-          const legends: Record<string, string> = {
-            "nasa-fwi": "https://maps.effis.emergency.copernicus.eu/gwis?service=WMS&request=GetLegendGraphic&version=1.1.1&format=image/png&layer=nasa_geos5.fwi",
-            "soil-moisture": "https://gibs.earthdata.nasa.gov/legends/SMAP_Soil_Moisture_H.svg",
-            "greenness": "https://gibs.earthdata.nasa.gov/legends/MODIS_NDVI_H.svg",
-            "land-type": "https://gibs.earthdata.nasa.gov/legends/MODIS_IGBP_Land_Cover_Type_H.svg",
-            "air-temperature": "https://gibs.earthdata.nasa.gov/legends/AIRS_Temperature_H.svg",
-          };
-          return <><img src={legends[definition.id]} alt={t("providerLegend")} style={{ maxWidth: "100%", height: "auto", background: "white" }} />{definition.id === "land-type" ? <p className="hint">{t("landLegend")}</p> : null}</>;
-        }
+        if (definition.id !== "fire-danger") return <DriverLegend id={definition.id} />;
         return (
           <ul className="legend">
             {dangerClasses.map((entry) => (

@@ -11,7 +11,7 @@ export default function LanguageSwitch() {
   const t = useTranslations("shell");
 
   return (
-    <form action={setLocale} className="chip-group glass" aria-label={t("languageLabel")}>
+    <form action={setLocale} className="chip-group glass lang" aria-label={t("languageLabel")}>
       {locales.map((locale) => (
         <button
           key={locale}

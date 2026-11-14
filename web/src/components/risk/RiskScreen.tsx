@@ -8,6 +8,7 @@ import WeekOutlook from './WeekOutlook';
 import RiskSpotDetails from './RiskSpotDetails';
 import RiskPlaceholder from './RiskPlaceholder';
 import { RiskLinks } from './RiskLinks';
+import { formatIsoDateTime } from '@/components/report/lib/format';
 import './risk.css';
 
 export default function RiskScreen({example=false}:{example?:boolean}) {
@@ -30,7 +31,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const selectSpot=useCallback((id:number)=>{const node=document.getElementById(`risk-spot-${id}`);node?.scrollIntoView({block:'nearest'});node?.focus({preventScroll:true});},[]);
  const countries=[...new Set(index?.regions.map(r=>r.country)??[])];
  return <main className="risk-page">
-  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href="/">{t('back')}</a><a href={proof}>{t('proof')}</a></nav></header>
+  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href={proof}>{t('proof')}</a></nav></header>
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
   {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">
@@ -42,7 +43,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
     <RiskMap regions={index.regions} region={region} spots={spots} onRegion={selectRegion} onSpot={selectSpot}/>
     <section className="risk-sheet" aria-label={t('title')}>
      <h2>{locale==='bg'?region.name_local:region.name_en}</h2>
-     <div className="risk-meta"><p>{t('valid',{date})}</p><p>{t('made',{date:index.meta?.made_at??''})}</p><p>{t('weatherRun',{date:index.meta?.fire_weather_run??''})}</p><p>{t('estimates')}</p></div>
+     <div className="risk-meta"><p>{t('valid',{date})}</p><p>{t('made',{date:formatIsoDateTime(index.meta?.made_at??'',locale==='bg'?'bg':'en')})}</p><p>{t('weatherRun',{date:index.meta?.fire_weather_run??''})}</p><p>{t('estimates')}</p></div>
      {countryFailed?<p role="alert">{t('failed')}</p>:!countryData?<p role="status">{t('loading')}</p>:countryData.status==='missing'?<p role="status">{t('missingCountry')}</p>:spots.length===0?<p role="status">{t('empty')}</p>:<ol className="risk-list" aria-label={t('title')}>{spots.map(spot=><li key={spot.spot_id} id={`risk-spot-${spot.spot_id}`} tabIndex={-1}><span className="risk-rank">{spot.rank}</span><div className="risk-spot"><RiskSpotDetails spot={spot} crew={spot.rank===1} day={day}/></div></li>)}</ol>}
     </section>
    </div>):<p className="risk-placeholder">{t('noRegion')}</p>}

@@ -46,6 +46,7 @@ import {
 import { chance, extremes, rankWindow, trend, unusual, unusualToDate } from "@/lib/stats";
 import { MAX_ROWS } from "@/lib/hotspots/query";
 import { encodeSelection } from "@/lib/ui/selection-url";
+import RiskHereCard from "@/components/risk/RiskHereCard";
 import { useCountryName } from "./country-name";
 import { decodeView, defaultView, viewSearch, type ViewState } from "@/lib/ui/view-url";
 import {
@@ -592,6 +593,10 @@ function Report({
           {t("chanceMeaning")}
         </p>
       )}
+
+      {selection.kind === "point" ? (
+        <RiskHereCard point={{ lat: selection.lat, lon: selection.lon }} country={data.reported?.iso3 ?? ""} />
+      ) : null}
 
       {selection.kind === "country" ? (
         <CountryTest iso3={selection.iso3} locale={locale} />
