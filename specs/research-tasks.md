@@ -15,7 +15,7 @@ Created Sat 14 Nov 2026. The team decided to do this research later; nothing bel
 - **Time:** 2000–2025, plus newer data, plus older data if it exists.
 - **Resolution:** daily where possible.
 - **App:** a 3D globe (like Google Earth) plus 2D maps; English and Bulgarian; mobile-friendly PWA.
-- **Hosting:** a virtual machine and/or Vercel.
+- **Hosting:** Vercel (decided 14 Nov evening).
 - **Build:** done with AI coding agents (Claude Code); the demo is due **Sun 15 Nov 14:00**.
 
 ## 1. Data sources (interview C2, D1)
@@ -69,7 +69,6 @@ A first pass exists: [`../docs/research/forecast-options.md`](../docs/research/f
 
 ## Still waiting on the team
 
-- **Tick features** in [`features-moscow.md`](features-moscow.md) (Must and Should).
 - **Unanswered interview questions:**
   - E1 and E2 (Claude recommends VIIRS-equivalent units and a ratio-vs-regression comparison);
   - D4 (who registers the FIRMS key);

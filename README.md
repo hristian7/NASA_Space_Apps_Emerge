@@ -7,9 +7,9 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 ## Status (Sat 14 Nov)
 
 - **Interview answered:** decisions are in [`specs/interview-answers.md`](specs/interview-answers.md).
-- **Feature list ready to choose from:** [`specs/features-moscow.md`](specs/features-moscow.md) (Must / Should / Could / Won't). The team ticks features, then we write `specs/specification.md`.
+- **Features chosen (14 Nov evening):** [`specs/features-moscow.md`](specs/features-moscow.md): all Musts and Shoulds, plus push alerts. Hosting on Vercel.
 - **Research open:** data sources, storage and tech stack → [`specs/research-tasks.md`](specs/research-tasks.md). A first forecasting note is done: [`docs/research/forecast-options.md`](docs/research/forecast-options.md).
-- **Code:** not started.
+- **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)); app not started.
 
 ## Read first
 
