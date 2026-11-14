@@ -15,6 +15,13 @@
 import type { DailyCell, DailyFile, DailyYear, MetaFile } from '../../types/data';
 import type { Selection, WindowYear } from '../../types/ui';
 
+import {
+  type BackgroundFile,
+  backgroundPeriod,
+  conversionFactor,
+  loadBackground,
+  setBackgroundStatus,
+} from './background';
 import { DataError, DataSource } from './source';
 import { loadDailyTiles, loadMeta } from './loaders';
 import { selectionCells, tilesForSelection, type WeightedCell } from './selection';
@@ -127,16 +134,18 @@ interface WindowFiles {
    * no years at all rather than a row of zeros.
    */
   hasCells: boolean;
+  /** background.json, for the conversion factors of ruling 11. */
+  background: BackgroundFile | null;
 }
 
 async function dailyInputs(selection: Selection, src?: DataSource): Promise<WindowFiles> {
   const meta = await loadMeta(src);
   if (selection.kind === 'country') {
-    return { meta, files: [], cells: [], found: [], hasCells: false };
+    return { meta, files: [], cells: [], found: [], hasCells: false, background: null };
   }
   const wanted = tilesForSelection(selection);
   const keys = meta.daily.length > 0 ? wanted.filter((key) => meta.daily.includes(key)) : wanted;
-  const files = await loadDailyTiles(keys, src);
+  const [files, background] = await Promise.all([loadDailyTiles(keys, src), loadBackground(src)]);
   const { cells } = selectionCells(selection);
   const byId = new Map<number, DailyCell>();
   for (const file of files) {
@@ -147,7 +156,7 @@ async function dailyInputs(selection: Selection, src?: DataSource): Promise<Wind
     const cell = byId.get(weighted.id);
     if (cell) found.push({ weight: weighted.weight, cell });
   }
-  return { meta, files, cells, found, hasCells: true };
+  return { meta, files, cells, found, hasCells: true, background };
 }
 
 /**
@@ -187,18 +196,19 @@ function sumDays(
   input: WindowFiles,
   labelYear: number,
   dates: YMD[],
+  tally: { unscaledDays: number },
 ): { hot: number; frp: number } | null {
   const { meta } = input;
   if (!input.hasCells) return null;
   if (!windowYears(meta).includes(labelYear)) return null;
   const block = blockYear(meta, labelYear);
   const zero = dayNumber(blockStart(meta, block));
-  const offsets: number[] = [];
+  const days: { offset: number; date: YMD }[] = [];
   for (const date of dates) {
     if (isNoDataDay(meta, toIso(date))) return null;
     const offset = dayNumber(date) - zero;
     if (offset < 0 || offset >= meta.daily_window.days) return null;
-    offsets.push(offset);
+    days.push({ offset, date });
   }
 
   let hot = 0;
@@ -208,10 +218,24 @@ function sumDays(
     if (!entry) continue;
     const at = new Map<number, number>();
     entry.d.forEach((offset, position) => at.set(offset, position));
-    for (const offset of offsets) {
+    for (const { offset, date } of days) {
       const position = at.get(offset);
       if (position === undefined) continue;
-      hot += weight * entry.hot[position];
+      // Ruling 11: a day before February 2012 is one older sensor's raw
+      // count, so it is scaled by that group's k_hot for the day's own
+      // calendar month and period. FRP is never converted.
+      const raw = entry.hot[position];
+      if (backgroundPeriod(date.y, date.m)) {
+        const factor = conversionFactor(input.background, cell.g, date.y, date.m, 'hot');
+        if (factor === null) {
+          tally.unscaledDays += 1;
+          hot += weight * raw;
+        } else {
+          hot += weight * raw * factor;
+        }
+      } else {
+        hot += weight * raw;
+      }
       frp += weight * entry.frp[position];
     }
   }
@@ -243,6 +267,20 @@ export function pastWindow(currentEnd: string, days: number, labelYear: number):
     days: dates.map(toIso),
     estimated: labelYear < 2012,
   };
+}
+
+/**
+ * Says how the conversion factors went, through the same status the monthly
+ * background uses: a missing file or a day that had to be summed raw means the
+ * pre-2012 part of the window reads too low, and a screen can say so.
+ */
+function reportBackground(input: WindowFiles, tally: { unscaledDays: number }): void {
+  setBackgroundStatus({
+    loaded: input.background !== null,
+    cellsWithoutGroup: 0,
+    groupsNotFound: [],
+    unscaledDays: tally.unscaledDays,
+  });
 }
 
 function asWindowYear(
@@ -286,12 +324,14 @@ export async function getWindowTotals(
   const currentYear = end.y;
   const current = pastWindow(meta.last_data_day, length, currentYear);
   const years: WindowYear[] = [];
+  const tally = { unscaledDays: 0 };
   if (input.hasCells) {
     for (const labelYear of windowYears(meta)) {
       const dates = pastWindow(meta.last_data_day, length, labelYear).days.map(parseDate);
-      years.push(asWindowYear(labelYear, sumDays(input, labelYear, dates)));
+      years.push(asWindowYear(labelYear, sumDays(input, labelYear, dates, tally)));
     }
   }
+  reportBackground(input, tally);
 
   return { days: length, start: current.start, end: meta.last_data_day, currentYear, years };
 }
@@ -310,11 +350,12 @@ export async function getMonthToDate(
   const meta = input.meta;
   const end = parseDate(meta.last_data_day);
 
+  const tally = { unscaledDays: 0 };
   const forYear = (labelYear: number): WindowYear => {
     const limit = Math.min(end.d, daysInMonth(labelYear, end.m));
     const dates: YMD[] = [];
     for (let d = 1; d <= limit; d += 1) dates.push({ y: labelYear, m: end.m, d });
-    return asWindowYear(labelYear, sumDays(input, labelYear, dates));
+    return asWindowYear(labelYear, sumDays(input, labelYear, dates, tally));
   };
 
   const past: WindowYear[] = [];
@@ -325,5 +366,7 @@ export async function getMonthToDate(
     }
   }
 
-  return { day: end.d, year: end.y, month: end.m, current: forYear(end.y), past };
+  const current = forYear(end.y);
+  reportBackground(input, tally);
+  return { day: end.d, year: end.y, month: end.m, current, past };
 }

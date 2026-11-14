@@ -24,9 +24,11 @@ Everything lives under `web/public/data/`, so the app fetches static files and d
 |---|---|---|
 | `meta.json` | version, dates, grid rules, label meanings, no-data periods, which files exist, sources | 3.7 KB |
 | `countries/<ISO3>.json` | one country's full monthly series | 56 to 63 KB |
+| `countries/index.json` | one line per country file, for the country search | 0.3 KB |
+| `background.json` | the value of a month before Feb 2012 that a cell does not list | 1.5 KB |
 | `reported/<ISO3>.json` | officially reported fires and burned area per year | 1 to 3 KB |
 | `tiles/<lat0>_<lon0>.json.gz` | every fire cell in a 5 degree square, monthly, pre-gzipped | 46 to 56 KB |
-| `globe/<year>.json` | one year's totals per cell, for the globe layer | 31 KB |
+| `globe/<year>.json.gz` | one year's totals per cell, for the globe layer, pre-gzipped | 3.3 KB |
 | `daily/<lat0>_<lon0>.json.gz` | the daily window per cell, pre-gzipped | 4 to 5 KB |
 | `validation.json` | everything the "How we know it's right" page shows | 7 KB |
 
@@ -203,7 +205,7 @@ One file per country, keyed by its three-letter code. The country is a single po
 | `name_key` | string | translation key, `country.<ISO3>` |
 | `type` | `"country"` | |
 | `lat`, `lon` | number | the mean of the country's fire cell centres. A summary point, **not** a border centroid |
-| `precision_radius_km` | number | distance from that point to the furthest of those cells, so the circle covers all the data in the file |
+| `precision_radius_km` | number | distance from that point to the furthest of those cells, so the circle covers all the data in the file. Never below the precision radius of one cell: a country whose fire all sits in a single cell is no more precise than that cell |
 | `first_month`, `last_month` | `"YYYY-MM"` | |
 | `months` | list | **every** month from `first_month` to `last_month`, in order, with no gaps |
 
@@ -223,6 +225,29 @@ Each month holds, in this order: `y`, `m`, the seven harmonized fields, the five
 ```
 
 ---
+
+### 5.1 `countries/index.json`
+
+One line per country file, so the country search box has a data source and does not need to fetch every country file to know what exists.
+
+| Field | Type | Notes |
+|---|---|---|
+| `schema` | `"emerge-country-index-1"` | |
+| `example` | boolean | |
+| `built` | `"YYYY-MM-DD"` | |
+| `countries` | list | sorted by `iso3` |
+
+One entry: `iso3`, `name` (English, for the search box), `lat` and `lon` (the same summary point as the country file), and `bbox` as `[west, south, east, north]` in degrees. The box is drawn around the outer edges of the country's fire cells, not its border, and it is the smallest such box: it is found by cutting the longitudes at their widest empty gap, so a country reaching across the 180 degree line gets a box with **`west` greater than `east`** rather than one spanning the whole world. The app must handle that case.
+
+```json
+{"schema":"emerge-country-index-1","example":true,"built":"2026-11-14",
+ "countries":[{"iso3":"BGR","name":"Bulgaria","lat":42.7886,"lon":25.2032,
+               "bbox":[22.25,41,28.75,44.25]},
+              {"iso3":"USA","name":"United States","lat":42.7733,"lon":-106.677,
+               "bbox":[179.5,18.75,-66.75,70.5]}]}
+```
+
+The USA entry shows the wrap: its fire cells run from the Aleutians past the 180 degree line to Maine, so `west` is 179.5 and `east` is -66.75.
 
 ## 6. `reported/<ISO3>.json`
 
@@ -273,7 +298,7 @@ Layout: one object per cell, with **parallel arrays indexed by position in `mi`*
 | `months` | object | `{first, last}`, the lowest and highest month index in the file |
 | `cells` | list | sorted by `id` ascending |
 
-One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius_km`, then the parallel arrays `mi` (month indexes, ascending), `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src` (index into `src_labels`), `flags` (bit set).
+One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius_km`, `g` (the cell's group id, for the background lookup in section 7.1), then the parallel arrays `mi` (month indexes, ascending), `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src` (index into `src_labels`), `flags` (bit set).
 
 **Fire months only.** A month is listed when at least one satellite saw at least one detection in that cell. A month inside the coverage period that is not listed means 0. A listed month can still hold `hot: 0` and `cd: 0`: that happens from Feb 2012 when MODIS or NOAA-20 saw fire in the cell but the reference sensor, S-NPP, did not. Zero is the honest harmonized answer there.
 
@@ -287,6 +312,7 @@ One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius
  "months":{"first":10,"last":311},
  "cells":[{"type":"cell","id":264329,"lat":44.125,"lon":22.375,
            "precision_radius_km":17.11,
+           "g":"BGR_40",
            "mi":[25,55],"hot":[3,11],"hot_lo":[2,8],"hot_hi":[4,14],
            "cd":[3,11],"cd_lo":[2,8],"cd_hi":[4,14],"frp":[12,515],
            "src":[0,1],"flags":[1,1]}]}
@@ -296,11 +322,61 @@ Read as: cell 264329, month index 25 (February 2002) had 3 harmonized hotspots i
 
 ---
 
-## 8. `globe/<year>.json`
+### 7.1 `background.json`, and the value of a month a cell does not list
 
-One year of totals per cell, for the globe layer. Not pre-gzipped: it is small, and the host compresses it on the wire.
+Before February 2012 the old sensors often saw nothing where the newer one would have seen fire. The conversion carries that as a small **background** value, and it is the same for every cell of a group in a given calendar month and period, so it is stored once per group rather than on every cell. Without it, a small selection before 2012 reads too low and the calendar shows a false rise in 2012. This matches ruling 10 of [`number-logic.md`](number-logic.md) section 9.
 
-Layout: **columnar**. One `cols` object of equal-length arrays sharing one index, which is the cheapest shape for a layer that uploads straight into a buffer.
+**A group** is one country and one 5 degree latitude band. A tile cell names its group in `g`. **The group id is opaque**: the app looks it up and never takes it apart, because the pipeline owns its shape.
+
+| Field | Type | Notes |
+|---|---|---|
+| `schema` | `"emerge-background-1"` | |
+| `example` | boolean | |
+| `built` | `"YYYY-MM-DD"` | |
+| `note` | string | present only while the numbers are stand-ins |
+| `units` | `{"background":"hundredths","factors":"thousandths"}` | |
+| `periods` | `["estimated_terra","estimated_modis"]` | |
+| `groups` | object | keyed by group id |
+
+Each group holds one entry per period, and each period holds six arrays of **12 whole numbers, January first**.
+
+Four are the background: `hot`, `hot_hi`, `cd`, `cd_hi`, in **whole hundredths** (37 means 0.37). The lower end is always 0, so it is not stored. Hundredths because a background is well under 1 and a decimal would cost bytes and invite rounding drift.
+
+Two are the conversion factors: `k_hot` and `k_cd`, in **whole thousandths** (2700 means a factor of 2.7). They are the multiplier that turns a raw count from that period's sensor into a harmonized value, and the app needs them to read the daily files (section 9). The real exporter stops rather than write a zero factor, because a missing factor silently read as 1 would show the pre-2012 daily window far too low.
+
+**The reading rule, for a tile cell and one month:**
+
+1. The month **is listed** in the cell's `mi`: use the values at that position as they are. A listed month already includes everything, background and all.
+2. The month **is not listed and is before February 2012**: the value is `background[g][period][unit][m - 1] / 100`, where `period` is the month's `src` label and `m` is its calendar month. The **lower end is 0** and the **upper end** comes from the matching `_hi` array, divided by 100 as well.
+3. The month **is not listed and is February 2012 or later**: the value is 0, with 0 for both ends. The satellites looked and saw no fire.
+4. A month outside the coverage period in `meta.json` has no value at all. That is `null`, not 0.
+
+**Country files are not affected.** A country's monthly value already contains the background of every cell inside it, because it was summed over the cells before it was written. Adding the background again to a country total would double-count it.
+
+The globe files are not affected either: a cell absent from a globe file saw no fire that year, and a year is never read through the background rule.
+
+```json
+{"schema":"emerge-background-1","example":true,"built":"2026-11-14",
+ "note":"Stand-in background values and conversion factors of a believable size, the same in every month and group. Not a prediction.",
+ "units":{"background":"hundredths","factors":"thousandths"},
+ "periods":["estimated_terra","estimated_modis"],
+ "groups":{"BGR_40":{"estimated_modis":{"hot":[30,30,30,30,30,30,30,30,30,30,30,30],
+                                        "hot_hi":[90,90,90,90,90,90,90,90,90,90,90,90],
+                                        "cd":[20,20,20,20,20,20,20,20,20,20,20,20],
+                                        "cd_hi":[60,60,60,60,60,60,60,60,60,60,60,60],
+                                        "k_hot":[3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000,3000],
+                                        "k_cd":[2700,2700,2700,2700,2700,2700,2700,2700,2700,2700,2700,2700]}}}}
+```
+
+Read as: a cell in group `BGR_40` that does not list March 2005 has 0.30 hotspots for that month, in a range of 0 to 0.90, and 0.20 fire days, in a range of 0 to 0.60; and a raw daily count in that group and month is multiplied by 3.0 for hotspots. The example numbers are the same in every month and group on purpose, so nobody mistakes them for a prediction.
+
+**The daily files carry `g` and use the factors, not the background.** Ruling 10 is a rule about monthly values: no background is ever added to a daily value, and a day the daily window does not list is 0, as section 9 says. A daily cell does carry `g`, because ruling 11 has the app scale a pre-2012 raw count by `k_hot` of that cell's group, calendar month and period.
+
+## 8. `globe/<year>.json.gz`
+
+One year of totals per cell, for the globe layer. Pre-gzipped, like a tile.
+
+Layout: **columnar and slim**. One `cols` object of equal-length arrays sharing one index, which is the cheapest shape for a layer that uploads straight into a buffer.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -310,22 +386,19 @@ Layout: **columnar**. One `cols` object of equal-length arrays sharing one index
 | `year` | number | |
 | `type` | `"cell"` | |
 | `cell_deg` | number | 0.25 |
-| `src_labels`, `flag_labels` | lists | as in a tile |
+| `point_from_id` | `true` | see below |
 | `n` | number | number of cells, equal to every array's length |
-| `cols` | object | `id`, `lat`, `lon`, `precision_radius_km`, `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src`, `flags` |
+| `cols` | object | `id`, `hot`, `cd`, `frp` |
 
-Cells are sorted by `id` ascending. Only cells with at least one detection that year are present; a cell that is absent saw no fire. Yearly `hot`, `cd` and `frp` are the sum of that year's months, with no ceiling on `cd` (section 3.1). Yearly `src` is the **lowest index in `src_labels`** among the year's months, so a year that mixes estimated and measured months reports the earlier label rather than claiming to be measured. Yearly `flags` is the bitwise OR of the months' flags.
+**The point comes from the id here, not from stored fields.** `lat`, `lon` and `precision_radius_km` are left out and the app works them out from `id` with the frozen rule in section 2, which `cellCenter` and `precisionRadiusKm` implement and the expected answers test. `point_from_id` says so in the file. The reason is measured: with the full record shape the world globe layer came to **140 MB for 26 years `[V]`**, which no static budget holds, and the three position fields are exactly reproducible from the id. The ranges and the labels are left out for the same reason: the globe colours cells, and a cell that is opened is read from its tile, which carries everything.
+
+Cells are sorted by `id` ascending. Only cells with at least one detection that year are present; a cell that is absent saw no fire. Yearly `hot`, `cd` and `frp` are the sum of that year's months, with no ceiling on `cd` (section 3.1). Which era a year belongs to comes from `src_periods` in `meta.json`.
 
 ```json
-{"schema":"emerge-globe-1","example":true,"built":"2026-11-14","year":2024,
- "type":"cell","cell_deg":0.25,"n":2,
- "cols":{"id":[236420,236426],"lat":[48.875,48.875],"lon":[-114.875,-113.375],
-         "precision_radius_km":[16.636,16.636],"hot":[8,0],"hot_lo":[8,0],
-         "hot_hi":[8,0],"cd":[4,0],"cd_lo":[4,0],"cd_hi":[4,0],"frp":[100,0],
-         "src":[2,2],"flags":[0,0]}}
+{"schema":"emerge-globe-1","example":false,"built":"2026-11-14","year":2024,
+ "type":"cell","cell_deg":0.25,"point_from_id":true,"n":2,
+ "cols":{"id":[236420,236426],"hot":[8,0],"cd":[4,0],"frp":[100,0]}}
 ```
-
----
 
 ## 9. `daily/<lat0>_<lon0>.json.gz`, the daily window
 
@@ -337,20 +410,34 @@ The window is stated once in the file and once in `meta.json`: `days` (45), `lat
 |---|---|---|
 | `schema` | `"emerge-daily-1"` | |
 | `example`, `built`, `tile`, `type`, `cell_deg` | as in a tile | |
+| `values` | `"raw"` | the daily numbers are raw counts, not harmonized ones |
+| `sensor_labels` | `["terra","aqua","snpp"]` | `sensor` on a year block indexes this list |
 | `window` | object | `{days, latest_day, start_md, end_md, wraps_year}` |
 | `years` | list of numbers | every year the window is held for, ascending |
 | `src_labels`, `flag_labels` | lists | as in a tile |
 | `cells` | list | sorted by `id` ascending |
 
-One cell: `type`, `id`, `lat`, `lon`, `precision_radius_km`, `years`. One year block: `y`, `src` (index), `flags` (bit set), then the parallel arrays `d` (day offsets from the window start, 0 to `days - 1`, ascending), `hot` and `frp`.
+One cell: `type`, `id`, `lat`, `lon`, `precision_radius_km`, `g` (the group id, for the conversion factor), `years`. One year block: `y`, `src` (index), `flags` (bit set), `sensor` (index into `sensor_labels`), then the parallel arrays `d` (day offsets from the window start, 0 to `days - 1`, ascending), `hot` and `frp`.
 
-**Fire days only.** A day is listed when its harmonized `hot` is 1 or more. A day inside the coverage period that is not listed means 0. Only years with at least one fire day are listed, so a cell's `years` is usually much shorter than the file's `years`. A year block's `src` and `flags` are the window's, taken from the lowest `src_labels` index across the days present.
+**The daily values are raw, and the app scales them (ruling 11).** `hot` and `frp` are what **one named sensor** actually counted, and `sensor` on the year block says which: **Terra before July 2002, Aqua from July 2002 to January 2012, S-NPP from February 2012**. They are not converted here, for two reasons. The method refuses to publish daily harmonized values at all, because a count over fewer than about eight days is strongly biased by the orbit `[V]`; and the conversion publishes a monthly factor, not a daily one, so turning one into the other here would be a modelling step nobody has tested.
+
+**The reading rule, in the words of ruling 11:**
+
+1. A day **before February 2012** has `hot` = the raw count times `k_hot / 1000` of the cell's group (`g`), that calendar month and that period, from `background.json`. `k_cd` is there for a fire-day reading of the same day.
+2. **No background is added to a daily value.** The background in section 7.1 is a monthly rule only.
+3. **`frp` stays raw** and is not converted, which matches the monthly files, where FRP is the sensor's own total.
+4. A day **from February 2012** is used as it is: it is already S-NPP, the reference.
+
+Comparing a Terra or Aqua year with an S-NPP year unscaled would show a false jump at 2012, which is exactly what the factor prevents.
+
+**Fire days only.** A day is listed when its raw `hot` is 1 or more. A day inside the coverage period that is not listed means 0. Only years with at least one fire day are listed, so a cell's `years` is usually much shorter than the file's `years`. A year block's `src` and `flags` are the window's, taken from the lowest `src_labels` index across the days present.
 
 **Usage rule, not a storage rule:** the values are daily, but nothing shorter than `min_compare_days` (8) may be summed and compared, because short runs are badly biased by the orbit `[V]`. M27 sums 8 days. M5 sums the month to date, which is at least 8 days before the comparison is shown.
 
 ```json
 {"schema":"emerge-daily-1","example":true,"built":"2026-11-14",
  "tile":{"lat0":40,"lon0":20,"deg":5},"type":"cell","cell_deg":0.25,
+ "values":"raw","sensor_labels":["terra","aqua","snpp"],
  "window":{"days":45,"latest_day":"2025-12-31","start_md":"11-17","end_md":"12-31",
            "wraps_year":false},
  "years":[2000,2001],
@@ -358,10 +445,11 @@ One cell: `type`, `id`, `lat`, `lon`, `precision_radius_km`, `years`. One year b
  "flag_labels":["example","partial_month","snpp_gap_filled","low_confidence"],
  "cells":[{"type":"cell","id":264329,"lat":44.125,"lon":22.375,
            "precision_radius_km":17.11,
-           "years":[{"y":2009,"src":1,"flags":1,"d":[7],"hot":[3],"frp":[6]}]}]}
+           "g":"BGR_40",
+           "years":[{"y":2009,"src":1,"flags":1,"sensor":1,"d":[7],"hot":[1],"frp":[6]}]}]}
 ```
 
-Read as: cell 264329 had fire on one day of the 2009 window, offset 7, which is 24 November 2009, with 3 harmonized hotspots and 6 MW, estimated and flagged as an example number.
+Read as: cell 264329, in group `BGR_40`, had fire on one day of the 2009 window, offset 7, which is 24 November 2009, with 1 raw Aqua hotspot (`sensor_labels[1]`) and 6 MW. To compare it with a later year the app multiplies the 1 by `k_hot` of `BGR_40`, November, `estimated_modis`, which in the example set is 3000 thousandths, so 3.0 harmonized hotspots. The 6 MW stays as it is.
 
 ---
 
@@ -404,12 +492,12 @@ Everything the "How we know it's right" page shows (M6). The page renders this f
 
 | Selection | Files |
 |---|---|
-| any first load | `meta.json` |
+| any first load | `meta.json`, `background.json` (background values and conversion factors) and `countries/index.json` |
 | a country | `countries/<ISO3>.json`, and `reported/<ISO3>.json` for the reported card |
 | a point plus a search distance | every `tiles/<key>.json.gz` that overlaps the selection's bounding box, then cells are kept by their centre: inside the distance, **plus the cell that contains the chosen point**, which is always kept because a cell centre can be up to about 19 km away `[V]` |
 | a drawn area | the same tiles for the area's bounding box, then cells whose centre is inside the polygon |
 | "is this month unusual so far", and "this fire vs past fires" | `daily/<key>.json.gz` for the same tiles |
-| the globe layer | `globe/<year>.json` for the year on screen |
+| the globe layer | `globe/<year>.json.gz` for the year on screen |
 | the proof page | `validation.json` |
 | the reported card for a point or an area | `reported/<ISO3>.json` of the country the point falls in, shown as "country total, for context" |
 
@@ -436,13 +524,26 @@ Non-blocking points found while reading the spec and the build plan, and how eac
 
 ---
 
-## 13. How the example files are made and checked
+## 13. The two exporters
+
+| Script | Writes | Numbers |
+|---|---|---|
+| `pipeline/export_examples.py` | the whole file set for Bulgaria and two squares of the USA | measured S-NPP from Feb 2012; stand-ins before that, flagged `example` |
+| `pipeline/export_app.py` | the whole file set for the world | the conversion's own output, `"example": false` |
+
+They share the grid rules, the labels, the writers and the reported figures from one place, so the two cannot drift apart. The real exporter reads five files from the conversion (`cells_monthly`, `countries_monthly`, `cell_groups`, `background`, `factors`), the raw cell-day table for the daily window, and the independent scorer's results for `validation.json`. A missing input is a hard stop that names the file: a missing `factors.parquet` read as a factor of 1 would show the whole pre-2012 daily window far too low.
+
+**The real exporter does not invent anything it was not given.** Its country files map the data provider's own country names to three-letter codes from a table written out in the script; **a name that is not in that table gets no country file and is printed by name in the run output**, never guessed. Its reported files carry the same two verified figures as the example set and no others, so they stay flagged as an example until the rest are fetched. Its `validation.json` is read from the scorer's own score table and committed results, including the one world-gate check that was missed, and it states that the conversion was tested on two countries only.
+
+Every value the conversion gives as a decimal is rounded half up to a whole number on the way out, and a range whose end lands on the wrong side of the value after rounding is pulled back to the value, so `hot_lo <= hot <= hot_hi` always holds. Background values are rounded half up to whole hundredths the same way.
+
+## 14. How the example files are made and checked
 
 ```bash
 python pipeline/export_examples.py --data <data dir> --out web/public/data
 ```
 
-`--data` defaults to `data` beside the repo root and must hold `derived/bg_us/cell_days.parquet`. `--out` defaults to `web/public/data`. The output is deterministic: JSON with no spaces and a fixed field order, and gzip written with no timestamp, so two runs give byte-identical files.
+`--data` defaults to `data` beside the repo root and must hold `derived/bg_us/cell_days.parquet`. `--out` defaults to `web/public/data`. The world export is `python pipeline/export_app.py --in <conversion dir> --out <dir>`. The output is deterministic: JSON with no spaces and a fixed field order, and gzip written with no timestamp, so two runs give byte-identical files.
 
 `tests/contract/test_contract.py` checks the generated files against this page: required fields on every record, `src` inside the five labels and matching the date rule, `hot_lo <= hot <= hot_hi` and the same for `cd`, whole numbers where this page says whole numbers, no negative values, no month before November 2000, each cell id consistent with its own `lat` and `lon`, `precision_radius_km` within 1 per cent of half the cell diagonal, every `.gz` file valid gzip, and that `cd` is not capped at the days in a month.
 

@@ -38,8 +38,9 @@ import { describe, expect, it } from 'vitest';
 import type { Selection, Unit } from '../../src/types/ui';
 import { cellId } from '../../src/lib/data/cell';
 import { getSeries } from '../../src/lib/data/series';
+import { loadMeta as getMeta, loadTiles } from '../../src/lib/data/loaders';
 import { getMonthToDate, getWindowTotals, pastWindow } from '../../src/lib/data/daily';
-import { selectionCells } from '../../src/lib/data/selection';
+import { selectionCells, tilesForSelection } from '../../src/lib/data/selection';
 import { LOGIC_DIR, metaWith, patchedSource, testSource } from './helpers';
 
 const source = testSource();
@@ -163,9 +164,9 @@ interface ExpectedMonth {
   hi: number;
   src: string | null;
   flags: string[];
-  value_x625?: number;
-  lo_x625?: number;
-  hi_x625?: number;
+  value_x62500?: number;
+  lo_x62500?: number;
+  hi_x62500?: number;
 }
 
 describe('series_cases.json', () => {
@@ -185,14 +186,34 @@ describe('series_cases.json', () => {
 
         expect(series.cellCount, `${unit} cellCount`).toBe(expected.cellCount);
         expect(series.lowConfidence, `${unit} lowConfidence`).toBe(expected.lowConfidence);
-        expect(series.months.length, `${unit} seriesLength`).toBe(expected.seriesLength);
+        if (typeof expected.seriesLength === 'number') {
+          expect(series.months.length, `${unit} seriesLength`).toBe(expected.seriesLength);
+        }
 
         const first = series.months[0];
         const last = series.months[series.months.length - 1];
         const asKey = (point: { y: number; m: number }) =>
           `${point.y}-${String(point.m).padStart(2, '0')}`;
-        expect(asKey(first), `${unit} firstMonth`).toBe(expected.firstMonth);
-        expect(asKey(last), `${unit} lastMonth`).toBe(expected.lastMonth);
+        if (expected.firstMonth) expect(asKey(first), `${unit} firstMonth`).toBe(expected.firstMonth);
+        if (expected.lastMonth) expect(asKey(last), `${unit} lastMonth`).toBe(expected.lastMonth);
+
+        if (expected.cellsWithTileData !== undefined || expected.groups !== undefined) {
+          const meta = await getMeta(source);
+          const keys = tilesForSelection(selection).filter((key) => meta.tiles.includes(key));
+          const tiles = await loadTiles(keys, source);
+          const inTiles = new Map<number, string>();
+          for (const tile of tiles) {
+            for (const cell of tile.cells) inTiles.set(cell.id, cell.g);
+          }
+          const mine = selectionCells(selection).cells.filter((cell) => inTiles.has(cell.id));
+          if (expected.cellsWithTileData !== undefined) {
+            expect(mine.length, 'cells that a tile file holds').toBe(expected.cellsWithTileData);
+          }
+          if (expected.groups !== undefined) {
+            const groups = [...new Set(mine.map((cell) => inTiles.get(cell.id) as string))].sort();
+            expect(groups, 'the groups those cells belong to').toEqual(expected.groups);
+          }
+        }
 
         if (expected.weights) {
           const wanted = expected.weights as { id: number; subcells: number }[];
@@ -237,26 +258,26 @@ describe('series_cases.json', () => {
           same(mine.hi, wanted.hi, `${key} ${unit} hi`);
           expect(mine.src, `${key} ${unit} src`).toBe(wanted.src);
           expect(mine.flags, `${key} ${unit} flags`).toEqual(wanted.flags);
-          if (wanted.value_x625 !== undefined) {
+          if (wanted.value_x62500 !== undefined) {
             expect(
-              Math.round((mine.value as number) * 625),
-              `${key} ${unit} value x625`,
-            ).toBe(wanted.value_x625);
-            expect(Math.round((mine.lo as number) * 625), `${key} ${unit} lo x625`).toBe(
-              wanted.lo_x625,
+              Math.round((mine.value as number) * 62500),
+              `${key} ${unit} value x62500`,
+            ).toBe(wanted.value_x62500);
+            expect(Math.round((mine.lo as number) * 62500), `${key} ${unit} lo x62500`).toBe(
+              wanted.lo_x62500,
             );
-            expect(Math.round((mine.hi as number) * 625), `${key} ${unit} hi x625`).toBe(
-              wanted.hi_x625,
+            expect(Math.round((mine.hi as number) * 62500), `${key} ${unit} hi x62500`).toBe(
+              wanted.hi_x62500,
             );
           }
         }
 
         expect(asserted, `months checked in ${unit}`).toBeGreaterThan(0);
 
-        if (expected.sumOfAllMonths_x625) {
-          const wanted = (expected.sumOfAllMonths_x625 as Record<string, number>)[unit];
+        if (expected.sumOfAllMonths_x62500) {
+          const wanted = (expected.sumOfAllMonths_x62500 as Record<string, number>)[unit];
           const total = series.months.reduce((sum, point) => sum + (point.value ?? 0), 0);
-          expect(Math.round(total * 625), `${unit} sum of every month x625`).toBe(wanted);
+          expect(Math.round(total * 62500), `${unit} sum of every month x62500`).toBe(wanted);
         }
 
         if (expected.monthsWithZeroValue) {
@@ -275,8 +296,10 @@ interface ExpectedWindowYear {
   year: number;
   hot: number;
   frp: number;
-  hot_x625: number;
+  hot_x625000: number;
   frp_x625: number;
+  rawHot_x625: number;
+  sensor: string;
   estimated: boolean;
   windowStart: string;
   windowEnd: string;
@@ -337,8 +360,8 @@ describe('daily_cases.json', () => {
           if (!mine) continue;
           same(mine.hot, wanted.hot, `hot of ${wanted.year}`);
           same(mine.frp, wanted.frp, `frp of ${wanted.year}`);
-          expect(Math.round((mine.hot as number) * 625), `hot of ${wanted.year} x625`).toBe(
-            wanted.hot_x625,
+          expect(Math.round((mine.hot as number) * 625000), `hot of ${wanted.year} x625000`).toBe(
+            wanted.hot_x625000,
           );
           expect(Math.round((mine.frp as number) * 625), `frp of ${wanted.year} x625`).toBe(
             wanted.frp_x625,
@@ -347,6 +370,13 @@ describe('daily_cases.json', () => {
           const window = pastWindow(lastDataDay, c.input.days as number, wanted.year);
           expect(window.start, `window start of ${wanted.year}`).toBe(wanted.windowStart);
           expect(window.end, `window end of ${wanted.year}`).toBe(wanted.windowEnd);
+        }
+        if (expected.focus) {
+          const focus = expected.focus as ExpectedWindowYear;
+          const mine = totals.years.find((entry) => entry.year === expected.focusYear);
+          expect(mine, `the focus year ${String(expected.focusYear)} should be there`).toBeDefined();
+          same(mine?.hot, focus.hot, `hot of the focus year`);
+          same(mine?.frp, focus.frp, `frp of the focus year`);
         }
         expect(
           totals.years.length,
@@ -361,19 +391,19 @@ describe('daily_cases.json', () => {
       expect(monthToDate.day, 'day of the month').toBe(expected.dayOfMonth);
       same(monthToDate.current.hot, expected.current, 'the current month to date');
       expect(
-        Math.round((monthToDate.current.hot as number) * 625),
-        'the current month to date x625',
-      ).toBe(expected.current_x625);
+        Math.round((monthToDate.current.hot as number) * 625000),
+        'the current month to date x625000',
+      ).toBe(expected.current_x625000);
 
       const pastYears = expected.pastYears as Record<string, number>;
-      const pastX625 = expected.pastYears_x625 as Record<string, number>;
+      const pastX625 = expected.pastYears_x625000 as Record<string, number>;
       expect(monthToDate.past.length, 'one row per past year').toBe(Object.keys(pastYears).length);
       for (const [year, wanted] of Object.entries(pastYears)) {
         const mine = monthToDate.past.find((entry) => entry.year === Number(year));
         expect(mine, `past year ${year} should be there`).toBeDefined();
         if (!mine) continue;
         same(mine.hot, wanted, `month to date of ${year}`);
-        expect(Math.round((mine.hot as number) * 625), `month to date of ${year} x625`).toBe(
+        expect(Math.round((mine.hot as number) * 625000), `month to date of ${year} x625000`).toBe(
           pastX625[year],
         );
       }
