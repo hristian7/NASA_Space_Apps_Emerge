@@ -763,6 +763,7 @@ def country_residual_pools(model: T1Model, pairs: pd.DataFrame) -> dict:
 
 MIN_CALIB_MONTHS = 12  # held-out country-months before a country gets its own factor
 BAND_FACTOR_CAP = 50.0
+BLEND_PRIOR_MONTHS = 12.0  # pooled-factor weight, in held-out months
 
 
 def band_factor(held: pd.DataFrame, level: float = BAND) -> dict:
@@ -794,10 +795,23 @@ def band_factor(held: pd.DataFrame, level: float = BAND) -> dict:
         k = min(int(np.ceil(level * (n + 1))), n)
         return float(max(np.sort(v)[k - 1], 1.0))
 
-    out = {"*": pick(d["need"].to_numpy()), "_pooled_n": int(len(d)), "_own": []}
+    pooled = pick(d["need"].to_numpy())
+    out = {"*": pooled, "_pooled_n": int(len(d)), "_own": [], "_detail": {}}
     for country, part in d.groupby("country"):
-        if len(part) >= MIN_CALIB_MONTHS:
-            out[country] = pick(part["need"].to_numpy())
+        n = len(part)
+        own = pick(part["need"].to_numpy())
+        # A country's own factor rests on n held-out months, so it is blended
+        # toward the pooled factor with weight n / (n + BLEND_PRIOR_MONTHS).
+        # With many held-out months the own factor is used almost as is.
+        w = n / (n + BLEND_PRIOR_MONTHS)
+        applied = w * own + (1 - w) * pooled
+        out["_detail"][str(country)] = {
+            "held_out_months": int(n),
+            "own_factor": float(own),
+            "applied_factor": float(applied),
+        }
+        if n >= MIN_CALIB_MONTHS:
+            out[str(country)] = float(applied)
             out["_own"].append(str(country))
     return out
 
@@ -806,7 +820,12 @@ def apply_band_factor(cr: pd.DataFrame, factors: dict) -> pd.DataFrame:
     """Widen a country-month range around its prediction by the factor."""
     out = cr.copy()
     f = np.array(
-        [float(factors.get(c, factors["*"])) for c in out["country"].to_numpy()]
+        [
+            float(factors.get(c, factors["*"]))
+            if not str(c).startswith("_")
+            else float(factors["*"])
+            for c in out["country"].to_numpy()
+        ]
     )
     p = out["pred"].to_numpy(dtype=float)
     out["lo"] = np.maximum(p - f * (p - out["lo"].to_numpy(dtype=float)), 0.0)

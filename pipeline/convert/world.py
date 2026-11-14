@@ -230,15 +230,29 @@ def pick_background_form(
         c: float(np.mean((q["lo"] <= q["y"]) & (q["y"] <= q["hi"])))
         for c, q in after_f.groupby("country")
     }
+    raw_width = {
+        c: float(np.median((q["hi"] - q["lo"]) / q["pred"].where(q["pred"] > 0)))
+        for c, q in held.groupby("country")
+    }
     report_calib = {
         "pooled_factor": calib["*"],
         "countries_with_their_own_factor": len(calib["_own"]),
         "min_held_out_months_for_own_factor": M.MIN_CALIB_MONTHS,
+        "blend_prior_months": M.BLEND_PRIOR_MONTHS,
         "median_own_factor": float(
-            np.median([calib[c] for c in calib["_own"]]) if calib["_own"] else calib["*"]
+            np.median([calib["_detail"][c]["own_factor"] for c in calib["_detail"]])
         ),
         "mean_inner_coverage_before": float(np.mean(list(before.values()))),
         "mean_inner_coverage_after": float(np.mean(list(after.values()))),
+        "per_country": {
+            c: calib["_detail"][c]
+            | {
+                "inner_coverage_before": before.get(c),
+                "inner_coverage_after": after.get(c),
+                "median_relative_width_before_the_factor": raw_width.get(c),
+            }
+            for c in sorted(calib["_detail"])
+        },
     }
     return index, picks_form, scores, calib, report_calib
 
@@ -581,11 +595,20 @@ def joint_country_ranges(
         )
         del frame
     joined = pd.concat(out, ignore_index=True)
+    joined["lo_raw"] = joined["lo"]
+    joined["hi_raw"] = joined["hi"]
     state = A3_STATE.get((unit, sat))
     if state is not None and len(state) > 2:
-        joined = M.apply_band_factor(joined, state[2])
+        widened = M.apply_band_factor(joined, state[2])
+        joined[["lo", "hi"]] = widened[["lo", "hi"]]
     return joined.rename(
-        columns={"pred": f"{unit}_joint", "lo": f"{unit}_joint_lo", "hi": f"{unit}_joint_hi"}
+        columns={
+            "pred": f"{unit}_joint",
+            "lo": f"{unit}_joint_lo",
+            "hi": f"{unit}_joint_hi",
+            "lo_raw": f"{unit}_joint_lo_raw",
+            "hi_raw": f"{unit}_joint_hi_raw",
+        }
     )
 
 
@@ -594,15 +617,22 @@ def centre_band(out: pd.DataFrame, joint: pd.DataFrame, unit: str) -> pd.DataFra
     merged = out.merge(joint, on=["country", "ym", "src"], how="left")
     p = merged[f"{unit}_joint"].to_numpy(dtype=float)
     ok = np.isfinite(p) & (p > 0)
-    for end in ("lo", "hi"):
+    for end in ("lo", "hi", "lo_raw", "hi_raw"):
         f = np.where(ok, merged[f"{unit}_joint_{end}"].to_numpy(dtype=float) / np.where(ok, p, 1.0), 1.0)
         merged[f"{unit}_{end}"] = np.where(
             merged["src"] == SRC_MEASURED, merged[unit], merged[unit] * f
         )
-    merged[f"{unit}_lo"] = np.minimum(merged[f"{unit}_lo"], merged[unit]).clip(lower=0.0)
-    merged[f"{unit}_hi"] = np.maximum(merged[f"{unit}_hi"], merged[unit])
+    for end in ("lo", "lo_raw"):
+        merged[f"{unit}_{end}"] = np.minimum(
+            merged[f"{unit}_{end}"], merged[unit]
+        ).clip(lower=0.0)
+    for end in ("hi", "hi_raw"):
+        merged[f"{unit}_{end}"] = np.maximum(merged[f"{unit}_{end}"], merged[unit])
     return merged.drop(
-        columns=[f"{unit}_joint", f"{unit}_joint_lo", f"{unit}_joint_hi"]
+        columns=[
+            f"{unit}_joint", f"{unit}_joint_lo", f"{unit}_joint_hi",
+            f"{unit}_joint_lo_raw", f"{unit}_joint_hi_raw",
+        ]
     )
 
 
@@ -795,7 +825,9 @@ def main() -> int:
     cell_groups[["cell", "group_id", "country"]].to_parquet(
         out_dir / "cell_groups.parquet", index=False, compression="zstd"
     )
-    countries.to_parquet(
+    # The pre-factor band ends are a diagnostic, not part of the contract.
+    raw_cols = [c for c in countries.columns if c.endswith("_raw")]
+    countries.drop(columns=raw_cols).to_parquet(
         out_dir / "countries_monthly.parquet", index=False, compression="zstd"
     )
     factors = factors.rename(columns={"moy": "month"})
@@ -829,6 +861,50 @@ def main() -> int:
         "countries_monthly": int(len(countries)),
         "aggregate": int(len(agg)),
     }
+    # Gate: every country has a row for every month of its coverage.
+    first = agg.groupby("country", as_index=False)["ym"].min()
+    last = ym(MEASURED_PERIOD[2], MEASURED_PERIOD[3])
+    have = countries.assign(ym=countries["year"] * 12 + countries["month"] - 1)
+    counts = have.groupby("country", as_index=False)["ym"].count().rename(
+        columns={"ym": "rows"}
+    )
+    want = first.assign(want=lambda d: last - d["ym"] + 1)[["country", "want"]]
+    gate = counts.merge(want, on="country", how="outer").fillna(0)
+    gate["ok"] = gate["rows"] == gate["want"]
+    report["month_completeness"] = {
+        "countries": int(len(gate)),
+        "countries_complete": int(gate["ok"].sum()),
+        "countries_incomplete": sorted(
+            gate.loc[~gate["ok"], "country"].astype(str).tolist()
+        )[:20],
+    }
+    print(f"\nmonth completeness: {int(gate['ok'].sum())} of {len(gate)} countries "
+          f"have a row for every month of their coverage")
+    assert gate["ok"].all(), "a country is missing months"
+
+    # Width of the country band, before and after the conformal factor.
+    est_rows = countries[countries["src"] != SRC_MEASURED]
+    shown = ["Bulgaria", "Slovenia", "Estonia", "Jamaica", "United_States"]
+    width = {}
+    for c in shown:
+        part = est_rows[(est_rows["country"] == c) & (est_rows["cd"] > 0)]
+        if part.empty:
+            continue
+        width[c] = {
+            "months": int(len(part)),
+            "hi_over_value_before": float(np.median(part["cd_hi_raw"] / part["cd"])),
+            "lo_over_value_before": float(np.median(part["cd_lo_raw"] / part["cd"])),
+            "hi_over_value_after": float(np.median(part["cd_hi"] / part["cd"])),
+            "lo_over_value_after": float(np.median(part["cd_lo"] / part["cd"])),
+        }
+    report["country_band_width"] = width
+    print("median hi/value and lo/value over estimated country-months, cd:")
+    for c, d in width.items():
+        print(f"  {c:16s} before {d['hi_over_value_before']:6.2f} / "
+              f"{d['lo_over_value_before']:4.2f}   after "
+              f"{d['hi_over_value_after']:6.2f} / {d['lo_over_value_after']:4.2f}"
+              f"   ({d['months']} months)")
+
     years = {}
     for y in (2001, 2005, 2011, 2013, 2020):
         part = countries[countries["year"] == y]
@@ -922,9 +998,35 @@ def country_rollup(
 ) -> pd.DataFrame:
     """Per country and month, with the background added for every cell of the
     country's cell universe that has no row that month."""
-    listed = cells.groupby(["country", "ym", "src"], as_index=False).agg(
+    seen_rows = cells.groupby(["country", "ym", "src"], as_index=False).agg(
         {**{c: "sum" for c in HARM_COLS}, "gap_filled": "max"}
     )
+    # Every country gets a row for every month from its first covered month to
+    # the end of the record. A month the source sensor never saw still carries
+    # the background of all the country's cells, and a measured month with no
+    # fire is an honest zero.
+    first = agg.groupby("country", as_index=False)["ym"].min().rename(
+        columns={"ym": "first_ym"}
+    )
+    last = ym(MEASURED_PERIOD[2], MEASURED_PERIOD[3])
+    full = pd.concat(
+        [
+            pd.DataFrame({"country": c, "ym": np.arange(int(f), last + 1)})
+            for c, f in zip(first["country"], first["first_ym"])
+        ],
+        ignore_index=True,
+    )
+    full["src"] = np.where(
+        full["ym"] <= ym(TERRA_PERIOD[2], TERRA_PERIOD[3]),
+        SRC_TERRA,
+        np.where(
+            full["ym"] <= ym(MODIS_PERIOD[2], MODIS_PERIOD[3]), SRC_MODIS, SRC_MEASURED
+        ),
+    )
+    listed = full.merge(seen_rows, on=["country", "ym", "src"], how="left")
+    for c in HARM_COLS:
+        listed[c] = listed[c].fillna(0.0)
+    listed["gap_filled"] = listed["gap_filled"].fillna(False)
     # Background for the cells with no row, per country x band x month.
     cells_per = univ.groupby(["country", "group"], as_index=False)["cell"].nunique()
     cells_per = cells_per.rename(columns={"cell": "n_cells"})
@@ -1005,6 +1107,7 @@ def country_rollup(
         ["country", "year", "month"]
         + HARM_COLS
         + ["frp", "terra", "aqua", "snpp", "noaa20", "src", "flags"]
+        + [c for c in ("cd_lo_raw", "cd_hi_raw", "hot_lo_raw", "hot_hi_raw") if c in out]
     )
     return out[cols].sort_values(["country", "year", "month"]).reset_index(drop=True)
 
