@@ -137,7 +137,7 @@ def attach_background(frame: pd.DataFrame, unit: str, sat: str) -> pd.DataFrame:
     state = A3_STATE.get((unit, sat))
     if state is None:
         return frame
-    index, picks_form = state
+    index, picks_form = state[0], state[1]
     parts = []
     for form in sorted(set(picks_form.values())):
         want = {c for c, f in picks_form.items() if f == form}
@@ -166,6 +166,7 @@ def pick_background_form(
     base_hold = M.pair_frame(univ, cm, hold_m, unit, sat, with_truth=True)
     terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
     scores: dict = {}
+    inner_cr: dict = {}
     for form in M.BACKGROUND_FORMS:
         pf = M.with_background(base_fit, index, form)
         hf = M.with_background(base_hold, index, form)
@@ -176,7 +177,11 @@ def pick_background_form(
             got = M.predict_convert(model, hf)
             got["y"] = hf.loc[got.index, "y"]
             scores[form][opt] = M.country_month_scores(got)
-            del model, got
+            pools = M.country_residual_pools(model, pf)
+            cr = M.country_month_ranges(model, M.with_term(hf, n_t), pools, rng)
+            truth = hf.groupby(["country", "ym"], as_index=False)["y"].sum()
+            inner_cr[(form, opt)] = cr.merge(truth, on=["country", "ym"], how="left")
+            del model, got, pools, cr
         del pf, hf
     picks_form = {}
     for country, opt in picks_term.items():
@@ -192,7 +197,36 @@ def pick_background_form(
         ok = [r for r in rows if abs(r[1]["bias"]) <= M.BIAS_GATE]
         pool = ok if ok else rows
         picks_form[country] = min(pool, key=lambda r: r[1]["country_month_nrmse"])[0]
-    return index, picks_form, scores
+    held = pd.concat(
+        [
+            inner_cr[(picks_form[c], picks_term[c])].query("country == @c")
+            for c in picks_form
+            if (picks_form[c], picks_term[c]) in inner_cr
+        ],
+        ignore_index=True,
+    )
+    calib = M.band_factor(held)
+    before = {
+        c: float(np.mean((q["lo"] <= q["y"]) & (q["y"] <= q["hi"])))
+        for c, q in held.groupby("country")
+    }
+    after_f = M.apply_band_factor(held, calib)
+    after_f["y"] = held["y"].to_numpy()
+    after = {
+        c: float(np.mean((q["lo"] <= q["y"]) & (q["y"] <= q["hi"])))
+        for c, q in after_f.groupby("country")
+    }
+    report_calib = {
+        "pooled_factor": calib["*"],
+        "countries_with_their_own_factor": len(calib["_own"]),
+        "min_held_out_months_for_own_factor": M.MIN_CALIB_MONTHS,
+        "median_own_factor": float(
+            np.median([calib[c] for c in calib["_own"]]) if calib["_own"] else calib["*"]
+        ),
+        "mean_inner_coverage_before": float(np.mean(list(before.values()))),
+        "mean_inner_coverage_after": float(np.mean(list(after.values()))),
+    }
+    return index, picks_form, scores, calib, report_calib
 
 
 def fit_options(
@@ -384,14 +418,13 @@ def harmonize(
         report["a3_background"] = {}
         for sat in ("Terra", "Aqua"):
             for unit in M.UNITS:
-                index, picks_form, scores = pick_background_form(
+                index, picks_form, scores, calib, rep = pick_background_form(
                     cm, univ, unit, sat, M.K_RATIO_CD * k_scale[unit], picks, rng
                 )
-                A3_STATE[(unit, sat)] = (index, picks_form)
+                A3_STATE[(unit, sat)] = (index, picks_form, calib)
                 report["a3_background"][f"{sat}_{unit}"] = {
-                    "picks": picks_form,
-                    "counts": pd.Series(picks_form).value_counts().to_dict(),
-                    "inner_scores": scores,
+                    "picks": pd.Series(picks_form).value_counts().to_dict(),
+                    "country_band_calibration": rep,
                 }
     for src, (frame, sat) in est.items():
         per_unit = {}
@@ -529,6 +562,9 @@ def joint_country_ranges(
         )
         del frame
     joined = pd.concat(out, ignore_index=True)
+    state = A3_STATE.get((unit, sat))
+    if state is not None and len(state) > 2:
+        joined = M.apply_band_factor(joined, state[2])
     return joined.rename(
         columns={"pred": f"{unit}_joint", "lo": f"{unit}_joint_lo", "hi": f"{unit}_joint_hi"}
     )
@@ -660,10 +696,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="World run of the scored A2 conversion")
     ap.add_argument("--data", default=str(ROOT / "data"))
     ap.add_argument("--threads", type=int, default=16)
-    ap.add_argument("--model", choices=("A2", "A3"), default="A2",
-                    help="A2 is the scored model and the default. A3 uses the "
-                         "background that follows MODIS activity; the scorer "
-                         "decides whether it replaces A2.")
+    ap.add_argument("--model", choices=("A2", "A3"), default="A3",
+                    help="A3 is the adopted model and the default. A2 is the "
+                         "earlier scored model, kept so the bake-off rows can "
+                         "be reproduced.")
     ap.add_argument("--check-bakeoff", action="store_true")
     args = ap.parse_args()
     data = Path(args.data).resolve()
@@ -774,6 +810,25 @@ def main() -> int:
         "countries_monthly": int(len(countries)),
         "aggregate": int(len(agg)),
     }
+    years = {}
+    for y in (2001, 2005, 2011, 2013, 2020):
+        part = countries[countries["year"] == y]
+        years[y] = {
+            "cd": float(part["cd"].sum()),
+            "cd_lo": float(part["cd_lo"].sum()),
+            "cd_hi": float(part["cd_hi"].sum()),
+            "src": sorted(set(part["src"])),
+        }
+    report["world_year_totals"] = years
+    report["world_year_totals_note"] = (
+        "Fire cell-days added over every country and month of the year. The range "
+        "is the sum of the calibrated country-month bands, so it is itself an "
+        "addition and not a jointly computed world band."
+    )
+    print("\nworld fire cell-days per year, harmonized:")
+    for y, d in years.items():
+        print(f"  {y}  {d['cd']:14,.0f}   range {d['cd_lo']:12,.0f} to {d['cd_hi']:12,.0f}"
+              f"   {','.join(d['src'])}")
     report["seconds_total"] = round(time.time() - t0, 1)
     control_totals(data, per_cell, countries, report, args.threads)
     if args.check_bakeoff:

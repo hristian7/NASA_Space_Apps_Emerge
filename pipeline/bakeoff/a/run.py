@@ -744,6 +744,61 @@ def country_residual_pools(model: T1Model, pairs: pd.DataFrame) -> dict:
     return pools
 
 
+MIN_CALIB_MONTHS = 12  # held-out country-months before a country gets its own factor
+BAND_FACTOR_CAP = 50.0
+
+
+def band_factor(held: pd.DataFrame, level: float = BAND) -> dict:
+    """Split-conformal widening factor for a country-month range.
+
+    `held` carries `country`, `pred`, `lo`, `hi` and the measured `y` for the
+    inner holdout. For each held-out month the factor that would just cover it
+    is measured on the side it falls, and the factor kept is the one that covers
+    `level` of them: the ceil(level x (n + 1)) / n order statistic, which is the
+    usual split-conformal choice. A country with fewer than
+    MIN_CALIB_MONTHS held-out months uses the pooled factor instead.
+    """
+    d = held.copy()
+    p = d["pred"].to_numpy(dtype=float)
+    y = d["y"].to_numpy(dtype=float)
+    lo_w = np.maximum(p - d["lo"].to_numpy(dtype=float), 0.0)
+    hi_w = np.maximum(d["hi"].to_numpy(dtype=float) - p, 0.0)
+    need = np.where(
+        y < p,
+        np.divide(p - y, lo_w, out=np.full_like(p, BAND_FACTOR_CAP), where=lo_w > 0),
+        np.divide(y - p, hi_w, out=np.full_like(p, BAND_FACTOR_CAP), where=hi_w > 0),
+    )
+    d["need"] = np.clip(np.nan_to_num(need, nan=BAND_FACTOR_CAP), 0.0, BAND_FACTOR_CAP)
+
+    def pick(v: np.ndarray) -> float:
+        n = len(v)
+        if n == 0:
+            return 1.0
+        k = min(int(np.ceil(level * (n + 1))), n)
+        return float(max(np.sort(v)[k - 1], 1.0))
+
+    out = {"*": pick(d["need"].to_numpy()), "_pooled_n": int(len(d)), "_own": []}
+    for country, part in d.groupby("country"):
+        if len(part) >= MIN_CALIB_MONTHS:
+            out[country] = pick(part["need"].to_numpy())
+            out["_own"].append(str(country))
+    return out
+
+
+def apply_band_factor(cr: pd.DataFrame, factors: dict) -> pd.DataFrame:
+    """Widen a country-month range around its prediction by the factor."""
+    out = cr.copy()
+    f = np.array(
+        [float(factors.get(c, factors["*"])) for c in out["country"].to_numpy()]
+    )
+    p = out["pred"].to_numpy(dtype=float)
+    out["lo"] = np.maximum(p - f * (p - out["lo"].to_numpy(dtype=float)), 0.0)
+    out["hi"] = p + f * (out["hi"].to_numpy(dtype=float) - p)
+    out["lo"] = np.minimum(out["lo"], p)
+    out["hi"] = np.maximum(out["hi"], p)
+    return out
+
+
 # ----------------------------------------------------------------- run
 
 
@@ -878,7 +933,7 @@ def main() -> int:
     # Both A2 and A3 also get country-month rows whose range is computed
     # jointly rather than by adding cell ranges.
     rng3 = np.random.default_rng(SEED + 2)
-    a3_inner, a3_insample, a3_counts = {}, {}, {}
+    a3_inner, a3_insample, a3_counts, a3_calib = {}, {}, {}, {}
     terms = {n: (t, k) for n, t, k in A2_OPTIONS}
     t_a3 = time.time()
     for test, win in TESTS.items():
@@ -897,7 +952,7 @@ def main() -> int:
             assert not set(i_hold["ym"]) & set(pred_m.tolist()), "inner holdout leak"
             opts = sorted(set(picks_term.values()))
 
-            scores, cover = {}, {}
+            scores, cover, inner_cr = {}, {}, {}
             for form in BACKGROUND_FORMS:
                 pf = with_background(i_fit, index, form)
                 hf = with_background(i_hold, index, form)
@@ -920,7 +975,8 @@ def main() -> int:
                         )
                         for c, p in cr.groupby("country")
                     }
-                    del m_i, got, cr
+                    inner_cr[(form, opt)] = cr
+                    del m_i, got
 
             picks_form = {}
             for country, opt in picks_term.items():
@@ -935,6 +991,33 @@ def main() -> int:
                 picks_form[country] = min(
                     pool, key=lambda r: r[1]["country_month_nrmse"]
                 )[0]
+            held = pd.concat(
+                [
+                    inner_cr[(picks_form[c], picks_term[c])].query("country == @c")
+                    for c in picks_form
+                    if (picks_form[c], picks_term[c]) in inner_cr
+                ],
+                ignore_index=True,
+            )
+            calib = band_factor(held)
+            cov_before = {
+                c: float(np.mean((p["lo"] <= p["y"]) & (p["y"] <= p["hi"])))
+                for c, p in held.groupby("country")
+            }
+            after = apply_band_factor(held, calib)
+            after["y"] = held["y"].to_numpy()
+            cov_after = {
+                c: float(np.mean((p["lo"] <= p["y"]) & (p["y"] <= p["hi"])))
+                for c, p in after.groupby("country")
+            }
+            a3_calib[key] = {
+                "factors": {k: v for k, v in calib.items() if not k.startswith("_")},
+                "countries_with_their_own_factor": calib["_own"],
+                "pooled_factor_used_otherwise": calib["*"],
+                "min_held_out_months_for_own_factor": MIN_CALIB_MONTHS,
+                "inner_coverage_before": cov_before,
+                "inner_coverage_after": cov_after,
+            }
             a3_inner[key] = {
                 "inner_fit": f"{inner_fit[0]}-{inner_fit[1]:02d} to {inner_fit[2]}-12",
                 "inner_holdout": f"{inner_hold[0]}-01 to {inner_hold[2]}-{inner_hold[3]:02d}",
@@ -969,11 +1052,12 @@ def main() -> int:
                         got = predict_convert(model, ff)
                         if label == "A3":
                             q25_rows.append(got[got["pred"] > 0])
-                        ctry_rows.append(
-                            country_month_ranges(
-                                model, with_term(ff, n_t), pools, rng3
-                            )
+                        cr_final = country_month_ranges(
+                            model, with_term(ff, n_t), pools, rng3
                         )
+                        if label == "A3":
+                            cr_final = apply_band_factor(cr_final, calib)
+                        ctry_rows.append(cr_final)
                         del model, ins_got, got
                 if label == "A3":
                     a3_insample[key] = ins
@@ -1173,6 +1257,7 @@ def main() -> int:
                 "MODIS only, which a prediction year may supply."
             ),
             "inner_split": a3_inner,
+            "country_band_calibration": a3_calib,
             "in_sample_fit_years_only": a3_insample,
             "rows": a3_counts,
             "seconds": round(a3_seconds, 1),
