@@ -43,6 +43,6 @@ Each scored 1–5 on five things (fits our data, fast on phones, fits Vercel, qu
 
 ## Watch out
 
-- **Vercel's free plan allows 100 MB of static files** `[V]`. If ours exceed that (estimate 60–80 MB `[U]`), move them to Vercel Blob.
+- **Vercel's free plan allows 100 MB of static files** `[V]`. **Measured later (14 Nov): about 150 MB gzipped** with every column, above the limit, so the tiles go to Vercel Blob or a slimmer format (spec decision D-9). The 60–80 MB estimate was too low.
 - **firms-catalog:** filter with `ST_Intersects` (5 s vs 49 s `[V]`). `type` is empty for the last 3–4 months, so `type = 0` drops recent fires.
 - **Not verified:** DuckDB map tools inside a Vercel function; real phone speed.

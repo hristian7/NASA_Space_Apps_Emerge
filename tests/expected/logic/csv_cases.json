@@ -1,0 +1,277 @@
+{
+ "about": "Section 8. Expected text of monthly CSV body rows and the rules as checks.",
+ "cases": [
+  {
+   "name": "Tiny series, unit hot: body rows (flags joined with a pipe, half rounds up)",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2000,
+      "m": 11,
+      "value": 238.0,
+      "lo": 167.0,
+      "hi": 309.0,
+      "src": "estimated_terra",
+      "flags": [
+       "example"
+      ]
+     },
+     {
+      "y": 2000,
+      "m": 12,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "estimated_terra",
+      "flags": []
+     },
+     {
+      "y": 2012,
+      "m": 2,
+      "value": 1234.4,
+      "lo": 1100.0,
+      "hi": 1300.0,
+      "src": "measured",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2022,
+      "m": 7,
+      "value": null,
+      "lo": null,
+      "hi": null,
+      "src": null,
+      "flags": []
+     },
+     {
+      "y": 2025,
+      "m": 12,
+      "value": 7.0,
+      "lo": 7.0,
+      "hi": 7.0,
+      "src": "measured",
+      "flags": [
+       "low_confidence"
+      ]
+     }
+    ]
+   },
+   "expected": {
+    "bodyRows": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example|partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n"
+   }
+  },
+  {
+   "name": "Rounding to whole numbers at exact halves (half rounds up)",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2020,
+      "m": 1,
+      "value": 2.5,
+      "lo": 0.5,
+      "hi": 3.5,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 2,
+      "value": 1.5,
+      "lo": 1.49,
+      "hi": 1.51,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 3,
+      "value": 0.4999,
+      "lo": 0.0,
+      "hi": 0.5,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 4,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "measured",
+      "flags": []
+     }
+    ]
+   },
+   "expected": {
+    "bodyRows": "2020,1,hot,3,1,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,1,measured,\n2020,4,hot,0,0,0,measured,\n"
+   }
+  },
+  {
+   "name": "Two and three flags in one field",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2021,
+      "m": 6,
+      "value": 12.5,
+      "lo": 10.0,
+      "hi": 15.0,
+      "src": "provisional",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2021,
+      "m": 7,
+      "value": 3.0,
+      "lo": 3.0,
+      "hi": 3.0,
+      "src": "measured",
+      "flags": [
+       "partial_month",
+       "snpp_gap_filled",
+       "low_confidence"
+      ]
+     }
+    ]
+   },
+   "expected": {
+    "bodyRows": "2021,6,hot,13,10,15,provisional,example|partial_month\n2021,7,hot,3,3,3,measured,partial_month|snpp_gap_filled|low_confidence\n"
+   }
+  },
+  {
+   "name": "Rules as checks",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2000,
+      "m": 11,
+      "value": 238.0,
+      "lo": 167.0,
+      "hi": 309.0,
+      "src": "estimated_terra",
+      "flags": [
+       "example"
+      ]
+     },
+     {
+      "y": 2000,
+      "m": 12,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "estimated_terra",
+      "flags": []
+     },
+     {
+      "y": 2012,
+      "m": 2,
+      "value": 1234.4,
+      "lo": 1100.0,
+      "hi": 1300.0,
+      "src": "measured",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2022,
+      "m": 7,
+      "value": null,
+      "lo": null,
+      "hi": null,
+      "src": null,
+      "flags": []
+     },
+     {
+      "y": 2025,
+      "m": 12,
+      "value": 7.0,
+      "lo": 7.0,
+      "hi": 7.0,
+      "src": "measured",
+      "flags": [
+       "low_confidence"
+      ]
+     }
+    ]
+   },
+   "expected": {
+    "checks": [
+     {
+      "rule": "no carriage return anywhere",
+      "type": "doesNotContain",
+      "text": "\r"
+     },
+     {
+      "rule": "every line ends with the line feed character",
+      "type": "everyLineEndsWith",
+      "text": "\n"
+     },
+     {
+      "rule": "null value, low and high are empty fields",
+      "type": "rowEquals",
+      "row": "2022,7,hot,,,,,"
+     },
+     {
+      "rule": "zero is the character 0",
+      "type": "rowEquals",
+      "row": "2000,12,hot,0,0,0,estimated_terra,"
+     },
+     {
+      "rule": "flags in one field are joined with a pipe",
+      "type": "rowEquals",
+      "row": "2012,2,hot,1234,1100,1300,measured,example|partial_month"
+     },
+     {
+      "rule": "a field with a comma is quoted",
+      "type": "csvFieldQuoted",
+      "sample": "a,b",
+      "quoted": "\"a,b\""
+     },
+     {
+      "rule": "column count is 8 in every body row",
+      "type": "fieldCount",
+      "count": 8,
+      "note": "except rows where a quoted field holds commas"
+     },
+     {
+      "rule": "a fire value is never printed with a decimal point",
+      "type": "doesNotMatch",
+      "pattern": "\\.\\d"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Summary CSV: columns and quoting",
+   "input": {
+    "rows": [
+     [
+      "worst month",
+      "2024-07"
+     ],
+     [
+      "note, with comma",
+      "x"
+     ]
+    ]
+   },
+   "expected": {
+    "header": "key,value",
+    "bodyRows": "worst month,2024-07\n\"note, with comma\",x\n"
+   },
+   "note": "Section 8 does not fix the summary key names, so only the two column names and the quoting are pinned."
+  }
+ ]
+}

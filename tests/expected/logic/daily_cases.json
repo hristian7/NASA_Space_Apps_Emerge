@@ -1,0 +1,2694 @@
+{
+ "about": "Sections 4 and 6 inputs from the example daily files with ruling 11: hot of a day before Feb 2012 is the raw count times k_hot / 1000 of the cell's group, month and period; frp is raw. Fields: hot_x625000 and current_x625000 are exact integers (weighted sum x 625 x 1000); rawHot_x625 is the unconverted weighted count. 8 day window totals per year, month to date with each past year, and window date mapping.",
+ "cases": [
+  {
+   "name": "Sofia 50 km: 8 day window ending on the last data day",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "days": 8,
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 270091,
+      "subcells": 63
+     },
+     {
+      "id": 270092,
+      "subcells": 308
+     },
+     {
+      "id": 270093,
+      "subcells": 364
+     },
+     {
+      "id": 270094,
+      "subcells": 214
+     },
+     {
+      "id": 270095,
+      "subcells": 3
+     },
+     {
+      "id": 271530,
+      "subcells": 27
+     },
+     {
+      "id": 271531,
+      "subcells": 558
+     },
+     {
+      "id": 271532,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "subcells": 310
+     },
+     {
+      "id": 272970,
+      "subcells": 65
+     },
+     {
+      "id": 272971,
+      "subcells": 621
+     },
+     {
+      "id": 272972,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "subcells": 411
+     },
+     {
+      "id": 274411,
+      "subcells": 246
+     },
+     {
+      "id": 274412,
+      "subcells": 555
+     },
+     {
+      "id": 274413,
+      "subcells": 613
+     },
+     {
+      "id": 274414,
+      "subcells": 461
+     },
+     {
+      "id": 274415,
+      "subcells": 77
+     }
+    ],
+    "end": "2025-12-31",
+    "start": "2025-12-24",
+    "current": {
+     "year": 2025,
+     "hot": 0.0,
+     "frp": 0.0,
+     "hot_x625000": 0,
+     "frp_x625": 0,
+     "rawHot_x625": 0,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2025-12-24",
+     "windowEnd": "2025-12-31"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2000-12-24",
+      "windowEnd": "2000-12-31"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2001-12-24",
+      "windowEnd": "2001-12-31"
+     },
+     {
+      "year": 2002,
+      "hot": 3.0,
+      "frp": 9.0,
+      "hot_x625000": 1875000,
+      "frp_x625": 5625,
+      "rawHot_x625": 625,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2002-12-24",
+      "windowEnd": "2002-12-31"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2003-12-24",
+      "windowEnd": "2003-12-31"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2004-12-24",
+      "windowEnd": "2004-12-31"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2005-12-24",
+      "windowEnd": "2005-12-31"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2006-12-24",
+      "windowEnd": "2006-12-31"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2007-12-24",
+      "windowEnd": "2007-12-31"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2008-12-24",
+      "windowEnd": "2008-12-31"
+     },
+     {
+      "year": 2009,
+      "hot": 1.1808,
+      "frp": 2.7552,
+      "hot_x625000": 738000,
+      "frp_x625": 1722,
+      "rawHot_x625": 246,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2009-12-24",
+      "windowEnd": "2009-12-31"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2010-12-24",
+      "windowEnd": "2010-12-31"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2011-12-24",
+      "windowEnd": "2011-12-31"
+     },
+     {
+      "year": 2012,
+      "hot": 2.0,
+      "frp": 6.0,
+      "hot_x625000": 1250000,
+      "frp_x625": 3750,
+      "rawHot_x625": 1250,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2012-12-24",
+      "windowEnd": "2012-12-31"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0048,
+      "frp": 0.0096,
+      "hot_x625000": 3000,
+      "frp_x625": 6,
+      "rawHot_x625": 3,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2013-12-24",
+      "windowEnd": "2013-12-31"
+     },
+     {
+      "year": 2014,
+      "hot": 1.592,
+      "frp": 8.8208,
+      "hot_x625000": 995000,
+      "frp_x625": 5513,
+      "rawHot_x625": 995,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2014-12-24",
+      "windowEnd": "2014-12-31"
+     },
+     {
+      "year": 2015,
+      "hot": 3.4736,
+      "frp": 13.3392,
+      "hot_x625000": 2171000,
+      "frp_x625": 8337,
+      "rawHot_x625": 2171,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2015-12-24",
+      "windowEnd": "2015-12-31"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2016-12-24",
+      "windowEnd": "2016-12-31"
+     },
+     {
+      "year": 2017,
+      "hot": 1.0,
+      "frp": 1.0,
+      "hot_x625000": 625000,
+      "frp_x625": 625,
+      "rawHot_x625": 625,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2017-12-24",
+      "windowEnd": "2017-12-31"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2018-12-24",
+      "windowEnd": "2018-12-31"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2019-12-24",
+      "windowEnd": "2019-12-31"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2020-12-24",
+      "windowEnd": "2020-12-31"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2021-12-24",
+      "windowEnd": "2021-12-31"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2022-12-24",
+      "windowEnd": "2022-12-31"
+     },
+     {
+      "year": 2023,
+      "hot": 2.1584,
+      "frp": 8.6336,
+      "hot_x625000": 1349000,
+      "frp_x625": 5396,
+      "rawHot_x625": 1349,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2023-12-24",
+      "windowEnd": "2023-12-31"
+     },
+     {
+      "year": 2024,
+      "hot": 0.1232,
+      "frp": 0.3696,
+      "hot_x625000": 77000,
+      "frp_x625": 231,
+      "rawHot_x625": 77,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2024-12-24",
+      "windowEnd": "2024-12-31"
+     }
+    ],
+    "rank": 10,
+    "of": 26
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: last data day 31 Dec 2025 (D = 31, month complete)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 31,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 3.0,
+     "2003": 2.9568,
+     "2004": 6.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 1.1808,
+     "2010": 0.0144,
+     "2011": 4.4208,
+     "2012": 2.0,
+     "2013": 3.0048,
+     "2014": 1.616,
+     "2015": 4.0896,
+     "2016": 6.0736,
+     "2017": 1.0,
+     "2018": 0.3424,
+     "2019": 1.5008,
+     "2020": 1.0,
+     "2021": 2.0,
+     "2022": 0.0,
+     "2023": 2.1584,
+     "2024": 0.1232
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 1875000,
+     "2003": 1848000,
+     "2004": 3750000,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 738000,
+     "2010": 9000,
+     "2011": 2763000,
+     "2012": 1250000,
+     "2013": 1878000,
+     "2014": 1010000,
+     "2015": 2556000,
+     "2016": 3796000,
+     "2017": 625000,
+     "2018": 214000,
+     "2019": 938000,
+     "2020": 625000,
+     "2021": 1250000,
+     "2022": 0,
+     "2023": 1349000,
+     "2024": 77000
+    },
+    "current_x625000": 0,
+    "median": 1.1808,
+    "mean": 1.699264,
+    "ratioMedian": 0.0,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "below",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 20 Dec 2025 (D = 20)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-20"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 20,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 2.9568,
+     "2004": 6.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0144,
+     "2011": 4.4208,
+     "2012": 0.0,
+     "2013": 3.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 5.704,
+     "2017": 0.0,
+     "2018": 0.3424,
+     "2019": 1.5008,
+     "2020": 1.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 1848000,
+     "2004": 3750000,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 9000,
+     "2011": 2763000,
+     "2012": 0,
+     "2013": 1875000,
+     "2014": 0,
+     "2015": 77000,
+     "2016": 3565000,
+     "2017": 0,
+     "2018": 214000,
+     "2019": 938000,
+     "2020": 625000,
+     "2021": 625000,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "median": 0.0,
+    "mean": 1.042496,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 8 Dec 2025 (D = 8, shortest allowed)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-08"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 8,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 2.9568,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0144,
+     "2011": 4.4208,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 0.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 1848000,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 9000,
+     "2011": 2763000,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 77000,
+     "2016": 0,
+     "2017": 0,
+     "2018": 0,
+     "2019": 0,
+     "2020": 0,
+     "2021": 625000,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "median": 0.0,
+    "mean": 0.340608,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 5 Dec 2025 (D = 5, too early)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-05"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 5,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 2.9568,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 4.4208,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 0.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 1848000,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 2763000,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 77000,
+     "2016": 0,
+     "2017": 0,
+     "2018": 0,
+     "2019": 0,
+     "2020": 0,
+     "2021": 625000,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "status": "too_early",
+    "value": 0.0,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection): 8 day window ending on the last data day",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "days": 8,
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 272983,
+      "subcells": 625
+     }
+    ],
+    "end": "2025-12-31",
+    "start": "2025-12-24",
+    "current": {
+     "year": 2025,
+     "hot": 1.0,
+     "frp": 5.0,
+     "hot_x625000": 625000,
+     "frp_x625": 3125,
+     "rawHot_x625": 625,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2025-12-24",
+     "windowEnd": "2025-12-31"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2000-12-24",
+      "windowEnd": "2000-12-31"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2001-12-24",
+      "windowEnd": "2001-12-31"
+     },
+     {
+      "year": 2002,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2002-12-24",
+      "windowEnd": "2002-12-31"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2003-12-24",
+      "windowEnd": "2003-12-31"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2004-12-24",
+      "windowEnd": "2004-12-31"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2005-12-24",
+      "windowEnd": "2005-12-31"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2006-12-24",
+      "windowEnd": "2006-12-31"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2007-12-24",
+      "windowEnd": "2007-12-31"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2008-12-24",
+      "windowEnd": "2008-12-31"
+     },
+     {
+      "year": 2009,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2009-12-24",
+      "windowEnd": "2009-12-31"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2010-12-24",
+      "windowEnd": "2010-12-31"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2011-12-24",
+      "windowEnd": "2011-12-31"
+     },
+     {
+      "year": 2012,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2012-12-24",
+      "windowEnd": "2012-12-31"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2013-12-24",
+      "windowEnd": "2013-12-31"
+     },
+     {
+      "year": 2014,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2014-12-24",
+      "windowEnd": "2014-12-31"
+     },
+     {
+      "year": 2015,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2015-12-24",
+      "windowEnd": "2015-12-31"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2016-12-24",
+      "windowEnd": "2016-12-31"
+     },
+     {
+      "year": 2017,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2017-12-24",
+      "windowEnd": "2017-12-31"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2018-12-24",
+      "windowEnd": "2018-12-31"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2019-12-24",
+      "windowEnd": "2019-12-31"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2020-12-24",
+      "windowEnd": "2020-12-31"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2021-12-24",
+      "windowEnd": "2021-12-31"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2022-12-24",
+      "windowEnd": "2022-12-31"
+     },
+     {
+      "year": 2023,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2023-12-24",
+      "windowEnd": "2023-12-31"
+     },
+     {
+      "year": 2024,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2024-12-24",
+      "windowEnd": "2024-12-31"
+     }
+    ],
+    "rank": 1,
+    "of": 26
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: last data day 31 Dec 2025 (D = 31, month complete)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 31,
+    "current": 1.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 8.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625000,
+     "2014": 0,
+     "2015": 0,
+     "2016": 5000000,
+     "2017": 0,
+     "2018": 625000,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 625000,
+    "median": 0.0,
+    "mean": 0.4,
+    "ratioMedian": null,
+    "ratioMean": 2.5,
+    "higherThan": 22,
+    "status": "above",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 20 Dec 2025 (D = 20)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-20"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 20,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 6.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625000,
+     "2014": 0,
+     "2015": 0,
+     "2016": 3750000,
+     "2017": 0,
+     "2018": 625000,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "median": 0.0,
+    "mean": 0.32,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 8 Dec 2025 (D = 8, shortest allowed)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-08"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 8,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 3.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625000,
+     "2014": 0,
+     "2015": 0,
+     "2016": 1875000,
+     "2017": 0,
+     "2018": 625000,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "median": 0.0,
+    "mean": 0.2,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 5 Dec 2025 (D = 5, too early)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-05"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 5,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625000": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 0,
+     "2016": 0,
+     "2017": 0,
+     "2018": 625000,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625000": 0,
+    "status": "too_early",
+    "value": 0.0,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 25
+   }
+  },
+  {
+   "name": "Terra-period year 2001, cell 265771: 8 day window ending on 2025-11-24",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 43.875,
+     "lon": 22.875,
+     "radiusKm": 10
+    },
+    "days": 8,
+    "lastDataDay": "2025-11-24"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 265771,
+      "subcells": 625
+     }
+    ],
+    "end": "2025-11-24",
+    "start": "2025-11-17",
+    "current": {
+     "year": 2025,
+     "hot": 0.0,
+     "frp": 0.0,
+     "hot_x625000": 0,
+     "frp_x625": 0,
+     "rawHot_x625": 0,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2025-11-17",
+     "windowEnd": "2025-11-24"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2000-11-17",
+      "windowEnd": "2000-11-24"
+     },
+     {
+      "year": 2001,
+      "hot": 6.0,
+      "frp": 21.0,
+      "hot_x625000": 3750000,
+      "frp_x625": 13125,
+      "rawHot_x625": 1250,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2001-11-17",
+      "windowEnd": "2001-11-24"
+     },
+     {
+      "year": 2002,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2002-11-17",
+      "windowEnd": "2002-11-24"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2003-11-17",
+      "windowEnd": "2003-11-24"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2004-11-17",
+      "windowEnd": "2004-11-24"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2005-11-17",
+      "windowEnd": "2005-11-24"
+     },
+     {
+      "year": 2006,
+      "hot": 3.0,
+      "frp": 48.0,
+      "hot_x625000": 1875000,
+      "frp_x625": 30000,
+      "rawHot_x625": 625,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2006-11-17",
+      "windowEnd": "2006-11-24"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2007-11-17",
+      "windowEnd": "2007-11-24"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2008-11-17",
+      "windowEnd": "2008-11-24"
+     },
+     {
+      "year": 2009,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2009-11-17",
+      "windowEnd": "2009-11-24"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2010-11-17",
+      "windowEnd": "2010-11-24"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2011-11-17",
+      "windowEnd": "2011-11-24"
+     },
+     {
+      "year": 2012,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2012-11-17",
+      "windowEnd": "2012-11-24"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2013-11-17",
+      "windowEnd": "2013-11-24"
+     },
+     {
+      "year": 2014,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2014-11-17",
+      "windowEnd": "2014-11-24"
+     },
+     {
+      "year": 2015,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2015-11-17",
+      "windowEnd": "2015-11-24"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2016-11-17",
+      "windowEnd": "2016-11-24"
+     },
+     {
+      "year": 2017,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2017-11-17",
+      "windowEnd": "2017-11-24"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2018-11-17",
+      "windowEnd": "2018-11-24"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2019-11-17",
+      "windowEnd": "2019-11-24"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2020-11-17",
+      "windowEnd": "2020-11-24"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2021-11-17",
+      "windowEnd": "2021-11-24"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2022-11-17",
+      "windowEnd": "2022-11-24"
+     },
+     {
+      "year": 2023,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2023-11-17",
+      "windowEnd": "2023-11-24"
+     },
+     {
+      "year": 2024,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2024-11-17",
+      "windowEnd": "2024-11-24"
+     }
+    ],
+    "rank": 3,
+    "of": 26,
+    "focusYear": 2001,
+    "focus": {
+     "year": 2001,
+     "hot": 6.0,
+     "frp": 21.0,
+     "hot_x625000": 3750000,
+     "frp_x625": 13125,
+     "rawHot_x625": 1250,
+     "sensor": "terra",
+     "estimated": true,
+     "windowStart": "2001-11-17",
+     "windowEnd": "2001-11-24"
+    }
+   }
+  },
+  {
+   "name": "Aqua-period year 2005, cell 271535: 8 day window ending on 2025-11-27",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.875,
+     "lon": 23.875,
+     "radiusKm": 10
+    },
+    "days": 8,
+    "lastDataDay": "2025-11-27"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 271535,
+      "subcells": 625
+     }
+    ],
+    "end": "2025-11-27",
+    "start": "2025-11-20",
+    "current": {
+     "year": 2025,
+     "hot": 0.0,
+     "frp": 0.0,
+     "hot_x625000": 0,
+     "frp_x625": 0,
+     "rawHot_x625": 0,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2025-11-20",
+     "windowEnd": "2025-11-27"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2000-11-20",
+      "windowEnd": "2000-11-27"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2001-11-20",
+      "windowEnd": "2001-11-27"
+     },
+     {
+      "year": 2002,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2002-11-20",
+      "windowEnd": "2002-11-27"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2003-11-20",
+      "windowEnd": "2003-11-27"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2004-11-20",
+      "windowEnd": "2004-11-27"
+     },
+     {
+      "year": 2005,
+      "hot": 9.0,
+      "frp": 42.0,
+      "hot_x625000": 5625000,
+      "frp_x625": 26250,
+      "rawHot_x625": 1875,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2005-11-20",
+      "windowEnd": "2005-11-27"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2006-11-20",
+      "windowEnd": "2006-11-27"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2007-11-20",
+      "windowEnd": "2007-11-27"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2008-11-20",
+      "windowEnd": "2008-11-27"
+     },
+     {
+      "year": 2009,
+      "hot": 6.0,
+      "frp": 15.0,
+      "hot_x625000": 3750000,
+      "frp_x625": 9375,
+      "rawHot_x625": 1250,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2009-11-20",
+      "windowEnd": "2009-11-27"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2010-11-20",
+      "windowEnd": "2010-11-27"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2011-11-20",
+      "windowEnd": "2011-11-27"
+     },
+     {
+      "year": 2012,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2012-11-20",
+      "windowEnd": "2012-11-27"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2013-11-20",
+      "windowEnd": "2013-11-27"
+     },
+     {
+      "year": 2014,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2014-11-20",
+      "windowEnd": "2014-11-27"
+     },
+     {
+      "year": 2015,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2015-11-20",
+      "windowEnd": "2015-11-27"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2016-11-20",
+      "windowEnd": "2016-11-27"
+     },
+     {
+      "year": 2017,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2017-11-20",
+      "windowEnd": "2017-11-27"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2018-11-20",
+      "windowEnd": "2018-11-27"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2019-11-20",
+      "windowEnd": "2019-11-27"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2020-11-20",
+      "windowEnd": "2020-11-27"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2021-11-20",
+      "windowEnd": "2021-11-27"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2022-11-20",
+      "windowEnd": "2022-11-27"
+     },
+     {
+      "year": 2023,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2023-11-20",
+      "windowEnd": "2023-11-27"
+     },
+     {
+      "year": 2024,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2024-11-20",
+      "windowEnd": "2024-11-27"
+     }
+    ],
+    "rank": 3,
+    "of": 26,
+    "focusYear": 2005,
+    "focus": {
+     "year": 2005,
+     "hot": 9.0,
+     "frp": 42.0,
+     "hot_x625000": 5625000,
+     "frp_x625": 26250,
+     "rawHot_x625": 1875,
+     "sensor": "aqua",
+     "estimated": true,
+     "windowStart": "2005-11-20",
+     "windowEnd": "2005-11-27"
+    }
+   }
+  },
+  {
+   "name": "Measured year 2020, cell 274423: 8 day window ending on 2025-11-24",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.375,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "days": 8,
+    "lastDataDay": "2025-11-24"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 274423,
+      "subcells": 625
+     }
+    ],
+    "end": "2025-11-24",
+    "start": "2025-11-17",
+    "current": {
+     "year": 2025,
+     "hot": 0.0,
+     "frp": 0.0,
+     "hot_x625000": 0,
+     "frp_x625": 0,
+     "rawHot_x625": 0,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2025-11-17",
+     "windowEnd": "2025-11-24"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2000-11-17",
+      "windowEnd": "2000-11-24"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "terra",
+      "estimated": true,
+      "windowStart": "2001-11-17",
+      "windowEnd": "2001-11-24"
+     },
+     {
+      "year": 2002,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2002-11-17",
+      "windowEnd": "2002-11-24"
+     },
+     {
+      "year": 2003,
+      "hot": 3.0,
+      "frp": 19.0,
+      "hot_x625000": 1875000,
+      "frp_x625": 11875,
+      "rawHot_x625": 625,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2003-11-17",
+      "windowEnd": "2003-11-24"
+     },
+     {
+      "year": 2004,
+      "hot": 3.0,
+      "frp": 9.0,
+      "hot_x625000": 1875000,
+      "frp_x625": 5625,
+      "rawHot_x625": 625,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2004-11-17",
+      "windowEnd": "2004-11-24"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2005-11-17",
+      "windowEnd": "2005-11-24"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2006-11-17",
+      "windowEnd": "2006-11-24"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2007-11-17",
+      "windowEnd": "2007-11-24"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2008-11-17",
+      "windowEnd": "2008-11-24"
+     },
+     {
+      "year": 2009,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2009-11-17",
+      "windowEnd": "2009-11-24"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2010-11-17",
+      "windowEnd": "2010-11-24"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "aqua",
+      "estimated": true,
+      "windowStart": "2011-11-17",
+      "windowEnd": "2011-11-24"
+     },
+     {
+      "year": 2012,
+      "hot": 1.0,
+      "frp": 1.0,
+      "hot_x625000": 625000,
+      "frp_x625": 625,
+      "rawHot_x625": 625,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2012-11-17",
+      "windowEnd": "2012-11-24"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2013-11-17",
+      "windowEnd": "2013-11-24"
+     },
+     {
+      "year": 2014,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2014-11-17",
+      "windowEnd": "2014-11-24"
+     },
+     {
+      "year": 2015,
+      "hot": 1.0,
+      "frp": 4.0,
+      "hot_x625000": 625000,
+      "frp_x625": 2500,
+      "rawHot_x625": 625,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2015-11-17",
+      "windowEnd": "2015-11-24"
+     },
+     {
+      "year": 2016,
+      "hot": 1.0,
+      "frp": 4.0,
+      "hot_x625000": 625000,
+      "frp_x625": 2500,
+      "rawHot_x625": 625,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2016-11-17",
+      "windowEnd": "2016-11-24"
+     },
+     {
+      "year": 2017,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2017-11-17",
+      "windowEnd": "2017-11-24"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2018-11-17",
+      "windowEnd": "2018-11-24"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2019-11-17",
+      "windowEnd": "2019-11-24"
+     },
+     {
+      "year": 2020,
+      "hot": 5.0,
+      "frp": 35.0,
+      "hot_x625000": 3125000,
+      "frp_x625": 21875,
+      "rawHot_x625": 3125,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2020-11-17",
+      "windowEnd": "2020-11-24"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2021-11-17",
+      "windowEnd": "2021-11-24"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2022-11-17",
+      "windowEnd": "2022-11-24"
+     },
+     {
+      "year": 2023,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2023-11-17",
+      "windowEnd": "2023-11-24"
+     },
+     {
+      "year": 2024,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625000": 0,
+      "frp_x625": 0,
+      "rawHot_x625": 0,
+      "sensor": "snpp",
+      "estimated": false,
+      "windowStart": "2024-11-17",
+      "windowEnd": "2024-11-24"
+     }
+    ],
+    "rank": 7,
+    "of": 26,
+    "focusYear": 2020,
+    "focus": {
+     "year": 2020,
+     "hot": 5.0,
+     "frp": 35.0,
+     "hot_x625000": 3125000,
+     "frp_x625": 21875,
+     "rawHot_x625": 3125,
+     "sensor": "snpp",
+     "estimated": false,
+     "windowStart": "2020-11-17",
+     "windowEnd": "2020-11-24"
+    }
+   }
+  },
+  {
+   "name": "Window end 2024-02-29, 8 days: 2023 has no 29 Feb, so the window ends 28 Feb",
+   "input": {
+    "end": "2024-02-29",
+    "days": 8,
+    "pastYear": 2023
+   },
+   "expected": {
+    "label": 2023,
+    "start": "2023-02-21",
+    "end": "2023-02-28",
+    "days": [
+     "2023-02-21",
+     "2023-02-22",
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2024-02-29, 8 days: leap year 2020 ends on 29 Feb",
+   "input": {
+    "end": "2024-02-29",
+    "days": 8,
+    "pastYear": 2020
+   },
+   "expected": {
+    "label": 2020,
+    "start": "2020-02-22",
+    "end": "2020-02-29",
+    "days": [
+     "2020-02-22",
+     "2020-02-23",
+     "2020-02-24",
+     "2020-02-25",
+     "2020-02-26",
+     "2020-02-27",
+     "2020-02-28",
+     "2020-02-29"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2024-02-29, 45 days: always exactly 45 days",
+   "input": {
+    "end": "2024-02-29",
+    "days": 45,
+    "pastYear": 2021
+   },
+   "expected": {
+    "label": 2021,
+    "start": "2021-01-15",
+    "end": "2021-02-28",
+    "days": [
+     "2021-01-15",
+     "2021-01-16",
+     "2021-01-17",
+     "2021-01-18",
+     "2021-01-19",
+     "2021-01-20",
+     "2021-01-21",
+     "2021-01-22",
+     "2021-01-23",
+     "2021-01-24",
+     "2021-01-25",
+     "2021-01-26",
+     "2021-01-27",
+     "2021-01-28",
+     "2021-01-29",
+     "2021-01-30",
+     "2021-01-31",
+     "2021-02-01",
+     "2021-02-02",
+     "2021-02-03",
+     "2021-02-04",
+     "2021-02-05",
+     "2021-02-06",
+     "2021-02-07",
+     "2021-02-08",
+     "2021-02-09",
+     "2021-02-10",
+     "2021-02-11",
+     "2021-02-12",
+     "2021-02-13",
+     "2021-02-14",
+     "2021-02-15",
+     "2021-02-16",
+     "2021-02-17",
+     "2021-02-18",
+     "2021-02-19",
+     "2021-02-20",
+     "2021-02-21",
+     "2021-02-22",
+     "2021-02-23",
+     "2021-02-24",
+     "2021-02-25",
+     "2021-02-26",
+     "2021-02-27",
+     "2021-02-28"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2024-03-02, 8 days: current window holds 29 Feb, past 2023 window does not",
+   "input": {
+    "end": "2024-03-02",
+    "days": 8,
+    "pastYear": 2023
+   },
+   "expected": {
+    "label": 2023,
+    "start": "2023-02-23",
+    "end": "2023-03-02",
+    "days": [
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28",
+     "2023-03-01",
+     "2023-03-02"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020 is labelled 2020",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2020
+   },
+   "expected": {
+    "label": 2020,
+    "start": "2019-12-28",
+    "end": "2020-01-04",
+    "days": [
+     "2019-12-28",
+     "2019-12-29",
+     "2019-12-30",
+     "2019-12-31",
+     "2020-01-01",
+     "2020-01-02",
+     "2020-01-03",
+     "2020-01-04"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2011 is labelled 2011 and is estimated",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2011
+   },
+   "expected": {
+    "label": 2011,
+    "start": "2010-12-28",
+    "end": "2011-01-04",
+    "days": [
+     "2010-12-28",
+     "2010-12-29",
+     "2010-12-30",
+     "2010-12-31",
+     "2011-01-01",
+     "2011-01-02",
+     "2011-01-03",
+     "2011-01-04"
+    ],
+    "estimated": true
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2012 is labelled 2012 and is not estimated",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2012
+   },
+   "expected": {
+    "label": 2012,
+    "start": "2011-12-28",
+    "end": "2012-01-04",
+    "days": [
+     "2011-12-28",
+     "2011-12-29",
+     "2011-12-30",
+     "2011-12-31",
+     "2012-01-01",
+     "2012-01-02",
+     "2012-01-03",
+     "2012-01-04"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-12-31, 8 days: no year crossing",
+   "input": {
+    "end": "2025-12-31",
+    "days": 8,
+    "pastYear": 2019
+   },
+   "expected": {
+    "label": 2019,
+    "start": "2019-12-24",
+    "end": "2019-12-31",
+    "days": [
+     "2019-12-24",
+     "2019-12-25",
+     "2019-12-26",
+     "2019-12-27",
+     "2019-12-28",
+     "2019-12-29",
+     "2019-12-30",
+     "2019-12-31"
+    ],
+    "estimated": false
+   }
+  }
+ ]
+}

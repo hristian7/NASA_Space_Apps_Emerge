@@ -1,0 +1,21 @@
+id,country,name,lat,lon,radius_km
+c01,Bulgaria,Capital region,42.70,23.32,50
+c02,Bulgaria,Upper Thracian plain,42.15,24.75,50
+c03,Bulgaria,Danube plain hills,43.08,25.63,50
+c04,Bulgaria,Eastern Rhodope,41.65,25.37,50
+c05,Bulgaria,Black Sea coast north,43.20,27.92,50
+c06,Bulgaria,Northwest lowlands,43.41,23.23,50
+c07,United_States,Alaska interior,64.84,-147.72,50
+c08,United_States,Northern California,40.59,-122.39,50
+c09,United_States,Southern California,34.20,-118.20,50
+c10,United_States,Southeast Florida panhandle,30.44,-84.28,50
+c11,United_States,Southeast Georgia coastal plain,31.20,-82.35,50
+c12,United_States,Southeast Mississippi,31.33,-89.29,50
+c13,United_States,Great Plains western Kansas,37.75,-100.02,50
+c14,United_States,Great Plains grass hills,38.30,-96.50,50
+c15,United_States,Great Plains Sandhills,42.00,-101.00,50
+c16,United_States,Pacific Northwest central Oregon,44.06,-121.31,50
+c17,United_States,Pacific Northwest eastern Washington,47.66,-117.43,50
+c18,United_States,Southwest high plateau,35.20,-111.65,50
+c19,United_States,Northeast coast low fire,42.36,-71.06,50
+c20,United_States,Upper Midwest low fire,44.98,-93.27,50

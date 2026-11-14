@@ -38,6 +38,7 @@ https://firms.modaps.eosdis.nasa.gov/data/country/<folder>/<year>/<folder>_<year
 | Bulgaria, 2024 | 0.1 MB | 0.3 MB | — | `[V]` |
 | Brazil, 2024 | 40.6 MB | 147.1 MB | — | `[V]` |
 | Global, all years | 10.7 GB | 27.2 GB | 15.4 GB | `[D]` |
+| Global, all years, **measured 14 Nov** (country CSVs) | 8.7 GB | 22.2 GB | 12.6 GB | `[V]` (43.5 GB in total; 9.8 GB as zipped global files) |
 
 - **Implication:** per-country on demand is cheap; the whole world is not.
 

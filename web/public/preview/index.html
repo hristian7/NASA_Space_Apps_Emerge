@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="en" data-theme="ember" data-tab="history" data-sheet="half">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>Emerge design preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+    <style>
+      :root,
+      [data-theme="ember"] {
+        --font-ui: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --font-head: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --font-num: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --space: oklch(0.12 0.01 40);
+        --panel: oklch(0.17 0.012 40 / 0.92);
+        --panel-solid: oklch(0.17 0.012 40);
+        --line: oklch(1 0 0 / 0.1);
+        --ink: oklch(0.95 0.01 70);
+        --ink-2: oklch(0.95 0.01 70 / 0.72);
+        --ink-3: oklch(0.95 0.01 70 / 0.55);
+        --accent: oklch(0.76 0.17 55);
+        --empty: oklch(1 0 0 / 0.045);
+        --nodata: oklch(1 0 0 / 0.22);
+        --ramp-0: oklch(0.32 0.09 20);
+        --ramp-1: oklch(0.5 0.17 30);
+        --ramp-2: oklch(0.7 0.18 55);
+        --ramp-3: oklch(0.93 0.12 95);
+        --outline: oklch(0.95 0.05 80);
+        --radius: 14px;
+        --radius-s: 8px;
+      }
+      [data-theme="field"] {
+        --font-ui: "Public Sans", ui-sans-serif, sans-serif;
+        --font-head: "Newsreader", Georgia, serif;
+        --font-num: "Public Sans", ui-sans-serif, sans-serif;
+        --space: oklch(0.93 0.01 230);
+        --panel: oklch(0.99 0.003 90 / 0.95);
+        --panel-solid: oklch(0.99 0.003 90);
+        --line: oklch(0.2 0.02 250 / 0.13);
+        --ink: oklch(0.22 0.02 255);
+        --ink-2: oklch(0.22 0.02 255 / 0.76);
+        --ink-3: oklch(0.22 0.02 255 / 0.6);
+        --accent: oklch(0.52 0.19 35);
+        --empty: oklch(0.22 0.02 255 / 0.05);
+        --nodata: oklch(0.22 0.02 255 / 0.3);
+        --ramp-0: oklch(0.92 0.07 85);
+        --ramp-1: oklch(0.8 0.13 65);
+        --ramp-2: oklch(0.6 0.19 35);
+        --ramp-3: oklch(0.36 0.13 15);
+        --outline: oklch(0.99 0.003 90);
+        --radius: 4px;
+        --radius-s: 2px;
+      }
+      [data-theme="ops"] {
+        --font-ui: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+        --font-head: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+        --font-num: "IBM Plex Mono", ui-monospace, monospace;
+        --space: oklch(0.15 0.015 250);
+        --panel: oklch(0.19 0.015 250 / 0.96);
+        --panel-solid: oklch(0.19 0.015 250);
+        --line: oklch(0.8 0.03 240 / 0.16);
+        --ink: oklch(0.93 0.01 240);
+        --ink-2: oklch(0.93 0.01 240 / 0.74);
+        --ink-3: oklch(0.93 0.01 240 / 0.56);
+        --accent: oklch(0.86 0.17 95);
+        --empty: oklch(1 0 0 / 0.04);
+        --nodata: oklch(1 0 0 / 0.22);
+        --ramp-0: oklch(0.34 0.06 260);
+        --ramp-1: oklch(0.55 0.12 300);
+        --ramp-2: oklch(0.72 0.17 35);
+        --ramp-3: oklch(0.92 0.15 100);
+        --outline: oklch(0.86 0.17 95);
+        --radius: 2px;
+        --radius-s: 1px;
+      }
+      :root {
+        /* EFFIS fire danger classes, very low to extreme. */
+        --d0: oklch(0.72 0.17 145);
+        --d1: oklch(0.88 0.17 100);
+        --d2: oklch(0.76 0.17 65);
+        --d3: oklch(0.62 0.22 30);
+        --d4: oklch(0.45 0.16 25);
+        --d5: oklch(0.38 0.15 320);
+        --sheet: 50dvh;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow-x: clip;
+        background: var(--space);
+        color: var(--ink);
+        font: 400 14px/1.45 var(--font-ui);
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      a {
+        color: inherit;
+      }
+      .num {
+        font-family: var(--font-num);
+        font-variant-numeric: tabular-nums;
+      }
+      #map {
+        position: fixed;
+        inset: 0;
+      }
+      .maplibregl-ctrl-attrib {
+        display: none;
+      }
+      .glass {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px);
+      }
+
+      /* Top bar */
+      .top {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        pointer-events: none;
+        z-index: 4;
+      }
+      .top > * {
+        pointer-events: auto;
+      }
+      .brand {
+        font: 600 20px/1 var(--font-head);
+        letter-spacing: -0.01em;
+        padding: 9px 12px;
+      }
+      .search,
+      .tabs,
+      .lang {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
+      }
+      .search input {
+        width: 130px;
+        border: 0;
+        background: none;
+        padding: 6px 8px;
+        outline: none;
+      }
+      .search input::placeholder {
+        color: var(--ink-3);
+      }
+      .chip {
+        border: 0;
+        background: none;
+        padding: 6px 10px;
+        border-radius: var(--radius-s);
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .chip[aria-pressed="true"],
+      .chip[aria-selected="true"] {
+        background: var(--line);
+        color: var(--ink);
+      }
+      .tabs .chip {
+        padding: 6px 16px;
+        font-weight: 500;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .settings-btn {
+        padding: 3px;
+      }
+      .settings {
+        position: fixed;
+        top: 70px;
+        right: 16px;
+        width: 220px;
+        padding: 12px;
+        z-index: 5;
+      }
+      .settings[hidden] {
+        display: none;
+      }
+      .settings h2 {
+        margin: 0 0 6px;
+        font: 600 12px/1.3 var(--font-ui);
+        color: var(--ink-2);
+      }
+      .settings .row {
+        display: flex;
+        gap: 2px;
+        margin-bottom: 10px;
+      }
+      .settings p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--ink-3);
+      }
+
+      /* Panel */
+      .report {
+        position: fixed;
+        top: 72px;
+        right: 16px;
+        bottom: 104px;
+        width: 400px;
+        overflow-y: auto;
+        padding: 18px 18px 14px;
+        z-index: 3;
+      }
+      .handle {
+        display: none;
+      }
+      .report h1 {
+        margin: 0;
+        font: 600 26px/1.15 var(--font-head);
+        letter-spacing: -0.01em;
+      }
+      .headline {
+        margin: 6px 0 14px;
+        font: 500 16px/1.35 var(--font-ui);
+        text-wrap: pretty;
+      }
+      .headline .num {
+        font-weight: 600;
+      }
+      .headline .up {
+        color: var(--accent);
+      }
+      .report h2 {
+        margin: 0 0 8px;
+        font: 600 12px/1.3 var(--font-ui);
+        color: var(--ink-2);
+      }
+      .modes-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .modes {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-s);
+        flex: 1;
+      }
+      .modes .chip {
+        flex: 1;
+        padding: 6px 4px;
+        font-size: 13px;
+      }
+      .proof {
+        font-size: 12px;
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      section + section {
+        margin-top: 18px;
+      }
+      [data-tab="history"] .fc-only,
+      [data-tab="forecast"] .hi-only {
+        display: none !important;
+      }
+
+      /* Calendar */
+      .cal {
+        display: grid;
+        grid-template-columns: 36px repeat(12, 1fr) 44px;
+        grid-auto-rows: 12px;
+        gap: 3px 2px;
+        font-size: 11px;
+        line-height: 12px;
+        position: relative;
+      }
+      .cal .mh,
+      .cal .yh,
+      .cal .avg {
+        line-height: 12px;
+      }
+      .cal .avgrow {
+        height: 20px;
+      }
+      .cal .mh {
+        text-align: center;
+        color: var(--ink-3);
+      }
+      .cal .yh {
+        color: var(--ink-3);
+        align-self: center;
+        font-family: var(--font-num);
+        padding-left: 6px;
+      }
+      .cal .yh.est {
+        color: var(--ink-2);
+        box-shadow: inset 2px 0 0 var(--ink-3);
+      }
+      .cell {
+        height: 12px;
+        border: 0;
+        padding: 0;
+        border-radius: 1px;
+        background: var(--empty);
+      }
+      .cell.nodata {
+        background: none;
+        box-shadow: inset 0 0 0 1px var(--nodata);
+        cursor: default;
+      }
+      .cell.sel {
+        outline: 2px solid var(--ink);
+        outline-offset: 0;
+        position: relative;
+        z-index: 1;
+      }
+      .tot {
+        align-self: center;
+        height: 7px;
+        border-radius: 1px;
+        background: var(--ink-3);
+      }
+      .tot.cur {
+        background: var(--accent);
+      }
+      .cal .avg {
+        color: var(--ink-3);
+        font-size: 11px;
+        align-self: center;
+        padding-left: 6px;
+      }
+      .avgbar {
+        align-self: end;
+        border-radius: 1px 1px 0 0;
+        background: var(--ink-3);
+        min-height: 1px;
+      }
+      .cal-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 12px;
+        margin-top: 8px;
+        color: var(--ink-3);
+        font-size: 11px;
+      }
+      .ramp {
+        width: 80px;
+        height: 6px;
+        border-radius: 1px;
+        background: linear-gradient(90deg, var(--ramp-0), var(--ramp-1), var(--ramp-2), var(--ramp-3));
+      }
+      .key {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .key-est {
+        width: 2px;
+        height: 11px;
+        background: var(--ink-3);
+      }
+      .key-nodata {
+        width: 11px;
+        height: 11px;
+        box-shadow: inset 0 0 0 1px var(--nodata);
+      }
+
+      /* Cards */
+      .cards,
+      .facts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .card {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-s);
+      }
+      .card .big {
+        font: 500 24px/1.1 var(--font-num);
+        font-variant-numeric: tabular-nums;
+        margin: 4px 0;
+      }
+      .card .big.up {
+        color: var(--accent);
+      }
+      .card p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 12px;
+        text-wrap: pretty;
+      }
+      .card h2 {
+        margin: 0;
+      }
+
+      /* Forecast panel */
+      .danger-now {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 6px 0 16px;
+      }
+      .badge {
+        padding: 8px 12px;
+        border-radius: var(--radius-s);
+        font-weight: 600;
+        color: oklch(0.15 0.01 60);
+        white-space: nowrap;
+      }
+      .badge[data-c="4"],
+      .badge[data-c="5"] {
+        color: oklch(0.98 0.01 60);
+      }
+      .danger-now p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 12px;
+      }
+      .strip {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 3px;
+      }
+      .day {
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+        border: 0;
+        background: none;
+        padding: 4px 0;
+        border-radius: var(--radius-s);
+        font-size: 11px;
+        color: var(--ink-2);
+      }
+      .day.sel {
+        background: var(--line);
+        color: var(--ink);
+      }
+      .day i {
+        display: block;
+        width: 100%;
+        max-width: 26px;
+        height: 22px;
+        border-radius: var(--radius-s);
+        background: var(--empty);
+      }
+      .context {
+        margin: 0;
+        color: var(--ink-2);
+        text-wrap: pretty;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        font-size: 13px;
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: none;
+        padding: 7px 12px;
+        border-radius: var(--radius-s);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--space);
+        font-weight: 600;
+      }
+      .btn:disabled {
+        background: none;
+        border-color: var(--line);
+        color: var(--ink-3);
+        cursor: not-allowed;
+      }
+      .note {
+        margin: 14px 0 0;
+        color: var(--ink-3);
+        font-size: 12px;
+        text-wrap: pretty;
+      }
+
+      /* Timeline */
+      .timeline {
+        position: fixed;
+        left: 16px;
+        right: 432px;
+        bottom: 16px;
+        display: grid;
+        grid-template-columns: auto auto 1fr;
+        align-items: center;
+        gap: 14px;
+        padding: 8px 14px 6px;
+        z-index: 3;
+      }
+      .timeline .when {
+        font: 500 15px/1.15 var(--font-num);
+        min-width: 96px;
+      }
+      .timeline .when small {
+        display: block;
+        font: 400 11px var(--font-ui);
+        color: var(--ink-3);
+      }
+      .play {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: none;
+        font-size: 11px;
+      }
+      [data-theme="ops"] .play {
+        border-radius: var(--radius-s);
+      }
+      [data-tab="forecast"] .play {
+        visibility: hidden;
+      }
+      .track {
+        position: relative;
+        min-width: 0;
+      }
+      .bars {
+        display: block;
+        width: 100%;
+        height: 26px;
+      }
+      .bars rect {
+        fill: var(--ink-3);
+      }
+      .bars rect.sel {
+        fill: var(--accent);
+      }
+      .bars .now {
+        stroke: var(--ink);
+        stroke-width: 1.5;
+      }
+      .track input {
+        width: 100%;
+        margin: 2px 0 0;
+        accent-color: var(--accent);
+      }
+      .ticks {
+        position: relative;
+        height: 14px;
+        color: var(--ink-3);
+        font: 11px var(--font-num);
+      }
+      .ticks span {
+        position: absolute;
+        translate: -50% 0;
+        white-space: nowrap;
+      }
+      .ticks span:first-child {
+        translate: 0 0;
+      }
+      .ticks span:last-child {
+        translate: -100% 0;
+      }
+
+      /* Map legend */
+      .legend {
+        position: fixed;
+        left: 16px;
+        bottom: 98px;
+        padding: 8px 10px;
+        font-size: 11px;
+        color: var(--ink-2);
+        z-index: 3;
+        display: grid;
+        gap: 5px;
+      }
+      .legend .scale {
+        display: flex;
+        gap: 2px;
+      }
+      .legend .scale span {
+        width: 22px;
+        height: 8px;
+        border-radius: 1px;
+      }
+
+      .switcher {
+        position: fixed;
+        left: 16px;
+        top: 72px;
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        z-index: 4;
+        font-size: 12px;
+      }
+      .switcher b {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      @media (max-width: 1100px) {
+        .timeline {
+          right: 16px;
+          bottom: 16px;
+        }
+        .report {
+          bottom: 112px;
+        }
+        .legend {
+          bottom: 112px;
+          left: 16px;
+        }
+      }
+      @media (max-width: 767px) {
+        .brand,
+        .lang,
+        .spacer {
+          display: none;
+        }
+        .search {
+          flex: 1;
+          min-width: 0;
+        }
+        .search input {
+          flex: 1;
+          min-width: 0;
+          width: auto;
+        }
+        .tabs {
+          position: fixed;
+          top: 64px;
+          left: 16px;
+          right: 16px;
+        }
+        .tabs .chip {
+          flex: 1;
+        }
+        .switcher {
+          top: 112px;
+          left: auto;
+          right: 16px;
+        }
+        .report {
+          top: auto;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: auto;
+          height: var(--sheet);
+          border-radius: var(--radius) var(--radius) 0 0;
+          padding-top: 6px;
+          padding-bottom: 24px;
+          transition: height 0.25s ease;
+        }
+        [data-sheet="peek"] {
+          --sheet: 132px;
+        }
+        [data-sheet="half"] {
+          --sheet: 50dvh;
+        }
+        [data-sheet="full"] {
+          --sheet: calc(100dvh - 120px);
+        }
+        .handle {
+          display: block;
+          width: 100%;
+          height: 22px;
+          border: 0;
+          background: none;
+          position: relative;
+        }
+        .handle::after {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 8px;
+          width: 40px;
+          height: 4px;
+          translate: -50% 0;
+          border-radius: 2px;
+          background: var(--ink-3);
+        }
+        .timeline {
+          left: 8px;
+          right: 8px;
+          bottom: calc(var(--sheet) + 8px);
+          grid-template-columns: auto 1fr;
+          padding: 6px 10px 4px;
+          transition: bottom 0.25s ease;
+        }
+        .timeline .play {
+          display: none;
+        }
+        .legend {
+          display: none;
+        }
+        .settings {
+          top: 112px;
+          left: 16px;
+          right: auto;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .report,
+        .timeline {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" aria-label="Globe showing fire activity"></div>
+
+    <header class="top">
+      <span class="brand glass">Emerge</span>
+      <div class="search glass" role="search">
+        <input id="q" type="search" data-i18n-ph="search" placeholder="Search a country" aria-label="Search a country" />
+        <button class="chip" data-country="BGR" aria-pressed="true">Bulgaria</button>
+        <button class="chip" data-country="USA" aria-pressed="false">USA</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="tabs glass" role="tablist" aria-label="View">
+        <button class="chip" role="tab" data-tab="history" aria-selected="true" data-i18n="tabHistory">History</button>
+        <button class="chip" role="tab" data-tab="forecast" aria-selected="false" data-i18n="tabForecast">Forecast</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="lang glass" role="group" aria-label="Language">
+        <button class="chip" data-lang="en" aria-pressed="true">EN</button>
+        <button class="chip" data-lang="bg" aria-pressed="false">БГ</button>
+      </div>
+      <div class="settings-btn glass"><button class="chip" id="settingsToggle" aria-expanded="false" data-i18n="settings">Map</button></div>
+    </header>
+
+    <div class="settings glass" id="settings" hidden>
+      <h2 data-i18n="baseMap">Base map</h2>
+      <div class="row" role="group">
+        <button class="chip" data-base="day" aria-pressed="false" data-i18n="day">Day</button>
+        <button class="chip" data-base="night" aria-pressed="true" data-i18n="night">Night</button>
+      </div>
+      <p data-i18n="moreLayers">Rain, temperature and wind layers come to Forecast later.</p>
+    </div>
+
+    <main class="report glass" id="report" aria-live="polite">
+      <button class="handle" id="handle" aria-label="Resize panel"></button>
+      <h1 id="title">Bulgaria</h1>
+
+      <div class="hi-only">
+        <p class="headline" id="headline"></p>
+        <div class="modes-row">
+          <div class="modes" role="group" aria-label="Values">
+            <button class="chip" data-mode="harm" aria-pressed="true" data-i18n="harm">Fair comparison</button>
+            <button class="chip" data-mode="raw" aria-pressed="false" data-i18n="raw">By satellite</button>
+            <button class="chip" data-mode="frp" aria-pressed="false" data-i18n="frp">Fire heat</button>
+          </div>
+          <a class="proof" href="#proof" data-i18n="proof">How we know</a>
+        </div>
+        <section>
+          <h2 data-i18n="calendar">Fire calendar</h2>
+          <div class="cal" id="cal" role="grid" aria-label="Fire calendar"></div>
+          <div class="cal-foot">
+            <span class="key"><span data-i18n="less">Less</span><span class="ramp"></span><span data-i18n="more">More</span></span>
+            <span class="key"><span class="key-est"></span><span data-i18n="estimated">Estimated from MODIS</span></span>
+            <span class="key"><span class="key-nodata"></span><span data-i18n="nodata">No satellite data</span></span>
+          </div>
+        </section>
+        <section class="cards">
+          <div class="card">
+            <h2 data-i18n="unusual">Is this unusual?</h2>
+            <div class="big num" id="unusualBig"></div>
+            <p id="unusualText"></p>
+          </div>
+          <div class="card">
+            <h2 data-i18n="chance">Chance of a busy month</h2>
+            <div class="big num" id="chanceBig"></div>
+            <p id="chanceText"></p>
+          </div>
+        </section>
+        <div class="actions">
+          <button class="btn primary" id="csv" data-i18n="csv">Download CSV</button>
+          <button class="btn" id="share" data-i18n="share">Share</button>
+        </div>
+      </div>
+
+      <div class="fc-only">
+        <div class="danger-now">
+          <span class="badge" id="badge"></span>
+          <p id="dangerText"></p>
+        </div>
+        <section>
+          <h2 data-i18n="next">Fire danger, next days</h2>
+          <div class="strip" id="strip"></div>
+        </section>
+        <section class="facts">
+          <div class="card">
+            <h2 data-i18n="near24">Fires, last 24 hours</h2>
+            <div class="big num" id="f24"></div>
+            <p id="f24text"></p>
+          </div>
+          <div class="card">
+            <h2 data-i18n="near7">Fires, last 7 days</h2>
+            <div class="big num" id="f7"></div>
+            <p id="f7text"></p>
+          </div>
+        </section>
+        <section>
+          <h2 data-i18n="usually">What usually happens</h2>
+          <p class="context" id="context"></p>
+        </section>
+        <section>
+          <h2 data-i18n="official">Official services</h2>
+          <div class="links" id="links"></div>
+        </section>
+        <div class="actions">
+          <button class="btn" id="share2" data-i18n="share">Share</button>
+        </div>
+      </div>
+
+      <p class="note" id="note"></p>
+    </main>
+
+    <div class="legend glass" id="legend"></div>
+
+    <div class="timeline glass" role="group" aria-label="Time">
+      <button class="play" id="play" aria-label="Play">▶</button>
+      <span class="when num" id="when"></span>
+      <div class="track">
+        <svg class="bars" id="bars" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <input type="range" id="slider" min="0" max="0" value="0" aria-label="Time" />
+        <div class="ticks" id="ticks"></div>
+      </div>
+    </div>
+
+    <nav class="switcher" aria-label="Design direction">
+      <button class="chip" data-theme-pick="ember" aria-pressed="true"><b>A</b> Ember</button>
+      <button class="chip" data-theme-pick="field" aria-pressed="false"><b>B</b> Field</button>
+      <button class="chip" data-theme-pick="ops" aria-pressed="false"><b>C</b> Ops</button>
+    </nav>
+
+    <script>
+      const DANGER = [
+        { max: 5.2, en: "Very low", bg: "Много ниска" },
+        { max: 11.2, en: "Low", bg: "Ниска" },
+        { max: 21.3, en: "Moderate", bg: "Умерена" },
+        { max: 38, en: "High", bg: "Висока" },
+        { max: 50, en: "Very high", bg: "Много висока" },
+        { max: Infinity, en: "Extreme", bg: "Екстремна" },
+      ];
+      const T = {
+        en: {
+          search: "Search a country", tabHistory: "History", tabForecast: "Forecast", settings: "Map",
+          baseMap: "Base map", day: "Day", night: "Night", moreLayers: "Rain, temperature and wind layers come to Forecast later.",
+          harm: "Fair comparison", raw: "By satellite", frp: "Fire heat", proof: "How we know", calendar: "Fire calendar",
+          less: "Less", more: "More", estimated: "Estimated from MODIS", nodata: "No satellite data",
+          unusual: "Is this unusual?", chance: "Chance of a busy month", csv: "Download CSV", share: "Share",
+          next: "Fire danger, next days", near24: "Fires, last 24 hours", near7: "Fires, last 7 days",
+          usually: "What usually happens", official: "Official services", avg: "avg",
+          months: ["J","F","M","A","M","J","J","A","S","O","N","D"],
+          monthNames: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+          monthLong: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+          days: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+          names: { BGR: "Bulgaria", USA: "United States" },
+          unit: { harm: "fire days", raw: "fire days", frp: "MW of fire heat" },
+          headline: (mon, v, unit, rel) => `${mon} · <span class="num">${v}</span> ${unit}${rel ? ` · ${rel}` : ""}`,
+          relUp: (p) => `<span class="up">${p}% above usual</span>`, relDown: (p) => `${p}% below usual`, relSame: "about usual",
+          above: (p) => `${p}% above the usual level for this month`, below: (p) => `${p}% below the usual level for this month`,
+          normal: "About the usual level for this month", none: "No fires recorded this month",
+          chanceText: (k, n, mon) => `${mon} was a busy month in ${k} of ${n} years`,
+          today: "Today", danger: (c) => `${c} fire danger`, fwi: (v, d) => `Fire Weather Index ${v} on ${d}. Official forecast (Copernicus).`,
+          loading: "Loading the official forecast…", failed: "The official forecast could not be loaded right now.",
+          inCountry: "in the country", nearPoint: "within 50 km", closest: (km) => `nearest about ${km} km away`,
+          context: (mon, k, n) => `${mon} has been a busy fire month here in ${k} of the last ${n} years.`,
+          past: "Detected fires", future: "Fire danger forecast", now: "now",
+          noteHistory: "Research prototype. Fire data: NASA FIRMS. Imagery: NASA GIBS. Values before 2012 use a placeholder conversion, not the final model.",
+          noteForecast: "Research prototype. Not an official warning. Follow local authorities (112 in the EU, 911 in the US). Fire danger: Copernicus GWIS (CC BY 4.0). Recent fires: NASA FIRMS, snapshot of 7 to 14 Nov 2026. Tap the globe to pick a point.",
+          legendHistory: "Fire days per cell, this month", legendPast: "Fire detections that day", legendFuture: "Fire danger (official)",
+          point: (la, lo) => `Point ${la}, ${lo}`,
+          proofSoon: "The proof page arrives with the conversion model: tests on unseen years, error ranges, and where the method is weak.",
+        },
+        bg: {
+          search: "Търсене на държава", tabHistory: "История", tabForecast: "Прогноза", settings: "Карта",
+          baseMap: "Основна карта", day: "Ден", night: "Нощ", moreLayers: "Слоеве за дъжд, температура и вятър ще се появят в Прогноза.",
+          harm: "Съпоставими", raw: "По сателит", frp: "Топлина", proof: "Как знаем", calendar: "Пожарен календар",
+          less: "По-малко", more: "Повече", estimated: "Оценка от MODIS", nodata: "Няма сателитни данни",
+          unusual: "Необичайно ли е?", chance: "Шанс за активен месец", csv: "Изтегли CSV", share: "Сподели",
+          next: "Пожарна опасност, следващите дни", near24: "Пожари, последните 24 часа", near7: "Пожари, последните 7 дни",
+          usually: "Какво обикновено става", official: "Официални служби", avg: "ср.",
+          months: ["Я","Ф","М","А","М","Ю","Ю","А","С","О","Н","Д"],
+          monthNames: ["яну","фев","мар","апр","май","юни","юли","авг","сеп","окт","ное","дек"],
+          monthLong: ["януари","февруари","март","април","май","юни","юли","август","септември","октомври","ноември","декември"],
+          days: ["нд","пн","вт","ср","чт","пт","сб"],
+          names: { BGR: "България", USA: "САЩ" },
+          unit: { harm: "пожарни дни", raw: "пожарни дни", frp: "MW топлина" },
+          headline: (mon, v, unit, rel) => `${mon} · <span class="num">${v}</span> ${unit}${rel ? ` · ${rel}` : ""}`,
+          relUp: (p) => `<span class="up">${p}% над обичайното</span>`, relDown: (p) => `${p}% под обичайното`, relSame: "около обичайното",
+          above: (p) => `${p}% над обичайното за този месец`, below: (p) => `${p}% под обичайното за този месец`,
+          normal: "Около обичайното за този месец", none: "Няма регистрирани пожари този месец",
+          chanceText: (k, n, mon) => `${mon} е бил активен месец в ${k} от ${n} години`,
+          today: "Днес", danger: (c) => `${c} пожарна опасност`, fwi: (v, d) => `Индекс на пожарната опасност ${v} за ${d}. Официална прогноза (Copernicus).`,
+          loading: "Зареждане на официалната прогноза…", failed: "Официалната прогноза не може да се зареди в момента.",
+          inCountry: "в страната", nearPoint: "в радиус 50 км", closest: (km) => `най-близкият на около ${km} км`,
+          context: (mon, k, n) => `${mon} е бил активен пожарен месец тук в ${k} от последните ${n} години.`,
+          past: "Засечени пожари", future: "Прогноза за опасност", now: "сега",
+          noteHistory: "Изследователски прототип. Данни: NASA FIRMS. Изображения: NASA GIBS. Стойностите преди 2012 г. използват временно преобразуване.",
+          noteForecast: "Изследователски прототип. Не е официално предупреждение. Следвайте местните власти (112). Опасност: Copernicus GWIS (CC BY 4.0). Пожари: NASA FIRMS, 7 до 14 ноем. 2026. Докоснете глобуса, за да изберете точка.",
+          legendHistory: "Пожарни дни в клетка, този месец", legendPast: "Засечени пожари в този ден", legendFuture: "Пожарна опасност (официална)",
+          point: (la, lo) => `Точка ${la}, ${lo}`,
+          proofSoon: "Страницата с проверката идва с модела за преобразуване.",
+        },
+      };
+      const TODAY = "2026-11-14";
+      const DAYS_BACK = 7, DAYS_AHEAD = 9;
+      const CENTER = { BGR: [42.7, 25.3], USA: [37.5, -119.5] };
+      const LINKS = {
+        BGR: [["EFFIS fire danger", "https://forest-fire.emergency.copernicus.eu/apps/effis.current.situation/"], ["NIMH fire index", "https://meteo.bg/bg/forecasts/fireindex"]],
+        USA: [["NIFC outlooks", "https://www.nifc.gov/nicc/predictive-services/outlooks"], ["GWIS", "https://gwis.jrc.ec.europa.eu/apps/gwis.current.situation/"]],
+      };
+
+      const state = { theme: "ember", lang: "en", country: "BGR", mode: "harm", tab: "history", idx: 0, day: 0, base: "night", point: null };
+      const data = {};
+      let cells = null, recent = null, map, outlines = false;
+      const fwiCache = new Map();
+
+      const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+      const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      const rgb = (n) => {
+        probe.clearRect(0, 0, 1, 1);
+        probe.fillStyle = "#000";
+        probe.fillStyle = css(n);
+        probe.fillRect(0, 0, 1, 1);
+        const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+        return `rgb(${r},${g},${b})`;
+      };
+      const t = (k) => T[state.lang][k];
+      const fmt = (v) => Math.round(v).toLocaleString(state.lang === "bg" ? "bg-BG" : "en-US");
+      const dayDate = (offset) => {
+        const d = new Date(`${TODAY}T12:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + offset);
+        return d.toISOString().slice(0, 10);
+      };
+      const dangerClass = (fwi) => DANGER.findIndex((c) => fwi < c.max);
+
+      function value(r) {
+        if (state.mode === "frp") return r.frp || 0;
+        if (state.mode === "raw") return r.y >= 2012 ? (r.snpp ?? 0) : r.y < 2002 || (r.y === 2002 && r.m < 7) ? r.terra : r.aqua;
+        return r.harm || 0;
+      }
+      function rampColor(f) {
+        const stops = [css("--ramp-0"), css("--ramp-1"), css("--ramp-2"), css("--ramp-3")];
+        const i = Math.min(2, Math.floor(f * 3));
+        const k = Math.min(1, Math.max(0, f * 3 - i));
+        return `color-mix(in oklch, ${stops[i]} ${Math.round((1 - k) * 100)}%, ${stops[i + 1]})`;
+      }
+      const series = () => data[state.country];
+      const shapes = {};
+      function inRing(ring, x, y) {
+        let hit = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const [xi, yi] = ring[i], [xj, yj] = ring[j];
+          if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+        }
+        return hit;
+      }
+      function inCountry(code, lat, lon) {
+        const g = shapes[code];
+        if (!g) return null;
+        const polys = g.type === "Polygon" ? [g.coordinates] : g.coordinates;
+        return polys.some((rings) => inRing(rings[0], lon, lat) && !rings.slice(1).some((h) => inRing(h, lon, lat)));
+      }
+      const near = (f) => {
+        if (state.point) return km(state.point[0], state.point[1], f[0], f[1]) <= 50;
+        if (f[6] !== state.country) return false;
+        const inside = inCountry(state.country, f[0], f[1]);
+        return inside === null ? true : inside;
+      };
+
+      /* History */
+      function usual(r) {
+        const same = series().filter((x) => x.m === r.m && x.y !== r.y).map(value).sort((a, b) => a - b);
+        return same[Math.floor(same.length / 2)] || 0;
+      }
+      function busyCount(m) {
+        const s = series();
+        const all = s.map(value).sort((a, b) => a - b);
+        const busy = all[Math.floor(all.length * 0.75)];
+        const years = s.filter((x) => x.m === m);
+        return { k: years.filter((x) => value(x) >= busy).length, n: years.length };
+      }
+      function renderCalendar() {
+        const s = series();
+        const vals = s.map(value);
+        const sorted = vals.filter((v) => v > 0).sort((a, b) => a - b);
+        const rank = (v) => {
+          let lo = 0, hi = sorted.length;
+          while (lo < hi) { const mid = (lo + hi) >> 1; sorted[mid] < v ? (lo = mid + 1) : (hi = mid); }
+          return sorted.length > 1 ? lo / (sorted.length - 1) : 1;
+        };
+        const yearTot = {};
+        s.forEach((r, i) => (yearTot[r.y] = (yearTot[r.y] || 0) + vals[i]));
+        const totSorted = Object.values(yearTot).sort((a, b) => a - b);
+        const maxTot = totSorted[Math.floor(totSorted.length * 0.95)] || 1;
+        const selY = s[state.idx].y;
+        let html = '<span></span>' + t("months").map((m) => `<span class="mh">${m}</span>`).join("") + '<span class="mh">Σ</span>';
+        for (let y = 2000; y <= 2025; y++) {
+          html += `<span class="yh${y < 2012 ? " est" : ""}">${y}</span>`;
+          for (let m = 1; m <= 12; m++) {
+            const i = s.findIndex((r) => r.y === y && r.m === m);
+            if (i < 0) { html += '<span class="cell nodata" aria-hidden="true"></span>'; continue; }
+            const v = vals[i];
+            const bg = v > 0 ? `background-color:${rampColor(rank(v))}` : "";
+            const label = `${t("monthNames")[m - 1]} ${y}: ${fmt(v)}`;
+            html += `<button class="cell${i === state.idx ? " sel" : ""}" data-i="${i}" tabindex="${i === state.idx ? 0 : -1}" style="${bg}" title="${label}" aria-label="${label}"></button>`;
+          }
+          html += `<span class="tot${y === selY ? " cur" : ""}" data-y="${y}" style="width:${Math.max(2, Math.min(100, ((yearTot[y] || 0) / maxTot) * 100))}%" title="${y}: ${fmt(yearTot[y] || 0)}"></span>`;
+        }
+        const avg = [];
+        for (let m = 1; m <= 12; m++) {
+          const rows = s.filter((r) => r.m === m);
+          avg.push(rows.reduce((a, r) => a + value(r), 0) / rows.length);
+        }
+        const maxAvg = Math.max(...avg);
+        html += `<span class="avg">${t("avg")}</span>` + avg.map((a) => `<span class="avgbar" style="height:${Math.max(1, (a / maxAvg) * 12)}px"></span>`).join("") + "<span></span>";
+        document.getElementById("cal").innerHTML = html;
+      }
+      function renderHistoryText() {
+        const r = series()[state.idx];
+        const v = value(r);
+        const med = usual(r);
+        let rel = "";
+        if (v > 0 && med > 0) {
+          const p = Math.round(((v - med) / med) * 100);
+          rel = Math.abs(p) <= 25 ? t("relSame") : p > 0 ? t("relUp")(p) : t("relDown")(-p);
+        }
+        document.getElementById("headline").innerHTML = t("headline")(`${t("monthLong")[r.m - 1]} ${r.y}`, fmt(v), t("unit")[state.mode], rel);
+        const big = document.getElementById("unusualBig"), txt = document.getElementById("unusualText");
+        if (v === 0) { big.textContent = "0"; big.className = "big num"; txt.textContent = t("none"); }
+        else if (med === 0) { big.textContent = "+"; big.className = "big num up"; txt.textContent = t("above")("∞"); }
+        else {
+          const p = Math.round(((v - med) / med) * 100);
+          big.textContent = `${p > 0 ? "+" : ""}${p}%`;
+          big.className = "big num" + (p > 25 ? " up" : "");
+          txt.textContent = Math.abs(p) <= 25 ? t("normal") : p > 0 ? t("above")(p) : t("below")(-p);
+        }
+        const { k, n } = busyCount(r.m);
+        document.getElementById("chanceBig").textContent = `${Math.round((k / n) * 100)}%`;
+        document.getElementById("chanceText").textContent = t("chanceText")(k, n, t("monthNames")[r.m - 1]);
+      }
+
+      /* Forecast */
+      function km(a, b, c, d) {
+        const r = Math.PI / 180;
+        const x = Math.sin(((c - a) * r) / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(((d - b) * r) / 2) ** 2;
+        return 12742 * Math.asin(Math.sqrt(x));
+      }
+      function recentFor(days) {
+        if (!recent) return [];
+        const cutoff = dayDate(-days + 1);
+        return recent.fires.filter((f) => f[2] >= cutoff && near(f));
+      }
+      function fwiAt(lat, lon, date) {
+        const key = `${lat.toFixed(2)},${lon.toFixed(2)},${date}`;
+        if (fwiCache.has(key)) return fwiCache.get(key);
+        const u = `https://maps.effis.emergency.copernicus.eu/gwis?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&LAYERS=ecmwf.query&QUERY_LAYERS=ecmwf.query&STYLES=&CRS=EPSG:4326&BBOX=${lat - 0.1},${lon - 0.1},${lat + 0.1},${lon + 0.1}&WIDTH=101&HEIGHT=101&I=50&J=50&INFO_FORMAT=text/html&FEATURE_COUNT=1&TIME=${date}`;
+        const p = fetch(u)
+          .then((r) => r.text())
+          .then((h) => {
+            const m = h.replace(/<[^>]*>/g, " ").match(/Fire Weather Index \(FWI\)\s*([-\d.]+)/);
+            return m ? Number(m[1]) : null;
+          })
+          .catch(() => null);
+        fwiCache.set(key, p);
+        return p;
+      }
+      const pointNow = () => state.point || CENTER[state.country];
+      let fwiVals = [];
+      async function renderForecast() {
+        const [lat, lon] = pointNow();
+        const days = Array.from({ length: DAYS_AHEAD + 1 }, (_, i) => i);
+        const shown = Math.max(0, state.day);
+        document.getElementById("strip").innerHTML = days
+          .map((i) => {
+            const d = new Date(`${dayDate(i)}T12:00:00Z`);
+            return `<button class="day${i === shown ? " sel" : ""}" data-day="${i}"><i id="d${i}"></i>${i === 0 ? t("today") : t("days")[d.getUTCDay()]}</button>`;
+          })
+          .join("");
+        const badge = document.getElementById("badge");
+        const text = document.getElementById("dangerText");
+        badge.textContent = "…";
+        badge.style.background = css("--empty");
+        text.textContent = t("loading");
+        const key = `${lat},${lon}`;
+        const vals = await Promise.all(days.map((i) => fwiAt(lat, lon, dayDate(i))));
+        if (state.tab !== "forecast" || `${pointNow()[0]},${pointNow()[1]}` !== key) return;
+        fwiVals = vals;
+        vals.forEach((v, i) => {
+          const el = document.getElementById(`d${i}`);
+          if (el && v != null) { el.style.background = css(`--d${dangerClass(v)}`); el.title = `FWI ${v.toFixed(1)}`; }
+        });
+        const v = vals[shown];
+        if (v == null) { badge.textContent = "?"; text.textContent = t("failed"); }
+        else {
+          const c = dangerClass(v);
+          badge.textContent = t("danger")(DANGER[c][state.lang]);
+          badge.dataset.c = c;
+          badge.style.background = css(`--d${c}`);
+          text.textContent = t("fwi")(v.toFixed(1), dayDate(shown));
+        }
+        renderBars();
+      }
+      function renderForecastFacts() {
+        const scope = state.point ? t("nearPoint") : t("inCountry");
+        document.getElementById("f24").textContent = fmt(recentFor(1).length);
+        document.getElementById("f7").textContent = fmt(recentFor(7).length);
+        let nearest = "";
+        if (state.point && recent) {
+          const ds = recent.fires.filter((f) => f[2] >= dayDate(-6)).map((f) => km(state.point[0], state.point[1], f[0], f[1]));
+          if (ds.length) nearest = ` · ${t("closest")(Math.round(Math.min(...ds)))}`;
+        }
+        document.getElementById("f24text").textContent = scope;
+        document.getElementById("f7text").textContent = scope + nearest;
+        const m = Number(TODAY.slice(5, 7));
+        const { k, n } = busyCount(m);
+        document.getElementById("context").textContent = t("context")(t("monthLong")[m - 1], k, n);
+        document.getElementById("links").innerHTML = LINKS[state.country].map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join("");
+      }
+
+      /* Timeline */
+      function renderBars() {
+        const svg = document.getElementById("bars");
+        const W = 600, H = 26;
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+        let g = "";
+        if (state.tab === "history") {
+          const s = series(), vals = s.map(value);
+          const vs = [...vals].sort((a, b) => a - b), max = vs[Math.floor(vs.length * 0.97)] || 1;
+          const w = W / s.length;
+          s.forEach((r, i) => {
+            const h = Math.max(0.5, Math.min(1, vals[i] / max) * H);
+            g += `<rect x="${i * w}" y="${H - h}" width="${Math.max(0.6, w - 0.4)}" height="${h}"${i === state.idx ? ' class="sel"' : ""}/>`;
+          });
+        } else {
+          const total = DAYS_BACK + DAYS_AHEAD + 1, w = W / total;
+          const counts = [];
+          for (let o = -DAYS_BACK; o <= 0; o++) counts.push(recent ? recent.fires.filter((f) => f[2] === dayDate(o) && near(f)).length : 0);
+          const maxC = Math.max(1, ...counts);
+          counts.forEach((c, i) => {
+            const h = Math.max(0.5, (c / maxC) * H * 0.9);
+            g += `<rect x="${i * w + 1}" y="${H - h}" width="${w - 2}" height="${h}"${i - DAYS_BACK === state.day ? ' class="sel"' : ""}/>`;
+          });
+          fwiVals.forEach((v, i) => {
+            if (v == null || i === 0) return;
+            const h = Math.max(2, Math.min(1, v / 50) * H * 0.9);
+            g += `<rect x="${(DAYS_BACK + i) * w + 1}" y="${H - h}" width="${w - 2}" height="${h}" style="fill:${css(`--d${dangerClass(v)}`)};opacity:${i === state.day ? 1 : 0.6}"/>`;
+          });
+          const nx = (DAYS_BACK + 0.5) * w;
+          g += `<line class="now" x1="${nx}" x2="${nx}" y1="0" y2="${H}"/>`;
+        }
+        svg.innerHTML = g;
+      }
+      function renderTimeline() {
+        const slider = document.getElementById("slider");
+        const ticks = document.getElementById("ticks");
+        if (state.tab === "history") {
+          const s = series();
+          slider.min = 0;
+          slider.max = s.length - 1;
+          slider.value = state.idx;
+          const r = s[state.idx];
+          document.getElementById("when").innerHTML = `${t("monthNames")[r.m - 1]} ${r.y}<small>${r.y < 2012 ? t("estimated") : "VIIRS"}</small>`;
+          ticks.innerHTML = [2001, 2005, 2010, 2015, 2020, 2025]
+            .map((y) => `<span style="left:${(s.findIndex((x) => x.y === y && x.m === 1) / (s.length - 1)) * 100}%">${y}</span>`)
+            .join("");
+        } else {
+          slider.min = -DAYS_BACK;
+          slider.max = DAYS_AHEAD;
+          slider.value = state.day;
+          const d = new Date(`${dayDate(state.day)}T12:00:00Z`);
+          const label = state.day === 0 ? t("today") : `${t("days")[d.getUTCDay()]} ${d.getUTCDate()} ${t("monthNames")[d.getUTCMonth()]}`;
+          document.getElementById("when").innerHTML = `${label}<small>${state.day < 0 ? t("past") : t("future")}</small>`;
+          ticks.innerHTML = `<span style="left:0%">−7</span><span style="left:${(DAYS_BACK / (DAYS_BACK + DAYS_AHEAD)) * 100}%">${t("now")}</span><span style="left:100%">+9</span>`;
+        }
+        renderBars();
+      }
+      function renderLegend() {
+        const el = document.getElementById("legend");
+        if (state.tab === "history") el.innerHTML = `<span>${t("legendHistory")}</span><span class="scale">${[0, 1, 2, 3].map((i) => `<span style="background:var(--ramp-${i})"></span>`).join("")}</span>`;
+        else if (state.day < 0) el.innerHTML = `<span>${t("legendPast")}</span><span class="scale">${[1, 2, 3].map((i) => `<span style="background:var(--ramp-${i})"></span>`).join("")}</span>`;
+        else el.innerHTML = `<span>${t("legendFuture")}</span><span class="scale">${DANGER.map((c, i) => `<span title="${c[state.lang]}" style="background:var(--d${i})"></span>`).join("")}</span>`;
+      }
+
+      /* Map */
+      const GIBS = {
+        day: "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg",
+        night: "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png",
+      };
+      const gwisTiles = (date) => `https://maps.effis.emergency.copernicus.eu/gwis?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=ecmwf.fwi&STYLES=&FORMAT=image/png&TRANSPARENT=true&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256&TIME=${date}`;
+      const fc = (features) => ({ type: "FeatureCollection", features });
+      function cellSquares() {
+        if (!cells) return [];
+        const r = series()[state.idx];
+        return (cells[r.y * 100 + r.m] || []).map(([gy, gx, v]) => {
+          const a = gy * 0.25, b = gx * 0.25;
+          return { type: "Feature", properties: { v }, geometry: { type: "Polygon", coordinates: [[[b, a], [b + 0.25, a], [b + 0.25, a + 0.25], [b, a + 0.25], [b, a]]] } };
+        });
+      }
+      function recentPoints() {
+        if (!recent || state.day > 0) return [];
+        const d = dayDate(Math.min(0, state.day));
+        return recent.fires.filter((f) => f[2] === d).map((f) => ({ type: "Feature", properties: { frp: f[4] }, geometry: { type: "Point", coordinates: [f[1], f[0]] } }));
+      }
+      function renderMap() {
+        if (!map || !map.getSource("cells")) return;
+        const hist = state.tab === "history";
+        map.getSource("cells").setData(fc(hist ? cellSquares() : []));
+        map.getSource("recent").setData(fc(hist ? [] : recentPoints()));
+        const showDanger = !hist && state.day >= 0;
+        if (showDanger) map.getSource("danger").setTiles([gwisTiles(dayDate(state.day))]);
+        map.setLayoutProperty("danger", "visibility", showDanger ? "visible" : "none");
+        const p = state.point;
+        map.getSource("pin").setData(fc(!hist && p ? [{ type: "Feature", geometry: { type: "Point", coordinates: [p[1], p[0]] } }] : []));
+        if (outlines) map.setFilter("outline", ["==", ["get", "id"], state.country === "BGR" ? "100" : "840"]);
+      }
+      function mapPaint() {
+        return {
+          cells: { "fill-color": ["interpolate", ["linear"], ["get", "v"], 1, rgb("--ramp-1"), 15, rgb("--ramp-2"), 80, rgb("--ramp-3")], "fill-opacity": 0.82 },
+          recent: {
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 1.4, 6, 3.5],
+            "circle-color": ["interpolate", ["linear"], ["get", "frp"], 1, rgb("--ramp-1"), 10, rgb("--ramp-2"), 60, rgb("--ramp-3")],
+            "circle-opacity": 0.9,
+          },
+        };
+      }
+      function applyMapTheme() {
+        if (!map || !map.getLayer("cells")) return;
+        const p = mapPaint();
+        for (const [k, v] of Object.entries(p.cells)) map.setPaintProperty("cells", k, v);
+        for (const [k, v] of Object.entries(p.recent)) map.setPaintProperty("recent", k, v);
+        map.setPaintProperty("outline", "line-color", rgb("--outline"));
+        map.setPaintProperty("pin", "circle-stroke-color", rgb("--ink"));
+        map.setPaintProperty("pin", "circle-color", rgb("--accent"));
+        map.setPaintProperty("base", "raster-saturation", state.theme === "ops" ? -0.85 : 0);
+        map.setPaintProperty("base", "raster-brightness-max", state.theme === "ops" ? 0.6 : 1);
+        map.setSky?.({ "sky-color": rgb("--space"), "horizon-color": rgb("--space"), "atmosphere-blend": state.theme === "field" ? 0.3 : 0.8 });
+      }
+      function setBase(base) {
+        state.base = base;
+        press("[data-base]", "base", base);
+        map?.getSource("base")?.setTiles([GIBS[base]]);
+      }
+      function fly() {
+        const c = state.country === "BGR" ? { center: [25.3, 42.7], zoom: 4.6 } : { center: [-98, 39], zoom: 2.4 };
+        const pad = innerWidth >= 768 ? { right: 420, left: 40 } : { bottom: innerHeight * 0.5 };
+        map?.flyTo({ ...c, padding: pad, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1600 });
+      }
+
+      /* Render */
+      function press(selector, attr, val) {
+        document.querySelectorAll(selector).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === val)));
+      }
+      function renderText() {
+        document.documentElement.lang = state.lang;
+        document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+        document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = t(el.dataset.i18nPh)));
+        const p = state.point;
+        document.getElementById("title").textContent = state.tab === "forecast" && p ? t("point")(p[0].toFixed(2), p[1].toFixed(2)) : t("names")[state.country];
+        document.querySelectorAll("[data-country]").forEach((b) => (b.textContent = t("names")[b.dataset.country].replace("United States", "USA")));
+        document.getElementById("note").textContent = state.tab === "history" ? t("noteHistory") : t("noteForecast");
+      }
+      function renderAll() {
+        document.documentElement.dataset.tab = state.tab;
+        renderText();
+        if (state.tab === "history") { renderCalendar(); renderHistoryText(); }
+        else { renderForecastFacts(); renderForecast(); }
+        renderTimeline();
+        renderLegend();
+        renderMap();
+      }
+      function setIdx(i) {
+        state.idx = Math.max(0, Math.min(series().length - 1, i));
+        document.querySelectorAll(".cell.sel").forEach((c) => { c.classList.remove("sel"); c.tabIndex = -1; });
+        const cell = document.querySelector(`.cell[data-i="${state.idx}"]`);
+        if (cell) { cell.classList.add("sel"); cell.tabIndex = 0; }
+        const y = String(series()[state.idx].y);
+        document.querySelectorAll(".tot").forEach((el) => el.classList.toggle("cur", el.dataset.y === y));
+        renderHistoryText();
+        renderTimeline();
+        renderMap();
+      }
+      function setDay(d) {
+        state.day = Math.max(-DAYS_BACK, Math.min(DAYS_AHEAD, d));
+        renderTimeline();
+        renderLegend();
+        renderMap();
+        renderForecast();
+      }
+      function setTheme(theme) {
+        state.theme = theme;
+        document.documentElement.dataset.theme = theme;
+        press("[data-theme-pick]", "themePick", theme);
+        setBase(theme === "ember" ? "night" : "day");
+        renderAll();
+        applyMapTheme();
+        try { localStorage.setItem("emerge-preview-theme", theme); } catch {}
+        syncUrl();
+      }
+      function syncUrl() {
+        const u = new URL(location.href);
+        u.searchParams.set("d", state.theme);
+        u.searchParams.set("tab", state.tab);
+        history.replaceState(null, "", u);
+      }
+
+      const BASE = location.pathname.endsWith("/") ? location.pathname : location.pathname + "/";
+      async function init() {
+        const q = new URLSearchParams(location.search);
+        const [bgr, usa] = await Promise.all(["BGR", "USA"].map((k) => fetch(`${BASE}data/${k}.json`).then((r) => r.json())));
+        data.BGR = bgr;
+        data.USA = usa;
+        let saved = null;
+        try { saved = localStorage.getItem("emerge-preview-theme"); } catch {}
+        const themes = ["ember", "field", "ops"];
+        state.theme = themes.includes(q.get("d")) ? q.get("d") : themes.includes(saved) ? saved : "ember";
+        state.tab = q.get("tab") === "forecast" ? "forecast" : "history";
+        document.documentElement.dataset.theme = state.theme;
+        press("[data-theme-pick]", "themePick", state.theme);
+        document.querySelectorAll("[role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === state.tab)));
+        state.base = state.theme === "ember" ? "night" : "day";
+        press("[data-base]", "base", state.base);
+        state.idx = bgr.findIndex((r) => r.y === 2024 && r.m === 8);
+        renderAll();
+
+        map = new maplibregl.Map({
+          container: "map",
+          style: {
+            version: 8,
+            projection: { type: "globe" },
+            sources: { base: { type: "raster", tiles: [GIBS[state.base]], tileSize: 256, maxzoom: 8 } },
+            layers: [{ id: "base", type: "raster", source: "base" }],
+          },
+          center: [25.3, 42.7],
+          zoom: 1.6,
+          attributionControl: false,
+        });
+        map.on("load", async () => {
+          const p = mapPaint();
+          map.addSource("danger", { type: "raster", tiles: [gwisTiles(TODAY)], tileSize: 256 });
+          map.addLayer({ id: "danger", type: "raster", source: "danger", paint: { "raster-opacity": 0.45 }, layout: { visibility: "none" } });
+          map.addSource("cells", { type: "geojson", data: fc([]) });
+          map.addLayer({ id: "cells", type: "fill", source: "cells", paint: p.cells });
+          map.addSource("recent", { type: "geojson", data: fc([]) });
+          map.addLayer({ id: "recent", type: "circle", source: "recent", paint: p.recent });
+          map.addSource("outline", { type: "geojson", data: fc([]) });
+          map.addLayer({ id: "outline", type: "line", source: "outline", paint: { "line-color": rgb("--outline"), "line-width": 1.6, "line-opacity": 0.9 } });
+          map.addSource("pin", { type: "geojson", data: fc([]) });
+          map.addLayer({ id: "pin", type: "circle", source: "pin", paint: { "circle-radius": 7, "circle-color": rgb("--accent"), "circle-stroke-width": 2, "circle-stroke-color": rgb("--ink") } });
+          applyMapTheme();
+          renderMap();
+          fly();
+          try {
+            const topo = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json").then((r) => r.json());
+            const all = topojson.feature(topo, topo.objects.countries);
+            const keep = all.features.filter((f) => f.id === "100" || f.id === "840").map((f) => ({ ...f, properties: { id: String(f.id) } }));
+            map.getSource("outline").setData(fc(keep));
+            keep.forEach((f) => (shapes[f.properties.id === "100" ? "BGR" : "USA"] = f.geometry));
+            outlines = true;
+            renderAll();
+          } catch {}
+        });
+        map.on("click", (e) => {
+          if (state.tab !== "forecast") return;
+          state.point = [e.lngLat.lat, e.lngLat.lng];
+          renderAll();
+        });
+        window.__preview = { map, state };
+
+        const [text, rec] = await Promise.all([fetch(`${BASE}data/cells.csv`).then((r) => r.text()), fetch(`${BASE}data/recent.json`).then((r) => r.json())]);
+        const out = {};
+        const lines = text.split("\n");
+        for (let i = 1; i < lines.length; i++) {
+          const [, ym, gy, gx, v] = lines[i].split(",");
+          if (!ym) continue;
+          (out[ym] ||= []).push([+gy, +gx, +v]);
+        }
+        cells = out;
+        recent = rec;
+        renderAll();
+      }
+
+      /* Events */
+      const cal = document.getElementById("cal");
+      cal.addEventListener("click", (e) => {
+        const c = e.target.closest(".cell[data-i]");
+        if (c) setIdx(+c.dataset.i);
+      });
+      cal.addEventListener("keydown", (e) => {
+        const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -12, ArrowDown: 12 }[e.key];
+        if (!step) return;
+        e.preventDefault();
+        setIdx(state.idx + step);
+        document.querySelector(`.cell[data-i="${state.idx}"]`)?.focus();
+      });
+      document.getElementById("slider").addEventListener("input", (e) => (state.tab === "history" ? setIdx(+e.target.value) : setDay(+e.target.value)));
+      document.getElementById("strip").addEventListener("click", (e) => {
+        const d = e.target.closest("[data-day]");
+        if (d) setDay(+d.dataset.day);
+      });
+      let timer = null;
+      document.getElementById("play").addEventListener("click", (e) => {
+        if (timer) { clearInterval(timer); timer = null; e.currentTarget.textContent = "▶"; return; }
+        e.currentTarget.textContent = "❚❚";
+        timer = setInterval(() => setIdx(state.idx + 1 >= series().length ? 0 : state.idx + 1), 260);
+      });
+      document.querySelectorAll("[role=tab]").forEach((b) =>
+        b.addEventListener("click", () => {
+          state.tab = b.dataset.tab;
+          document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+          if (timer) document.getElementById("play").click();
+          renderAll();
+          syncUrl();
+        }),
+      );
+      document.querySelectorAll("[data-country]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const r = series()[state.idx];
+          state.country = b.dataset.country;
+          state.point = null;
+          press("[data-country]", "country", state.country);
+          state.idx = Math.max(0, series().findIndex((x) => x.y === r.y && x.m === r.m));
+          renderAll();
+          fly();
+        }),
+      );
+      document.getElementById("q").addEventListener("input", (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        const hit = q.length > 1 && Object.entries({ ...T.en.names, ...T.bg.names }).find(([, n]) => n.toLowerCase().startsWith(q));
+        if (hit) document.querySelector(`[data-country="${hit[0]}"]`).click();
+      });
+      document.querySelectorAll("[data-mode]").forEach((b) =>
+        b.addEventListener("click", () => {
+          state.mode = b.dataset.mode;
+          press("[data-mode]", "mode", state.mode);
+          renderAll();
+        }),
+      );
+      document.querySelectorAll("[data-lang]").forEach((b) =>
+        b.addEventListener("click", () => {
+          state.lang = b.dataset.lang;
+          press("[data-lang]", "lang", state.lang);
+          renderAll();
+        }),
+      );
+      document.querySelectorAll("[data-base]").forEach((b) => b.addEventListener("click", () => setBase(b.dataset.base)));
+      document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.themePick)));
+      document.getElementById("settingsToggle").addEventListener("click", (e) => {
+        const s = document.getElementById("settings");
+        s.hidden = !s.hidden;
+        e.currentTarget.setAttribute("aria-expanded", String(!s.hidden));
+      });
+      document.getElementById("handle").addEventListener("click", () => {
+        const order = ["peek", "half", "full"];
+        const cur = document.documentElement.dataset.sheet;
+        document.documentElement.dataset.sheet = order[(order.indexOf(cur) + 1) % 3];
+      });
+      document.querySelector(".proof").addEventListener("click", (e) => {
+        e.preventDefault();
+        alert(t("proofSoon"));
+      });
+      document.getElementById("csv").addEventListener("click", () => {
+        const rows = series();
+        const head = "year,month,harmonized,low,high,terra,aqua,snpp,noaa20,frp_mw,source,flags";
+        const body = rows.map((r) => [r.y, r.m, r.harm, r.lo ?? "", r.hi ?? "", r.terra, r.aqua, r.snpp ?? "", r.noaa20 ?? "", r.frp, r.src, r.flags].join(","));
+        const blob = new Blob([[head, ...body].join("\n")], { type: "text/csv" });
+        const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `emerge-${state.country}.csv` });
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+      ["share", "share2"].forEach((id) =>
+        document.getElementById(id).addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(location.href); } catch {}
+        }),
+      );
+      init().catch((e) => {
+        document.getElementById("headline").textContent = `Data failed to load: ${e.message}`;
+      });
+    </script>
+  </body>
+</html>

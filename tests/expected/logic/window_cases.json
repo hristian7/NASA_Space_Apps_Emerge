@@ -1,0 +1,513 @@
+{
+ "about": "Section 6. Ranking of the current window against past years, and the estimated flag.",
+ "cases": [
+  {
+   "name": "Highest: current beats every past year",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 100,
+     "frp": 300,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 30,
+      "frp": 90,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 12,
+      "frp": 36,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     },
+     {
+      "year": 2012,
+      "hot": 22,
+      "frp": 66,
+      "estimated": false
+     },
+     {
+      "year": 2013,
+      "hot": 40,
+      "frp": 120,
+      "estimated": false
+     }
+    ]
+   },
+   "expected": {
+    "rank": 1,
+    "of": 7,
+    "rankedYears": [
+     2008,
+     2009,
+     2010,
+     2011,
+     2012,
+     2013
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true,
+     "2012": false,
+     "2013": false
+    }
+   }
+  },
+  {
+   "name": "Lowest: current below every past year",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 1,
+     "frp": 3,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 30,
+      "frp": 90,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 12,
+      "frp": 36,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     },
+     {
+      "year": 2012,
+      "hot": 22,
+      "frp": 66,
+      "estimated": false
+     },
+     {
+      "year": 2013,
+      "hot": 40,
+      "frp": 120,
+      "estimated": false
+     }
+    ]
+   },
+   "expected": {
+    "rank": 7,
+    "of": 7,
+    "rankedYears": [
+     2008,
+     2009,
+     2010,
+     2011,
+     2012,
+     2013
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true,
+     "2012": false,
+     "2013": false
+    }
+   }
+  },
+  {
+   "name": "Tie for first: current equals the highest past year",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 50,
+     "frp": 150,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 30,
+      "frp": 90,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 12,
+      "frp": 36,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     },
+     {
+      "year": 2012,
+      "hot": 22,
+      "frp": 66,
+      "estimated": false
+     },
+     {
+      "year": 2013,
+      "hot": 40,
+      "frp": 120,
+      "estimated": false
+     }
+    ]
+   },
+   "expected": {
+    "rank": 1,
+    "of": 7,
+    "rankedYears": [
+     2008,
+     2009,
+     2010,
+     2011,
+     2012,
+     2013
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true,
+     "2012": false,
+     "2013": false
+    }
+   }
+  },
+  {
+   "name": "Tie in the middle: current equals two past years",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 22,
+     "frp": 66,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 22,
+      "frp": 66,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 22,
+      "frp": 66,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     }
+    ]
+   },
+   "expected": {
+    "rank": 2,
+    "of": 5,
+    "rankedYears": [
+     2008,
+     2009,
+     2010,
+     2011
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true
+    }
+   }
+  },
+  {
+   "name": "Tie among past years only (does not change the current rank)",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 45,
+     "frp": 135,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 50,
+      "frp": 150,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": 7,
+      "frp": 21,
+      "estimated": true
+     }
+    ]
+   },
+   "expected": {
+    "rank": 3,
+    "of": 5,
+    "rankedYears": [
+     2008,
+     2009,
+     2010,
+     2011
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true
+    }
+   }
+  },
+  {
+   "name": "No past years",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 10,
+     "frp": 30,
+     "estimated": false
+    },
+    "past": []
+   },
+   "expected": {
+    "rank": null,
+    "of": 1,
+    "rankedYears": [],
+    "estimatedByYear": {}
+   },
+   "note": "rank is null and of is 1."
+  },
+  {
+   "name": "Past years with null left out of the ranking",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 25,
+     "frp": 75,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 30,
+      "frp": 90,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": null,
+      "frp": null,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 20,
+      "frp": 60,
+      "estimated": true
+     },
+     {
+      "year": 2011,
+      "hot": null,
+      "frp": null,
+      "estimated": true
+     },
+     {
+      "year": 2012,
+      "hot": 26,
+      "frp": 78,
+      "estimated": false
+     }
+    ]
+   },
+   "expected": {
+    "rank": 3,
+    "of": 4,
+    "rankedYears": [
+     2008,
+     2010,
+     2012
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true,
+     "2011": true,
+     "2012": false
+    }
+   }
+  },
+  {
+   "name": "All past years null",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 25,
+     "frp": 75,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": null,
+      "frp": null,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": null,
+      "frp": null,
+      "estimated": true
+     }
+    ]
+   },
+   "expected": {
+    "rank": null,
+    "of": 1,
+    "rankedYears": [],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true
+    }
+   },
+   "note": "No ranked year: rank null, of 1."
+  },
+  {
+   "name": "Current 0 with several past years at 0 (ties for the better rank)",
+   "input": {
+    "days": 8,
+    "end": "2025-12-31",
+    "current": {
+     "year": 2025,
+     "hot": 0,
+     "frp": 0,
+     "estimated": false
+    },
+    "past": [
+     {
+      "year": 2008,
+      "hot": 0,
+      "frp": 0,
+      "estimated": true
+     },
+     {
+      "year": 2009,
+      "hot": 0,
+      "frp": 0,
+      "estimated": true
+     },
+     {
+      "year": 2010,
+      "hot": 4,
+      "frp": 12,
+      "estimated": true
+     }
+    ]
+   },
+   "expected": {
+    "rank": 2,
+    "of": 4,
+    "rankedYears": [
+     2008,
+     2009,
+     2010
+    ],
+    "estimatedByYear": {
+     "2008": true,
+     "2009": true,
+     "2010": true
+    }
+   }
+  },
+  {
+   "name": "Estimated flag: true for years before 2012, false from 2012",
+   "input": {
+    "years": [
+     2010,
+     2011,
+     2012,
+     2013
+    ]
+   },
+   "expected": {
+    "estimated": {
+     "2010": true,
+     "2011": true,
+     "2012": false,
+     "2013": false
+    }
+   }
+  }
+ ]
+}

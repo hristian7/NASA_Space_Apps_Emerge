@@ -1,0 +1,93 @@
+/*
+ * The wiring's own styles: the states, the notices and the date range. Colour,
+ * radius and type come only from the theme tokens in src/styles/themes.css.
+ * Global stylesheet with prefixed names, as the report panel does.
+ */
+
+.ap-state {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.ap-notice {
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.ap-empty {
+  margin: 0;
+  font: 500 15px/1.35 var(--font-head);
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.ap-range {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ap-rangeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.ap-rangeField {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ap-rangeLabel {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.ap-select {
+  font: 400 13px/1.2 var(--font-ui);
+  color: var(--ink);
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 5px 6px;
+  max-width: 10.5rem;
+}
+
+.ap-monthLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.ap-monthNow {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.ap-hotspots {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ap-link {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.ap-retry {
+  justify-self: start;
+}

@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "../styles/themes.css";
+@import "maplibre-gl/dist/maplibre-gl.css";
+@import "../styles/shell.css";
+
+@theme {
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-panel: var(--panel);
+  --color-space: var(--space);
+  --color-accent: var(--accent);
+  --radius-token: var(--radius);
+  --radius-token-s: var(--radius-s);
+}

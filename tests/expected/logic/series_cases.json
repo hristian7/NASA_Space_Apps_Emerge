@@ -1,0 +1,2151 @@
+{
+ "about": "Sections 2 and ruling 10. Monthly series of selections built from the example tiles and background.json. value, lo, hi are weighted sums to 6 decimals; the *_x62500 fields are exact integers (weighted sum x 625 x 100). Flags are listed in the closed-set order example, partial_month, snpp_gap_filled, low_confidence.",
+ "cases": [
+  {
+   "name": "Sofia, 50 km",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    }
+   },
+   "expected": {
+    "cellCount": 22,
+    "lowConfidence": false,
+    "seriesLength": 302,
+    "firstMonth": "2000-11",
+    "lastMonth": "2025-12",
+    "weights": [
+     {
+      "id": 270091,
+      "subcells": 63
+     },
+     {
+      "id": 270092,
+      "subcells": 308
+     },
+     {
+      "id": 270093,
+      "subcells": 364
+     },
+     {
+      "id": 270094,
+      "subcells": 214
+     },
+     {
+      "id": 270095,
+      "subcells": 3
+     },
+     {
+      "id": 271530,
+      "subcells": 27
+     },
+     {
+      "id": 271531,
+      "subcells": 558
+     },
+     {
+      "id": 271532,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "subcells": 310
+     },
+     {
+      "id": 272970,
+      "subcells": 65
+     },
+     {
+      "id": 272971,
+      "subcells": 621
+     },
+     {
+      "id": 272972,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "subcells": 411
+     },
+     {
+      "id": 274411,
+      "subcells": 246
+     },
+     {
+      "id": 274412,
+      "subcells": 555
+     },
+     {
+      "id": 274413,
+      "subcells": 613
+     },
+     {
+      "id": 274414,
+      "subcells": 461
+     },
+     {
+      "id": 274415,
+      "subcells": 77
+     }
+    ],
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 29.8544,
+       "lo": 18.8016,
+       "hi": 44.2864,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1865900,
+       "lo_x62500": 1175100,
+       "hi_x62500": 2767900
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 28.4816,
+       "lo": 18.5552,
+       "hi": 40.6608,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1780100,
+       "lo_x62500": 1159700,
+       "hi_x62500": 2541300
+      }
+     },
+     "2002-06": {
+      "hot": {
+       "y": 2002,
+       "m": 6,
+       "value": 6.85008,
+       "lo": 2.0,
+       "hi": 15.55024,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 428130,
+       "lo_x62500": 125000,
+       "hi_x62500": 971890
+      },
+      "cd": {
+       "y": 2002,
+       "m": 6,
+       "value": 5.56672,
+       "lo": 2.0,
+       "hi": 11.70016,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 347920,
+       "lo_x62500": 125000,
+       "hi_x62500": 731260
+      }
+     },
+     "2002-07": {
+      "hot": {
+       "y": 2002,
+       "m": 7,
+       "value": 4.18704,
+       "lo": 0.0288,
+       "hi": 12.49392,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 261690,
+       "lo_x62500": 1800,
+       "hi_x62500": 780870
+      },
+      "cd": {
+       "y": 2002,
+       "m": 7,
+       "value": 2.80416,
+       "lo": 0.0288,
+       "hi": 8.34528,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 175260,
+       "lo_x62500": 1800,
+       "hi_x62500": 521580
+      }
+     },
+     "2005-08": {
+      "hot": {
+       "y": 2005,
+       "m": 8,
+       "value": 9.2832,
+       "lo": 3.8048,
+       "hi": 18.3424,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 580200,
+       "lo_x62500": 237800,
+       "hi_x62500": 1146400
+      },
+      "cd": {
+       "y": 2005,
+       "m": 8,
+       "value": 8.0896,
+       "lo": 3.8048,
+       "hi": 14.7616,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 505600,
+       "lo_x62500": 237800,
+       "hi_x62500": 922600
+      }
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 4.15008,
+       "lo": 0.0,
+       "hi": 12.45024,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 259380,
+       "lo_x62500": 0,
+       "hi_x62500": 778140
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 2.76672,
+       "lo": 0.0,
+       "hi": 8.30016,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 172920,
+       "lo_x62500": 0,
+       "hi_x62500": 518760
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2020-08": {
+      "hot": {
+       "y": 2020,
+       "m": 8,
+       "value": 6.288,
+       "lo": 6.288,
+       "hi": 6.288,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 393000,
+       "lo_x62500": 393000,
+       "hi_x62500": 393000
+      },
+      "cd": {
+       "y": 2020,
+       "m": 8,
+       "value": 5.9184,
+       "lo": 5.9184,
+       "hi": 5.9184,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 369900,
+       "lo_x62500": 369900,
+       "hi_x62500": 369900
+      }
+     },
+     "2022-07": {
+      "hot": {
+       "y": 2022,
+       "m": 7,
+       "value": 7.9568,
+       "lo": 7.9568,
+       "hi": 7.9568,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 497300,
+       "lo_x62500": 497300,
+       "hi_x62500": 497300
+      },
+      "cd": {
+       "y": 2022,
+       "m": 7,
+       "value": 7.6144,
+       "lo": 7.6144,
+       "hi": 7.6144,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 475900,
+       "lo_x62500": 475900,
+       "hi_x62500": 475900
+      }
+     },
+     "2025-12": {
+      "hot": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     }
+    },
+    "october_2000": {
+     "inSeries": false
+    },
+    "sumOfAllMonths_x62500": {
+     "hot": 392594620,
+     "cd": 346946980
+    },
+    "monthsWithZeroValue": {
+     "hot": 18,
+     "cd": 18
+    },
+    "noNullMonths": true
+   }
+  },
+  {
+   "name": "Plovdiv, 50 km (two tiles)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.15,
+     "lon": 24.75,
+     "radiusKm": 50
+    }
+   },
+   "expected": {
+    "cellCount": 26,
+    "lowConfidence": false,
+    "seriesLength": 302,
+    "firstMonth": "2000-11",
+    "lastMonth": "2025-12",
+    "weights": [
+     {
+      "id": 272977,
+      "subcells": 43
+     },
+     {
+      "id": 272978,
+      "subcells": 217
+     },
+     {
+      "id": 272979,
+      "subcells": 217
+     },
+     {
+      "id": 272980,
+      "subcells": 43
+     },
+     {
+      "id": 274416,
+      "subcells": 83
+     },
+     {
+      "id": 274417,
+      "subcells": 575
+     },
+     {
+      "id": 274418,
+      "subcells": 625
+     },
+     {
+      "id": 274419,
+      "subcells": 625
+     },
+     {
+      "id": 274420,
+      "subcells": 575
+     },
+     {
+      "id": 274421,
+      "subcells": 83
+     },
+     {
+      "id": 275856,
+      "subcells": 245
+     },
+     {
+      "id": 275857,
+      "subcells": 625
+     },
+     {
+      "id": 275858,
+      "subcells": 625
+     },
+     {
+      "id": 275859,
+      "subcells": 625
+     },
+     {
+      "id": 275860,
+      "subcells": 625
+     },
+     {
+      "id": 275861,
+      "subcells": 245
+     },
+     {
+      "id": 277296,
+      "subcells": 41
+     },
+     {
+      "id": 277297,
+      "subcells": 488
+     },
+     {
+      "id": 277298,
+      "subcells": 625
+     },
+     {
+      "id": 277299,
+      "subcells": 625
+     },
+     {
+      "id": 277300,
+      "subcells": 488
+     },
+     {
+      "id": 277301,
+      "subcells": 41
+     },
+     {
+      "id": 278737,
+      "subcells": 1
+     },
+     {
+      "id": 278738,
+      "subcells": 92
+     },
+     {
+      "id": 278739,
+      "subcells": 92
+     },
+     {
+      "id": 278740,
+      "subcells": 1
+     }
+    ],
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 12.42352,
+       "lo": 6.7744,
+       "hi": 21.52816,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 776470,
+       "lo_x62500": 423400,
+       "hi_x62500": 1345510
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 11.27168,
+       "lo": 6.7744,
+       "hi": 18.07264,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 704480,
+       "lo_x62500": 423400,
+       "hi_x62500": 1129540
+      }
+     },
+     "2002-06": {
+      "hot": {
+       "y": 2002,
+       "m": 6,
+       "value": 5.172,
+       "lo": 0.784,
+       "hi": 13.556,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 323250,
+       "lo_x62500": 49000,
+       "hi_x62500": 847250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 6,
+       "value": 3.84,
+       "lo": 0.784,
+       "hi": 9.56,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 240000,
+       "lo_x62500": 49000,
+       "hi_x62500": 597500
+      }
+     },
+     "2002-07": {
+      "hot": {
+       "y": 2002,
+       "m": 7,
+       "value": 6.64512,
+       "lo": 1.8752,
+       "hi": 15.24736,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 415320,
+       "lo_x62500": 117200,
+       "hi_x62500": 952960
+      },
+      "cd": {
+       "y": 2002,
+       "m": 7,
+       "value": 5.36768,
+       "lo": 1.8752,
+       "hi": 11.41504,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 335480,
+       "lo_x62500": 117200,
+       "hi_x62500": 713440
+      }
+     },
+     "2005-08": {
+      "hot": {
+       "y": 2005,
+       "m": 8,
+       "value": 50.86912,
+       "lo": 34.2304,
+       "hi": 69.94816,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 3179320,
+       "lo_x62500": 2139400,
+       "hi_x62500": 4371760
+      },
+      "cd": {
+       "y": 2005,
+       "m": 8,
+       "value": 48.87968,
+       "lo": 33.4464,
+       "hi": 65.93984,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 3054980,
+       "lo_x62500": 2090400,
+       "hi_x62500": 4121240
+      }
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 4.1136,
+       "lo": 0.0,
+       "hi": 12.3408,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 257100,
+       "lo_x62500": 0,
+       "hi_x62500": 771300
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 2.7424,
+       "lo": 0.0,
+       "hi": 8.2272,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 171400,
+       "lo_x62500": 0,
+       "hi_x62500": 514200
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2020-08": {
+      "hot": {
+       "y": 2020,
+       "m": 8,
+       "value": 52.2368,
+       "lo": 52.2368,
+       "hi": 52.2368,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 3264800,
+       "lo_x62500": 3264800,
+       "hi_x62500": 3264800
+      },
+      "cd": {
+       "y": 2020,
+       "m": 8,
+       "value": 33.8896,
+       "lo": 33.8896,
+       "hi": 33.8896,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 2118100,
+       "lo_x62500": 2118100,
+       "hi_x62500": 2118100
+      }
+     },
+     "2022-07": {
+      "hot": {
+       "y": 2022,
+       "m": 7,
+       "value": 15.496,
+       "lo": 15.496,
+       "hi": 15.496,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 968500,
+       "lo_x62500": 968500,
+       "hi_x62500": 968500
+      },
+      "cd": {
+       "y": 2022,
+       "m": 7,
+       "value": 14.2304,
+       "lo": 14.2304,
+       "hi": 14.2304,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 889400,
+       "lo_x62500": 889400,
+       "hi_x62500": 889400
+      }
+     },
+     "2025-11": {
+      "hot": {
+       "y": 2025,
+       "m": 11,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2025,
+       "m": 11,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2025-12": {
+      "hot": {
+       "y": 2025,
+       "m": 12,
+       "value": 1.0,
+       "lo": 1.0,
+       "hi": 1.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 62500,
+       "lo_x62500": 62500,
+       "hi_x62500": 62500
+      },
+      "cd": {
+       "y": 2025,
+       "m": 12,
+       "value": 1.0,
+       "lo": 1.0,
+       "hi": 1.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 62500,
+       "lo_x62500": 62500,
+       "hi_x62500": 62500
+      }
+     }
+    },
+    "october_2000": {
+     "inSeries": false
+    },
+    "sumOfAllMonths_x62500": {
+     "hot": 745587540,
+     "cd": 660286860
+    },
+    "monthsWithZeroValue": {
+     "hot": 5,
+     "cd": 5
+    },
+    "noNullMonths": true
+   }
+  },
+  {
+   "name": "Polygon 24.8 to 25.4 E, 42.2 to 42.7 N (two tiles)",
+   "input": {
+    "selection": {
+     "kind": "polygon",
+     "ring": [
+      [
+       24.8,
+       42.2
+      ],
+      [
+       25.4,
+       42.2
+      ],
+      [
+       25.4,
+       42.7
+      ],
+      [
+       24.8,
+       42.7
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "cellCount": 9,
+    "lowConfidence": false,
+    "seriesLength": 302,
+    "firstMonth": "2000-11",
+    "lastMonth": "2025-12",
+    "weights": [
+     {
+      "id": 272979,
+      "subcells": 400
+     },
+     {
+      "id": 272980,
+      "subcells": 500
+     },
+     {
+      "id": 272981,
+      "subcells": 300
+     },
+     {
+      "id": 274419,
+      "subcells": 500
+     },
+     {
+      "id": 274420,
+      "subcells": 625
+     },
+     {
+      "id": 274421,
+      "subcells": 375
+     },
+     {
+      "id": 275859,
+      "subcells": 100
+     },
+     {
+      "id": 275860,
+      "subcells": 125
+     },
+     {
+      "id": 275861,
+      "subcells": 75
+     }
+    ],
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 1.44,
+       "lo": 0.0,
+       "hi": 4.32,
+       "src": "estimated_terra",
+       "flags": [],
+       "value_x62500": 90000,
+       "lo_x62500": 0,
+       "hi_x62500": 270000
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 0.96,
+       "lo": 0.0,
+       "hi": 2.88,
+       "src": "estimated_terra",
+       "flags": [],
+       "value_x62500": 60000,
+       "lo_x62500": 0,
+       "hi_x62500": 180000
+      }
+     },
+     "2002-06": {
+      "hot": {
+       "y": 2002,
+       "m": 6,
+       "value": 1.764,
+       "lo": 0.24,
+       "hi": 4.692,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 110250,
+       "lo_x62500": 15000,
+       "hi_x62500": 293250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 6,
+       "value": 1.296,
+       "lo": 0.24,
+       "hi": 3.288,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 81000,
+       "lo_x62500": 15000,
+       "hi_x62500": 205500
+      }
+     },
+     "2002-07": {
+      "hot": {
+       "y": 2002,
+       "m": 7,
+       "value": 3.06,
+       "lo": 1.2,
+       "hi": 6.18,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 191250,
+       "lo_x62500": 75000,
+       "hi_x62500": 386250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 7,
+       "value": 2.64,
+       "lo": 1.2,
+       "hi": 4.92,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 165000,
+       "lo_x62500": 75000,
+       "hi_x62500": 307500
+      }
+     },
+     "2005-08": {
+      "hot": {
+       "y": 2005,
+       "m": 8,
+       "value": 22.904,
+       "lo": 16.08,
+       "hi": 30.352,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1431500,
+       "lo_x62500": 1005000,
+       "hi_x62500": 1897000
+      },
+      "cd": {
+       "y": 2005,
+       "m": 8,
+       "value": 22.336,
+       "lo": 15.84,
+       "hi": 29.248,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1396000,
+       "lo_x62500": 990000,
+       "hi_x62500": 1828000
+      }
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 1.44,
+       "lo": 0.0,
+       "hi": 4.32,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 90000,
+       "lo_x62500": 0,
+       "hi_x62500": 270000
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 0.96,
+       "lo": 0.0,
+       "hi": 2.88,
+       "src": "estimated_modis",
+       "flags": [],
+       "value_x62500": 60000,
+       "lo_x62500": 0,
+       "hi_x62500": 180000
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2020-08": {
+      "hot": {
+       "y": 2020,
+       "m": 8,
+       "value": 3.8,
+       "lo": 3.8,
+       "hi": 3.8,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 237500,
+       "lo_x62500": 237500,
+       "hi_x62500": 237500
+      },
+      "cd": {
+       "y": 2020,
+       "m": 8,
+       "value": 3.44,
+       "lo": 3.44,
+       "hi": 3.44,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 215000,
+       "lo_x62500": 215000,
+       "hi_x62500": 215000
+      }
+     },
+     "2022-07": {
+      "hot": {
+       "y": 2022,
+       "m": 7,
+       "value": 9.48,
+       "lo": 9.48,
+       "hi": 9.48,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 592500,
+       "lo_x62500": 592500,
+       "hi_x62500": 592500
+      },
+      "cd": {
+       "y": 2022,
+       "m": 7,
+       "value": 6.92,
+       "lo": 6.92,
+       "hi": 6.92,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 432500,
+       "lo_x62500": 432500,
+       "hi_x62500": 432500
+      }
+     },
+     "2025-11": {
+      "hot": {
+       "y": 2025,
+       "m": 11,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2025,
+       "m": 11,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2025-12": {
+      "hot": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.16,
+       "lo": 0.16,
+       "hi": 0.16,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 10000,
+       "lo_x62500": 10000,
+       "hi_x62500": 10000
+      },
+      "cd": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.16,
+       "lo": 0.16,
+       "hi": 0.16,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 10000,
+       "lo_x62500": 10000,
+       "hi_x62500": 10000
+      }
+     }
+    },
+    "october_2000": {
+     "inSeries": false
+    },
+    "sumOfAllMonths_x62500": {
+     "hot": 184589250,
+     "cd": 165344500
+    },
+    "monthsWithZeroValue": {
+     "hot": 12,
+     "cd": 12
+    },
+    "noNullMonths": true
+   }
+  },
+  {
+   "name": "Sofia, radius 0 (small selection, low confidence)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 0
+    }
+   },
+   "expected": {
+    "cellCount": 1,
+    "lowConfidence": true,
+    "seriesLength": 302,
+    "firstMonth": "2000-11",
+    "lastMonth": "2025-12",
+    "weights": [
+     {
+      "id": 272973,
+      "subcells": 625
+     }
+    ],
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      }
+     },
+     "2002-06": {
+      "hot": {
+       "y": 2002,
+       "m": 6,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 6,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      }
+     },
+     "2002-07": {
+      "hot": {
+       "y": 2002,
+       "m": 7,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 7,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      }
+     },
+     "2005-08": {
+      "hot": {
+       "y": 2005,
+       "m": 8,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2005,
+       "m": 8,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      }
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2020-08": {
+      "hot": {
+       "y": 2020,
+       "m": 8,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2020,
+       "m": 8,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2022-07": {
+      "hot": {
+       "y": 2022,
+       "m": 7,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2022,
+       "m": 7,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     },
+     "2025-12": {
+      "hot": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2025,
+       "m": 12,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      }
+     }
+    },
+    "october_2000": {
+     "inSeries": false
+    },
+    "sumOfAllMonths_x62500": {
+     "hot": 24293750,
+     "cd": 19800000
+    },
+    "monthsWithZeroValue": {
+     "hot": 130,
+     "cd": 130
+    },
+    "noNullMonths": true
+   }
+  },
+  {
+   "name": "Rule isolation, one cell (264329, group BGR_40): listed, unlisted before Feb 2012, unlisted from Feb 2012",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 44.125,
+     "lon": 22.375,
+     "radiusKm": 0
+    }
+   },
+   "expected": {
+    "cellCount": 1,
+    "lowConfidence": true,
+    "weights": [
+     {
+      "id": 264329,
+      "subcells": 625
+     }
+    ],
+    "months": {
+     "2002-02": {
+      "hot": {
+       "y": 2002,
+       "m": 2,
+       "value": 3.0,
+       "lo": 2.0,
+       "hi": 4.0,
+       "src": "estimated_terra",
+       "flags": [
+        "example",
+        "low_confidence"
+       ],
+       "value_x62500": 187500,
+       "lo_x62500": 125000,
+       "hi_x62500": 250000
+      },
+      "cd": {
+       "y": 2002,
+       "m": 2,
+       "value": 3.0,
+       "lo": 2.0,
+       "hi": 4.0,
+       "src": "estimated_terra",
+       "flags": [
+        "example",
+        "low_confidence"
+       ],
+       "value_x62500": 187500,
+       "lo_x62500": 125000,
+       "hi_x62500": 250000
+      },
+      "rule": "listed",
+      "group": "BGR_40",
+      "label": "listed_estimated_terra"
+     },
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_terra",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      },
+      "rule": "background",
+      "group": "BGR_40",
+      "label": "unlisted_estimated_terra"
+     },
+     "2004-08": {
+      "hot": {
+       "y": 2004,
+       "m": 8,
+       "value": 11.0,
+       "lo": 8.0,
+       "hi": 14.0,
+       "src": "estimated_modis",
+       "flags": [
+        "example",
+        "low_confidence"
+       ],
+       "value_x62500": 687500,
+       "lo_x62500": 500000,
+       "hi_x62500": 875000
+      },
+      "cd": {
+       "y": 2004,
+       "m": 8,
+       "value": 11.0,
+       "lo": 8.0,
+       "hi": 14.0,
+       "src": "estimated_modis",
+       "flags": [
+        "example",
+        "low_confidence"
+       ],
+       "value_x62500": 687500,
+       "lo_x62500": 500000,
+       "hi_x62500": 875000
+      },
+      "rule": "listed",
+      "group": "BGR_40",
+      "label": "listed_estimated_modis"
+     },
+     "2002-07": {
+      "hot": {
+       "y": 2002,
+       "m": 7,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2002,
+       "m": 7,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      },
+      "rule": "background",
+      "group": "BGR_40",
+      "label": "unlisted_estimated_modis"
+     },
+     "2012-03": {
+      "hot": {
+       "y": 2012,
+       "m": 3,
+       "value": 14.0,
+       "lo": 14.0,
+       "hi": 14.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 875000,
+       "lo_x62500": 875000,
+       "hi_x62500": 875000
+      },
+      "cd": {
+       "y": 2012,
+       "m": 3,
+       "value": 7.0,
+       "lo": 7.0,
+       "hi": 7.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 437500,
+       "lo_x62500": 437500,
+       "hi_x62500": 437500
+      },
+      "rule": "listed",
+      "group": "BGR_40",
+      "label": "listed_measured"
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 0.0,
+       "lo": 0.0,
+       "hi": 0.0,
+       "src": "measured",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 0,
+       "lo_x62500": 0,
+       "hi_x62500": 0
+      },
+      "rule": "zero",
+      "group": "BGR_40",
+      "label": "unlisted_first_measured_month_feb_2012"
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 0.3,
+       "lo": 0.0,
+       "hi": 0.9,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 18750,
+       "lo_x62500": 0,
+       "hi_x62500": 56250
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 0.2,
+       "lo": 0.0,
+       "hi": 0.6,
+       "src": "estimated_modis",
+       "flags": [
+        "low_confidence"
+       ],
+       "value_x62500": 12500,
+       "lo_x62500": 0,
+       "hi_x62500": 37500
+      },
+      "rule": "background",
+      "group": "BGR_40",
+      "label": "unlisted_last_estimated_modis_month_jan_2012"
+     }
+    }
+   }
+  },
+  {
+   "name": "Rule isolation, two adjacent cells: one lists the month, the other takes its background",
+   "input": {
+    "selection": {
+     "kind": "polygon",
+     "ring": [
+      [
+       22.25,
+       44.0
+      ],
+      [
+       22.75,
+       44.0
+      ],
+      [
+       22.75,
+       44.25
+      ],
+      [
+       22.25,
+       44.25
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "cellCount": 2,
+    "lowConfidence": false,
+    "weights": [
+     {
+      "id": 264329,
+      "subcells": 625
+     },
+     {
+      "id": 264330,
+      "subcells": 625
+     }
+    ],
+    "months": {
+     "2009-11": {
+      "hot": {
+       "y": 2009,
+       "m": 11,
+       "value": 3.3,
+       "lo": 2.0,
+       "hi": 4.9,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 206250,
+       "lo_x62500": 125000,
+       "hi_x62500": 306250
+      },
+      "cd": {
+       "y": 2009,
+       "m": 11,
+       "value": 3.2,
+       "lo": 2.0,
+       "hi": 4.6,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 200000,
+       "lo_x62500": 125000,
+       "hi_x62500": 287500
+      }
+     },
+     "2001-07": {
+      "hot": {
+       "y": 2001,
+       "m": 7,
+       "value": 16.3,
+       "lo": 11.0,
+       "hi": 21.9,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1018750,
+       "lo_x62500": 687500,
+       "hi_x62500": 1368750
+      },
+      "cd": {
+       "y": 2001,
+       "m": 7,
+       "value": 16.2,
+       "lo": 11.0,
+       "hi": 21.6,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 1012500,
+       "lo_x62500": 687500,
+       "hi_x62500": 1350000
+      }
+     }
+    },
+    "detail": {
+     "2009-11": {
+      "264329": "listed",
+      "264330": "background"
+     },
+     "2001-07": {
+      "264329": "background",
+      "264330": "listed"
+     }
+    }
+   }
+  },
+  {
+   "name": "Rule isolation, cells of two groups (USA_35 and USA_45)",
+   "input": {
+    "selection": {
+     "kind": "polygon",
+     "ring": [
+      [
+       -117.0,
+       36.0
+      ],
+      [
+       -112.0,
+       36.0
+      ],
+      [
+       -112.0,
+       47.0
+      ],
+      [
+       -117.0,
+       47.0
+      ]
+     ]
+    }
+   },
+   "expected": {
+    "cellCount": 880,
+    "cellsWithTileData": 187,
+    "groups": [
+     "USA_35",
+     "USA_45"
+    ],
+    "lowConfidence": false,
+    "seriesLength": 302,
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 127.9,
+       "lo": 55.0,
+       "hi": 252.7,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 7993750,
+       "lo_x62500": 3437500,
+       "hi_x62500": 15793750
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 107.6,
+       "lo": 53.0,
+       "hi": 196.8,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 6725000,
+       "lo_x62500": 3312500,
+       "hi_x62500": 12300000
+      }
+     },
+     "2005-08": {
+      "hot": {
+       "y": 2005,
+       "m": 8,
+       "value": 2467.0,
+       "lo": 1694.0,
+       "hi": 3288.0,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 154187500,
+       "lo_x62500": 105875000,
+       "hi_x62500": 205500000
+      },
+      "cd": {
+       "y": 2005,
+       "m": 8,
+       "value": 2272.0,
+       "lo": 1569.0,
+       "hi": 3007.0,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 142000000,
+       "lo_x62500": 98062500,
+       "hi_x62500": 187937500
+      }
+     },
+     "2011-12": {
+      "hot": {
+       "y": 2011,
+       "m": 12,
+       "value": 63.8,
+       "lo": 6.0,
+       "hi": 177.4,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 3987500,
+       "lo_x62500": 375000,
+       "hi_x62500": 11087500
+      },
+      "cd": {
+       "y": 2011,
+       "m": 12,
+       "value": 45.2,
+       "lo": 6.0,
+       "hi": 121.6,
+       "src": "estimated_modis",
+       "flags": [
+        "example"
+       ],
+       "value_x62500": 2825000,
+       "lo_x62500": 375000,
+       "hi_x62500": 7600000
+      }
+     },
+     "2012-01": {
+      "hot": {
+       "y": 2012,
+       "m": 1,
+       "value": 58.8,
+       "lo": 2.0,
+       "hi": 171.4,
+       "src": "estimated_modis",
+       "flags": [
+        "example",
+        "partial_month"
+       ],
+       "value_x62500": 3675000,
+       "lo_x62500": 125000,
+       "hi_x62500": 10712500
+      },
+      "cd": {
+       "y": 2012,
+       "m": 1,
+       "value": 40.2,
+       "lo": 2.0,
+       "hi": 115.6,
+       "src": "estimated_modis",
+       "flags": [
+        "example",
+        "partial_month"
+       ],
+       "value_x62500": 2512500,
+       "lo_x62500": 125000,
+       "hi_x62500": 7225000
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 3.0,
+       "lo": 3.0,
+       "hi": 3.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 187500,
+       "lo_x62500": 187500,
+       "hi_x62500": 187500
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 2.0,
+       "lo": 2.0,
+       "hi": 2.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 125000,
+       "lo_x62500": 125000,
+       "hi_x62500": 125000
+      }
+     },
+     "2020-08": {
+      "hot": {
+       "y": 2020,
+       "m": 8,
+       "value": 224.0,
+       "lo": 224.0,
+       "hi": 224.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 14000000,
+       "lo_x62500": 14000000,
+       "hi_x62500": 14000000
+      },
+      "cd": {
+       "y": 2020,
+       "m": 8,
+       "value": 99.0,
+       "lo": 99.0,
+       "hi": 99.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 6187500,
+       "lo_x62500": 6187500,
+       "hi_x62500": 6187500
+      }
+     },
+     "2025-12": {
+      "hot": {
+       "y": 2025,
+       "m": 12,
+       "value": 50.0,
+       "lo": 50.0,
+       "hi": 50.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 3125000,
+       "lo_x62500": 3125000,
+       "hi_x62500": 3125000
+      },
+      "cd": {
+       "y": 2025,
+       "m": 12,
+       "value": 27.0,
+       "lo": 27.0,
+       "hi": 27.0,
+       "src": "measured",
+       "flags": [],
+       "value_x62500": 1687500,
+       "lo_x62500": 1687500,
+       "hi_x62500": 1687500
+      }
+     }
+    },
+    "sumOfAllMonths_x62500": {
+     "hot": 11050812500,
+     "cd": 5490125000
+    }
+   },
+   "note": "Cells that are in no tile file (no fire ever) have no group and contribute 0 in every month."
+  },
+  {
+   "name": "Country series, Bulgaria (read as it is)",
+   "input": {
+    "selection": {
+     "kind": "country",
+     "iso3": "BGR"
+    }
+   },
+   "expected": {
+    "cellCount": 1,
+    "lowConfidence": false,
+    "seriesLength": 302,
+    "months": {
+     "2000-11": {
+      "hot": {
+       "y": 2000,
+       "m": 11,
+       "value": 238,
+       "lo": 167,
+       "hi": 309,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ]
+      },
+      "cd": {
+       "y": 2000,
+       "m": 11,
+       "value": 227,
+       "lo": 159,
+       "hi": 295,
+       "src": "estimated_terra",
+       "flags": [
+        "example"
+       ]
+      }
+     },
+     "2012-02": {
+      "hot": {
+       "y": 2012,
+       "m": 2,
+       "value": 17,
+       "lo": 17,
+       "hi": 17,
+       "src": "measured",
+       "flags": []
+      },
+      "cd": {
+       "y": 2012,
+       "m": 2,
+       "value": 15,
+       "lo": 15,
+       "hi": 15,
+       "src": "measured",
+       "flags": []
+      }
+     },
+     "2024-07": {
+      "hot": {
+       "y": 2024,
+       "m": 7,
+       "value": 742,
+       "lo": 742,
+       "hi": 742,
+       "src": "measured",
+       "flags": []
+      },
+      "cd": {
+       "y": 2024,
+       "m": 7,
+       "value": 399,
+       "lo": 399,
+       "hi": 399,
+       "src": "measured",
+       "flags": []
+      }
+     }
+    },
+    "firstMonth": "2000-11",
+    "lastMonth": "2025-12"
+   }
+  }
+ ]
+}

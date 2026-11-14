@@ -50,3 +50,28 @@ engine/daily/viirs/
 engine/daily/wx/
 engine/daily/*.txt
 !engine/daily/model_L*_fc_live.json
+
+# Next.js app in web/ (installed or built, rebuild with npm install and npm run build)
+web/node_modules/
+web/.next/
+web/test-results/
+web/playwright-report/
+web/*.tsbuildinfo
+
+# Written by the framework on every dev and build run
+web/next-env.d.ts
+fire-links/
+# Daily outlook version 2 working files (rebuild with engine/daily/v2/*.py)
+engine/daily/v2/*.npz
+engine/daily/v2/*.pkl
+engine/daily/v2/*.parquet
+engine/daily/v2/*.csv
+engine/daily/v2/*.json
+engine/daily/v2/*.geojson
+engine/daily/v2/*.pt
+engine/daily/v2/*.txt
+engine/daily/v2/static/
+engine/daily/v2/live_viirs/
+engine/daily/v2/cat2026/
+engine/daily/v2/keep/
+!engine/daily/v2/models/
