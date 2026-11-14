@@ -86,6 +86,12 @@ GROUP_BAND_DEG = 5
 EXAMPLE_BACKGROUND = {"cd": 20, "cd_hi": 60, "hot": 30, "hot_hi": 90}
 BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
 
+# The daily window holds raw counts, not harmonized ones, so each year says
+# which sensor produced them.
+SENSOR_LABELS = ["modis", "viirs"]
+
+EXAMPLE_FLAG = True
+
 EXAMPLE_TILES = ["40_20", "40_25", "35_-120", "45_-115"]
 DAILY_TILES = ["40_20", "40_25"]
 GLOBE_YEARS = [2024]
@@ -605,39 +611,38 @@ def build_background(group_ids: set[str], out: Path) -> None:
     )
 
 
-def build_globe(yearly: dict[int, dict], out: Path) -> None:
-    for year in GLOBE_YEARS:
-        ids = sorted(yearly[year])
-        cols: dict[str, list] = {k: [] for k in (
-            "id", "lat", "lon", "precision_radius_km", "hot", "hot_lo", "hot_hi",
-            "cd", "cd_lo", "cd_hi", "frp", "src", "flags")}
-        for cell_id in ids:
-            acc = yearly[year][cell_id]
-            lat, lon = cell_center(cell_id)
-            cols["id"].append(cell_id)
-            cols["lat"].append(round(lat, 4))
-            cols["lon"].append(round(lon, 4))
-            cols["precision_radius_km"].append(round(precision_radius_km(lat), 3))
-            for field in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi"):
+def build_globe(yearly: dict[int, dict], out: Path) -> list[int]:
+    """One file per year, slim and pre-gzipped.
+
+    The globe layer only colours cells, so it carries the cell id and the
+    values and nothing else: lat, lon and the precision radius come from the
+    id through the frozen rule in section 2 of the contract, and the ranges
+    come from the tile when a cell is opened. At 188,000 cells and 26 years
+    the full record shape measured 140 MB, which no static budget can hold.
+    """
+    years = sorted(yearly)
+    for year in years:
+        cols: dict[str, list] = {k: [] for k in ("id", "hot", "cd", "frp")}
+        for cell in sorted(yearly[year]):
+            acc = yearly[year][cell]
+            cols["id"].append(cell)
+            for field in ("hot", "cd", "frp"):
                 cols[field].append(acc[field])
-            cols["frp"].append(acc["frp"])
-            cols["src"].append(acc["src"])
-            cols["flags"].append(acc["flags"])
-        write_json(
-            out / "globe" / f"{year}.json",
+        write_gzip_json(
+            out / "globe" / f"{year}.json.gz",
             {
                 "schema": f"emerge-globe-{SCHEMA_VERSION}",
-                "example": True,
+                "example": EXAMPLE_FLAG,
                 "built": BUILT,
                 "year": year,
                 "type": "cell",
                 "cell_deg": CELL_DEG,
-                "src_labels": SRC_LABELS,
-                "flag_labels": FLAG_LABELS,
-                "n": len(ids),
+                "point_from_id": True,
+                "n": len(cols["id"]),
                 "cols": cols,
             },
         )
+    return years
 
 
 def daily_window() -> tuple[dt.date, dt.date, list[int]]:
@@ -662,7 +667,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
         if key not in wanted:
             continue
         measured = is_measured(day.year, day.month)
-        hot = int(snpp_n) if measured else round(EXAMPLE_RATIO * int(modis_n))
+        # Raw, not harmonized: the method publishes no daily conversion factor.
+        hot = int(snpp_n) if measured else int(modis_n)
         frp = int(snpp_frp) if measured else int(modis_frp)
         if hot <= 0:
             continue
@@ -684,6 +690,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                     "y": y,
                     "src": SRC_LABELS.index(src_for(y, 12)),
                     "flags": flag_bits(flags_for(y, 12)),
+                    "sensor": SENSOR_LABELS.index(
+                        "viirs" if is_measured(y, 12) else "modis"),
                     "d": [d[0] for d in days],
                     "hot": [d[1] for d in days],
                     "frp": [d[2] for d in days],
@@ -706,6 +714,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                 "tile": {"lat0": lat0, "lon0": lon0, "deg": TILE_DEG},
                 "type": "cell",
                 "cell_deg": CELL_DEG,
+                "values": "raw",
+                "sensor_labels": SENSOR_LABELS,
                 "window": {
                     "days": DAILY_WINDOW_DAYS,
                     "latest_day": end.isoformat(),
@@ -916,6 +926,7 @@ def build_meta(out: Path) -> None:
                 "wraps_year": False,
                 "years": years,
                 "min_compare_days": MIN_COMPARE_DAYS,
+                "values": "raw",
             },
             "countries": sorted(EXAMPLE_COUNTRIES.values()),
             "reported": sorted(REPORTED),

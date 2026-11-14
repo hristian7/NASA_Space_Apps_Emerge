@@ -227,24 +227,19 @@ export interface CountryIndexFile {
   countries: CountryIndexEntry[];
 }
 
-/** Columnar yearly totals. Every array has n entries and shares one index. */
+/**
+ * Columnar yearly totals. Every array has n entries and shares one index.
+ * There is no lat, lon or precision_radius_km here: the globe layer works
+ * them out from `id` with cellCenter and precisionRadiusKm.
+ */
 export interface GlobeColumns {
   id: number[];
-  lat: number[];
-  lon: number[];
-  precision_radius_km: number[];
   hot: number[];
-  hot_lo: number[];
-  hot_hi: number[];
   cd: number[];
-  cd_lo: number[];
-  cd_hi: number[];
   frp: number[];
-  src: number[];
-  flags: number[];
 }
 
-/** web/public/data/globe/<year>.json */
+/** web/public/data/globe/<year>.json.gz, after unzipping. */
 export interface GlobeFile {
   schema: 'emerge-globe-1';
   example: boolean;
@@ -252,12 +247,15 @@ export interface GlobeFile {
   year: number;
   type: 'cell';
   cell_deg: number;
-  src_labels: SrcLabel[];
-  flag_labels: FlagLabel[];
+  /** Always true: the point is derived from the cell id, not stored. */
+  point_from_id: true;
   /** Number of cells, equal to the length of every array in cols. */
   n: number;
   cols: GlobeColumns;
 }
+
+/** Which sensor a raw daily value came from. */
+export type SensorLabel = 'modis' | 'viirs';
 
 /** One year of the daily window for one cell. Only days with fire are listed. */
 export interface DailyYear {
@@ -267,9 +265,14 @@ export interface DailyYear {
   src: number;
   /** Bit set over the file's flag_labels, for the whole year's window. */
   flags: number;
+  /**
+   * Index into the file's sensor_labels. The daily values are RAW, so a year
+   * seen by MODIS cannot be compared with a VIIRS year without scaling.
+   */
+  sensor: number;
   /** Day offsets from the window start, 0 to days - 1, ascending. */
   d: number[];
-  /** Harmonized hotspots on that day. */
+  /** Raw hotspots that sensor counted on that day. Not harmonized. */
   hot: number[];
   /** Fire radiative power in MW on that day, whole numbers. */
   frp: number[];
@@ -291,6 +294,10 @@ export interface DailyFile {
   tile: { lat0: number; lon0: number; deg: number };
   type: 'cell';
   cell_deg: number;
+  /** Always "raw": the daily values are not harmonized. */
+  values: 'raw';
+  /** Label for each index used in DailyYear.sensor. */
+  sensor_labels: SensorLabel[];
   window: {
     /** Length of the window in days. */
     days: number;
@@ -379,6 +386,8 @@ export interface MetaFile {
     years: number[];
     /** Shortest run of days that may be summed and compared. */
     min_compare_days: number;
+    /** Always "raw": the daily files hold raw counts, not harmonized ones. */
+    values: 'raw';
   };
   /** ISO3 codes with a countries/<ISO3>.json file. */
   countries: string[];
