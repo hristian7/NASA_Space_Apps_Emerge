@@ -15,6 +15,8 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 
 | File | What it is |
 |---|---|
+| [`specs/overview.md`](specs/overview.md) | **Start here:** Emerge in one page (what we build now, what comes later) |
+| [`specs/specification.md`](specs/specification.md) | **The build spec:** scope, data, design, tests, order of work, open decisions |
 | [`docs/challenge-brief.md`](docs/challenge-brief.md) | NASA's challenge text (source of truth) |
 | [`docs/firms-data.md`](docs/firms-data.md) | Deep dive on the FIRMS fire data for this challenge: download URLs, columns, cleaning rules, sizes, how different the sensors are |
 | [`docs/challenges-overview.md`](docs/challenges-overview.md) | All 14 challenges at a glance, plus key rules (added by a teammate) |
