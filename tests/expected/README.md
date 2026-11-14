@@ -13,3 +13,20 @@ Written on 14 Nov 2026 by a separate agent, before the code under test existed. 
 Facts found while writing the samples:
 - `rows_where_float_and_decimal_floor_differ` counts rows where `floor(lat * 100)` in double arithmetic differs from the exact decimal floor [V]. It is 25 for United States Sep 2020 and 0 elsewhere. It does not change the totals [V].
 - The busiest cell is the one with the highest `cd`. Ties go to the lower cell id.
+
+## `logic/`: expected answers for the app's number logic
+
+Written on 14 Nov 2026 from `docs/number-logic.md`, `web/src/types/ui.ts` and `docs/data-contract.md`, before the logic code existed. The author never read `web/src/lib` or `web/src/components`. Plain Python with numpy and scipy (`scipy.stats.beta` for the Jeffreys range, `numpy.polyfit` as a cross-check of an exact-fraction least-squares fit). The example files under `web/public/data` are read with `json` and `gzip` only. `logic/make_logic_expected.py` regenerates every file and is deterministic.
+
+| File | Section | What it pins |
+|---|---|---|
+| `selection_weights.json` | 1 | Cell ids and overlap weights (sub-cell counts out of 625, and the weight to 6 decimals), total weight, `lowConfidence`, for points, polygons, the 180 degree line, the equator, 65 N, cell edges and the small-selection rule |
+| `series_cases.json` | 2 | Monthly series from the example tiles for three selections plus one small selection, and three Bulgaria country months. Exact integers (`value_x625`) sit next to the rounded values |
+| `daily_cases.json` | 4, 6 | 8 day window totals per year, rank, month to date with each past year, and the window date mapping |
+| `unusual_cases.json` | 3, 4 | Status, median, mean, ratios, `higherThan`, `years`, `no_history`, `too_early` |
+| `chance_cases.json` | 5 | Chance of fire and its Jeffreys range |
+| `window_cases.json` | 6 | Ranking, ties, null years, the `estimated` flag |
+| `trend_extremes_cases.json` | 7 | Slope, share per decade, worst month, worst year |
+| `csv_cases.json` | 8 | Body rows of the monthly CSV, rounding, quoting, line ends |
+
+Numbers are rounded to 6 decimals; compare with a tolerance of 1e-6. A case key named `ambiguity` marks a place where the documents are silent or disagree; its `alt` keys (or alternative keys under `expected`) give the other reading. Fields under `unpinned` are not defined by the rules and must not be asserted.

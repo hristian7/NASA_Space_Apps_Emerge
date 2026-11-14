@@ -1,0 +1,241 @@
+{
+ "about": "Section 8. Expected text of monthly CSV body rows and the rules as checks.",
+ "cases": [
+  {
+   "name": "Tiny series, unit hot: body rows",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2000,
+      "m": 11,
+      "value": 238.0,
+      "lo": 167.0,
+      "hi": 309.0,
+      "src": "estimated_terra",
+      "flags": [
+       "example"
+      ]
+     },
+     {
+      "y": 2000,
+      "m": 12,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "estimated_terra",
+      "flags": []
+     },
+     {
+      "y": 2012,
+      "m": 2,
+      "value": 1234.4,
+      "lo": 1100.0,
+      "hi": 1300.0,
+      "src": "measured",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2022,
+      "m": 7,
+      "value": null,
+      "lo": null,
+      "hi": null,
+      "src": null,
+      "flags": []
+     },
+     {
+      "y": 2025,
+      "m": 12,
+      "value": 7.0,
+      "lo": 7.0,
+      "hi": 7.0,
+      "src": "measured",
+      "flags": [
+       "low_confidence"
+      ]
+     }
+    ]
+   },
+   "expected": {
+    "bodyRowsIfFlagsJoinedBySemicolon": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example;partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n",
+    "bodyRowsIfFlagsJoinedByCommaAndQuoted": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,\"example,partial_month\"\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n",
+    "bodyRowsIfFlagsJoinedBySpace": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n"
+   },
+   "ambiguity": "Section 8 does not say how several flags share one field. Three candidates are given. Single-flag and no-flag rows are identical in all three."
+  },
+  {
+   "name": "Rounding to whole numbers at exact halves",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2020,
+      "m": 1,
+      "value": 2.5,
+      "lo": 0.5,
+      "hi": 3.5,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 2,
+      "value": 1.5,
+      "lo": 1.49,
+      "hi": 1.51,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 3,
+      "value": 0.4999,
+      "lo": 0.0,
+      "hi": 0.5,
+      "src": "measured",
+      "flags": []
+     },
+     {
+      "y": 2020,
+      "m": 4,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "measured",
+      "flags": []
+     }
+    ]
+   },
+   "expected": {
+    "bodyRowsIfHalfRoundsUp": "2020,1,hot,3,1,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,1,measured,\n2020,4,hot,0,0,0,measured,\n",
+    "bodyRowsIfHalfRoundsToEven": "2020,1,hot,2,0,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,0,measured,\n2020,4,hot,0,0,0,measured,\n"
+   },
+   "ambiguity": "Section 8 says 'rounded to whole numbers' without a tie rule (JavaScript Math.round rounds halves up; Python round goes to even). Weighted values such as 2.5 occur. Both are given. Values like 0.4999 and 1.49 round the same either way."
+  },
+  {
+   "name": "Rules as checks",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2000,
+      "m": 11,
+      "value": 238.0,
+      "lo": 167.0,
+      "hi": 309.0,
+      "src": "estimated_terra",
+      "flags": [
+       "example"
+      ]
+     },
+     {
+      "y": 2000,
+      "m": 12,
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "src": "estimated_terra",
+      "flags": []
+     },
+     {
+      "y": 2012,
+      "m": 2,
+      "value": 1234.4,
+      "lo": 1100.0,
+      "hi": 1300.0,
+      "src": "measured",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2022,
+      "m": 7,
+      "value": null,
+      "lo": null,
+      "hi": null,
+      "src": null,
+      "flags": []
+     },
+     {
+      "y": 2025,
+      "m": 12,
+      "value": 7.0,
+      "lo": 7.0,
+      "hi": 7.0,
+      "src": "measured",
+      "flags": [
+       "low_confidence"
+      ]
+     }
+    ]
+   },
+   "expected": {
+    "checks": [
+     {
+      "rule": "no carriage return anywhere",
+      "type": "doesNotContain",
+      "text": "\r"
+     },
+     {
+      "rule": "every line ends with the line feed character",
+      "type": "everyLineEndsWith",
+      "text": "\n"
+     },
+     {
+      "rule": "null value, low and high are empty fields",
+      "type": "rowEquals",
+      "row": "2022,7,hot,,,,,"
+     },
+     {
+      "rule": "zero is the character 0",
+      "type": "rowEquals",
+      "row": "2000,12,hot,0,0,0,estimated_terra,"
+     },
+     {
+      "rule": "a field with a comma is quoted",
+      "type": "csvFieldQuoted",
+      "sample": "a,b",
+      "quoted": "\"a,b\""
+     },
+     {
+      "rule": "column count is 8 in every body row",
+      "type": "fieldCount",
+      "count": 8,
+      "note": "except rows where a quoted field holds commas"
+     },
+     {
+      "rule": "a fire value is never printed with a decimal point",
+      "type": "doesNotMatch",
+      "pattern": "\\.\\d"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Summary CSV: columns and quoting",
+   "input": {
+    "rows": [
+     [
+      "worst month",
+      "2024-07"
+     ],
+     [
+      "note, with comma",
+      "x"
+     ]
+    ]
+   },
+   "expected": {
+    "header": "key,value",
+    "bodyRows": "worst month,2024-07\n\"note, with comma\",x\n"
+   },
+   "ambiguity": "The summary key names are not fixed by section 8 ('one row per figure'), so only the two column names and the quoting are pinned."
+  }
+ ]
+}

@@ -1,0 +1,1406 @@
+{
+ "about": "Sections 4 and 6 inputs from the example daily files: 8 day window totals per year, month to date with each past year, and window date mapping.",
+ "cases": [
+  {
+   "name": "Sofia 50 km: 8 day window ending on the last data day",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "days": 8,
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 270091,
+      "subcells": 63
+     },
+     {
+      "id": 270092,
+      "subcells": 308
+     },
+     {
+      "id": 270093,
+      "subcells": 364
+     },
+     {
+      "id": 270094,
+      "subcells": 214
+     },
+     {
+      "id": 270095,
+      "subcells": 3
+     },
+     {
+      "id": 271530,
+      "subcells": 27
+     },
+     {
+      "id": 271531,
+      "subcells": 558
+     },
+     {
+      "id": 271532,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "subcells": 310
+     },
+     {
+      "id": 272970,
+      "subcells": 65
+     },
+     {
+      "id": 272971,
+      "subcells": 621
+     },
+     {
+      "id": 272972,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "subcells": 411
+     },
+     {
+      "id": 274411,
+      "subcells": 246
+     },
+     {
+      "id": 274412,
+      "subcells": 555
+     },
+     {
+      "id": 274413,
+      "subcells": 613
+     },
+     {
+      "id": 274414,
+      "subcells": 461
+     },
+     {
+      "id": 274415,
+      "subcells": 77
+     }
+    ],
+    "end": "2025-12-31",
+    "start": "2025-12-24",
+    "current": {
+     "year": 2025,
+     "hot": 0.0,
+     "frp": 0.0,
+     "hot_x625": 0,
+     "frp_x625": 0,
+     "estimated": false,
+     "windowStart": "2025-12-24",
+     "windowEnd": "2025-12-31"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2000-12-24",
+      "windowEnd": "2000-12-31"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2001-12-24",
+      "windowEnd": "2001-12-31"
+     },
+     {
+      "year": 2002,
+      "hot": 3.0,
+      "frp": 9.0,
+      "hot_x625": 1875,
+      "frp_x625": 5625,
+      "estimated": true,
+      "windowStart": "2002-12-24",
+      "windowEnd": "2002-12-31"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2003-12-24",
+      "windowEnd": "2003-12-31"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2004-12-24",
+      "windowEnd": "2004-12-31"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2005-12-24",
+      "windowEnd": "2005-12-31"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2006-12-24",
+      "windowEnd": "2006-12-31"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2007-12-24",
+      "windowEnd": "2007-12-31"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2008-12-24",
+      "windowEnd": "2008-12-31"
+     },
+     {
+      "year": 2009,
+      "hot": 1.1808,
+      "frp": 2.7552,
+      "hot_x625": 738,
+      "frp_x625": 1722,
+      "estimated": true,
+      "windowStart": "2009-12-24",
+      "windowEnd": "2009-12-31"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2010-12-24",
+      "windowEnd": "2010-12-31"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2011-12-24",
+      "windowEnd": "2011-12-31"
+     },
+     {
+      "year": 2012,
+      "hot": 2.0,
+      "frp": 6.0,
+      "hot_x625": 1250,
+      "frp_x625": 3750,
+      "estimated": false,
+      "windowStart": "2012-12-24",
+      "windowEnd": "2012-12-31"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0048,
+      "frp": 0.0096,
+      "hot_x625": 3,
+      "frp_x625": 6,
+      "estimated": false,
+      "windowStart": "2013-12-24",
+      "windowEnd": "2013-12-31"
+     },
+     {
+      "year": 2014,
+      "hot": 1.592,
+      "frp": 8.8208,
+      "hot_x625": 995,
+      "frp_x625": 5513,
+      "estimated": false,
+      "windowStart": "2014-12-24",
+      "windowEnd": "2014-12-31"
+     },
+     {
+      "year": 2015,
+      "hot": 3.4736,
+      "frp": 13.3392,
+      "hot_x625": 2171,
+      "frp_x625": 8337,
+      "estimated": false,
+      "windowStart": "2015-12-24",
+      "windowEnd": "2015-12-31"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2016-12-24",
+      "windowEnd": "2016-12-31"
+     },
+     {
+      "year": 2017,
+      "hot": 1.0,
+      "frp": 1.0,
+      "hot_x625": 625,
+      "frp_x625": 625,
+      "estimated": false,
+      "windowStart": "2017-12-24",
+      "windowEnd": "2017-12-31"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2018-12-24",
+      "windowEnd": "2018-12-31"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2019-12-24",
+      "windowEnd": "2019-12-31"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2020-12-24",
+      "windowEnd": "2020-12-31"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2021-12-24",
+      "windowEnd": "2021-12-31"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2022-12-24",
+      "windowEnd": "2022-12-31"
+     },
+     {
+      "year": 2023,
+      "hot": 2.1584,
+      "frp": 8.6336,
+      "hot_x625": 1349,
+      "frp_x625": 5396,
+      "estimated": false,
+      "windowStart": "2023-12-24",
+      "windowEnd": "2023-12-31"
+     },
+     {
+      "year": 2024,
+      "hot": 0.1232,
+      "frp": 0.3696,
+      "hot_x625": 77,
+      "frp_x625": 231,
+      "estimated": false,
+      "windowStart": "2024-12-24",
+      "windowEnd": "2024-12-31"
+     }
+    ],
+    "rank": 10,
+    "of": 26
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: last data day 31 Dec 2025 (D = 31, month complete)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 31,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 6.0,
+     "2003": 5.464,
+     "2004": 6.7472,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 1.1808,
+     "2010": 0.0144,
+     "2011": 6.8848,
+     "2012": 2.0,
+     "2013": 3.0048,
+     "2014": 1.616,
+     "2015": 4.0896,
+     "2016": 6.0736,
+     "2017": 1.0,
+     "2018": 0.3424,
+     "2019": 1.5008,
+     "2020": 1.0,
+     "2021": 2.0,
+     "2022": 0.0,
+     "2023": 2.1584,
+     "2024": 0.1232
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 3750,
+     "2003": 3415,
+     "2004": 4217,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 738,
+     "2010": 9,
+     "2011": 4303,
+     "2012": 1250,
+     "2013": 1878,
+     "2014": 1010,
+     "2015": 2556,
+     "2016": 3796,
+     "2017": 625,
+     "2018": 214,
+     "2019": 938,
+     "2020": 625,
+     "2021": 1250,
+     "2022": 0,
+     "2023": 1349,
+     "2024": 77
+    },
+    "current_x625": 0,
+    "median": 1.1808,
+    "mean": 2.048,
+    "ratioMedian": 0.0,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "below",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 20 Dec 2025 (D = 20)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-20"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 20,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 5.464,
+     "2004": 6.7472,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0144,
+     "2011": 6.8848,
+     "2012": 0.0,
+     "2013": 3.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 5.704,
+     "2017": 0.0,
+     "2018": 0.3424,
+     "2019": 1.5008,
+     "2020": 1.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 3415,
+     "2004": 4217,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 9,
+     "2011": 4303,
+     "2012": 0,
+     "2013": 1875,
+     "2014": 0,
+     "2015": 77,
+     "2016": 3565,
+     "2017": 0,
+     "2018": 214,
+     "2019": 938,
+     "2020": 625,
+     "2021": 625,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "median": 0.0,
+    "mean": 1.271232,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 8 Dec 2025 (D = 8, shortest allowed)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-08"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 8,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 2.464,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0144,
+     "2011": 6.8848,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 0.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 1540,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 9,
+     "2011": 4303,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 77,
+     "2016": 0,
+     "2017": 0,
+     "2018": 0,
+     "2019": 0,
+     "2020": 0,
+     "2021": 625,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "median": 0.0,
+    "mean": 0.419456,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Sofia 50 km, month to date: pretend the last data day is 5 Dec 2025 (D = 5, too early)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.7,
+     "lon": 23.32,
+     "radiusKm": 50
+    },
+    "lastDataDay": "2025-12-05"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 5,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 2.464,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 6.8848,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.1232,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 0.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 1.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 1540,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 4303,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 77,
+     "2016": 0,
+     "2017": 0,
+     "2018": 0,
+     "2019": 0,
+     "2020": 0,
+     "2021": 625,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "status": "too_early",
+    "unpinned": {
+     "reason": "the rules give only the status for too_early; the other fields are not stated",
+     "ifComputedAnyway": {
+      "median": 0.0,
+      "mean": 0.41888,
+      "ratioMedian": null,
+      "ratioMean": 0.0,
+      "higherThan": 0,
+      "status": "near"
+     }
+    }
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection): 8 day window ending on the last data day",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "days": 8,
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "weights": [
+     {
+      "id": 272983,
+      "subcells": 625
+     }
+    ],
+    "end": "2025-12-31",
+    "start": "2025-12-24",
+    "current": {
+     "year": 2025,
+     "hot": 1.0,
+     "frp": 5.0,
+     "hot_x625": 625,
+     "frp_x625": 3125,
+     "estimated": false,
+     "windowStart": "2025-12-24",
+     "windowEnd": "2025-12-31"
+    },
+    "past": [
+     {
+      "year": 2000,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2000-12-24",
+      "windowEnd": "2000-12-31"
+     },
+     {
+      "year": 2001,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2001-12-24",
+      "windowEnd": "2001-12-31"
+     },
+     {
+      "year": 2002,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2002-12-24",
+      "windowEnd": "2002-12-31"
+     },
+     {
+      "year": 2003,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2003-12-24",
+      "windowEnd": "2003-12-31"
+     },
+     {
+      "year": 2004,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2004-12-24",
+      "windowEnd": "2004-12-31"
+     },
+     {
+      "year": 2005,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2005-12-24",
+      "windowEnd": "2005-12-31"
+     },
+     {
+      "year": 2006,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2006-12-24",
+      "windowEnd": "2006-12-31"
+     },
+     {
+      "year": 2007,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2007-12-24",
+      "windowEnd": "2007-12-31"
+     },
+     {
+      "year": 2008,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2008-12-24",
+      "windowEnd": "2008-12-31"
+     },
+     {
+      "year": 2009,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2009-12-24",
+      "windowEnd": "2009-12-31"
+     },
+     {
+      "year": 2010,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2010-12-24",
+      "windowEnd": "2010-12-31"
+     },
+     {
+      "year": 2011,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": true,
+      "windowStart": "2011-12-24",
+      "windowEnd": "2011-12-31"
+     },
+     {
+      "year": 2012,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2012-12-24",
+      "windowEnd": "2012-12-31"
+     },
+     {
+      "year": 2013,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2013-12-24",
+      "windowEnd": "2013-12-31"
+     },
+     {
+      "year": 2014,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2014-12-24",
+      "windowEnd": "2014-12-31"
+     },
+     {
+      "year": 2015,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2015-12-24",
+      "windowEnd": "2015-12-31"
+     },
+     {
+      "year": 2016,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2016-12-24",
+      "windowEnd": "2016-12-31"
+     },
+     {
+      "year": 2017,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2017-12-24",
+      "windowEnd": "2017-12-31"
+     },
+     {
+      "year": 2018,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2018-12-24",
+      "windowEnd": "2018-12-31"
+     },
+     {
+      "year": 2019,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2019-12-24",
+      "windowEnd": "2019-12-31"
+     },
+     {
+      "year": 2020,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2020-12-24",
+      "windowEnd": "2020-12-31"
+     },
+     {
+      "year": 2021,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2021-12-24",
+      "windowEnd": "2021-12-31"
+     },
+     {
+      "year": 2022,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2022-12-24",
+      "windowEnd": "2022-12-31"
+     },
+     {
+      "year": 2023,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2023-12-24",
+      "windowEnd": "2023-12-31"
+     },
+     {
+      "year": 2024,
+      "hot": 0.0,
+      "frp": 0.0,
+      "hot_x625": 0,
+      "frp_x625": 0,
+      "estimated": false,
+      "windowStart": "2024-12-24",
+      "windowEnd": "2024-12-31"
+     }
+    ],
+    "rank": 1,
+    "of": 26
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: last data day 31 Dec 2025 (D = 31, month complete)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-31"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 31,
+    "current": 1.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 8.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625,
+     "2014": 0,
+     "2015": 0,
+     "2016": 5000,
+     "2017": 0,
+     "2018": 625,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 625,
+    "median": 0.0,
+    "mean": 0.4,
+    "ratioMedian": null,
+    "ratioMean": 2.5,
+    "higherThan": 22,
+    "status": "above",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 20 Dec 2025 (D = 20)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-20"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 20,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 6.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625,
+     "2014": 0,
+     "2015": 0,
+     "2016": 3750,
+     "2017": 0,
+     "2018": 625,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "median": 0.0,
+    "mean": 0.32,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 8 Dec 2025 (D = 8, shortest allowed)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-08"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 8,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 1.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 3.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 625,
+     "2014": 0,
+     "2015": 0,
+     "2016": 1875,
+     "2017": 0,
+     "2018": 625,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "median": 0.0,
+    "mean": 0.2,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "status": "near",
+    "years": 25
+   }
+  },
+  {
+   "name": "Single busy cell 272983 (radius 10 km, small selection), month to date: pretend the last data day is 5 Dec 2025 (D = 5, too early)",
+   "input": {
+    "selection": {
+     "kind": "point",
+     "lat": 42.625,
+     "lon": 25.875,
+     "radiusKm": 10
+    },
+    "lastDataDay": "2025-12-05"
+   },
+   "expected": {
+    "month": 12,
+    "year": 2025,
+    "dayOfMonth": 5,
+    "current": 0.0,
+    "pastYears": {
+     "2000": 0.0,
+     "2001": 0.0,
+     "2002": 0.0,
+     "2003": 0.0,
+     "2004": 0.0,
+     "2005": 0.0,
+     "2006": 0.0,
+     "2007": 0.0,
+     "2008": 0.0,
+     "2009": 0.0,
+     "2010": 0.0,
+     "2011": 0.0,
+     "2012": 0.0,
+     "2013": 0.0,
+     "2014": 0.0,
+     "2015": 0.0,
+     "2016": 0.0,
+     "2017": 0.0,
+     "2018": 1.0,
+     "2019": 0.0,
+     "2020": 0.0,
+     "2021": 0.0,
+     "2022": 0.0,
+     "2023": 0.0,
+     "2024": 0.0
+    },
+    "pastYears_x625": {
+     "2000": 0,
+     "2001": 0,
+     "2002": 0,
+     "2003": 0,
+     "2004": 0,
+     "2005": 0,
+     "2006": 0,
+     "2007": 0,
+     "2008": 0,
+     "2009": 0,
+     "2010": 0,
+     "2011": 0,
+     "2012": 0,
+     "2013": 0,
+     "2014": 0,
+     "2015": 0,
+     "2016": 0,
+     "2017": 0,
+     "2018": 625,
+     "2019": 0,
+     "2020": 0,
+     "2021": 0,
+     "2022": 0,
+     "2023": 0,
+     "2024": 0
+    },
+    "current_x625": 0,
+    "status": "too_early",
+    "unpinned": {
+     "reason": "the rules give only the status for too_early; the other fields are not stated",
+     "ifComputedAnyway": {
+      "median": 0.0,
+      "mean": 0.04,
+      "ratioMedian": null,
+      "ratioMean": 0.0,
+      "higherThan": 0,
+      "status": "near"
+     }
+    }
+   }
+  },
+  {
+   "name": "Window end 2024-02-29, 8 days: 29 Feb maps to 28 Feb in 2023",
+   "input": {
+    "end": "2024-02-29",
+    "days": 8,
+    "pastYear": 2023
+   },
+   "expected": {
+    "mappedDays": [
+     "2023-02-22",
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28",
+     "2023-02-28"
+    ]
+   },
+   "ambiguity": "Eight current days map onto 22 to 28 Feb in 2023, so 28 Feb appears twice. Whether it is counted twice (8 values summed) or once (7 days) is not stated. Both are given.",
+   "alt": {
+    "countedTwice": [
+     "2023-02-22",
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28",
+     "2023-02-28"
+    ],
+    "countedOnce": [
+     "2023-02-22",
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28"
+    ]
+   }
+  },
+  {
+   "name": "Window end 2024-02-29, 8 days: leap year 2020 keeps 29 Feb",
+   "input": {
+    "end": "2024-02-29",
+    "days": 8,
+    "pastYear": 2020
+   },
+   "expected": {
+    "mappedDays": [
+     "2020-02-22",
+     "2020-02-23",
+     "2020-02-24",
+     "2020-02-25",
+     "2020-02-26",
+     "2020-02-27",
+     "2020-02-28",
+     "2020-02-29"
+    ]
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2020
+   },
+   "expected": {
+    "mappedDaysIfYearLabelIsTheEndYear": [
+     "2019-12-28",
+     "2019-12-29",
+     "2019-12-30",
+     "2019-12-31",
+     "2020-01-01",
+     "2020-01-02",
+     "2020-01-03",
+     "2020-01-04"
+    ],
+    "mappedDaysIfYearLabelIsTheStartYear": [
+     "2020-12-28",
+     "2020-12-29",
+     "2020-12-30",
+     "2020-12-31",
+     "2021-01-01",
+     "2021-01-02",
+     "2021-01-03",
+     "2021-01-04"
+    ]
+   },
+   "ambiguity": "Section 6 says a window that crosses 1 Jan uses the two matching years, but not which of the two is the label of the row. docs/data-contract.md section 9 labels a year block by the year the window STARTS in. Both mappings are given; the row's `year` label and its `estimated` flag depend on the choice."
+  }
+ ]
+}
