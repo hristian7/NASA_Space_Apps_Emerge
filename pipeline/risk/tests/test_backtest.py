@@ -133,3 +133,11 @@ def test_history_baseline_has_brier_and_reliability(candidates):
     assert probability['history_brier'] > 0
     assert probability['history_brier_skill'] == 0
     assert sum(row['n'] for row in probability['history_reliability']) == 9
+
+
+def test_regions_without_fires_are_reported(candidates):
+    candidates.execute("INSERT INTO candidates VALUES ('D',50,'forest','2025-07-01',1,0.1,'none',0.1)")
+    result = risk.selection_scores(candidates, 'forest_wildland', 2025)
+    assert result['regions']['D']['land_spots'] == 1
+    assert result['regions']['D']['new_fires'] == 0
+    assert result['regions']['D']['methods']['fwi']['capture_rate'] is None

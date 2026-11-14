@@ -131,14 +131,18 @@ def selection_scores(con, selection, year, has_model=False):
         by_month[r['day'].strftime('%Y-%m')].append(r)
         (small if land_spots[r['region_id']] < 20 else large).append(r)
     regions = {}
-    for region, items in sorted(by_region.items()):
-        regions[region] = {'land_spots': land_spots[region], 'min_scored_spots': min(r['n'] for r in items), 'max_scored_spots': max(r['n'] for r in items),
+    for region in sorted(land_spots):
+        items = by_region[region]
+        regions[region] = {'land_spots': land_spots[region],
+                           'min_scored_spots': min((r['n'] for r in items), default=None),
+                           'max_scored_spots': max((r['n'] for r in items), default=None),
                            **aggregate(items, methods)}
+    months = [r[0] for r in con.execute("SELECT DISTINCT strftime(day, '%Y-%m') FROM candidates ORDER BY 1").fetchall()]
     result = {'coverage': dict(zip(['eligible_spot_days', 'scored_spot_days', 'eligible_new_fires', 'scored_new_fires'], coverage)),
               'pooled': aggregate(rows, methods), 'continuing': continuing,
               'region_days_without_scores': sum(r['n'] == 0 for r in rows),
               'regions_under_20': aggregate(small, methods), 'regions_20_or_more': aggregate(large, methods),
-              'regions': regions, 'months': {k: aggregate(v, methods) for k, v in sorted(by_month.items())},
+              'regions': regions, 'months': {k: aggregate(by_month[k], methods) for k in months},
               'bootstrap': bootstrap(rows, year, methods)}
     # The same fire-positive region-days as the ranking are used for probability metrics.
     query = con.execute("""
