@@ -18,6 +18,9 @@ import { clampHistoryYear } from './history';
 import type { RecentWindow } from './firms';
 import { historyCells, recentPoints, type HistoryCell, type RecentPoint } from './overlay';
 import type { RecentPayload } from './recent';
+
+/** Cells per loaded year file, so returning to a year reuses them. */
+const cellsByFile = new WeakMap<GlobeFile, HistoryCell[]>();
 import {
   defaultLayerState,
   layerStateFromSearch,
@@ -208,7 +211,15 @@ export function useLayers(): LayersValue {
     };
   }, [recentOn, hydrated, state.recentWindow]);
 
-  const cells = useMemo(() => (historyOn ? historyCells(history) : []), [historyOn, history]);
+  const cells = useMemo(() => {
+    if (!historyOn || history === null) return [];
+    let built = cellsByFile.get(history);
+    if (built === undefined) {
+      built = historyCells(history);
+      cellsByFile.set(history, built);
+    }
+    return built;
+  }, [historyOn, history]);
   const points = useMemo(() => (recentOn ? recentPoints(recent) : []), [recentOn, recent]);
 
   return {

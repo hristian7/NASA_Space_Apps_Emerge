@@ -64,6 +64,8 @@ const countryBorderLayer = "emerge-countries-border";
 const countryChosenFill = "emerge-country-chosen-fill";
 const countryChosenLine = "emerge-country-chosen-line";
 const countriesUrl = "/geo/countries.json";
+/** Merged squares per year and zoom step, so zooming back and forth builds each once. */
+const mergedCells = new WeakMap<HistoryCell[], Map<number, HistoryCell[]>>();
 
 
 function rasterStyle(id: string): StyleSpecification | string {
@@ -345,17 +347,25 @@ export default function MapView({
 
         // A new style wipes every source, so the tiles are put back the same
         // way the selection is.
+        // Only a layer whose tiles changed is rebuilt; the others keep their
+        // loaded tiles, so switching one layer does not flash the rest.
+        const shownTiles = new Map<string, string>();
         const paintDanger = () => {
           for (const definition of LAYERS.filter((entry) => entry.kind === "raster_tiles")) {
             const source = `emerge-raster-${definition.id}`;
             const layer = `${source}-tiles`;
-            if (instance.getLayer(layer)) instance.removeLayer(layer);
-            if (instance.getSource(source)) instance.removeSource(source);
             const date = rasters.current[definition.id];
-            const tiles = date && layerUrl(definition.source, date);
+            const tiles = date && definition.source.kind === "tile_template" ? layerUrl(definition.source, date) : "";
+            const present = instance.getSource(source) !== undefined;
+            if (present && shownTiles.get(definition.id) === tiles) continue;
+            if (instance.getLayer(layer)) instance.removeLayer(layer);
+            if (present) instance.removeSource(source);
+            shownTiles.delete(definition.id);
             if (!tiles || definition.source.kind !== "tile_template") continue;
             instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.kind === "tile_template" && definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
-            instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, instance.getLayer(fillLayer) ? fillLayer : undefined);
+            const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
+            instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, below);
+            shownTiles.set(definition.id, tiles);
           }
         };
         paintDangerRef.current = paintDanger;
@@ -466,6 +476,7 @@ export default function MapView({
 
         // A new style drops every source and layer, so they are put back.
         instance.on("style.load", () => {
+          shownTiles.clear();
           instance.setProjection({ type: projection });
           paintSelection();
           paintCountries();
@@ -559,10 +570,19 @@ export default function MapView({
   // What the history layer actually draws at this zoom. Merging is done here
   // rather than in the loader, because only the map knows how close the
   // camera is.
-  const drawnCells = useMemo(
-    () => aggregateCells(historyCells, factor, CELL_DEG),
-    [historyCells, factor],
-  );
+  const drawnCells = useMemo(() => {
+    let byFactor = mergedCells.get(historyCells);
+    if (byFactor === undefined) {
+      byFactor = new Map();
+      mergedCells.set(historyCells, byFactor);
+    }
+    let cells = byFactor.get(factor);
+    if (cells === undefined) {
+      cells = aggregateCells(historyCells, factor, CELL_DEG);
+      byFactor.set(factor, cells);
+    }
+    return cells;
+  }, [historyCells, factor]);
 
   // History cells and recent detections, drawn over the map by deck.gl.
   useEffect(() => {
