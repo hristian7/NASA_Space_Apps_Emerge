@@ -44,7 +44,13 @@ M = _load_model_module()
 FIT = (2012, 2, 2022, 12)
 TERRA_PERIOD = (2000, 11, 2002, 6)
 MODIS_PERIOD = (2002, 7, 2012, 1)
-MEASURED_PERIOD = (2012, 2, 2025, 12)
+MEASURED_PERIOD = (2012, 2, 2026, 11)
+RECORD_END_DAY = "2026-11-14"
+SNPP_END_DAY = "2026-11-02"
+CAL_2026 = (2026, 1, 2026, 10)  # the last full months S-NPP and NOAA-20 both flew
+PROVISIONAL_SHARE = 0.5
+SRC_CALIBRATED, SRC_PROVISIONAL = "measured_calibrated", "provisional"
+UNASSIGNED = "Unassigned"
 NOAA20_RATIO_YEARS = (2018, 1, 2022, 12)
 WORLD_OPTIONS = ("moy", "moy_pooled")
 MIN_INNER_PAIRS = 100  # positive-MODIS pairs a country needs for an inner split
@@ -112,6 +118,75 @@ def aggregate(src: Path, threads: int) -> pd.DataFrame:
     return frame
 
 
+
+def aggregate_2026(src: Path, threads: int) -> pd.DataFrame:
+    """The 2026 table, aggregated like the main one.
+
+    Days after S-NPP stopped go into the same fill channel the 34 gap days
+    use (`cd_gap`, `hot_gap`, `frp_gap`), so the measured series continues
+    through one mechanism rather than two. NOAA-21 is read but not used: only
+    NOAA-20 is calibrated here.
+    """
+    con = duckdb.connect()
+    con.execute(f"SET threads = {threads}")
+    con.execute("SET memory_limit = '40GB'")
+    frame = con.execute(
+        f"""
+        SELECT country, sat,
+               CAST(grow * 1440 + gcol AS INTEGER) AS cell,
+               CAST(floor((90 - (grow + 0.5) * 0.25) / 5) AS SMALLINT) AS latband,
+               CAST(year(day) * 12 + month(day) - 1 AS INTEGER) AS ym,
+               CAST(sum(CASE WHEN post THEN 0 ELSE 1 END) AS INTEGER) AS cd,
+               CAST(sum(CASE WHEN post THEN 0 ELSE detections END) AS INTEGER) AS hot,
+               sum(CASE WHEN post THEN 0 ELSE frp END) AS frp,
+               CAST(sum(CASE WHEN post THEN 1 ELSE 0 END) AS INTEGER) AS cd_gap,
+               CAST(sum(CASE WHEN post THEN detections ELSE 0 END) AS INTEGER) AS hot_gap,
+               sum(CASE WHEN post THEN frp ELSE 0 END) AS frp_gap,
+               CAST(sum(detections) AS INTEGER) AS hot_raw,
+               CAST(sum(CASE WHEN provisional THEN 1 ELSE 0 END) AS BIGINT) AS prov_rows,
+               CAST(count(*) AS BIGINT) AS src_rows,
+               min(day) AS first_day, max(day) AS last_day
+        FROM (
+          SELECT country, sat, day, detections, frp, provisional,
+                 greatest(0, least(719,
+                   CAST(floor((90 - (cy + 0.5) / 100.0) / 0.25) AS BIGINT))) AS grow,
+                 CAST(floor((((cx + 0.5) / 100.0 + 180)
+                       - 360 * floor(((cx + 0.5) / 100.0 + 180) / 360)) / 0.25)
+                      AS BIGINT) AS gcol,
+                 day > DATE '{SNPP_END_DAY}' AS post
+          FROM '{src.as_posix()}'
+          WHERE sat IN ('Terra', 'Aqua', 'SNPP', 'NOAA20')
+        ) GROUP BY ALL
+        """
+    ).df()
+    con.close()
+    frame["group"] = frame["country"] + "|" + frame["latband"].astype(str)
+    return frame
+
+
+def provisional_months(agg: pd.DataFrame, report: dict) -> set:
+    """Months whose reference-sensor rows are mostly near-real-time.
+
+    The reference sensor is S-NPP, plus NOAA-20 on the days after S-NPP
+    stopped, which is exactly what the measured value is built from.
+    """
+    ref = agg[
+        (agg["sat"] == "SNPP")
+        | ((agg["sat"] == "NOAA20") & (agg.get("cd_gap", 0) > 0))
+    ]
+    if "prov_rows" not in ref.columns:
+        return set()
+    per = ref.groupby("ym", as_index=False)[["prov_rows", "src_rows"]].sum()
+    per = per[per["src_rows"] > 0]
+    per["share"] = per["prov_rows"] / per["src_rows"]
+    hit = per[per["share"] > PROVISIONAL_SHARE]
+    report["provisional_share_by_month"] = {
+        f"{int(r['ym']) // 12}-{int(r['ym']) % 12 + 1:02d}": round(float(r["share"]), 4)
+        for _, r in per[per["ym"] >= ym(2026, 1)].iterrows()
+    }
+    return set(hit["ym"].astype(int))
+
+
 def model_frame(agg: pd.DataFrame) -> pd.DataFrame:
     """The columns the imported model functions expect, gap days excluded."""
     cols = ["country", "group", "latband", "cell", "ym", "sat", "cd", "hot"]
@@ -169,13 +244,15 @@ def pick_background_form(
     k_ratio: float,
     picks_term: dict,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
 ) -> tuple:
     """Choose a background form per country on the same inner split as A2."""
-    inner_fit = (FIT[0], FIT[1], FIT[2] - INNER_HOLD_YEARS, 12)
-    inner_hold = (FIT[2] - INNER_HOLD_YEARS + 1, 1, FIT[2], FIT[3])
+    w = fit_window
+    inner_fit = (w[0], w[1], w[2] - INNER_HOLD_YEARS, 12)
+    inner_hold = (w[2] - INNER_HOLD_YEARS + 1, 1, w[2], w[3])
     fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
     assert not set(fit_m) & set(hold_m), "inner split overlaps"
-    index = M.activity_index(cm, unit, sat, FIT)
+    index = M.activity_index(cm, unit, sat, w)
     base_fit = M.pair_frame(univ, cm, fit_m, unit, sat, with_truth=True)
     base_hold = M.pair_frame(univ, cm, hold_m, unit, sat, with_truth=True)
     terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
@@ -283,15 +360,17 @@ def pick_per_country(
     modis_sat: str,
     k_ratio: float,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
 ) -> tuple[dict, dict]:
     """Choose `moy` or `moy_pooled` per country on an inner split of the fit
     years. A country with too few positive MODIS pairs in the inner fit, or no
     measured fire in the inner holdout, cannot be judged and takes
     `moy_pooled`, the safer of the two for a thin group."""
-    inner_fit = (FIT[0], FIT[1], FIT[2] - INNER_HOLD_YEARS, 12)
-    inner_hold = (FIT[2] - INNER_HOLD_YEARS + 1, 1, FIT[2], FIT[3])
+    w = fit_window
+    inner_fit = (w[0], w[1], w[2] - INNER_HOLD_YEARS, 12)
+    inner_hold = (w[2] - INNER_HOLD_YEARS + 1, 1, w[2], w[3])
     fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
-    assert set(hold_m) <= set(months_in(FIT)), "inner holdout outside the fit years"
+    assert set(hold_m) <= set(months_in(w)), "inner holdout outside the fit years"
     assert not set(fit_m) & set(hold_m), "inner split overlaps"
 
     models, pairs = fit_options(cm, univ, fit_m, unit, modis_sat, k_ratio, rng)
@@ -338,13 +417,15 @@ def fit_production(
     modis_sat: str,
     k_ratio: float,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
+    pred_window: tuple[int, int, int, int] | None = None,
 ) -> tuple[dict, dict]:
     """Refit both options on all fit years and record where S-NPP came from.
 
     The leakage record is taken from the rows that actually built the fitted
     parameters, not from a frame that was just filtered, so it can fail.
     """
-    months = months_in(FIT)
+    months = months_in(fit_window)
     models, pairs = fit_options(cm, univ, months, unit, modis_sat, k_ratio, rng)
     truth = pairs.loc[pairs["y"] > 0, "ym"]
     record = {
@@ -357,6 +438,10 @@ def fit_production(
     assert record["snpp_first_ym"] >= record["window_first_ym"], "S-NPP before the fit window"
     assert record["snpp_last_ym"] <= record["window_last_ym"], "S-NPP after the fit window"
     assert record["snpp_first_ym"] >= ym(2012, 2), "S-NPP used before Feb 2012"
+    if pred_window is not None:
+        bad = np.isin(truth.to_numpy(), months_in(pred_window))
+        record["snpp_rows_inside_the_prediction_window"] = int(bad.sum())
+        assert not bad.any(), "S-NPP from a prediction year entered the fit"
     pools = {n: fast_country_pools(m, pairs) for n, m in models.items()}
     del pairs
     return models, record, pools
@@ -442,6 +527,7 @@ def harmonize(
     est_parts, backgrounds = [], []
     joint_ranges: dict = {}
     factor_parts: list = []
+    pooled: list = []
     if MODEL_VARIANT and MODEL_VARIANT[0] == "A3":
         report["a3_background"] = {}
         for sat in ("Terra", "Aqua"):
@@ -460,7 +546,7 @@ def harmonize(
                 "country_band_calibration": rep,
             }
     for src, (frame, sat) in est.items():
-        per_unit = {}
+        per_unit, models_by_unit = {}, {}
         for unit in M.UNITS:
             models, record, pools = fit_production(
                 cm, univ, unit, sat, M.K_RATIO_CD * k_scale[unit], rng
@@ -493,7 +579,8 @@ def harmonize(
             )
             joint["src"] = src
             joint_ranges.setdefault(unit, []).append(joint)
-            del got, base, models
+            models_by_unit[unit] = models
+            del got, base
         joined = per_unit["cd"].merge(
             per_unit["hot"], on=["country", "cell", "ym"], how="outer"
         )
@@ -510,6 +597,16 @@ def harmonize(
         factor_parts.append(
             f_cd.merge(f_hot[["group", "moy", "k_hot"]], on=["group", "moy"], how="left")
         )
+        pbg, pf_cd = pooled_rows(models_by_unit["cd"], bg_cd, f_cd, src, "cd")
+        _, pf_hot = pooled_rows(models_by_unit["hot"], bg_hot, f_hot, src, "hot")
+        pooled.append(
+            (
+                pbg.rename(columns={"pred": "cd", "hi": "cd_hi"}).assign(
+                    hot=pbg["pred"], hot_hi=pbg["hi"]
+                ),
+                pf_cd.merge(pf_hot[["group", "moy", "k_hot"]], on=["group", "moy"]),
+            )
+        )
 
     estimated = pd.concat(est_parts, ignore_index=True)
     report["joint_country_range"] = (
@@ -524,6 +621,8 @@ def harmonize(
 
     # Measured period: S-NPP as it is, with the gap days filled from NOAA-20.
     ratio = noaa20_ratio(agg, report)
+    ratio_2026 = noaa20_ratio(agg, report, CAL_2026, "noaa20_to_snpp_ratio_2026")
+    prov_ym = provisional_months(agg, report)
     snpp = agg.loc[
         (agg["sat"] == "SNPP") & M.window_mask(agg["ym"], MEASURED_PERIOD),
         ["country", "cell", "ym", "cd", "hot"],
@@ -542,12 +641,40 @@ def harmonize(
     for c in ("cd", "hot", "cd_gap", "hot_gap"):
         meas[c] = meas[c].fillna(0).astype(float)
     meas["gap_filled"] = meas["cd_gap"] > 0
-    meas["cd"] = meas["cd"] + meas["cd_gap"] * ratio["cd"]
-    meas["hot"] = meas["hot"] + meas["hot_gap"] * ratio["hot"]
+    after_snpp = meas["ym"] >= ym(2026, 1)
     for u in M.UNITS:
+        r = np.where(after_snpp, ratio_2026[u], ratio[u])
+        meas[u] = meas[u] + meas[f"{u}_gap"] * r
         meas[f"{u}_lo"] = meas[u]
         meas[f"{u}_hi"] = meas[u]
-    meas["src"] = SRC_MEASURED
+    # Label: a month holding a day after S-NPP stopped is measured_calibrated
+    # and keeps that label; a month whose reference rows are mostly
+    # near-real-time is provisional; everything else is measured.
+    calibrated_ym = set(
+        meas.loc[meas["gap_filled"] & after_snpp, "ym"].astype(int).unique()
+    )
+    meas["src"] = np.where(
+        meas["ym"].isin(calibrated_ym),
+        SRC_CALIBRATED,
+        np.where(meas["ym"].isin(prov_ym), SRC_PROVISIONAL, SRC_MEASURED),
+    )
+    report["month_labels"] = {
+        "measured_calibrated": sorted(
+            f"{v // 12}-{v % 12 + 1:02d}" for v in calibrated_ym
+        ),
+        "provisional": sorted(
+            f"{v // 12}-{v % 12 + 1:02d}" for v in prov_ym if v not in calibrated_ym
+        ),
+        "measured_calibrated_is_also_provisional": sorted(
+            f"{v // 12}-{v % 12 + 1:02d}" for v in calibrated_ym if v in prov_ym
+        ),
+        "snpp_gap_filled": sorted(
+            f"{v // 12}-{v % 12 + 1:02d}"
+            for v in meas.loc[
+                meas["gap_filled"] & ~after_snpp, "ym"
+            ].astype(int).unique()
+        ),
+    }
     measured = meas[
         ["country", "cell", "ym", "src", "gap_filled"] + HARM_COLS
     ]
@@ -563,6 +690,7 @@ def harmonize(
         picks,
         joint,
         pd.concat(factor_parts, ignore_index=True),
+        pooled,
     )
 
 
@@ -707,19 +835,31 @@ def check_factors(
     return out
 
 
-def noaa20_ratio(agg: pd.DataFrame, report: dict) -> dict:
-    """NOAA-20 to S-NPP ratio, measured on non-gap days 2018 to 2022."""
-    w = M.window_mask(agg["ym"], NOAA20_RATIO_YEARS)
+def noaa20_ratio(
+    agg: pd.DataFrame,
+    report: dict,
+    window: tuple[int, int, int, int] = NOAA20_RATIO_YEARS,
+    key: str = "noaa20_to_snpp_ratio",
+) -> dict:
+    """S-NPP over NOAA-20, measured on the window's non-gap days.
+
+    The returned number multiplies a NOAA-20 count to bring it to S-NPP level,
+    so it is the reciprocal of the NOAA-20 to S-NPP ratio that the research
+    note quotes. Both are reported.
+    """
+    w = M.window_mask(agg["ym"], window)
     out = {}
     for unit in M.UNITS:
         a = float(agg.loc[w & (agg["sat"] == "SNPP"), unit].sum())
         b = float(agg.loc[w & (agg["sat"] == "NOAA20"), unit].sum())
         out[unit] = a / b if b else 1.0
-    report["noaa20_to_snpp_ratio"] = {
-        "years": "2018 to 2022, gap days excluded",
-        "cd": round(out["cd"], 5),
-        "hot": round(out["hot"], 5),
-        "applied_as": "NOAA-20 gap-day counts are multiplied by this before filling",
+    report[key] = {
+        "window": f"{window[0]}-{window[1]:02d} to {window[2]}-{window[3]:02d}",
+        "snpp_over_noaa20_cd": round(out["cd"], 5),
+        "snpp_over_noaa20_hot": round(out["hot"], 5),
+        "noaa20_over_snpp_cd": round(1 / out["cd"], 5) if out["cd"] else None,
+        "noaa20_over_snpp_hot": round(1 / out["hot"], 5) if out["hot"] else None,
+        "applied_as": "a NOAA-20 count is multiplied by snpp_over_noaa20 before filling",
     }
     return out
 
@@ -741,6 +881,126 @@ def partial_months(agg: pd.DataFrame) -> dict:
     return out
 
 
+
+# ------------------------------------------------- the world model's own tests
+
+Q25_COUNTRIES = ("Bulgaria", "United_States")
+
+
+def holdout_run(agg, cm, rng, report, out_dir):
+    """Hold-out predictions from the world model, for the independent scorer.
+
+    The scored bake-off fitted two countries. These rows come from the same
+    functions fitted on all of them, so the scorer can say what the world
+    model is worth, including for a small country.
+    """
+    pieces, counts, leak = [], {}, {}
+    for test in ("t1", "t2"):
+        fitw, predw = M.TESTS[test]["fit"], M.TESTS[test]["pred"]
+        univ = M.universe(cm, fitw)
+        k_cd = M.K_RATIO_CD
+        aqua = cm[(cm["sat"] == "Aqua") & M.window_mask(cm["ym"], fitw)]
+        k_scale = {u: float(aqua[u].sum() / aqua["cd"].sum()) for u in M.UNITS}
+        picks_term, inner_t = pick_per_country(
+            cm, univ, "cd", "Aqua", k_cd * k_scale["cd"], rng, fit_window=fitw
+        )
+        A3_STATE.clear()
+        index, picks_form, scores, calib, rep = pick_background_form(
+            cm, univ, "cd", "Aqua", k_cd * k_scale["cd"], picks_term, rng,
+            fit_window=fitw,
+        )
+        for unit in M.UNITS:
+            A3_STATE[(unit, "Aqua")] = (
+                M.activity_index(cm, unit, "Aqua", fitw), picks_form, calib,
+            )
+        report.setdefault("tests", {})[test] = {
+            "fit": f"{fitw[0]}-{fitw[1]:02d} to {fitw[2]}-{fitw[3]:02d}",
+            "predict": f"{predw[0]}-{predw[1]:02d} to {predw[2]}-{predw[3]:02d}",
+            "time_term_counts": pd.Series(picks_term).value_counts().to_dict(),
+            "background_form_counts": pd.Series(picks_form).value_counts().to_dict(),
+            "inner_split": inner_t,
+            "country_band_calibration": rep,
+        }
+        for unit in M.UNITS:
+            models, record, pools = fit_production(
+                cm, univ, unit, "Aqua", k_cd * k_scale[unit], rng,
+                fit_window=fitw, pred_window=predw,
+            )
+            leak[f"{test}_{unit}"] = record
+            future = pair_frame(
+                univ, cm, months_in(predw), unit, "Aqua", with_truth=False
+            )
+            cr = joint_country_ranges(
+                models, picks_term, univ, cm, months_in(predw), unit, "Aqua",
+                pools, rng,
+            ).rename(
+                columns={
+                    f"{unit}_joint": "pred",
+                    f"{unit}_joint_lo": "lo",
+                    f"{unit}_joint_hi": "hi",
+                }
+            )
+            cr = cr.drop(
+                columns=[c for c in cr.columns if c.endswith("_raw")], errors="ignore"
+            )
+            cr["grid"], cr["cell"] = "country", 0
+            q = predict_rows(
+                models, picks_term, future[future["country"].isin(Q25_COUNTRIES)]
+            )
+            q = q[q["pred"] > 0].copy()
+            q["grid"] = "q25"
+            for frame in (cr, q):
+                frame["pipeline"], frame["test"], frame["unit"] = "W", test, unit
+                frame["year"] = frame["ym"] // 12
+                frame["month"] = (frame["ym"] % 12) + 1
+                pieces.append(
+                    frame[
+                        [
+                            "pipeline", "test", "unit", "country", "grid", "cell",
+                            "year", "month", "pred", "lo", "hi",
+                        ]
+                    ]
+                )
+            counts[f"{test}_{unit}_country"] = int(len(cr))
+            counts[f"{test}_{unit}_q25"] = int(len(q))
+            print(f"W {test} {unit}: {len(cr):,} country rows "
+                  f"({cr['country'].nunique()} countries), {len(q):,} q25 rows",
+                  flush=True)
+            del models, pools, future, cr, q
+    pred = pd.concat(pieces, ignore_index=True)
+    pred["cell"] = pred["cell"].astype("int64")
+    pred["year"] = pred["year"].astype("int32")
+    pred["month"] = pred["month"].astype("int32")
+    for c in ("pred", "lo", "hi"):
+        pred[c] = pred[c].astype("float64")
+    pred["pred"] = pred["pred"].clip(lower=0.0)
+    pred["lo"] = np.minimum(pred["lo"].clip(lower=0.0), pred["pred"])
+    pred["hi"] = np.maximum(pred["hi"], pred["pred"])
+    assert list(pred.columns) == [
+        "pipeline", "test", "unit", "country", "grid", "cell",
+        "year", "month", "pred", "lo", "hi",
+    ]
+    assert set(pred["pipeline"]) == {"W"}
+    assert set(pred["test"]) == {"t1", "t2"}
+    assert set(pred["unit"]) == set(M.UNITS)
+    assert set(pred["grid"]) == {"country", "q25"}
+    assert set(pred.loc[pred["grid"] == "country", "cell"]) == {0}
+    assert set(pred.loc[pred["grid"] == "q25", "country"]) <= set(Q25_COUNTRIES)
+    assert not pred.isna().any().any(), "NaN in the hold-out output"
+    assert (pred["pred"] >= 0).all()
+    assert (pred["lo"] <= pred["pred"]).all() and (pred["pred"] <= pred["hi"]).all()
+    assert pred["month"].between(1, 12).all()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pred.to_parquet(out_dir / "pred.parquet", index=False, compression="zstd")
+    report["rows"] = counts
+    report["rows_total"] = int(len(pred))
+    report["countries"] = int(
+        pred.loc[pred["grid"] == "country", "country"].nunique()
+    )
+    report["leakage_record"] = leak
+    return pred
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="World run of the scored A2 conversion")
     ap.add_argument("--data", default=str(ROOT / "data"))
@@ -749,6 +1009,9 @@ def main() -> int:
                     help="A3 is the adopted model and the default. A2 is the "
                          "earlier scored model, kept so the bake-off rows can "
                          "be reproduced.")
+    ap.add_argument("--holdout", action="store_true",
+                    help="Write the hold-out predictions of the world model "
+                         "for the scorer instead of the record.")
     ap.add_argument("--check-bakeoff", action="store_true")
     args = ap.parse_args()
     data = Path(args.data).resolve()
@@ -761,6 +1024,49 @@ def main() -> int:
 
     src = data / "derived" / "world" / "cell_days.parquet"
     agg = aggregate(src, args.threads)
+    src26 = data / "derived" / "world" / "cell_days_2026.parquet"
+    if src26.exists() and not args.holdout:
+        a26 = aggregate_2026(src26, args.threads)
+        report["rows_2026_aggregate"] = int(len(a26))
+        report["unassigned_cell_months_2026"] = int(
+            a26.loc[a26["country"] == UNASSIGNED, ["cell", "ym"]]
+            .drop_duplicates()
+            .shape[0]
+        )
+        print(f"2026 table: {len(a26):,} aggregate rows, "
+              f"{report['unassigned_cell_months_2026']:,} cell-months with no country")
+        agg = pd.concat([agg, a26], ignore_index=True)
+        for c in ("prov_rows", "src_rows"):
+            agg[c] = agg[c].fillna(0)
+    if args.holdout:
+        cm = model_frame(agg)
+        rng = np.random.default_rng(M.SEED + 7)
+        MODEL_VARIANT.append("A3")
+        hout = data / "derived" / "bakeoff" / "W"
+        report["pipeline"] = "W"
+        report["band"] = M.BAND
+        report["model"] = (
+            "The world model (A3) fitted on all countries, predicting the protocol "
+            "t1 and t2 windows. Country rows carry the jointly computed and "
+            "conformally calibrated range. q25 rows are written for Bulgaria and "
+            "the United States so the world model can sit next to A3 on the "
+            "existing levels."
+        )
+        t_h = time.time()
+        holdout_run(agg, cm, rng, report, hout)
+        report["seconds_model"] = round(time.time() - t_h, 1)
+        report["seconds_total"] = round(time.time() - t0, 1)
+        for key, rec in report["leakage_record"].items():
+            print(f"  leakage {key}: S-NPP months {rec['snpp_first_ym']} to "
+                  f"{rec['snpp_last_ym']}, fit window {rec['window_first_ym']} to "
+                  f"{rec['window_last_ym']}, rows inside the prediction window "
+                  f"{rec.get('snpp_rows_inside_the_prediction_window')}")
+        (hout / "manifest.json").write_text(
+            json.dumps(report, indent=2, default=str) + "\n"
+        )
+        print(f"\nwrote {hout}: {report['rows_total']:,} rows, "
+              f"{report['countries']} countries, {report['seconds_total']} s")
+        return 0
     print(f"aggregate: {len(agg):,} country x satellite x cell x month rows "
           f"in {time.time() - t0:.0f} s")
     cm = model_frame(agg)
@@ -771,7 +1077,9 @@ def main() -> int:
 
     rng = np.random.default_rng(M.SEED)
     t_fit = time.time()
-    cells, background, picks, joint, factors = harmonize(agg, cm, univ, rng, report)
+    (cells, background, picks, joint, factors, pooled_parts) = harmonize(
+        agg, cm, univ, rng, report
+    )
     report["seconds_model"] = round(time.time() - t_fit, 1)
 
     # One row per cell-month: a border cell's countries are added together.
@@ -786,6 +1094,13 @@ def main() -> int:
     cells.loc[cells["gap_filled"], "flags"] = (
         cells.loc[cells["gap_filled"], "flags"] | FLAG_GAP_FILLED
     )
+    # The record ends mid-month, so its last month is partial whatever the
+    # per-satellite spans say.
+    end = pd.Timestamp(RECORD_END_DAY)
+    last_ym = ym(end.year, end.month)
+    if end.day < end.days_in_month:
+        hit = cells["ym"] == last_ym
+        cells.loc[hit, "flags"] = cells.loc[hit, "flags"] | FLAG_PARTIAL
 
     frp = reference_frp(agg)
     countries = country_rollup(cells, agg, univ, background, picks, report, joint, rng)
@@ -804,6 +1119,16 @@ def main() -> int:
     write_checks(per_cell, countries, background)
     per_cell.to_parquet(out_dir / "cells_monthly.parquet", index=False, compression="zstd")
 
+    if pooled_parts:
+        background = pd.concat(
+            [background] + [b for b, _ in pooled_parts], ignore_index=True
+        )
+        factors = pd.concat(
+            [factors] + [f for _, f in pooled_parts], ignore_index=True
+        )
+        factors = factors.groupby(
+            ["group", "period", "moy"], as_index=False
+        ).agg({"k_cd": "max", "k_hot": "max"})
     background = background.rename(columns={"moy": "month"})
     background["group_id"] = (
         background["group"].astype("category").cat.codes.astype("int32")
@@ -812,16 +1137,27 @@ def main() -> int:
         ["group_id", "country", "lat_band", "period", "month", "hot", "hot_hi", "cd", "cd_hi"]
     ].to_parquet(out_dir / "background.parquet", index=False, compression="zstd")
 
-    groups_map = dict(
-        zip(background["group"], background["group_id"])
+    groups_map = dict(zip(background["group"], background["group_id"]))
+    cell_groups = cell_groups_table(agg, univ, groups_map, report)
+    if POOLED_GROUP in set(cell_groups["group"]):
+        groups_map[POOLED_GROUP] = int(max(groups_map.values())) + 1
+    cell_groups["group_id"] = cell_groups["group"].map(groups_map).astype("int32")
+    # Every cell in the record has exactly one group row.
+    in_record = set(per_cell["cell"].astype(int))
+    have = cell_groups.loc[cell_groups["cell"].isin(in_record), "cell"]
+    report["cell_group_completeness"] = {
+        "cells_in_cells_monthly": len(in_record),
+        "cells_with_exactly_one_group_row": int(
+            have.value_counts().eq(1).sum()
+        ),
+        "cells_without_a_group": int(len(in_record) - have.nunique()),
+    }
+    print(f"cell groups: {report['cell_group_completeness']['cells_with_exactly_one_group_row']:,}"
+          f" of {len(in_record):,} cells in the record have exactly one group row")
+    assert report["cell_group_completeness"]["cells_without_a_group"] == 0, (
+        "a cell in the record has no group"
     )
-    cell_groups = dominant_country(agg, univ)
-    # A border cell's busiest country can be one with no fit-window rows of its
-    # own, so it has no fitted group. Those cells get -1, meaning no background.
-    cell_groups["group_id"] = (
-        cell_groups["group"].map(groups_map).fillna(-1).astype("int32")
-    )
-    report["cells_without_a_group"] = int((cell_groups["group_id"] < 0).sum())
+    assert have.value_counts().eq(1).all(), "a cell has more than one group row"
     cell_groups[["cell", "group_id", "country"]].to_parquet(
         out_dir / "cell_groups.parquet", index=False, compression="zstd"
     )
@@ -862,7 +1198,9 @@ def main() -> int:
         "aggregate": int(len(agg)),
     }
     # Gate: every country has a row for every month of its coverage.
-    first = agg.groupby("country", as_index=False)["ym"].min()
+    first = (
+        agg[agg["country"] != UNASSIGNED].groupby("country", as_index=False)["ym"].min()
+    )
     last = ym(MEASURED_PERIOD[2], MEASURED_PERIOD[3])
     have = countries.assign(ym=countries["year"] * 12 + countries["month"] - 1)
     counts = have.groupby("country", as_index=False)["ym"].count().rename(
@@ -924,8 +1262,32 @@ def main() -> int:
     for y, d in years.items():
         print(f"  {y}  {d['cd']:14,.0f}   range {d['cd_lo']:12,.0f} to {d['cd_hi']:12,.0f}"
               f"   {','.join(d['src'])}")
+    coverage = {
+        "last_day_per_satellite": {
+            str(k): str(pd.Timestamp(v).date())
+            for k, v in agg.groupby("sat")["last_day"].max().items()
+        },
+        "last_day_of_the_record": RECORD_END_DAY,
+        "snpp_last_day": SNPP_END_DAY,
+        "first_month": f"{TERRA_PERIOD[0]}-{TERRA_PERIOD[1]:02d}",
+        "last_month": f"{MEASURED_PERIOD[2]}-{MEASURED_PERIOD[3]:02d}",
+        "calibration": {
+            "gap_days_2022_2024": report.get("noaa20_to_snpp_ratio"),
+            "after_snpp_2026": report.get("noaa20_to_snpp_ratio_2026"),
+        },
+        "month_labels": report.get("month_labels", {}),
+        "provisional_share_by_month": report.get("provisional_share_by_month", {}),
+        "src_periods": src_periods(report),
+        "notes": (
+            "November 2026 holds 14 days of 30 and carries partial_month. S-NPP "
+            "stopped on 2 Nov 2026, so 3 to 14 Nov rests on NOAA-20 brought to "
+            "S-NPP level. NOAA-21 is in the input but is not used."
+        ),
+    }
+    (out_dir / "coverage.json").write_text(json.dumps(coverage, indent=2) + "\n")
     report["seconds_total"] = round(time.time() - t0, 1)
     control_totals(data, per_cell, countries, report, args.threads)
+    checks_2026(data, per_cell, countries, report, args.threads)
     if args.check_bakeoff:
         report["bakeoff_consistency"] = check_bakeoff(data)
     report["diagnostic_t3_overshoot"] = drift_diagnostic(cm, univ, rng)
@@ -986,6 +1348,94 @@ def dominant_country(agg: pd.DataFrame, univ: pd.DataFrame) -> pd.DataFrame:
     return best[best["cell"].isin(set(univ["cell"]))][["cell", "country", "group"]]
 
 
+
+POOLED_GROUP = "POOLED|0"
+
+
+def pooled_rows(models: dict, background: pd.DataFrame, factors: pd.DataFrame,
+                period: str, unit: str) -> tuple:
+    """A background and a factor row for the pooled group.
+
+    A cell whose own country and band never entered the fit still has to answer
+    for an estimated month, so it is given the cascade's global level, which is
+    the value the model itself falls back to. The upper end carries the median
+    relative width of the fitted groups.
+    """
+    model = models[sorted(models)[0]]
+    bg_hi_ratio = float(
+        np.median(
+            (background["hi"] / background["pred"].where(background["pred"] > 0)).dropna()
+        )
+    ) if len(background) else 2.0
+    bg = {
+        "group": POOLED_GROUP, "country": "POOLED", "lat_band": 0,
+        "period": period, "moy": list(range(1, 13)),
+    }
+    bgr = pd.DataFrame({
+        "group": POOLED_GROUP, "country": "POOLED", "lat_band": 0, "period": period,
+        "moy": np.arange(1, 13),
+        "pred": model.z_global, "hi": model.z_global * bg_hi_ratio,
+    })
+    fac = pd.DataFrame({
+        "group": POOLED_GROUP, "period": period, "moy": np.arange(1, 13),
+        f"k_{unit}": model.r_global,
+    })
+    return bgr, fac
+
+
+def cell_groups_table(
+    agg: pd.DataFrame, univ: pd.DataFrame, groups_map: dict, report: dict
+) -> pd.DataFrame:
+    """A group for every cell that appears in the record, not only fitted ones.
+
+    A cell that first burned after the fit window still has to answer for an
+    estimated month, so it takes the group its own country and 5 degree band
+    would give it; failing that the nearest fitted band of the same country;
+    failing that the pooled group. The background does apply to such a cell
+    before Feb 2012: the background is the expected value where the old sensor
+    saw nothing in a cell that can burn, and a cell that burned in 2023 can
+    burn, so leaving it out would read 0 for every estimated month.
+    """
+    weight = agg.groupby(["cell", "country", "latband", "group"], as_index=False)["cd"].sum()
+    weight = weight.sort_values(
+        ["cell", "cd", "country"], ascending=[True, False, True]
+    )
+    best = weight.drop_duplicates("cell", keep="first").reset_index(drop=True)
+    fitted = {g for g in groups_map if g != POOLED_GROUP}
+    in_univ = set(univ["cell"].astype(int))
+    bands = {}
+    for g in fitted:
+        country, band = g.rsplit("|", 1)
+        bands.setdefault(country, []).append(int(band))
+
+    final, route = [], []
+    for cell, country, band, group in zip(
+        best["cell"].to_numpy(), best["country"].to_numpy(),
+        best["latband"].to_numpy(), best["group"].to_numpy(),
+    ):
+        if group in fitted:
+            final.append(group)
+            route.append("fit_universe" if int(cell) in in_univ else "own_country_band")
+            continue
+        near = bands.get(str(country))
+        if near:
+            pick = min(near, key=lambda b: (abs(b - int(band)), b))
+            final.append(f"{country}|{pick}")
+            route.append("nearest_band_same_country")
+            continue
+        final.append(POOLED_GROUP)
+        route.append("pooled")
+    best["group_final"] = final
+    best["route"] = route
+    report["cell_group_routes"] = (
+        pd.Series(route).value_counts().to_dict() if route else {}
+    )
+    out = best[["cell", "country", "group_final", "route"]].rename(
+        columns={"group_final": "group"}
+    )
+    return out
+
+
 def country_rollup(
     cells: pd.DataFrame,
     agg: pd.DataFrame,
@@ -998,6 +1448,7 @@ def country_rollup(
 ) -> pd.DataFrame:
     """Per country and month, with the background added for every cell of the
     country's cell universe that has no row that month."""
+    cells = cells[cells["country"] != UNASSIGNED]
     seen_rows = cells.groupby(["country", "ym", "src"], as_index=False).agg(
         {**{c: "sum" for c in HARM_COLS}, "gap_filled": "max"}
     )
@@ -1005,8 +1456,11 @@ def country_rollup(
     # the end of the record. A month the source sensor never saw still carries
     # the background of all the country's cells, and a measured month with no
     # fire is an honest zero.
-    first = agg.groupby("country", as_index=False)["ym"].min().rename(
-        columns={"ym": "first_ym"}
+    first = (
+        agg[agg["country"] != UNASSIGNED]
+        .groupby("country", as_index=False)["ym"]
+        .min()
+        .rename(columns={"ym": "first_ym"})
     )
     last = ym(MEASURED_PERIOD[2], MEASURED_PERIOD[3])
     full = pd.concat(
@@ -1023,6 +1477,16 @@ def country_rollup(
             full["ym"] <= ym(MODIS_PERIOD[2], MODIS_PERIOD[3]), SRC_MODIS, SRC_MEASURED
         ),
     )
+    labels = report.get("month_labels", {})
+
+    def relabel(names: list, label: str) -> None:
+        want = {
+            ym(int(n.split("-")[0]), int(n.split("-")[1])) for n in names
+        }
+        full.loc[full["ym"].isin(want), "src"] = label
+
+    relabel(labels.get("provisional", []), SRC_PROVISIONAL)
+    relabel(labels.get("measured_calibrated", []), SRC_CALIBRATED)
     listed = full.merge(seen_rows, on=["country", "ym", "src"], how="left")
     for c in HARM_COLS:
         listed[c] = listed[c].fillna(0.0)
@@ -1129,11 +1593,17 @@ def write_checks(cells: pd.DataFrame, countries: pd.DataFrame, bg: pd.DataFrame)
     assert (cells["cell"].between(0, 1036799)).all(), "cell id out of range"
     assert (cells["month"].between(1, 12)).all()
     assert (cells["year"] * 12 + cells["month"] - 1 >= ym(2000, 11)).all()
-    assert set(cells["src"]) <= {SRC_TERRA, SRC_MODIS, SRC_MEASURED}
+    assert set(cells["src"]) <= {
+        SRC_TERRA, SRC_MODIS, SRC_MEASURED, SRC_CALIBRATED, SRC_PROVISIONAL,
+    }, "src outside the five labels the data contract fixes"
     assert (bg["cd"] >= 0).all() and (bg["hot"] >= 0).all()
     assert (bg["cd"] <= bg["cd_hi"] + 1e-9).all()
-    meas = cells[cells["src"] == SRC_MEASURED]
-    assert (meas["year"] * 12 + meas["month"] - 1 >= ym(2012, 2)).all(), "measured before Feb 2012"
+    meas = cells[
+        cells["src"].isin({SRC_MEASURED, SRC_CALIBRATED, SRC_PROVISIONAL})
+    ]
+    assert (
+        meas["year"] * 12 + meas["month"] - 1 >= ym(2012, 2)
+    ).all(), "a measured label before Feb 2012"
 
 
 def control_totals(
@@ -1176,6 +1646,104 @@ def control_totals(
     assert abs(mine["cd"] - direct[0]) < 1e-6, "2019 cd control total mismatch"
     assert abs(mine["hot"] - direct[1]) < 1e-6, "2019 hot control total mismatch"
     assert raw_ok, "Bulgaria Aug 2020 raw hotspot mismatch"
+
+
+
+
+def src_periods(report: dict) -> list:
+    """The label timeline, built from the labels the run actually applied."""
+    labels = report.get("month_labels", {})
+    special = {}
+    for name in ("provisional", "measured_calibrated"):
+        for m in labels.get(name, []):
+            y, mo = (int(x) for x in m.split("-"))
+            special[ym(y, mo)] = name
+    out = [
+        {"from": "2000-11", "to": "2002-06", "src": SRC_TERRA},
+        {"from": "2002-07", "to": "2012-01", "src": SRC_MODIS},
+    ]
+    start, last = ym(2012, 2), ym(MEASURED_PERIOD[2], MEASURED_PERIOD[3])
+    run_src = special.get(start, SRC_MEASURED)
+    run_from = start
+    for v in range(start + 1, last + 2):
+        here = special.get(v, SRC_MEASURED) if v <= last else None
+        if here != run_src:
+            out.append({
+                "from": f"{run_from // 12}-{run_from % 12 + 1:02d}",
+                "to": f"{(v - 1) // 12}-{(v - 1) % 12 + 1:02d}",
+                "src": run_src,
+            })
+            run_src, run_from = here, v
+    return out
+
+
+def checks_2026(
+    data: Path, cells: pd.DataFrame, countries: pd.DataFrame, report: dict, threads: int
+) -> None:
+    """The gates the 2026 extension adds."""
+    src26 = data / "derived" / "world" / "cell_days_2026.parquet"
+    if not src26.exists():
+        return
+    con = duckdb.connect()
+    con.execute(f"SET threads = {threads}")
+    direct = con.execute(
+        f"""SELECT count(*) AS cd, sum(detections) AS hot FROM '{src26.as_posix()}'
+            WHERE sat = 'SNPP' AND day <= DATE '2026-10-31'"""
+    ).fetchone()
+    post = con.execute(
+        f"""SELECT count(*) AS cd, sum(detections) AS hot FROM '{src26.as_posix()}'
+            WHERE sat = 'NOAA20' AND day > DATE '{SNPP_END_DAY}'"""
+    ).fetchone()
+    con.close()
+    jan_oct = cells[
+        (cells["year"] == 2026) & (cells["month"] <= 10)
+    ][["cd", "hot"]].sum()
+    nov = cells[(cells["year"] == 2026) & (cells["month"] == 11)]
+    r = report["noaa20_to_snpp_ratio_2026"]
+    expected_nov_fill = {
+        "cd": float(post[0]) * r["snpp_over_noaa20_cd"],
+        "hot": float(post[1]) * r["snpp_over_noaa20_hot"],
+    }
+    print(f"\n2026 Jan to Oct S-NPP cd: pipeline {jan_oct['cd']:,.0f} | "
+          f"direct {direct[0]:,}")
+    print(f"2026 Jan to Oct S-NPP hot: pipeline {jan_oct['hot']:,.0f} | "
+          f"direct {direct[1]:,}")
+    print(f"3 to 14 Nov 2026 fill, cd: NOAA-20 {post[0]:,} / "
+          f"{r['noaa20_over_snpp_cd']} = {expected_nov_fill['cd']:,.0f}")
+    partial_ok = bool(
+        (nov["flags"].astype(int) & FLAG_PARTIAL).all() and len(nov)
+    )
+    print(f"November 2026 carries partial_month: {'PASS' if partial_ok else 'MISS'}")
+    report["checks_2026"] = {
+        "jan_to_oct_snpp_cd": {"pipeline": float(jan_oct["cd"]), "direct": int(direct[0])},
+        "jan_to_oct_snpp_hot": {"pipeline": float(jan_oct["hot"]), "direct": int(direct[1])},
+        "post_snpp_noaa20_rows": {"cd": int(post[0]), "hot": int(post[1])},
+        "post_snpp_value_after_scaling": expected_nov_fill,
+        "november_2026_partial_month": partial_ok,
+    }
+    assert abs(jan_oct["cd"] - direct[0]) < 1e-6, "2026 Jan to Oct cd mismatch"
+    assert abs(jan_oct["hot"] - direct[1]) < 1e-6, "2026 Jan to Oct hot mismatch"
+    assert partial_ok, "November 2026 is missing partial_month"
+
+    prev = data / "derived" / "world" / "prev_cells_monthly.parquet"
+    if prev.exists():
+        old = pd.read_parquet(prev, columns=["cell", "year", "month", "cd", "hot"])
+        old = old[old["year"] <= 2025].head(200000).sample(
+            n=1000, random_state=1
+        )
+        now = cells[["cell", "year", "month", "cd", "hot"]]
+        both = old.merge(
+            now, on=["cell", "year", "month"], how="left", suffixes=("_old", "_new")
+        )
+        same = int(
+            ((both["cd_old"] == both["cd_new"]) & (both["hot_old"] == both["hot_new"])).sum()
+        )
+        print(f"months to Dec 2025 unchanged on a 1,000 cell-month sample: "
+              f"{same} of {len(both)}")
+        report["checks_2026"]["sample_unchanged_to_2025"] = {
+            "sampled": int(len(both)), "identical": same
+        }
+        assert same == len(both), "a pre-2026 cell-month changed"
 
 
 def check_bakeoff(data: Path) -> dict:

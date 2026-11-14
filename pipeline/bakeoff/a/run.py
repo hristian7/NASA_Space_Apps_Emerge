@@ -414,6 +414,10 @@ class T1Model:
         zero["res"] = zero["y"].to_numpy() / np.maximum(self.z[sid_zero] * expo, 1e-12)
         self.pools_zero = build_pools(zero, "res")
 
+        # The cascade's global level, kept so a cell with no fitted group of
+        # its own can still be given the pooled value. Draws nothing.
+        self.r_global = float(sy.sum() / max(sx.sum(), 1e-9))
+        self.z_global = float(zy.sum() / max(zn.sum(), 1e-9))
         self.n_pos, self.n_zero = len(pos), len(zero)
         return self
 
