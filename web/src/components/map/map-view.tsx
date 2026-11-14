@@ -29,6 +29,7 @@ import {
   type HistoryCell,
   type RecentPoint,
 } from "@/lib/layers/overlay";
+import { useWindLayer } from "./wind-layer";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -161,6 +162,7 @@ export default function MapView({
   rasters.current = rasterDates;
   const paintDangerRef = useRef<(() => void) | null>(null);
   const rasterKey = JSON.stringify(rasterDates);
+  useWindLayer(map, ready, Boolean(rasterDates.wind));
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
@@ -344,6 +346,10 @@ export default function MapView({
           node.dataset.zoom = instance.getZoom().toFixed(2);
         };
         instance.on("moveend", publishCamera);
+        instance.on("error", (event) => {
+          const sourceId = (event as unknown as { sourceId?: string }).sourceId;
+          if (sourceId?.startsWith("emerge-raster-")) window.dispatchEvent(new CustomEvent("emerge-raster-error", { detail: sourceId.slice("emerge-raster-".length) }));
+        });
 
         instance.on("load", () => {
           publishCamera();

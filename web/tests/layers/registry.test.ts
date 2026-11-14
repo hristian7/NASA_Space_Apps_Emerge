@@ -33,7 +33,7 @@ describe("the registry drives the panel list", () => {
       .sort((a, b) => (a.panel?.order ?? 0) - (b.panel?.order ?? 0))
       .map((entry) => entry.id);
     expect(listed).toEqual(expected);
-    expect(listed).toEqual(["harmonized-history", "recent-fires", "fire-danger"]);
+    expect(listed).toEqual(["harmonized-history", "recent-fires", "fire-danger", "nasa-fwi", "soil-moisture", "greenness", "land-type", "air-temperature", "wind"]);
   });
 
   it("leaves out a layer with no panel block", () => {

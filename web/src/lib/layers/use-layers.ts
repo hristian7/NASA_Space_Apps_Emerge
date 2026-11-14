@@ -212,7 +212,7 @@ export function useLayers(): LayersValue {
     recentStatus,
     recent,
     recentPoints: points,
-    rasterDates: Object.fromEntries(LAYERS.filter((entry) => entry.kind === 'raster_tiles' && state.on.includes(entry.id) && entry.source.kind === 'tile_template').map((entry) => [entry.id, entry.source.kind === 'tile_template' ? entry.source.date ?? dangerDate(state.dangerDay) : ''])),
+    rasterDates: { ...(state.on.includes('wind') ? { wind: 'on' } : {}), ...Object.fromEntries(LAYERS.filter((entry) => entry.kind === 'raster_tiles' && state.on.includes(entry.id) && entry.source.kind === 'tile_template').map((entry) => [entry.id, entry.source.kind === 'tile_template' ? entry.source.date ?? dangerDate(state.dangerDay) : ''])) },
     toggle,
     setYear,
     setWindow,

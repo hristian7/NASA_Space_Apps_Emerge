@@ -15,7 +15,8 @@ import type { Unit } from '../types/ui';
 export type LayerKind =
   | 'harmonized_cells'
   | 'detections'
-  | 'raster_tiles';
+  | 'raster_tiles'
+  | 'wind';
 
 /** How the layer steps through time. */
 export type LayerTimeStep = 'month' | 'year' | 'day' | 'none';
@@ -194,6 +195,42 @@ export const LAYERS: readonly LayerDefinition[] = [
       urlKey: 'd',
       showsDisclaimer: true,
     },
+  },
+  {
+    id: 'nasa-fwi', nameKey: 'layers.nasaFwi', kind: 'raster_tiles', units: [], timeStep: 'day',
+    source: { kind: 'tile_template', urlTemplate: 'https://maps.effis.emergency.copernicus.eu/gwis?service=WMS&version=1.1.1&request=GetMap&layers=nasa_geos5.fwi&styles=&format=image/png&transparent=true&srs=EPSG:3857&width=256&height=256&time={date}&bbox={bbox-epsg-3857}', tileSize: 256, firstDate: null },
+    credit: 'Copernicus GWIS, NASA GEOS-5', loader: { status: 'none' }, verified: true,
+    panel: { order: 4, explainKey: 'layers.nasaFwiExplain', timeKey: 'layers.nasaFwiTime', control: 'danger_day', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'f' },
+  },
+  {
+    id: 'soil-moisture', nameKey: 'layers.soilMoisture', kind: 'raster_tiles', units: [], timeStep: 'day',
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/SMAP_L3_Passive_Enhanced_Day_Soil_Moisture/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-11' },
+    credit: 'NASA SMAP / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 5, explainKey: 'layers.soilMoistureExplain', timeKey: 'layers.soilMoistureTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 's' },
+  },
+  {
+    id: 'greenness', nameKey: 'layers.greenness', kind: 'raster_tiles', units: [], timeStep: 'day',
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_NOAA20_NDVI_8Day/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-13' },
+    credit: 'NOAA-20 VIIRS / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 6, explainKey: 'layers.greennessExplain', timeKey: 'layers.greennessTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'g' },
+  },
+  {
+    id: 'land-type', nameKey: 'layers.landType', kind: 'raster_tiles', units: [], timeStep: 'day',
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2024-01-01' },
+    credit: 'NASA MODIS / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 7, explainKey: 'layers.landTypeExplain', timeKey: 'layers.landTypeTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'l' },
+  },
+  {
+    id: 'air-temperature', nameKey: 'layers.airTemperature', kind: 'raster_tiles', units: [], timeStep: 'day',
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AIRS_L2_Surface_Air_Temperature_Day/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-14' },
+    credit: 'NASA AIRS / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 8, explainKey: 'layers.airTemperatureExplain', timeKey: 'layers.airTemperatureTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 't' },
+  },
+  {
+    id: 'wind', nameKey: 'layers.wind', kind: 'wind', units: [], timeStep: 'day',
+    source: { kind: 'api_route', path: 'https://api.open-meteo.com/v1/forecast' },
+    credit: 'Weather data by Open-Meteo.com', loader: { status: 'built', module: 'lib/layers/wind', fn: 'fetchWind' }, verified: true,
+    panel: { order: 9, explainKey: 'layers.windExplain', timeKey: 'layers.windTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'w' },
   },
 ];
 

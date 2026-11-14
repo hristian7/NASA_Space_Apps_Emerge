@@ -37,5 +37,27 @@
     "extreme": "Extreme",
     "veryExtreme": "Very extreme"
   },
-  "mergedNote": "Zoomed out, each square covers several cells and takes the colour of the worst one. Zoom in to see every cell."
+  "mergedNote": "Zoomed out, each square covers several cells and takes the colour of the worst one. Zoom in to see every cell.",
+  "nasaFwi": "NASA fire-weather index (as shown in GWIS), experimental",
+  "nasaFwiExplain": "Fire weather index, dimensionless. No data where the service has no coverage.",
+  "nasaFwiTime": "Forecast for {date}.",
+  "soilMoisture": "Soil moisture",
+  "soilMoistureExplain": "Soil moisture (m³/m³); gaps are satellite coverage. No data in gaps.",
+  "soilMoistureTime": "Observation: {date}.",
+  "greenness": "Plant greenness (index, 8 days)",
+  "greennessExplain": "NDVI, dimensionless. No data where observations are missing.",
+  "greennessTime": "Composite date: {date}.",
+  "landType": "Land type (2024)",
+  "landTypeExplain": "IGBP land cover classes. No data where observations are missing.",
+  "landTypeTime": "Annual map: {date}.",
+  "airTemperature": "Air temperature (satellite pass, gaps between passes)",
+  "airTemperatureExplain": "Surface air temperature in kelvin. No data between satellite passes.",
+  "airTemperatureTime": "Observation: {date}.",
+  "driverLegend": "See the provider colours on the map.",
+  "landLegend": "Forest; shrub and grass; farmland; other.",
+  "wind": "Wind",
+  "windExplain": "Arrows show wind direction; speed in km/h. No data if the service cannot be reached.",
+  "windTime": "Wind observation: {date} UTC.",
+  "windNoData": "No wind data available.",
+  "providerLegend": "Provider colour legend"
 }

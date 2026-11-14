@@ -13,6 +13,12 @@ describe('the layer registry', () => {
       'harmonized-history',
       'recent-fires',
       'fire-danger',
+      'nasa-fwi',
+      'soil-moisture',
+      'greenness',
+      'land-type',
+      'air-temperature',
+      'wind',
     ]);
     for (const entry of LAYERS) {
       expect(entry.nameKey.startsWith('layers.')).toBe(true);

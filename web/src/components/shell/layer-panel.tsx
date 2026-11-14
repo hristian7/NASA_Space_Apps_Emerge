@@ -57,6 +57,19 @@ export default function LayerPanel({
 }: Props) {
   const t = useTranslations("layers");
   const [open, setOpen] = useState(true);
+  const [rasterErrors, setRasterErrors] = useState<string[]>([]);
+  const [wind, setWind] = useState({ state: "loading", time: "" });
+  useEffect(() => {
+    const update = (event: Event) => setWind((event as CustomEvent<{ state: string; time: string }>).detail);
+    window.addEventListener("emerge-wind", update);
+    return () => window.removeEventListener("emerge-wind", update);
+  }, []);
+
+  useEffect(() => {
+    const update = (event: Event) => setRasterErrors((current) => [...new Set([...current, (event as CustomEvent<string>).detail])]);
+    window.addEventListener("emerge-raster-error", update);
+    return () => window.removeEventListener("emerge-raster-error", update);
+  }, []);
 
   // A phone opens with the list folded away, so the map and the report sheet
   // keep their room; a wide screen has space for it from the start.
@@ -147,11 +160,11 @@ export default function LayerPanel({
       case "danger_day":
         return (
           <div className="layer-control">
-            <label className="label" htmlFor="layer-day">
+            <label className="label" htmlFor={`layer-day-${definition.id}`}>
               {t("dayLabel")}
             </label>
             <select
-              id="layer-day"
+              id={`layer-day-${definition.id}`}
               className="field"
               value={state.dangerDay}
               onChange={(event) => onDay(Number(event.target.value))}
@@ -210,6 +223,17 @@ export default function LayerPanel({
           </ul>
         );
       case "classes":
+        if (definition.id === "wind") return <p className="hint">➤ km/h</p>;
+        if (definition.id !== "fire-danger") {
+          const legends: Record<string, string> = {
+            "nasa-fwi": "https://maps.effis.emergency.copernicus.eu/gwis?service=WMS&request=GetLegendGraphic&version=1.1.1&format=image/png&layer=nasa_geos5.fwi",
+            "soil-moisture": "https://gibs.earthdata.nasa.gov/legends/SMAP_Soil_Moisture_H.svg",
+            "greenness": "https://gibs.earthdata.nasa.gov/legends/MODIS_NDVI_H.svg",
+            "land-type": "https://gibs.earthdata.nasa.gov/legends/MODIS_IGBP_Land_Cover_Type_H.svg",
+            "air-temperature": "https://gibs.earthdata.nasa.gov/legends/AIRS_Temperature_H.svg",
+          };
+          return <><img src={legends[definition.id]} alt={t("providerLegend")} style={{ maxWidth: "100%", height: "auto" }} />{definition.id === "land-type" ? <p className="hint">{t("landLegend")}</p> : null}</>;
+        }
         return (
           <ul className="legend">
             {dangerClasses.map((entry) => (
@@ -253,6 +277,12 @@ export default function LayerPanel({
         to: recent.dataTime ?? "",
       });
     }
+    if (rasterErrors.includes(definition.id)) return t("failed");
+    if (definition.id === "wind") {
+      if (wind.state === "loading") return t("loading");
+      if (wind.state !== "ready") return t("windNoData");
+      return t(key, { date: wind.time });
+    }
     return t(key, { date: definition.source.kind === "tile_template" ? definition.source.date ?? dangerDate(state.dangerDay) : "" });
   };
 
@@ -281,7 +311,7 @@ export default function LayerPanel({
                   type="checkbox"
                   role="switch"
                   checked={on}
-                  onChange={() => onToggle(definition.id)}
+                  onChange={() => { setRasterErrors((current) => current.filter((id) => id !== definition.id)); onToggle(definition.id); }}
                 />
                 <span>{t(short(definition.nameKey))}</span>
               </label>
