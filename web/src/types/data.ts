@@ -180,15 +180,23 @@ export interface TileFile {
 export type BackgroundPeriod = 'estimated_terra' | 'estimated_modis';
 
 /**
- * One group's background for one period. Each array holds 12 values, January
- * first, in whole hundredths: 37 means 0.37. The lower end is always 0, so it
- * is not stored.
+ * One group's background and conversion factors for one period. Each array
+ * holds 12 values, January first.
+ *
+ * The background arrays are whole hundredths: 37 means 0.37. Their lower end
+ * is always 0, so it is not stored.
+ *
+ * The factor arrays are whole thousandths: 2700 means a factor of 2.7. They
+ * turn a raw daily count from that period's sensor into a harmonized value
+ * (ruling 11).
  */
 export interface BackgroundSeries {
   hot: number[];
   hot_hi: number[];
   cd: number[];
   cd_hi: number[];
+  k_hot: number[];
+  k_cd: number[];
 }
 
 /** web/public/data/background.json */
@@ -198,7 +206,7 @@ export interface BackgroundFile {
   built: string;
   /** Present only while the numbers are stand-ins. */
   note?: string;
-  unit: 'hundredths';
+  units: { background: 'hundredths'; factors: 'thousandths' };
   periods: BackgroundPeriod[];
   /** Keyed by the group id a tile cell carries in its `g` field. */
   groups: Record<string, Record<BackgroundPeriod, BackgroundSeries>>;
@@ -254,8 +262,11 @@ export interface GlobeFile {
   cols: GlobeColumns;
 }
 
-/** Which sensor a raw daily value came from. */
-export type SensorLabel = 'modis' | 'viirs';
+/**
+ * Which single sensor a raw daily value came from: Terra before July 2002,
+ * Aqua from July 2002 to January 2012, S-NPP from February 2012.
+ */
+export type SensorLabel = 'terra' | 'aqua' | 'snpp';
 
 /** One year of the daily window for one cell. Only days with fire are listed. */
 export interface DailyYear {
@@ -282,6 +293,11 @@ export interface DailyYear {
 export interface DailyCell extends PointHead {
   type: 'cell';
   id: number;
+  /**
+   * Group this cell belongs to, for the conversion factor in background.json.
+   * An opaque key: never take it apart.
+   */
+  g: string;
   /** Only years with at least one fire day are listed, ascending. */
   years: DailyYear[];
 }

@@ -40,6 +40,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from export_examples import (  # noqa: E402  the shared, frozen rules
     BACKGROUND_PERIODS,
+    BACKGROUND_UNITS,
+    FACTOR_UNITS,
     CELL_DEG,
     DAILY_WINDOW_DAYS,
     FIRST_MONTH,
@@ -57,11 +59,11 @@ from export_examples import (  # noqa: E402  the shared, frozen rules
     flag_bits,
     group_id,
     haversine_km,
-    is_measured,
     lon_box,
     month_index,
     months_between,
     precision_radius_km,
+    sensor_for,
     src_for,
     tile_key,
     write_gzip_json,
@@ -73,7 +75,7 @@ BUILT = "2026-11-14"
 EXAMPLE_FLAG = False
 
 # Sensor behind a raw daily value. The daily files are raw, not harmonized.
-SENSOR_LABELS = ["modis", "viirs"]
+from export_examples import SENSOR_LABELS  # noqa: E402
 
 CHUNK = 200_000
 
@@ -531,22 +533,43 @@ def build_reported(out: Path) -> list[str]:
 
 
 def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
+    """background.json: the background values and the conversion factors.
+
+    Background values are whole hundredths, factors whole thousandths. The
+    factors are what the app multiplies a raw daily count by (ruling 11), so a
+    missing factors file is a hard stop rather than a silent 1.
+    """
     rows = con.execute(
         """
         SELECT group_id, period, month, hot, hot_hi, cd, cd_hi
         FROM background ORDER BY group_id, period, month
         """
     ).fetchall()
+    blank = {unit: [0] * 12 for unit in BACKGROUND_UNITS + FACTOR_UNITS}
     groups: dict[str, dict[str, dict[str, list[int]]]] = {}
     for gid, period, month, hot, hot_hi, cd, cd_hi in rows:
         if period not in BACKGROUND_PERIODS:
             raise SystemExit(f"background carries an unknown period: {period}")
         series = groups.setdefault(gid, {}).setdefault(
-            period, {unit: [0] * 12 for unit in ("hot", "hot_hi", "cd", "cd_hi")}
+            period, {unit: list(values) for unit, values in blank.items()}
         )
         for unit, value in (("hot", hot), ("hot_hi", hot_hi),
                             ("cd", cd), ("cd_hi", cd_hi)):
             series[unit][int(month) - 1] = whole((value or 0) * 100)
+
+    for gid, period, month, k_hot, k_cd in con.execute(
+        """
+        SELECT group_id, period, month, k_hot, k_cd
+        FROM factors ORDER BY group_id, period, month
+        """
+    ).fetchall():
+        if period not in BACKGROUND_PERIODS:
+            raise SystemExit(f"a factor carries an unknown period: {period}")
+        if gid not in groups or period not in groups[gid]:
+            raise SystemExit(f"a factor names a group with no background: {gid} {period}")
+        groups[gid][period]["k_hot"][int(month) - 1] = whole((k_hot or 0) * 1000)
+        groups[gid][period]["k_cd"][int(month) - 1] = whole((k_cd or 0) * 1000)
+
     for gid, periods in groups.items():
         for period in BACKGROUND_PERIODS:
             if period not in periods:
@@ -555,13 +578,19 @@ def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
             for m in range(12):
                 s["hot_hi"][m] = max(s["hot_hi"][m], s["hot"][m])
                 s["cd_hi"][m] = max(s["cd_hi"][m], s["cd"][m])
+                for unit in FACTOR_UNITS:
+                    if s[unit][m] <= 0:
+                        raise SystemExit(
+                            f"group {gid} {period} month {m + 1} has no {unit}: "
+                            "the app cannot scale a raw daily count without it"
+                        )
     write_json(
         out / "background.json",
         {
             "schema": f"emerge-background-{SCHEMA_VERSION}",
             "example": False,
             "built": BUILT,
-            "unit": "hundredths",
+            "units": {"background": "hundredths", "factors": "thousandths"},
             "periods": BACKGROUND_PERIODS,
             "groups": {
                 gid: {p: groups[gid][p] for p in BACKGROUND_PERIODS}
@@ -579,10 +608,12 @@ DAILY_SQL = """
 SELECT
   (((17999 - 2 * cy) // 50) * 1440 + ((2 * cx + 1 + 36000) // 50))::BIGINT AS cell,
   day,
-  sum(CASE WHEN sat = 'SNPP' THEN detections ELSE 0 END)::BIGINT AS viirs_n,
-  sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN detections ELSE 0 END)::BIGINT AS modis_n,
-  sum(CASE WHEN sat = 'SNPP' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS viirs_frp,
-  sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS modis_frp
+  sum(CASE WHEN sat = 'Terra' THEN detections ELSE 0 END)::BIGINT AS terra_n,
+  sum(CASE WHEN sat = 'Aqua'  THEN detections ELSE 0 END)::BIGINT AS aqua_n,
+  sum(CASE WHEN sat = 'SNPP'  THEN detections ELSE 0 END)::BIGINT AS snpp_n,
+  sum(CASE WHEN sat = 'Terra' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS terra_frp,
+  sum(CASE WHEN sat = 'Aqua'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS aqua_frp,
+  sum(CASE WHEN sat = 'SNPP'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp
 FROM read_parquet($cell_days)
 WHERE (month(day) = $start_month AND day(day) >= $start_day) OR month(day) = 12
 GROUP BY cell, day
@@ -623,7 +654,8 @@ def daily_file(key: str, cells: list[dict], start: dt.date, end: dt.date,
     }
 
 
-def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path, out: Path) -> list[str]:
+def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path,
+                groups: dict[int, str], out: Path) -> list[str]:
     start, end, years = daily_window()
     if (start.month, end.month) != (11, 12):
         raise SystemExit("the daily query assumes a window inside November and December")
@@ -640,12 +672,13 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path, out: Path) -> l
         if cell is None or not per_year:
             return
         rec = cell_head(cell)
+        rec["g"] = groups[cell]
         rec["years"] = [
             {
                 "y": y,
                 "src": SRC_LABELS.index(src_for(y, 12)),
                 "flags": flag_bits([]),
-                "sensor": SENSOR_LABELS.index("viirs" if is_measured(y, 12) else "modis"),
+                "sensor": SENSOR_LABELS.index(sensor_for(y, 12)),
                 "d": [d[0] for d in sorted(per_year[y])],
                 "hot": [d[1] for d in sorted(per_year[y])],
                 "frp": [d[2] for d in sorted(per_year[y])],
@@ -665,7 +698,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path, out: Path) -> l
         chunk = con.fetchmany(CHUNK)
         if not chunk:
             break
-        for c, day, viirs_n, modis_n, viirs_frp, modis_frp in chunk:
+        for (c, day, terra_n, aqua_n, snpp_n,
+             terra_frp, aqua_frp, snpp_frp) in chunk:
             tkey = tile_of(c)
             if tkey != key:
                 close_cell()
@@ -674,9 +708,10 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path, out: Path) -> l
             if c != cell:
                 close_cell()
                 cell, per_year = c, {}
-            measured = is_measured(day.year, day.month)
-            hot = int(viirs_n) if measured else int(modis_n)
-            frp = int(viirs_frp) if measured else int(modis_frp)
+            # Raw, from the one sensor the year's block names (ruling 11).
+            counts = {"terra": (terra_n, terra_frp), "aqua": (aqua_n, aqua_frp),
+                      "snpp": (snpp_n, snpp_frp)}
+            hot, frp = (int(v) for v in counts[sensor_for(day.year, day.month)])
             if hot <= 0:
                 continue
             offset = (day - dt.date(day.year, start.month, start.day)).days
@@ -1018,15 +1053,22 @@ def main() -> None:
     cell_days = Path(args.cell_days) if args.cell_days else inp.parent / "cell_days.parquet"
     out = Path(args.out)
     for path in (inp / "cells_monthly.parquet", inp / "countries_monthly.parquet",
-                 inp / "cell_groups.parquet", inp / "background.parquet", cell_days,
+                 inp / "cell_groups.parquet", inp / "background.parquet",
+                 inp / "factors.parquet", cell_days,
                  Path(args.scores), Path(args.results)):
         if not path.is_file():
-            raise SystemExit(f"input not found: {path}")
+            raise SystemExit(
+                f"input not found: {path}\n"
+                "The conversion must deliver every one of cells_monthly.parquet, "
+                "countries_monthly.parquet, cell_groups.parquet, "
+                "background.parquet and factors.parquet."
+            )
 
     con = duckdb.connect()
     con.execute(f"PRAGMA threads={args.threads}")
     con.execute("PRAGMA memory_limit='6GB'")
-    for name in ("cells_monthly", "countries_monthly", "cell_groups", "background"):
+    for name in ("cells_monthly", "countries_monthly", "cell_groups",
+                 "background", "factors"):
         # A CREATE VIEW cannot carry a parameter, so the path goes in as a
         # literal with its quotes doubled.
         literal = str(inp / f"{name}.parquet").replace("'", "''")
@@ -1082,7 +1124,7 @@ def main() -> None:
     print(f"  {len(globe_years)} years", flush=True)
 
     print("daily window ...", flush=True)
-    daily = build_daily(con, cell_days, out)
+    daily = build_daily(con, cell_days, groups, out)
     print(f"  {len(daily)} tiles", flush=True)
 
     print("validation ...", flush=True)

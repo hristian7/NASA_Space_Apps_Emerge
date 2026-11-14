@@ -84,11 +84,17 @@ GROUP_BAND_DEG = 5
 # nothing; it is the same for every cell of a group, so it is stored once per
 # group. These numbers are placeholders of a believable size, not a prediction.
 EXAMPLE_BACKGROUND = {"cd": 20, "cd_hi": 60, "hot": 30, "hot_hi": 90}
+
+# Stand-in conversion factors, in whole thousandths. They turn a raw daily
+# count from the period's sensor into a harmonized one (ruling 11).
+EXAMPLE_FACTORS = {"k_hot": 3000, "k_cd": 2700}
+BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
+FACTOR_UNITS = ["k_hot", "k_cd"]
 BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
 
 # The daily window holds raw counts, not harmonized ones, so each year says
 # which sensor produced them.
-SENSOR_LABELS = ["modis", "viirs"]
+SENSOR_LABELS = ["terra", "aqua", "snpp"]
 
 EXAMPLE_FLAG = True
 
@@ -194,6 +200,16 @@ def is_measured(y: int, m: int) -> bool:
     return src_for(y, m) == "measured"
 
 
+def sensor_for(y: int, m: int) -> str:
+    """Which single sensor the daily raw value comes from (ruling 11)."""
+    i = month_index(y, m)
+    if i < month_index(2002, 7):
+        return "terra"
+    if i < month_index(2012, 2):
+        return "aqua"
+    return "snpp"
+
+
 def flags_for(y: int, m: int) -> list[str]:
     out = []
     if not is_measured(y, m):
@@ -297,6 +313,8 @@ SELECT
   max(CASE WHEN sat = 'SNPP' THEN 1 ELSE 0 END)::INT AS snpp_cd,
   (max(CASE WHEN sat = 'Terra' THEN 1 ELSE 0 END)
    + max(CASE WHEN sat = 'Aqua' THEN 1 ELSE 0 END))::INT AS modis_cd,
+  sum(CASE WHEN sat = 'Terra' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS terra_frp,
+  sum(CASE WHEN sat = 'Aqua'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS aqua_frp,
   sum(CASE WHEN sat = 'SNPP' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp,
   sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS modis_frp
 FROM read_parquet($parquet)
@@ -328,10 +346,12 @@ DAILY_SQL = """
 SELECT
   crow * 1440 + ccol AS cell_id,
   day,
+  sum(terra_n)::BIGINT   AS terra_n,
+  sum(aqua_n)::BIGINT    AS aqua_n,
   sum(snpp_n)::BIGINT    AS snpp_n,
-  sum(modis_n)::BIGINT   AS modis_n,
-  sum(snpp_frp)::BIGINT  AS snpp_frp,
-  sum(modis_frp)::BIGINT AS modis_frp
+  sum(terra_frp)::BIGINT AS terra_frp,
+  sum(aqua_frp)::BIGINT  AS aqua_frp,
+  sum(snpp_frp)::BIGINT  AS snpp_frp
 FROM small_cell_day
 WHERE (month(day) = 11 AND day(day) >= $start_day) OR month(day) = 12
 GROUP BY cell_id, day
@@ -515,11 +535,12 @@ def cell_month_rows(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     ).fetchall()
 
 
-def build_tiles(rows: list[tuple], out: Path) -> tuple[dict[int, dict], set[str]]:
+def build_tiles(rows: list[tuple], out: Path) -> tuple[dict[int, dict], dict[int, str]]:
     """Write the tile files.
 
-    Returns the yearly totals the globe file needs and every group id used, so
-    background.json can hold exactly the groups the tiles point at.
+    Returns the yearly totals the globe file needs and the group of every cell
+    written, so background.json can hold exactly the groups the files point at
+    and the daily files can name the same group.
     """
     wanted = set(EXAMPLE_TILES)
     per_tile: dict[str, dict[int, list[dict]]] = {k: {} for k in EXAMPLE_TILES}
@@ -586,7 +607,7 @@ def build_tiles(rows: list[tuple], out: Path) -> tuple[dict[int, dict], set[str]
                 "cells": cells,
             },
         )
-    return yearly, set(groups.values())
+    return yearly, groups
 
 
 def build_background(group_ids: set[str], out: Path) -> None:
@@ -595,19 +616,18 @@ def build_background(group_ids: set[str], out: Path) -> None:
     These are stand-ins of a believable size, not a prediction. The real
     exporter writes the conversion's own numbers in the same shape.
     """
-    one_period = {
-        unit: [EXAMPLE_BACKGROUND[unit]] * 12
-        for unit in ("hot", "hot_hi", "cd", "cd_hi")
-    }
+    one_period = {unit: [EXAMPLE_BACKGROUND[unit]] * 12 for unit in BACKGROUND_UNITS}
+    one_period.update({unit: [EXAMPLE_FACTORS[unit]] * 12 for unit in FACTOR_UNITS})
     write_json(
         out / "background.json",
         {
             "schema": f"emerge-background-{SCHEMA_VERSION}",
             "example": True,
             "built": BUILT,
-            "note": "Stand-in numbers of a believable size, the same in every "
-                    "month and group. Not a prediction.",
-            "unit": "hundredths",
+            "note": "Stand-in background values and conversion factors of a "
+                    "believable size, the same in every month and group. Not a "
+                    "prediction.",
+            "units": {"background": "hundredths", "factors": "thousandths"},
             "periods": BACKGROUND_PERIODS,
             "groups": {
                 gid: {period: dict(one_period) for period in BACKGROUND_PERIODS}
@@ -657,7 +677,7 @@ def daily_window() -> tuple[dt.date, dt.date, list[int]]:
     return start, LAST_DATA_DAY, years
 
 
-def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
+def build_daily(con: duckdb.DuckDBPyConnection, groups: dict[int, str], out: Path) -> None:
     start, end, years = daily_window()
     if (start.month, end.month) != (11, 12):
         raise SystemExit("the daily window query assumes a window inside November and December")
@@ -667,15 +687,16 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     per_tile: dict[str, dict[int, dict[int, list[tuple[int, int, int]]]]] = {
         k: {} for k in DAILY_TILES
     }
-    for cell_id, day, snpp_n, modis_n, snpp_frp, modis_frp in rows:
+    for (cell_id, day, terra_n, aqua_n, snpp_n,
+         terra_frp, aqua_frp, snpp_frp) in rows:
         lat, lon = cell_center(cell_id)
         key = tile_key(lat, lon)
         if key not in wanted:
             continue
-        measured = is_measured(day.year, day.month)
-        # Raw, not harmonized: the method publishes no daily conversion factor.
-        hot = int(snpp_n) if measured else int(modis_n)
-        frp = int(snpp_frp) if measured else int(modis_frp)
+        # Raw, from the one sensor the year's block names (ruling 11).
+        counts = {"terra": (terra_n, terra_frp), "aqua": (aqua_n, aqua_frp),
+                  "snpp": (snpp_n, snpp_frp)}
+        hot, frp = (int(v) for v in counts[sensor_for(day.year, day.month)])
         if hot <= 0:
             continue
         offset = (day - dt.date(day.year, start.month, start.day)).days
@@ -696,8 +717,7 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                     "y": y,
                     "src": SRC_LABELS.index(src_for(y, 12)),
                     "flags": flag_bits(flags_for(y, 12)),
-                    "sensor": SENSOR_LABELS.index(
-                        "viirs" if is_measured(y, 12) else "modis"),
+                    "sensor": SENSOR_LABELS.index(sensor_for(y, 12)),
                     "d": [d[0] for d in days],
                     "hot": [d[1] for d in days],
                     "frp": [d[2] for d in days],
@@ -708,6 +728,7 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                 "lat": round(lat, 4),
                 "lon": round(lon, 4),
                 "precision_radius_km": round(precision_radius_km(lat), 3),
+                "g": groups[cell_id],
                 "years": year_blocks,
             })
         lat0, lon0 = (int(p) for p in key.split("_"))
@@ -963,10 +984,10 @@ def main() -> None:
     build_meta(out)
     build_country_files(con, out)
     build_reported_files(out)
-    yearly, group_ids = build_tiles(rows, out)
-    build_background(group_ids, out)
+    yearly, cell_groups = build_tiles(rows, out)
+    build_background(set(cell_groups.values()), out)
     build_globe(yearly, out)
-    build_daily(con, out)
+    build_daily(con, cell_groups, out)
     build_validation(out)
 
     total = 0

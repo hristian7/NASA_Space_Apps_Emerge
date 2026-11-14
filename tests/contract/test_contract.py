@@ -137,7 +137,7 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-SENSOR_LABELS = ["modis", "viirs"]
+SENSOR_LABELS = ["terra", "aqua", "snpp"]
 # Levels the independent scorer reports. The last two are shown for information.
 VALIDATION_SCOPES = (
     "country_month", "cell_month", "circle_month",
@@ -145,6 +145,7 @@ VALIDATION_SCOPES = (
 )
 BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
 BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
+FACTOR_UNITS = ["k_hot", "k_cd"]
 BACKGROUND_GROUPS = set(read_json(DATA / "background.json")["groups"])
 
 
@@ -465,7 +466,14 @@ def test_daily_file(path: Path):
             assert 0 <= block["src"] < len(SRC_LABELS), w2
             assert SRC_LABELS[block["src"]] == expected_src(block["y"], 12), f"{w2}: wrong src label"
             assert 0 <= block["flags"] < (1 << len(FLAG_LABELS)), w2
-            want_sensor = "viirs" if block["y"] >= 2012 else "modis"
+            # Terra before Jul 2002, Aqua to Jan 2012, S-NPP after (ruling 11).
+            # Every window here sits in November and December.
+            if block["y"] < 2002:
+                want_sensor = "terra"
+            elif block["y"] < 2012:
+                want_sensor = "aqua"
+            else:
+                want_sensor = "snpp"
             assert SENSOR_LABELS[block["sensor"]] == want_sensor, f"{w2}: wrong sensor"
             n = len(block["d"])
             assert n > 0, w2
@@ -689,7 +697,7 @@ def test_background_file():
     doc = read_json(DATA / "background.json")
     assert doc["schema"] == "emerge-background-1"
     assert doc["example"] is IS_EXAMPLE
-    assert doc["unit"] == "hundredths"
+    assert doc["units"] == {"background": "hundredths", "factors": "thousandths"}
     assert doc["periods"] == BACKGROUND_PERIODS
     if doc["example"]:
         assert doc["note"], "a stand-in background must say so in the file"
@@ -700,12 +708,17 @@ def test_background_file():
         assert list(periods) == BACKGROUND_PERIODS, f"{gid}: wrong periods"
         for period, series in periods.items():
             where = f"{gid} {period}"
-            assert list(series) == BACKGROUND_UNITS, f"{where}: wrong units"
+            assert list(series) == BACKGROUND_UNITS + FACTOR_UNITS, f"{where}: wrong units"
             for unit, values in series.items():
                 assert len(values) == 12, f"{where} {unit}: needs 12 months"
                 for v in values:
-                    assert is_whole(v), f"{where} {unit}: not a whole hundredth"
+                    assert is_whole(v), f"{where} {unit}: not a whole number"
                     assert v >= 0, f"{where} {unit}: negative"
+            # The app multiplies a raw daily count by this, so a zero factor
+            # would silently show the pre-2012 daily window far too low.
+            for unit in FACTOR_UNITS:
+                for m in range(12):
+                    assert series[unit][m] > 0, f"{where} {unit} month {m + 1}: no factor"
             for m in range(12):
                 assert series["hot"][m] <= series["hot_hi"][m], f"{where}: hot above its upper end"
                 assert series["cd"][m] <= series["cd_hi"][m], f"{where}: cd above its upper end"
@@ -724,11 +737,16 @@ def test_every_background_group_is_used_by_a_tile():
     )
 
 
-def test_the_daily_files_carry_no_group_id():
-    """Ruling 10 is a monthly rule, so the daily files must not imply one."""
+def test_every_daily_cell_names_a_group_with_a_factor():
+    """Ruling 11: the app scales a pre-2012 raw count by that group's k_hot."""
+    doc = read_json(DATA / "background.json")
     for path in DAILY_FILES:
         for cell in read_gzip_json(path)["cells"]:
-            assert "g" not in cell, f"{path.name}: a daily cell carries a group id"
+            gid = cell["g"]
+            assert gid in doc["groups"], f"{path.name} cell {cell['id']}: group {gid} is unknown"
+            for period in BACKGROUND_PERIODS:
+                for unit in FACTOR_UNITS:
+                    assert len(doc["groups"][gid][period][unit]) == 12
 
 
 def test_country_index():
