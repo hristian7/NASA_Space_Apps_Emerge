@@ -6,7 +6,9 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 
 ## Status (Sat 14 Nov)
 
-- **Specification:** in progress. The team answers [`specs/interview-questions.md`](specs/interview-questions.md), then we write `specs/specification.md`.
+- **Interview answered:** decisions are in [`specs/interview-answers.md`](specs/interview-answers.md).
+- **Feature list ready to choose from:** [`specs/features-moscow.md`](specs/features-moscow.md) (Must / Should / Could / Won't). The team ticks features, then we write `specs/specification.md`.
+- **Research open:** data sources, storage and tech stack → [`specs/research-tasks.md`](specs/research-tasks.md). A first forecasting note is done: [`docs/research/forecast-options.md`](docs/research/forecast-options.md).
 - **Code:** not started.
 
 ## Read first
@@ -20,7 +22,11 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`docs/data-sources.md`](docs/data-sources.md) | Plain-language guide to every data source named in the 14 challenges (added by a teammate) |
 | [`docs/rules-and-judging.md`](docs/rules-and-judging.md) | Deadlines, submission rules, open-source rules, judging criteria, awards |
 | [`docs/verification-plan.md`](docs/verification-plan.md) | How we prove the conversion and the app are right |
-| [`specs/interview-questions.md`](specs/interview-questions.md) | Questions the 6 of us answer to write the spec |
+| [`specs/interview-questions.md`](specs/interview-questions.md) | Questions the 6 of us answered to shape the spec |
+| [`specs/interview-answers.md`](specs/interview-answers.md) | The team's decisions, plus answers to the team's questions |
+| [`specs/features-moscow.md`](specs/features-moscow.md) | All features in priority order (MoSCoW), 2–3 sentences each |
+| [`specs/research-tasks.md`](specs/research-tasks.md) | Open research tasks with briefs, and what's still waiting on the team |
+| [`docs/research/forecast-options.md`](docs/research/forecast-options.md) | First pass on fire-risk forecasting options |
 
 ## Key deadlines (Sofia time)
 
