@@ -1,0 +1,2396 @@
+{
+ "about": "Section 1. Cells and overlap weights for selections. weight = subcells / 625, 6 decimals. Cells sorted by id. totalWeight and lowConfidence are after the small-selection rule. Haversine, Earth radius 6371.0088 km, inside means distance <= radius.",
+ "cases": [
+  {
+   "name": "Sofia, 50 km",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 50
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 270091,
+      "weight": 0.1008,
+      "subcells": 63
+     },
+     {
+      "id": 270092,
+      "weight": 0.4928,
+      "subcells": 308
+     },
+     {
+      "id": 270093,
+      "weight": 0.5824,
+      "subcells": 364
+     },
+     {
+      "id": 270094,
+      "weight": 0.3424,
+      "subcells": 214
+     },
+     {
+      "id": 270095,
+      "weight": 0.0048,
+      "subcells": 3
+     },
+     {
+      "id": 271530,
+      "weight": 0.0432,
+      "subcells": 27
+     },
+     {
+      "id": 271531,
+      "weight": 0.8928,
+      "subcells": 558
+     },
+     {
+      "id": 271532,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "weight": 0.496,
+      "subcells": 310
+     },
+     {
+      "id": 272970,
+      "weight": 0.104,
+      "subcells": 65
+     },
+     {
+      "id": 272971,
+      "weight": 0.9936,
+      "subcells": 621
+     },
+     {
+      "id": 272972,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "weight": 0.6576,
+      "subcells": 411
+     },
+     {
+      "id": 274411,
+      "weight": 0.3936,
+      "subcells": 246
+     },
+     {
+      "id": 274412,
+      "weight": 0.888,
+      "subcells": 555
+     },
+     {
+      "id": 274413,
+      "weight": 0.9808,
+      "subcells": 613
+     },
+     {
+      "id": 274414,
+      "weight": 0.7376,
+      "subcells": 461
+     },
+     {
+      "id": 274415,
+      "weight": 0.1232,
+      "subcells": 77
+     }
+    ],
+    "cellCount": 22,
+    "totalWeight": 13.8336,
+    "rawTotalWeightBeforeSmallRule": 13.8336,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Sofia, 10 km",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 10
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.5568,
+    "lowConfidence": true
+   }
+  },
+  {
+   "name": "Sofia, 200 km",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 200
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 262888,
+      "weight": 0.1136,
+      "subcells": 71
+     },
+     {
+      "id": 262889,
+      "weight": 0.4464,
+      "subcells": 279
+     },
+     {
+      "id": 262890,
+      "weight": 0.7024,
+      "subcells": 439
+     },
+     {
+      "id": 262891,
+      "weight": 0.8736,
+      "subcells": 546
+     },
+     {
+      "id": 262892,
+      "weight": 0.9728,
+      "subcells": 608
+     },
+     {
+      "id": 262893,
+      "weight": 0.9968,
+      "subcells": 623
+     },
+     {
+      "id": 262894,
+      "weight": 0.936,
+      "subcells": 585
+     },
+     {
+      "id": 262895,
+      "weight": 0.808,
+      "subcells": 505
+     },
+     {
+      "id": 262896,
+      "weight": 0.6016,
+      "subcells": 376
+     },
+     {
+      "id": 262897,
+      "weight": 0.3056,
+      "subcells": 191
+     },
+     {
+      "id": 262898,
+      "weight": 0.0208,
+      "subcells": 13
+     },
+     {
+      "id": 264326,
+      "weight": 0.104,
+      "subcells": 65
+     },
+     {
+      "id": 264327,
+      "weight": 0.64,
+      "subcells": 400
+     },
+     {
+      "id": 264328,
+      "weight": 0.9856,
+      "subcells": 616
+     },
+     {
+      "id": 264329,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264330,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264331,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264332,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264333,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264334,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264335,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264336,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264337,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 264338,
+      "weight": 0.8928,
+      "subcells": 558
+     },
+     {
+      "id": 264339,
+      "weight": 0.392,
+      "subcells": 245
+     },
+     {
+      "id": 264340,
+      "weight": 0.0048,
+      "subcells": 3
+     },
+     {
+      "id": 265765,
+      "weight": 0.2592,
+      "subcells": 162
+     },
+     {
+      "id": 265766,
+      "weight": 0.928,
+      "subcells": 580
+     },
+     {
+      "id": 265767,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265768,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265769,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265770,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265771,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265772,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265773,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265774,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265775,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265776,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265777,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265778,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265779,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 265780,
+      "weight": 0.7024,
+      "subcells": 439
+     },
+     {
+      "id": 265781,
+      "weight": 0.0448,
+      "subcells": 28
+     },
+     {
+      "id": 267204,
+      "weight": 0.2032,
+      "subcells": 127
+     },
+     {
+      "id": 267205,
+      "weight": 0.9648,
+      "subcells": 603
+     },
+     {
+      "id": 267206,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267207,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267208,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267209,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267210,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267211,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267212,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267213,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267214,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267215,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267216,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267217,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267218,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267219,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267220,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 267221,
+      "weight": 0.72,
+      "subcells": 450
+     },
+     {
+      "id": 267222,
+      "weight": 0.008,
+      "subcells": 5
+     },
+     {
+      "id": 268643,
+      "weight": 0.008,
+      "subcells": 5
+     },
+     {
+      "id": 268644,
+      "weight": 0.8288,
+      "subcells": 518
+     },
+     {
+      "id": 268645,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268646,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268647,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268648,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268649,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268650,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268651,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268652,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268653,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268654,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268655,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268656,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268657,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268658,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268659,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268660,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268661,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 268662,
+      "weight": 0.3968,
+      "subcells": 248
+     },
+     {
+      "id": 270083,
+      "weight": 0.2576,
+      "subcells": 161
+     },
+     {
+      "id": 270084,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270085,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270086,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270087,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270088,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270089,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270090,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270091,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270092,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270093,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270094,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270095,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270096,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270097,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270098,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270099,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270100,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270101,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 270102,
+      "weight": 0.8176,
+      "subcells": 511
+     },
+     {
+      "id": 271523,
+      "weight": 0.4704,
+      "subcells": 294
+     },
+     {
+      "id": 271524,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271525,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271526,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271527,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271528,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271529,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271530,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271531,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271532,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271536,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271537,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271538,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271539,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271540,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271541,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271542,
+      "weight": 0.9952,
+      "subcells": 622
+     },
+     {
+      "id": 271543,
+      "weight": 0.0352,
+      "subcells": 22
+     },
+     {
+      "id": 272963,
+      "weight": 0.4912,
+      "subcells": 307
+     },
+     {
+      "id": 272964,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272965,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272966,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272967,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272968,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272969,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272970,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272971,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272972,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272976,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272977,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272978,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272979,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272980,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272981,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272982,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272983,
+      "weight": 0.0512,
+      "subcells": 32
+     },
+     {
+      "id": 274403,
+      "weight": 0.3168,
+      "subcells": 198
+     },
+     {
+      "id": 274404,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274405,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274406,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274407,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274408,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274409,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274410,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274411,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274412,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274413,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274414,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274415,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274416,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274417,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274418,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274419,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274420,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274421,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 274422,
+      "weight": 0.8768,
+      "subcells": 548
+     },
+     {
+      "id": 275843,
+      "weight": 0.0352,
+      "subcells": 22
+     },
+     {
+      "id": 275844,
+      "weight": 0.9088,
+      "subcells": 568
+     },
+     {
+      "id": 275845,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275846,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275847,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275848,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275849,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275850,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275851,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275852,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275853,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275854,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275855,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275856,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275857,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275858,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275859,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275860,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275861,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 275862,
+      "weight": 0.504,
+      "subcells": 315
+     },
+     {
+      "id": 277284,
+      "weight": 0.352,
+      "subcells": 220
+     },
+     {
+      "id": 277285,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277286,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277287,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277288,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277289,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277290,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277291,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277292,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277293,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277294,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277295,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277296,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277297,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277298,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277299,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277300,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 277301,
+      "weight": 0.8624,
+      "subcells": 539
+     },
+     {
+      "id": 277302,
+      "weight": 0.0496,
+      "subcells": 31
+     },
+     {
+      "id": 278725,
+      "weight": 0.488,
+      "subcells": 305
+     },
+     {
+      "id": 278726,
+      "weight": 0.9984,
+      "subcells": 624
+     },
+     {
+      "id": 278727,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278728,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278729,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278730,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278731,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278732,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278733,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278734,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278735,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278736,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278737,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278738,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278739,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 278740,
+      "weight": 0.8912,
+      "subcells": 557
+     },
+     {
+      "id": 278741,
+      "weight": 0.1552,
+      "subcells": 97
+     },
+     {
+      "id": 280166,
+      "weight": 0.3344,
+      "subcells": 209
+     },
+     {
+      "id": 280167,
+      "weight": 0.912,
+      "subcells": 570
+     },
+     {
+      "id": 280168,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280169,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280170,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280171,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280172,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280173,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280174,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280175,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280176,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280177,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280178,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 280179,
+      "weight": 0.7072,
+      "subcells": 442
+     },
+     {
+      "id": 280180,
+      "weight": 0.0992,
+      "subcells": 62
+     },
+     {
+      "id": 281607,
+      "weight": 0.048,
+      "subcells": 30
+     },
+     {
+      "id": 281608,
+      "weight": 0.4496,
+      "subcells": 281
+     },
+     {
+      "id": 281609,
+      "weight": 0.8176,
+      "subcells": 511
+     },
+     {
+      "id": 281610,
+      "weight": 0.9984,
+      "subcells": 624
+     },
+     {
+      "id": 281611,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 281612,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 281613,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 281614,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 281615,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 281616,
+      "weight": 0.9552,
+      "subcells": 597
+     },
+     {
+      "id": 281617,
+      "weight": 0.6704,
+      "subcells": 419
+     },
+     {
+      "id": 281618,
+      "weight": 0.248,
+      "subcells": 155
+     },
+     {
+      "id": 283050,
+      "weight": 0.0896,
+      "subcells": 56
+     },
+     {
+      "id": 283051,
+      "weight": 0.2672,
+      "subcells": 167
+     },
+     {
+      "id": 283052,
+      "weight": 0.3696,
+      "subcells": 231
+     },
+     {
+      "id": 283053,
+      "weight": 0.3952,
+      "subcells": 247
+     },
+     {
+      "id": 283054,
+      "weight": 0.3328,
+      "subcells": 208
+     },
+     {
+      "id": 283055,
+      "weight": 0.2,
+      "subcells": 125
+     },
+     {
+      "id": 283056,
+      "weight": 0.0224,
+      "subcells": 14
+     }
+    ],
+    "cellCount": 254,
+    "totalWeight": 221.3344,
+    "rawTotalWeightBeforeSmallRule": 221.3344,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Sofia, radius 0 (small selection)",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 0
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.0,
+    "lowConfidence": true
+   }
+  },
+  {
+   "name": "Radius 0 exactly on a sub-cell centre (inside or not, the small-selection result is the same)",
+   "input": {
+    "kind": "point",
+    "lat": 42.705,
+    "lon": 23.325,
+    "radiusKm": 0
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.0016,
+    "lowConfidence": true
+   },
+   "note": "A centre exactly at the distance counts as inside, so one sub-cell may count; either way the total is below 1."
+  },
+  {
+   "name": "Sofia, 13 km: total below 1 even though several cells are touched",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 13
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.9408,
+    "lowConfidence": true
+   },
+   "note": "The small-selection rule replaces the overlap weights with the single cell holding the point."
+  },
+  {
+   "name": "Sofia, 14 km: first whole-km radius with total of 1 or more",
+   "input": {
+    "kind": "point",
+    "lat": 42.7,
+    "lon": 23.32,
+    "radiusKm": 14
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 271532,
+      "weight": 0.056,
+      "subcells": 35
+     },
+     {
+      "id": 271533,
+      "weight": 0.2192,
+      "subcells": 137
+     },
+     {
+      "id": 272972,
+      "weight": 0.2096,
+      "subcells": 131
+     },
+     {
+      "id": 272973,
+      "weight": 0.5968,
+      "subcells": 373
+     }
+    ],
+    "cellCount": 4,
+    "totalWeight": 1.0816,
+    "rawTotalWeightBeforeSmallRule": 1.0816,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Equator, 50 km",
+   "input": {
+    "kind": "point",
+    "lat": 0.0,
+    "lon": 10.0,
+    "radiusKm": 50
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 516278,
+      "weight": 0.1392,
+      "subcells": 87
+     },
+     {
+      "id": 516279,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 516280,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 516281,
+      "weight": 0.1392,
+      "subcells": 87
+     },
+     {
+      "id": 517718,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 517719,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 517720,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 517721,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 519158,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 519159,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 519160,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 519161,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 520598,
+      "weight": 0.1392,
+      "subcells": 87
+     },
+     {
+      "id": 520599,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 520600,
+      "weight": 0.7008,
+      "subcells": 438
+     },
+     {
+      "id": 520601,
+      "weight": 0.1392,
+      "subcells": 87
+     }
+    ],
+    "cellCount": 16,
+    "totalWeight": 10.1632,
+    "rawTotalWeightBeforeSmallRule": 10.1632,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "65 N, 50 km",
+   "input": {
+    "kind": "point",
+    "lat": 65.0,
+    "lon": 20.0,
+    "radiusKm": 50
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 141916,
+      "weight": 0.0848,
+      "subcells": 53
+     },
+     {
+      "id": 141917,
+      "weight": 0.4528,
+      "subcells": 283
+     },
+     {
+      "id": 141918,
+      "weight": 0.68,
+      "subcells": 425
+     },
+     {
+      "id": 141919,
+      "weight": 0.784,
+      "subcells": 490
+     },
+     {
+      "id": 141920,
+      "weight": 0.784,
+      "subcells": 490
+     },
+     {
+      "id": 141921,
+      "weight": 0.68,
+      "subcells": 425
+     },
+     {
+      "id": 141922,
+      "weight": 0.4528,
+      "subcells": 283
+     },
+     {
+      "id": 141923,
+      "weight": 0.0848,
+      "subcells": 53
+     },
+     {
+      "id": 143355,
+      "weight": 0.1072,
+      "subcells": 67
+     },
+     {
+      "id": 143356,
+      "weight": 0.9248,
+      "subcells": 578
+     },
+     {
+      "id": 143357,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143358,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143359,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143360,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143361,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143362,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 143363,
+      "weight": 0.9248,
+      "subcells": 578
+     },
+     {
+      "id": 143364,
+      "weight": 0.1072,
+      "subcells": 67
+     },
+     {
+      "id": 144795,
+      "weight": 0.0992,
+      "subcells": 62
+     },
+     {
+      "id": 144796,
+      "weight": 0.9168,
+      "subcells": 573
+     },
+     {
+      "id": 144797,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144798,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144799,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144800,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144801,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144802,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 144803,
+      "weight": 0.9168,
+      "subcells": 573
+     },
+     {
+      "id": 144804,
+      "weight": 0.0992,
+      "subcells": 62
+     },
+     {
+      "id": 146236,
+      "weight": 0.0752,
+      "subcells": 47
+     },
+     {
+      "id": 146237,
+      "weight": 0.4432,
+      "subcells": 277
+     },
+     {
+      "id": 146238,
+      "weight": 0.6768,
+      "subcells": 423
+     },
+     {
+      "id": 146239,
+      "weight": 0.784,
+      "subcells": 490
+     },
+     {
+      "id": 146240,
+      "weight": 0.784,
+      "subcells": 490
+     },
+     {
+      "id": 146241,
+      "weight": 0.6768,
+      "subcells": 423
+     },
+     {
+      "id": 146242,
+      "weight": 0.4432,
+      "subcells": 277
+     },
+     {
+      "id": 146243,
+      "weight": 0.0752,
+      "subcells": 47
+     }
+    ],
+    "cellCount": 36,
+    "totalWeight": 24.0576,
+    "rawTotalWeightBeforeSmallRule": 24.0576,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "0 N 179.9 E, 50 km (cells on both sides of the 180 degree line)",
+   "input": {
+    "kind": "point",
+    "lat": 0.0,
+    "lon": 179.9,
+    "radiusKm": 50
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 515520,
+      "weight": 0.52,
+      "subcells": 325
+     },
+     {
+      "id": 515521,
+      "weight": 0.0064,
+      "subcells": 4
+     },
+     {
+      "id": 516958,
+      "weight": 0.3808,
+      "subcells": 238
+     },
+     {
+      "id": 516959,
+      "weight": 0.7728,
+      "subcells": 483
+     },
+     {
+      "id": 516960,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 516961,
+      "weight": 0.3008,
+      "subcells": 188
+     },
+     {
+      "id": 518397,
+      "weight": 0.1104,
+      "subcells": 69
+     },
+     {
+      "id": 518398,
+      "weight": 0.9904,
+      "subcells": 619
+     },
+     {
+      "id": 518399,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 518400,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 518401,
+      "weight": 0.3008,
+      "subcells": 188
+     },
+     {
+      "id": 519837,
+      "weight": 0.1104,
+      "subcells": 69
+     },
+     {
+      "id": 519838,
+      "weight": 0.9904,
+      "subcells": 619
+     },
+     {
+      "id": 519839,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 519840,
+      "weight": 0.52,
+      "subcells": 325
+     },
+     {
+      "id": 519841,
+      "weight": 0.0064,
+      "subcells": 4
+     },
+     {
+      "id": 521278,
+      "weight": 0.3808,
+      "subcells": 238
+     },
+     {
+      "id": 521279,
+      "weight": 0.7728,
+      "subcells": 483
+     }
+    ],
+    "cellCount": 18,
+    "totalWeight": 10.1632,
+    "rawTotalWeightBeforeSmallRule": 10.1632,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Point exactly on a cell corner, 5 km (small selection; the cell below and east of the point)",
+   "input": {
+    "kind": "point",
+    "lat": 42.25,
+    "lon": 23.25,
+    "radiusKm": 5
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 275853,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.1344,
+    "lowConfidence": true
+   },
+   "note": "Latitude 42.25 is the upper edge of the cell below it. Longitude 23.25 belongs to the cell east of it."
+  },
+  {
+   "name": "Point exactly on a cell corner, 30 km",
+   "input": {
+    "kind": "point",
+    "lat": 42.25,
+    "lon": 23.25,
+    "radiusKm": 30
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272972,
+      "weight": 0.0304,
+      "subcells": 19
+     },
+     {
+      "id": 272973,
+      "weight": 0.0304,
+      "subcells": 19
+     },
+     {
+      "id": 274411,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 274412,
+      "weight": 0.9584,
+      "subcells": 599
+     },
+     {
+      "id": 274413,
+      "weight": 0.9584,
+      "subcells": 599
+     },
+     {
+      "id": 274414,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 275851,
+      "weight": 0.248,
+      "subcells": 155
+     },
+     {
+      "id": 275852,
+      "weight": 0.9584,
+      "subcells": 599
+     },
+     {
+      "id": 275853,
+      "weight": 0.9584,
+      "subcells": 599
+     },
+     {
+      "id": 275854,
+      "weight": 0.248,
+      "subcells": 155
+     },
+     {
+      "id": 277292,
+      "weight": 0.0304,
+      "subcells": 19
+     },
+     {
+      "id": 277293,
+      "weight": 0.0304,
+      "subcells": 19
+     }
+    ],
+    "cellCount": 12,
+    "totalWeight": 4.9504,
+    "rawTotalWeightBeforeSmallRule": 4.9504,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Point on the 180 degree line, 5 km (small selection, column 0)",
+   "input": {
+    "kind": "point",
+    "lat": 10.0,
+    "lon": 180.0,
+    "radiusKm": 5
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 460800,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.1024,
+    "lowConfidence": true
+   }
+  },
+  {
+   "name": "Small polygon inside one cell (4 sub-cells)",
+   "input": {
+    "kind": "polygon",
+    "ring": [
+     [
+      23.31,
+      42.66
+     ],
+     [
+      23.33,
+      42.66
+     ],
+     [
+      23.33,
+      42.68
+     ],
+     [
+      23.31,
+      42.68
+     ]
+    ]
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 1,
+    "totalWeight": 1.0,
+    "rawTotalWeightBeforeSmallRule": 0.0064,
+    "lowConfidence": true
+   },
+   "note": "The vertex average is (23.32, 42.67), inside cell 272973. The ring is not repeated at its end."
+  },
+  {
+   "name": "Polygon covering several cells (square 23.0 to 23.5 E, 42.5 to 43.0 N)",
+   "input": {
+    "kind": "polygon",
+    "ring": [
+     [
+      23.0,
+      42.5
+     ],
+     [
+      23.5,
+      42.5
+     ],
+     [
+      23.5,
+      43.0
+     ],
+     [
+      23.0,
+      43.0
+     ]
+    ]
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 271532,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272972,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 4,
+    "totalWeight": 4.0,
+    "rawTotalWeightBeforeSmallRule": 4.0,
+    "lowConfidence": false
+   },
+   "note": "Edges lie on sub-cell boundaries, never on sub-cell centres, so inside or not is not in doubt."
+  },
+  {
+   "name": "Triangle (even-odd rule)",
+   "input": {
+    "kind": "polygon",
+    "ring": [
+     [
+      23.0,
+      42.5
+     ],
+     [
+      24.0,
+      42.5
+     ],
+     [
+      23.5,
+      43.5
+     ]
+    ]
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 268653,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 268654,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 270093,
+      "weight": 0.7504,
+      "subcells": 469
+     },
+     {
+      "id": 270094,
+      "weight": 0.7504,
+      "subcells": 469
+     },
+     {
+      "id": 271532,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 271533,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271534,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271535,
+      "weight": 0.2496,
+      "subcells": 156
+     },
+     {
+      "id": 272972,
+      "weight": 0.7504,
+      "subcells": 469
+     },
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272974,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272975,
+      "weight": 0.7504,
+      "subcells": 469
+     }
+    ],
+    "cellCount": 12,
+    "totalWeight": 8.0,
+    "rawTotalWeightBeforeSmallRule": 8.0,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Polygon with a repeated closing vertex gives the same weights as the open ring",
+   "input": {
+    "kind": "polygon",
+    "ring": [
+     [
+      23.0,
+      42.5
+     ],
+     [
+      23.5,
+      42.5
+     ],
+     [
+      23.5,
+      43.0
+     ],
+     [
+      23.0,
+      43.0
+     ],
+     [
+      23.0,
+      42.5
+     ]
+    ]
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 271532,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 271533,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272972,
+      "weight": 1.0,
+      "subcells": 625
+     },
+     {
+      "id": 272973,
+      "weight": 1.0,
+      "subcells": 625
+     }
+    ],
+    "cellCount": 4,
+    "totalWeight": 4.0,
+    "rawTotalWeightBeforeSmallRule": 4.0,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "Self-crossing bow tie (even-odd leaves the crossing halves apart)",
+   "input": {
+    "kind": "polygon",
+    "ring": [
+     [
+      23.0,
+      42.5
+     ],
+     [
+      23.5,
+      43.0
+     ],
+     [
+      23.5,
+      42.5
+     ],
+     [
+      23.0,
+      43.0
+     ]
+    ]
+   },
+   "expected": {
+    "cells": [
+     {
+      "id": 271532,
+      "weight": 0.4896,
+      "subcells": 306
+     },
+     {
+      "id": 271533,
+      "weight": 0.5104,
+      "subcells": 319
+     },
+     {
+      "id": 272972,
+      "weight": 0.4896,
+      "subcells": 306
+     },
+     {
+      "id": 272973,
+      "weight": 0.5104,
+      "subcells": 319
+     }
+    ],
+    "cellCount": 4,
+    "totalWeight": 2.0,
+    "rawTotalWeightBeforeSmallRule": 2.0,
+    "lowConfidence": false
+   }
+  },
+  {
+   "name": "The cell holding the point is in the weighted set whenever the total is 1 or more",
+   "input": {
+    "probes": [
+     [
+      42.7499,
+      23.2501
+     ],
+     [
+      42.25,
+      23.25
+     ],
+     [
+      0.0,
+      0.0
+     ],
+     [
+      65.0,
+      20.0
+     ],
+     [
+      10.0,
+      180.0
+     ],
+     [
+      42.7,
+      23.32
+     ]
+    ],
+    "radiiKm": [
+     14,
+     20,
+     50
+    ]
+   },
+   "expected": {
+    "ownCellAlwaysInSet": true,
+    "probeCount": 18
+   }
+  }
+ ]
+}

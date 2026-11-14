@@ -1,0 +1,982 @@
+{
+ "about": "Section 5. Chance of fire. Jeffreys range from scipy.stats.beta.ppf at 0.05 and 0.95, 6 decimals.",
+ "cases": [
+  {
+   "name": "0 of 20 years",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2010,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2011,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2012,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2013,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2014,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2020
+   },
+   "expected": {
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.090476,
+    "fireYears": 0,
+    "years": 20
+   }
+  },
+  {
+   "name": "20 of 20 years",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2010,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2011,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2012,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2013,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2014,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2020
+   },
+   "expected": {
+    "p": 1.0,
+    "lo": 0.909524,
+    "hi": 1.0,
+    "fireYears": 20,
+    "years": 20
+   }
+  },
+  {
+   "name": "7 of 25 years",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 3
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 1
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 9
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2010,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2011,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2012,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2013,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2014,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 4
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 7
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2022,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2023,
+      "m": 8,
+      "value": 12
+     },
+     {
+      "y": 2024,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2025
+   },
+   "expected": {
+    "p": 0.28,
+    "lo": 0.154725,
+    "hi": 0.441031,
+    "fireYears": 7,
+    "years": 25
+   }
+  },
+  {
+   "name": "1 of 3 years",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 4
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2003
+   },
+   "expected": {
+    "p": 0.333333,
+    "lo": 0.062413,
+    "hi": 0.764466,
+    "fireYears": 1,
+    "years": 3
+   }
+  },
+  {
+   "name": "No years (first year of the series)",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2000
+   },
+   "expected": {
+    "p": null,
+    "lo": null,
+    "hi": null,
+    "fireYears": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No years: month never present",
+   "input": {
+    "series": [
+     {
+      "y": 2010,
+      "m": 3,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2020
+   },
+   "expected": {
+    "p": null,
+    "lo": null,
+    "hi": null,
+    "fireYears": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No years: every past year is null",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2002
+   },
+   "expected": {
+    "p": null,
+    "lo": null,
+    "hi": null,
+    "fireYears": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "Threshold: 0.49 does not count as a fire year",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 0.49
+     }
+    ],
+    "month": 8,
+    "year": 2010
+   },
+   "expected": {
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.170773,
+    "fireYears": 0,
+    "years": 10
+   }
+  },
+  {
+   "name": "Threshold: 0.5 counts as a fire year",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 0.5
+     }
+    ],
+    "month": 8,
+    "year": 2010
+   },
+   "expected": {
+    "p": 1.0,
+    "lo": 0.829227,
+    "hi": 1.0,
+    "fireYears": 10,
+    "years": 10
+   }
+  },
+  {
+   "name": "Threshold edge, mixed (0.49, 0.5, 0.51, 0.4999999, 1)",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0.49
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0.5
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0.51
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 0.4999999
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 1
+     }
+    ],
+    "month": 8,
+    "year": 2005
+   },
+   "expected": {
+    "p": 0.6,
+    "lo": 0.260634,
+    "hi": 0.872224,
+    "fireYears": 3,
+    "years": 5
+   }
+  },
+  {
+   "name": "Null years are left out of the count",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 3
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2006
+   },
+   "expected": {
+    "p": 0.5,
+    "lo": 0.16528,
+    "hi": 0.83472,
+    "fireYears": 2,
+    "years": 4
+   }
+  },
+  {
+   "name": "Years from the asked year on are ignored",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2002
+   },
+   "expected": {
+    "p": 0.5,
+    "lo": 0.097308,
+    "hi": 0.902692,
+    "fireYears": 1,
+    "years": 2
+   }
+  },
+  {
+   "name": "Other months are ignored",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2000,
+      "m": 9,
+      "value": 100
+     },
+     {
+      "y": 2001,
+      "m": 7,
+      "value": 100
+     }
+    ],
+    "month": 8,
+    "year": 2003
+   },
+   "expected": {
+    "p": 0.666667,
+    "lo": 0.235534,
+    "hi": 0.937587,
+    "fireYears": 2,
+    "years": 3
+   }
+  },
+  {
+   "name": "1 of 1 year",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 2
+     }
+    ],
+    "month": 8,
+    "year": 2001
+   },
+   "expected": {
+    "p": 1.0,
+    "lo": 0.22852,
+    "hi": 1.0,
+    "fireYears": 1,
+    "years": 1
+   }
+  },
+  {
+   "name": "0 of 1 year",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2001
+   },
+   "expected": {
+    "p": 0.0,
+    "lo": 0.0,
+    "hi": 0.77148,
+    "fireYears": 0,
+    "years": 1
+   }
+  },
+  {
+   "name": "19 of 20 years",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2003,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2004,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2005,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2006,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2007,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2008,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2009,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2010,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2011,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2012,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2013,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2014,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 2
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 0
+     }
+    ],
+    "month": 8,
+    "year": 2020
+   },
+   "expected": {
+    "p": 0.95,
+    "lo": 0.820445,
+    "hi": 0.991131,
+    "fireYears": 19,
+    "years": 20
+   }
+  },
+  {
+   "name": "Month 11 starts in 2000 (Nov 2000 is the first month)",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 11,
+      "value": 1
+     },
+     {
+      "y": 2001,
+      "m": 11,
+      "value": 0
+     },
+     {
+      "y": 2002,
+      "m": 11,
+      "value": 2
+     },
+     {
+      "y": 2003,
+      "m": 11,
+      "value": 0
+     }
+    ],
+    "month": 11,
+    "year": 2004
+   },
+   "expected": {
+    "p": 0.5,
+    "lo": 0.16528,
+    "hi": 0.83472,
+    "fireYears": 2,
+    "years": 4
+   }
+  }
+ ]
+}

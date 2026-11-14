@@ -360,7 +360,7 @@ Drawn areas stay: NASA's challenge page names them.
 | D-9 | **Where the app's data lives** | Static files in the deployment · packed files on Vercel Blob · query function over Parquet | Measured 150 MB gzipped with every column, so **tiles cannot all be static**. Proposed: static for globe, countries, validation and reported numbers; tiles as a few packed files on Blob (or a slimmer binary format with fewer columns). Final choice after spike (a) | Sat 18:00 |
 
 **Account steps only the account owner can do** (one-time, in the browser):
-- create a Vercel Blob store if D-9 needs it;
+- ~~create a Vercel Blob store~~ **Done 14 Nov:** `emerge-data`, public, region `fra1` (Frankfurt), connected to the `emerge` project; its upload key `BLOB_READ_WRITE_TOKEN` is in Vercel's settings and in the git-ignored `.env.local`. Set the query function's region to `fra1` too, so it reads the store nearby;
 - approve any GitHub app permission.
 
 Keys and tokens then go into Vercel's environment settings, never into git.
