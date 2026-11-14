@@ -37,6 +37,8 @@ type ScoreResult =
       index: RiskIndex;
       open: boolean;
       spot: RiskSpot | null;
+      /** The closest scored spot when the place itself has none. */
+      nearest: { spot: RiskSpot; km: number } | null;
       top: RiskSpot[] | null;
       countryMissing: boolean;
       country: string;
@@ -47,9 +49,20 @@ type WeatherResult = { key: string; json: unknown } | { key: string; failed: tru
 const TOP_COUNT = 5;
 const noCountries = new Map<string, { lat: number; lon: number }>();
 
-/** Same reach as the report card's lookup, for any forecast day. */
-async function nearestOnDay(index: RiskIndex, lat: number, lon: number, day: string, example: boolean): Promise<RiskSpot | null> {
-  if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+/**
+ * Our model scores only the highest-risk places each day, so a point is
+ * matched to a scored spot within that spot's own radius (forest and
+ * wildland first, then all vegetation), and otherwise to the closest scored
+ * spot in the same countries, shown with its distance.
+ */
+async function lookupOnDay(
+  index: RiskIndex,
+  lat: number,
+  lon: number,
+  day: string,
+  example: boolean,
+): Promise<{ spot: RiskSpot | null; nearest: { spot: RiskSpot; km: number } | null }> {
+  if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return { spot: null, nearest: null };
   const reach = index.meta.grid_g * 112;
   const countries = [
     ...new Set(
@@ -59,14 +72,40 @@ async function nearestOnDay(index: RiskIndex, lat: number, lon: number, day: str
     ),
   ];
   const files = await Promise.all(countries.map((country) => loadRiskCountry(country, example)));
-  const spots = files.flatMap(({ file }) => Object.values(file.regions).flatMap((days) => days[day] ?? []));
-  return nearestSpot(spots, lat, lon);
+  const forest = files.flatMap(({ file }) => Object.values(file.regions).flatMap((days) => days[day] ?? []));
+  const all = files.flatMap(({ file }) => Object.values(file.all_vegetation ?? {}).flatMap((days) => days[day] ?? []));
+  const spot = nearestSpot(forest, lat, lon) ?? nearestSpot(all, lat, lon);
+  if (spot !== null) return { spot, nearest: null };
+  const scored = [...forest, ...all].filter((candidate) => candidate.p !== null);
+  let nearest: { spot: RiskSpot; km: number } | null = null;
+  for (const candidate of scored) {
+    const km = distanceKm(lat, lon, candidate.lat, candidate.lon);
+    if (nearest === null || km < nearest.km) nearest = { spot: candidate, km };
+  }
+  return { spot: null, nearest };
 }
 
 function topSpots(spots: RiskSpot[]): RiskSpot[] {
   return [...spots]
     .sort((a, b) => (b.p ?? -1) - (a.p ?? -1) || a.rank - b.rank)
     .slice(0, TOP_COUNT);
+}
+
+const metricPaths: Record<string, ReactNode> = {
+  temp: <path d="M10 3.5a1.8 1.8 0 0 0-1.8 1.8v6.6a3.2 3.2 0 1 0 3.6 0V5.3A1.8 1.8 0 0 0 10 3.5zM10 9v4.8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />,
+  humidity: <path d="M10 3.2C8 6 5.8 8.6 5.8 11.4a4.2 4.2 0 0 0 8.4 0C14.2 8.6 12 6 10 3.2z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />,
+  wind: <path d="M3.5 8h9a2.3 2.3 0 1 0-2.3-2.3M3.5 12h11.5a2.3 2.3 0 1 1-2.3 2.3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />,
+  rain: <path d="M6 11.5a3.3 3.3 0 0 1 .6-6.5 4 4 0 0 1 7.6 1.4A2.6 2.6 0 0 1 14 11.5zM7.5 14l-.8 2M10.5 14l-.8 2M13.5 14l-.8 2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />,
+  dry: <><circle cx="10" cy="10" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M10 2.8v1.8M10 15.4v1.8M2.8 10h1.8M15.4 10h1.8M4.9 4.9l1.3 1.3M13.8 13.8l1.3 1.3M4.9 15.1l1.3-1.3M13.8 6.2l1.3-1.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></>,
+  soil: <path d="M3 9.5h14M3 12.5h14M3 15.5h14M7 9.5c0-2 1.3-3.5 3-4.5 1.7 1 3 2.5 3 4.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />,
+};
+
+function MetricIcon({ name }: { name: string }) {
+  return (
+    <svg className="fc-icon" viewBox="0 0 20 20" aria-hidden="true">
+      {metricPaths[name]}
+    </svg>
+  );
 }
 
 export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
@@ -93,7 +132,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     const example = exampleMode(search);
     (async (): Promise<ScoreResult> => {
       const index = await loadRiskIndex(example);
-      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, top: null, countryMissing: false };
+      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, top: null, countryMissing: false };
       if (!index.meta || !showForecast(index.meta, example)) {
         return { ...base, open: false, country: sel.kind === "country" ? sel.iso3 : "" };
       }
@@ -104,9 +143,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         return { ...base, open: true, top: topSpots(spots), countryMissing: status === "missing", country: sel.iso3 };
       }
       const at = selectionPoint(sel, noCountries);
-      const spot = at ? await nearestOnDay(index, at.lat, at.lon, dayKey, example) : null;
-      const country = index.regions.find((region) => region.region_id === spot?.region_id)?.country ?? "";
-      return { ...base, open: true, spot, country };
+      const found = at ? await lookupOnDay(index, at.lat, at.lon, dayKey, example) : { spot: null, nearest: null };
+      const regionOf = found.spot?.region_id ?? found.nearest?.spot.region_id;
+      const country = index.regions.find((region) => region.region_id === regionOf)?.country ?? "";
+      return { ...base, open: true, spot: found.spot, nearest: found.nearest, country };
     })()
       .then((result) => {
         if (live) setScore(result);
@@ -162,7 +202,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const scoreSection = (): ReactNode => {
     if (!currentScore) return <p role="status" className="fc-muted">{tr("loading")}</p>;
     if (currentScore.status === "failed") return <p role="alert">{tr("failed")}</p>;
-    const { example, open, spot, top, countryMissing, index } = currentScore;
+    const { example, open, spot, nearest, top, countryMissing, index } = currentScore;
     const validDate = index.meta ? dateText(index.meta.days[day]) : "";
     return (
       <>
@@ -246,6 +286,30 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               <p className="fc-muted">{tr("valid", { date: validDate })}</p>
             </div>
           )
+        ) : nearest !== null ? (
+          <div className="fc-score">
+            <p className="fc-levelName">{t("notScored")}</p>
+            <p className="fc-muted">{t("notScoredWhy")}</p>
+            <div className="fc-nearest">
+              <p>
+                {t("nearestSpot", {
+                  km: number(nearest.km, 0),
+                  level: nearest.spot.level,
+                })}{" "}
+                <span className="fc-muted">{chance(nearest.spot.p)}</span>
+              </p>
+              {onPickPoint ? (
+                <button
+                  type="button"
+                  className="whole-country"
+                  onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}
+                >
+                  {t("goToSpot")}
+                </button>
+              ) : null}
+            </div>
+            <p className="fc-muted">{tr("valid", { date: validDate })}</p>
+          </div>
         ) : (
           <>
             <p>{tr("noForecast")}</p>
@@ -257,6 +321,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   };
 
   const tile = (props: {
+    icon: string;
     label: string;
     value: string | null;
     unit: string;
@@ -265,7 +330,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     extra?: ReactNode;
   }) => (
     <div className={`${styles.card}${props.wide ? " fc-tileWide" : ""}`}>
-      <p className="fc-tileLabel">{props.label}</p>
+      <p className="fc-tileLabel">
+        <MetricIcon name={props.icon} />
+        {props.label}
+      </p>
       <p className="fc-tileValue">
         {props.value === null ? (
           <span className="fc-tileNoData">{t("noData")}</span>
@@ -298,9 +366,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       <>
         <p className="fc-muted">{where}</p>
         <div className="fc-tiles">
-          {tile({ label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), source: forecastSource })}
-          {tile({ label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), source: forecastSource })}
+          {tile({ icon: "temp", label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), source: forecastSource })}
+          {tile({ icon: "humidity", label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), source: forecastSource })}
           {tile({
+            icon: "wind",
             label: t("tWind"),
             value: show(w.windMax, 0),
             unit: t("unitKmh"),
@@ -327,15 +396,16 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               </p>
             ),
           })}
-          {tile({ label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), source: forecastSource })}
-          {tile({ label: t("tRain7"), value: show(w.rain7, 1), unit: t("unitMm"), source: t("sourcePast") })}
+          {tile({ icon: "rain", label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), source: forecastSource })}
+          {tile({ icon: "rain", label: t("tRain7"), value: show(w.rain7, 1), unit: t("unitMm"), source: t("sourcePast") })}
           {tile({
+            icon: "dry",
             label: t("tDry"),
             value: dry === null ? null : dry.atLeast ? t("atLeast", { n: dry.days }) : number(dry.days, 0),
             unit: dry === null ? "" : t("unitDays", { n: dry.days }),
             source: `${t("sourcePast")}. ${t("tDryNote")}`,
           })}
-          {tile({ label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), source: t("sourceSoil") })}
+          {tile({ icon: "soil", label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), source: t("sourceSoil") })}
         </div>
       </>
     );

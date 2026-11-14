@@ -245,3 +245,16 @@ button.fc-topRow:focus-visible {
   gap: 10px;
   font-size: 13px;
 }
+
+.fc-tileLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fc-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--accent);
+}

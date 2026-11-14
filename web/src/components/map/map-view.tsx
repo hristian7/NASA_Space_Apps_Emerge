@@ -256,20 +256,7 @@ export default function MapView({
         });
         map.current = instance;
 
-        // Every credit in one place: the map's own button, which opens the
-        // full list. Layers drawn outside MapLibre add theirs here.
-        instance.addControl(
-          new maplibregl.AttributionControl({
-            compact: true,
-            customAttribution: [
-              "Fire history: NASA FIRMS (MODIS, VIIRS), harmonized by this project",
-              "Wind and weather: Open-Meteo",
-              "Place search: Photon, data from OpenStreetMap contributors (ODbL)",
-              "Country borders: Natural Earth",
-            ],
-          }),
-          "bottom-right",
-        );
+        // Credits are listed once, in the information menu of the top bar.
         // Zoom buttons live in the shell's tool column, which asks by event.
         const zoomBy = (event: Event) => {
           const step = (event as CustomEvent<number>).detail;
@@ -454,7 +441,22 @@ export default function MapView({
             if (!tiles || definition.source.kind !== "tile_template") continue;
             instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.kind === "tile_template" && definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
             const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
-            instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, below);
+            // Smooth resampling for every driver layer. Air temperature comes in
+            // hard-edged satellite swaths, so it is also fainter and flatter.
+            const soft = definition.id === "air-temperature";
+            instance.addLayer(
+              {
+                id: layer,
+                type: "raster",
+                source,
+                paint: {
+                  "raster-opacity": soft ? 0.3 : 0.42,
+                  "raster-resampling": "linear",
+                  ...(soft ? { "raster-contrast": -0.25, "raster-saturation": -0.15 } : {}),
+                },
+              },
+              below,
+            );
             shownTiles.set(definition.id, tiles);
           }
         };
@@ -547,10 +549,6 @@ export default function MapView({
         });
 
         instance.on("load", () => {
-          // The credits start folded behind their button on every screen size.
-          const credits = node.querySelector(".maplibregl-ctrl-attrib");
-          credits?.classList.remove("maplibregl-compact-show");
-          credits?.removeAttribute("open");
           publishCamera();
           instance.getCanvas().setAttribute("aria-label", label.current);
           instance.setProjection({ type: projection });

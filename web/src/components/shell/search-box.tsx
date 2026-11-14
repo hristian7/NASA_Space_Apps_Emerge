@@ -9,13 +9,15 @@ import { parseCoordsQuery, searchPlaces, type PlaceHit } from "@/lib/ui/place-se
 type Props = {
   onCountry: (iso3: string) => void;
   onPoint: (lat: number, lon: number) => void;
+  /** Moves focus into the field, for when a phone unfolds it. */
+  autoFocus?: boolean;
 };
 
 const iso2ToIso3 = new Map(Object.entries(ISO3_TO_ISO2).map(([three, two]) => [two, three]));
 const pauseMs = 350;
 
 /** One field for a country, a city or any named place, or a latitude and longitude. */
-export default function SearchBox({ onCountry, onPoint }: Props) {
+export default function SearchBox({ onCountry, onPoint, autoFocus = false }: Props) {
   const t = useTranslations("search");
   const locale = useLocale();
   const listId = useId();
@@ -26,6 +28,11 @@ export default function SearchBox({ onCountry, onPoint }: Props) {
   const [places, setPlaces] = useState<PlaceHit[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "failed">("idle");
   const box = useRef<HTMLDivElement | null>(null);
+  const field = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (autoFocus) field.current?.focus();
+  }, [autoFocus]);
 
   const known = useMemo(() => new Set(iso3), [iso3]);
   const englishName = useMemo(() => new Map(entries.map((entry) => [entry.iso3, entry.name])), [entries]);
@@ -130,6 +137,7 @@ export default function SearchBox({ onCountry, onPoint }: Props) {
         <path d="M10.4 10.4 14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
       <input
+        ref={field}
         type="search"
         role="combobox"
         aria-expanded={showList}

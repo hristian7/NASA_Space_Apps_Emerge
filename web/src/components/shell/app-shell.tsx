@@ -5,6 +5,7 @@ import type { Selection } from "@/types/ui";
 import MapView from "@/components/map/map-view";
 import { defaultBasemapId } from "@/config/basemaps";
 import { historyYears } from "@/lib/layers/history";
+import { LAYERS } from "@/config/layers";
 import { useLayers } from "@/lib/layers/use-layers";
 import { removeQueryParam, setQueryParam } from "@/lib/ui/query";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
@@ -182,6 +183,20 @@ export default function AppShell() {
 
       <TimeSlider
         view={view}
+        fixedLayers={
+          history
+            ? []
+            : LAYERS.filter(
+                (entry) =>
+                  entry.kind === "raster_tiles" &&
+                  entry.source.kind === "tile_template" &&
+                  entry.source.date !== undefined &&
+                  layers.state.on.includes(entry.id),
+              ).map((entry) => ({
+                nameKey: entry.nameKey,
+                date: entry.source.kind === "tile_template" ? (entry.source.date ?? "") : "",
+              }))
+        }
         years={historyYears(layers.lastMonth)}
         year={layers.state.historyYear}
         onYear={layers.setYear}

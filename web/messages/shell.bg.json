@@ -50,5 +50,14 @@
   "forecastTime": "Ден от прогнозата",
   "clearPlace": "Затвори доклада",
   "countryHint": "Щракнете по картата за точка или потърсете държава горе.",
-  "wholeCountry": "Цялата държава: {name}"
+  "wholeCountry": "Цялата държава: {name}",
+  "infoMenu": "Информация и източници",
+  "creditsHeading": "Данни и източници",
+  "creditBasemap": "Изображения на основната карта: NASA Global Imagery Browse Services (GIBS), част от NASA ESDIS",
+  "creditDrivers": "Влажност на почвата, зеленина на растенията, вид на земята и температура на въздуха: NASA SMAP, VIIRS, MODIS и AIRS чрез NASA GIBS; индекс на пожарното време на NASA: NASA GEOS-5 чрез Copernicus GWIS",
+  "creditForecastWeather": "Времето за точка в панела с прогнозата: Open-Meteo.com",
+  "creditSearch": "Търсене на места: Photon, с данни от сътрудниците на OpenStreetMap (ODbL)",
+  "creditBorders": "Граници на държавите: Natural Earth",
+  "menu": "Меню",
+  "timelineFixed": "Плъзгачът мести историята на пожарите и пожарната опасност. Тези показват последното си наблюдение: {layers}."
 }

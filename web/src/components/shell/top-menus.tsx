@@ -36,7 +36,7 @@ export function LanguageMenu() {
   const current = useLocale();
   const { open, setOpen, root } = useDropdown();
   return (
-    <div className="dropdown" ref={root}>
+    <div className="dropdown lang-menu" ref={root}>
       <button
         type="button"
         className="icon-btn glass"
@@ -72,36 +72,110 @@ export function LanguageMenu() {
   );
 }
 
-/** The two explanation pages, grouped behind one entry. */
-export function AboutMenu() {
+/** One small button for the explanation pages and every data credit, each named once. */
+function useCredits(): string[] {
+  const t = useTranslations("shell");
+  const layers = useTranslations("layers");
+  return [
+    layers("historyCredit"),
+    layers("recentCredit"),
+    layers("dangerCredit"),
+    t("creditDrivers"),
+    layers("windCredit"),
+    t("creditForecastWeather"),
+    t("creditBasemap"),
+    t("creditSearch"),
+    t("creditBorders"),
+  ];
+}
+
+function InfoLinks({ onPick }: { onPick: () => void }) {
+  const t = useTranslations("shell");
+  const credits = useCredits();
+  return (
+    <>
+      <Link className="dropdown-item" href="/about" onClick={onPick}>
+        {t("aboutProject")}
+      </Link>
+      <Link className="dropdown-item" href="/proof" onClick={onPick}>
+        {t("howWeKnow")}
+      </Link>
+      <h2 className="info-heading">{t("creditsHeading")}</h2>
+      <ul className="info-credits">
+        {credits.map((credit) => (
+          <li key={credit}>{credit}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+export function InfoMenu() {
   const t = useTranslations("shell");
   const { open, setOpen, root } = useDropdown();
   return (
-    <div className="dropdown" ref={root}>
+    <div className="dropdown info-menu" ref={root}>
       <button
         type="button"
-        className="chip-solo glass"
+        className="icon-btn glass"
         aria-expanded={open}
         aria-haspopup="true"
-        aria-label={t("aboutMenu")}
+        aria-label={t("infoMenu")}
         onClick={() => setOpen(!open)}
       >
-        <svg className="about-icon" viewBox="0 0 20 20" aria-hidden="true" width="18" height="18">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
           <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
           <path d="M10 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           <circle cx="10" cy="6.4" r="1" fill="currentColor" />
         </svg>
-        <span className="about-text">{t("aboutMenu")}</span>
       </button>
       {open ? (
-        <nav className="dropdown-list glass" aria-label={t("aboutMenu")}>
-          <Link className="dropdown-item" href="/about" onClick={() => setOpen(false)}>
-            {t("aboutProject")}
-          </Link>
-          <Link className="dropdown-item" href="/proof" onClick={() => setOpen(false)}>
-            {t("howWeKnow")}
-          </Link>
-        </nav>
+        <div className="dropdown-list info-list glass" role="dialog" aria-label={t("infoMenu")}>
+          <InfoLinks onPick={() => setOpen(false)} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** On a phone, language and information share one menu button. */
+export function MobileMenu() {
+  const t = useTranslations("shell");
+  const current = useLocale();
+  const { open, setOpen, root } = useDropdown();
+  return (
+    <div className="dropdown mobile-menu" ref={root}>
+      <button
+        type="button"
+        className="icon-btn glass"
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-label={t("menu")}
+        onClick={() => setOpen(!open)}
+      >
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open ? (
+        <div className="dropdown-list info-list glass" role="dialog" aria-label={t("menu")}>
+          <form action={setLocale} className="menu-langs" aria-label={t("languageMenu")} onSubmit={() => setOpen(false)}>
+            {locales.map((locale) => (
+              <button
+                key={locale}
+                type="submit"
+                name="locale"
+                value={locale}
+                className="dropdown-item"
+                aria-current={locale === current ? "true" : undefined}
+                lang={locale}
+              >
+                {nativeName[locale] ?? locale.toUpperCase()}
+              </button>
+            ))}
+          </form>
+          <InfoLinks onPick={() => setOpen(false)} />
+        </div>
       ) : null}
     </div>
   );

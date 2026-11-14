@@ -12,6 +12,8 @@ type Props = {
   onYear: (year: number) => void;
   day: number;
   onDay: (day: number) => void;
+  /** Layers on screen that show their own latest date and ignore the slider. */
+  fixedLayers: { nameKey: string; date: string }[];
 };
 
 const stepMs = 1100;
@@ -20,9 +22,14 @@ const stepMs = 1100;
  * One time control for both views: the fire history moves by year, the
  * forecast by day. Play steps forward and stops at the end.
  */
-export default function TimeSlider({ view, years, year, onYear, day, onDay }: Props) {
+export default function TimeSlider({ view, years, year, onYear, day, onDay, fixedLayers }: Props) {
   const t = useTranslations("shell");
+  const layerNames = useTranslations("layers");
   const locale = useLocale();
+  const shortDate = (iso: string) =>
+    new Intl.DateTimeFormat(locale === "bg" ? "bg-BG" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(
+      new Date(`${iso}T00:00:00Z`),
+    );
   const [playing, setPlaying] = useState(false);
 
   const history = view === "history";
@@ -58,6 +65,15 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay }: Pr
 
   return (
     <div className="timeline glass" role="group" aria-label={history ? t("historyTime") : t("forecastTime")}>
+      {fixedLayers.length > 0 ? (
+        <p className="timeline-note glass" role="note">
+          {t("timelineFixed", {
+            layers: fixedLayers
+              .map((entry) => `${layerNames(entry.nameKey.replace(/^layers\./, ""))} (${shortDate(entry.date)})`)
+              .join(", "),
+          })}
+        </p>
+      ) : null}
       <button
         type="button"
         className="tool play"

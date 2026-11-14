@@ -9,5 +9,6 @@ export async function loadRiskHere(index: RiskIndex, lat: number, lon: number, e
  const files=await Promise.all(countries.map(country=>loadRiskCountry(country,example,fetcher)));
  const day=index.meta.days.tomorrow;
  const spots=files.flatMap(({file})=>Object.values(file.regions).flatMap(days=>days[day]??[]));
- return nearestSpot(spots,lat,lon);
+ const all=files.flatMap(({file})=>Object.values(file.all_vegetation??{}).flatMap(days=>days[day]??[]));
+ return nearestSpot(spots,lat,lon) ?? nearestSpot(all,lat,lon);
 }

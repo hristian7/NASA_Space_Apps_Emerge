@@ -50,5 +50,14 @@
   "forecastTime": "Forecast day",
   "clearPlace": "Close the report",
   "countryHint": "Click the map to pick a point, or search for a country above.",
-  "wholeCountry": "Show all of {name}"
+  "wholeCountry": "Show all of {name}",
+  "infoMenu": "Information and credits",
+  "creditsHeading": "Data and credits",
+  "creditBasemap": "Base map imagery: NASA Global Imagery Browse Services (GIBS), part of NASA ESDIS",
+  "creditDrivers": "Soil moisture, plant greenness, land type and air temperature: NASA SMAP, VIIRS, MODIS and AIRS through NASA GIBS; NASA fire-weather index: NASA GEOS-5 through Copernicus GWIS",
+  "creditForecastWeather": "Point weather in the forecast panel: Open-Meteo.com",
+  "creditSearch": "Place search: Photon, with data from OpenStreetMap contributors (ODbL)",
+  "creditBorders": "Country borders: Natural Earth",
+  "menu": "Menu",
+  "timelineFixed": "The slider moves fire history and fire danger. These show their latest observation instead: {layers}."
 }
