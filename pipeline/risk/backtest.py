@@ -140,22 +140,33 @@ def selection_scores(con, selection, year, has_model=False):
               'regions_under_20': aggregate(small, methods), 'regions_20_or_more': aggregate(large, methods),
               'regions': regions, 'months': {k: aggregate(v, methods) for k, v in sorted(by_month.items())},
               'bootstrap': bootstrap(rows, year, methods)}
+    # The same fire-positive region-days as the ranking are used for probability metrics.
+    query = con.execute("""
+      WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0),
+      scored AS (SELECT r.*, (label='new')::INTEGER AS actual FROM ranked r JOIN active USING(region_id,day))
+      SELECT count(*), avg(pow(p-actual,2)), avg(pow(hist_p-actual,2)) FROM scored
+    """).fetchone()
+    n, model_brier, history_brier = query
+    history_bins = con.execute("""
+      WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0)
+      SELECT least(9, floor(hist_p*10)::INTEGER) AS bin, count(*) AS n, avg(hist_p), avg((label='new')::INTEGER)
+      FROM ranked JOIN active USING(region_id,day) GROUP BY 1 ORDER BY 1
+    """).fetchall()
+    probability = {'n': n, 'history_brier': history_brier,
+                   'history_brier_skill': 0.0 if history_brier else None,
+                   'history_reliability': [{'bin': b, 'n': count, 'predicted': p, 'observed': obs}
+                                           for b,count,p,obs in history_bins]}
     if has_model:
-        # The same fire-positive region-days as the ranking are used for Brier and reliability.
-        query = con.execute("""
-          WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0),
-          scored AS (SELECT r.*, (label='new')::INTEGER AS actual FROM ranked r JOIN active USING(region_id,day))
-          SELECT count(*), avg(pow(p-actual,2)), avg(pow(hist_p-actual,2)) FROM scored
-        """).fetchone()
-        n, model_brier, history_brier = query
         bins = con.execute("""
           WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0)
           SELECT least(9, floor(p*10)::INTEGER) AS bin, count(*) AS n, avg(p), avg((label='new')::INTEGER)
           FROM ranked JOIN active USING(region_id,day) GROUP BY 1 ORDER BY 1
         """).fetchall()
-        result['probability'] = {'n': n, 'brier': model_brier, 'history_brier': history_brier,
-                                 'brier_skill': 1-model_brier/history_brier if history_brier else None,
-                                 'reliability': [{'bin': b, 'n': n, 'predicted': p, 'observed': obs} for b,n,p,obs in bins]}
+        probability.update({'brier': model_brier,
+                            'brier_skill': 1-model_brier/history_brier if history_brier else None,
+                            'reliability': [{'bin': b, 'n': count, 'predicted': p, 'observed': obs}
+                                            for b,count,p,obs in bins]})
+    result['probability'] = probability
     return result
 
 

@@ -114,3 +114,11 @@ def test_missing_scores_do_not_remove_eligible_fires_from_capture(candidates):
     assert result['pooled']['methods']['history']['captured_new'] == 2
     assert result['pooled']['methods']['history']['capture_rate'] == pytest.approx(2/3)
     assert result['regions']['C']['min_scored_spots'] == 0
+
+
+def test_history_baseline_has_brier_and_reliability(candidates):
+    result = risk.selection_scores(candidates, 'forest_wildland', 2025)
+    probability = result['probability']
+    assert probability['history_brier'] > 0
+    assert probability['history_brier_skill'] == 0
+    assert sum(row['n'] for row in probability['history_reliability']) == 9
