@@ -139,6 +139,11 @@ export interface TileCell extends PointHead {
   type: 'cell';
   /** Cell id: row * 1440 + col. */
   id: number;
+  /**
+   * Group this cell belongs to, for the background lookup in background.json.
+   * An opaque key: never take it apart.
+   */
+  g: string;
   /** Month indexes, ascending. January 2000 is 0. */
   mi: number[];
   hot: number[];
@@ -169,6 +174,57 @@ export interface TileFile {
   /** Lowest and highest month index present in this file. */
   months: { first: number; last: number };
   cells: TileCell[];
+}
+
+/** The two periods that have a background value. */
+export type BackgroundPeriod = 'estimated_terra' | 'estimated_modis';
+
+/**
+ * One group's background for one period. Each array holds 12 values, January
+ * first, in whole hundredths: 37 means 0.37. The lower end is always 0, so it
+ * is not stored.
+ */
+export interface BackgroundSeries {
+  hot: number[];
+  hot_hi: number[];
+  cd: number[];
+  cd_hi: number[];
+}
+
+/** web/public/data/background.json */
+export interface BackgroundFile {
+  schema: 'emerge-background-1';
+  example: boolean;
+  built: string;
+  /** Present only while the numbers are stand-ins. */
+  note?: string;
+  unit: 'hundredths';
+  periods: BackgroundPeriod[];
+  /** Keyed by the group id a tile cell carries in its `g` field. */
+  groups: Record<string, Record<BackgroundPeriod, BackgroundSeries>>;
+}
+
+/** One country in the search index. */
+export interface CountryIndexEntry {
+  iso3: string;
+  /** English name, for the search box. */
+  name: string;
+  /** The country file's summary point. */
+  lat: number;
+  lon: number;
+  /**
+   * [west, south, east, north] in degrees, around the country's fire cells.
+   * `west` greater than `east` means the box crosses the 180 degree line.
+   */
+  bbox: [number, number, number, number];
+}
+
+/** web/public/data/countries/index.json */
+export interface CountryIndexFile {
+  schema: 'emerge-country-index-1';
+  example: boolean;
+  built: string;
+  countries: CountryIndexEntry[];
 }
 
 /** Columnar yearly totals. Every array has n entries and shares one index. */

@@ -1,0 +1,1 @@
+{"schema":"emerge-country-index-1","example":true,"built":"2026-11-14","countries":[{"iso3":"BGR","name":"Bulgaria","lat":42.7886,"lon":25.2032,"bbox":[22.25,41.0,28.75,44.25]},{"iso3":"USA","name":"United States","lat":42.7733,"lon":-106.677,"bbox":[179.5,18.75,-66.75,70.5]}]}

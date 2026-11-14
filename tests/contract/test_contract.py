@@ -122,6 +122,11 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
+BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
+BACKGROUND_GROUPS = set(read_json(DATA / "background.json")["groups"])
+
+
 @pytest.fixture(scope="module")
 def meta() -> dict:
     return read_json(DATA / "meta.json")
@@ -152,7 +157,7 @@ def test_meta_shape(meta):
 
 def test_meta_indexes_match_the_files(meta):
     assert meta["countries"] == sorted(
-        p.stem for p in (DATA / "countries").glob("*.json")
+        p.stem for p in (DATA / "countries").glob("*.json") if p.stem != "index"
     )
     assert meta["reported"] == sorted(
         p.stem for p in (DATA / "reported").glob("*.json")
@@ -172,7 +177,9 @@ def test_meta_indexes_match_the_files(meta):
 # countries/<ISO3>.json
 # ---------------------------------------------------------------------------
 
-COUNTRY_FILES = sorted((DATA / "countries").glob("*.json"))
+COUNTRY_FILES = sorted(
+    p for p in (DATA / "countries").glob("*.json") if p.stem != "index"
+)
 TILE_FILES = sorted((DATA / "tiles").glob("*.json.gz"))
 DAILY_FILES = sorted((DATA / "daily").glob("*.json.gz"))
 GLOBE_FILES = sorted((DATA / "globe").glob("*.json"))
@@ -302,6 +309,9 @@ def test_tile_file(path: Path):
         assert tile_key_of(cell["lat"], cell["lon"]) == key, f"{where}: cell is in the wrong tile"
         want = half_diagonal_km(cell["lat"])
         assert abs(cell["precision_radius_km"] - want) <= 0.01 * want, f"{where}: precision radius off"
+
+        assert isinstance(cell["g"], str) and cell["g"], f"{where}: missing group id"
+        assert cell["g"] in BACKGROUND_GROUPS, f"{where}: group {cell['g']} is not in background.json"
 
         n = len(cell["mi"])
         assert n > 0, where
@@ -629,3 +639,93 @@ def test_fire_days_are_not_capped_at_the_days_in_a_month():
     pos = cell["mi"].index(248)  # September 2020
     assert cell["cd"][pos] == 2448
     assert cell["hot"][pos] == 10382
+
+
+# ---------------------------------------------------------------------------
+# background.json and countries/index.json
+# ---------------------------------------------------------------------------
+
+
+def test_background_file():
+    doc = read_json(DATA / "background.json")
+    assert doc["schema"] == "emerge-background-1"
+    assert doc["example"] is True
+    assert doc["unit"] == "hundredths"
+    assert doc["periods"] == BACKGROUND_PERIODS
+    assert doc["note"], "a stand-in background must say so in the file"
+    assert doc["groups"], "background.json has no groups"
+    assert list(doc["groups"]) == sorted(doc["groups"]), "groups must be sorted"
+
+    for gid, periods in doc["groups"].items():
+        assert list(periods) == BACKGROUND_PERIODS, f"{gid}: wrong periods"
+        for period, series in periods.items():
+            where = f"{gid} {period}"
+            assert list(series) == BACKGROUND_UNITS, f"{where}: wrong units"
+            for unit, values in series.items():
+                assert len(values) == 12, f"{where} {unit}: needs 12 months"
+                for v in values:
+                    assert is_whole(v), f"{where} {unit}: not a whole hundredth"
+                    assert v >= 0, f"{where} {unit}: negative"
+            for m in range(12):
+                assert series["hot"][m] <= series["hot_hi"][m], f"{where}: hot above its upper end"
+                assert series["cd"][m] <= series["cd_hi"][m], f"{where}: cd above its upper end"
+
+
+def test_every_background_group_is_used_by_a_tile():
+    """No group may be listed that no cell points at, and none may be missing."""
+    used = set()
+    for path in TILE_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            used.add(cell["g"])
+    assert used == BACKGROUND_GROUPS, (
+        f"groups only in the tiles: {sorted(used - BACKGROUND_GROUPS)}; "
+        f"groups only in background.json: {sorted(BACKGROUND_GROUPS - used)}"
+    )
+
+
+def test_the_daily_files_carry_no_group_id():
+    """Ruling 10 is a monthly rule, so the daily files must not imply one."""
+    for path in DAILY_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            assert "g" not in cell, f"{path.name}: a daily cell carries a group id"
+
+
+def test_country_index():
+    doc = read_json(DATA / "countries" / "index.json")
+    assert doc["schema"] == "emerge-country-index-1"
+    assert doc["example"] is True
+    entries = doc["countries"]
+    assert [e["iso3"] for e in entries] == sorted(e["iso3"] for e in entries)
+    assert [e["iso3"] for e in entries] == [p.stem for p in COUNTRY_FILES], (
+        "the index must name exactly the country files that exist"
+    )
+    for e in entries:
+        where = f"index {e['iso3']}"
+        assert e["name"], where
+        country = read_json(DATA / "countries" / f"{e['iso3']}.json")
+        assert e["lat"] == country["lat"] and e["lon"] == country["lon"], (
+            f"{where}: the point must match the country file"
+        )
+        west, south, east, north = e["bbox"]
+        assert -90 <= south < north <= 90, f"{where}: latitudes out of order"
+        for v in (west, east):
+            assert -180 <= v <= 180, f"{where}: longitude outside the range"
+        assert south <= e["lat"] <= north, f"{where}: the point is outside its own box"
+
+
+def test_the_country_box_holds_every_cell_of_that_country():
+    """Including the case where the box crosses the 180 degree line."""
+    boxes = {
+        e["iso3"]: e["bbox"]
+        for e in read_json(DATA / "countries" / "index.json")["countries"]
+    }
+    west, south, east, north = boxes["USA"]
+    assert west > east, "the USA box is expected to cross the 180 degree line"
+
+    for path in TILE_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            iso3 = cell["g"].split("_")[0]
+            w, s, e, n = boxes[iso3]
+            assert s <= cell["lat"] <= n, f"{iso3} cell {cell['id']} outside its box"
+            inside = (cell["lon"] >= w or cell["lon"] <= e) if w > e else (w <= cell["lon"] <= e)
+            assert inside, f"{iso3} cell {cell['id']} outside its box in longitude"

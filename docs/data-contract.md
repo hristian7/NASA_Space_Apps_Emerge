@@ -24,6 +24,8 @@ Everything lives under `web/public/data/`, so the app fetches static files and d
 |---|---|---|
 | `meta.json` | version, dates, grid rules, label meanings, no-data periods, which files exist, sources | 3.7 KB |
 | `countries/<ISO3>.json` | one country's full monthly series | 56 to 63 KB |
+| `countries/index.json` | one line per country file, for the country search | 0.3 KB |
+| `background.json` | the value of a month before Feb 2012 that a cell does not list | 1.5 KB |
 | `reported/<ISO3>.json` | officially reported fires and burned area per year | 1 to 3 KB |
 | `tiles/<lat0>_<lon0>.json.gz` | every fire cell in a 5 degree square, monthly, pre-gzipped | 46 to 56 KB |
 | `globe/<year>.json` | one year's totals per cell, for the globe layer | 31 KB |
@@ -224,6 +226,29 @@ Each month holds, in this order: `y`, `m`, the seven harmonized fields, the five
 
 ---
 
+### 5.1 `countries/index.json`
+
+One line per country file, so the country search box has a data source and does not need to fetch every country file to know what exists.
+
+| Field | Type | Notes |
+|---|---|---|
+| `schema` | `"emerge-country-index-1"` | |
+| `example` | boolean | |
+| `built` | `"YYYY-MM-DD"` | |
+| `countries` | list | sorted by `iso3` |
+
+One entry: `iso3`, `name` (English, for the search box), `lat` and `lon` (the same summary point as the country file), and `bbox` as `[west, south, east, north]` in degrees. The box is drawn around the outer edges of the country's fire cells, not its border, and it is the smallest such box: it is found by cutting the longitudes at their widest empty gap, so a country reaching across the 180 degree line gets a box with **`west` greater than `east`** rather than one spanning the whole world. The app must handle that case.
+
+```json
+{"schema":"emerge-country-index-1","example":true,"built":"2026-11-14",
+ "countries":[{"iso3":"BGR","name":"Bulgaria","lat":42.7886,"lon":25.2032,
+               "bbox":[22.25,41,28.75,44.25]},
+              {"iso3":"USA","name":"United States","lat":42.7733,"lon":-106.677,
+               "bbox":[179.5,18.75,-66.75,70.5]}]}
+```
+
+The USA entry shows the wrap: its fire cells run from the Aleutians past the 180 degree line to Maine, so `west` is 179.5 and `east` is -66.75.
+
 ## 6. `reported/<ISO3>.json`
 
 Officially reported fires and burned area, for the "detected vs reported" card (M28). These are **national totals**: shown in full for a country selection, and as "country total, for context" for a point or a drawn area.
@@ -273,7 +298,7 @@ Layout: one object per cell, with **parallel arrays indexed by position in `mi`*
 | `months` | object | `{first, last}`, the lowest and highest month index in the file |
 | `cells` | list | sorted by `id` ascending |
 
-One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius_km`, then the parallel arrays `mi` (month indexes, ascending), `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src` (index into `src_labels`), `flags` (bit set).
+One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius_km`, `g` (the cell's group id, for the background lookup in section 7.1), then the parallel arrays `mi` (month indexes, ascending), `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src` (index into `src_labels`), `flags` (bit set).
 
 **Fire months only.** A month is listed when at least one satellite saw at least one detection in that cell. A month inside the coverage period that is not listed means 0. A listed month can still hold `hot: 0` and `cd: 0`: that happens from Feb 2012 when MODIS or NOAA-20 saw fire in the cell but the reference sensor, S-NPP, did not. Zero is the honest harmonized answer there.
 
@@ -287,6 +312,7 @@ One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius
  "months":{"first":10,"last":311},
  "cells":[{"type":"cell","id":264329,"lat":44.125,"lon":22.375,
            "precision_radius_km":17.11,
+           "g":"BGR_40",
            "mi":[25,55],"hot":[3,11],"hot_lo":[2,8],"hot_hi":[4,14],
            "cd":[3,11],"cd_lo":[2,8],"cd_hi":[4,14],"frp":[12,515],
            "src":[0,1],"flags":[1,1]}]}
@@ -295,6 +321,53 @@ One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius
 Read as: cell 264329, month index 25 (February 2002) had 3 harmonized hotspots in a range of 2 to 4, 3 fire cell-days, 12 MW, produced by `src_labels[0]` (`estimated_terra`) and flagged bit 1 (`example`).
 
 ---
+
+### 7.1 `background.json`, and the value of a month a cell does not list
+
+Before February 2012 the old sensors often saw nothing where the newer one would have seen fire. The conversion carries that as a small **background** value, and it is the same for every cell of a group in a given calendar month and period, so it is stored once per group rather than on every cell. Without it, a small selection before 2012 reads too low and the calendar shows a false rise in 2012. This matches ruling 10 of [`number-logic.md`](number-logic.md) section 9.
+
+**A group** is one country and one 5 degree latitude band. A tile cell names its group in `g`. **The group id is opaque**: the app looks it up and never takes it apart, because the pipeline owns its shape.
+
+| Field | Type | Notes |
+|---|---|---|
+| `schema` | `"emerge-background-1"` | |
+| `example` | boolean | |
+| `built` | `"YYYY-MM-DD"` | |
+| `note` | string | present only while the numbers are stand-ins |
+| `unit` | `"hundredths"` | every value is a whole hundredth: 37 means 0.37 |
+| `periods` | `["estimated_terra","estimated_modis"]` | |
+| `groups` | object | keyed by group id |
+
+Each group holds one entry per period, and each period holds four arrays of **12 whole numbers, January first**: `hot`, `hot_hi`, `cd`, `cd_hi`. The lower end is always 0, so it is not stored. Values are whole hundredths because a background is well under 1 and storing it as a decimal would cost bytes and invite rounding drift.
+
+**The reading rule, for a tile cell and one month:**
+
+1. The month **is listed** in the cell's `mi`: use the values at that position as they are. A listed month already includes everything, background and all.
+2. The month **is not listed and is before February 2012**: the value is `background[g][period][unit][m - 1] / 100`, where `period` is the month's `src` label and `m` is its calendar month. The **lower end is 0** and the **upper end** comes from the matching `_hi` array, divided by 100 as well.
+3. The month **is not listed and is February 2012 or later**: the value is 0, with 0 for both ends. The satellites looked and saw no fire.
+4. A month outside the coverage period in `meta.json` has no value at all. That is `null`, not 0.
+
+**Country files are not affected.** A country's monthly value already contains the background of every cell inside it, because it was summed over the cells before it was written. Adding the background again to a country total would double-count it.
+
+The globe files are not affected either: a cell absent from a globe file saw no fire that year, and a year is never read through the background rule.
+
+```json
+{"schema":"emerge-background-1","example":true,"built":"2026-11-14",
+ "note":"Stand-in numbers of a believable size, the same in every month and group. Not a prediction.",
+ "unit":"hundredths","periods":["estimated_terra","estimated_modis"],
+ "groups":{"BGR_40":{"estimated_terra":{"hot":[30,30,30,30,30,30,30,30,30,30,30,30],
+                                        "hot_hi":[90,90,90,90,90,90,90,90,90,90,90,90],
+                                        "cd":[20,20,20,20,20,20,20,20,20,20,20,20],
+                                        "cd_hi":[60,60,60,60,60,60,60,60,60,60,60,60]},
+                     "estimated_modis":{"hot":[30,30,30,30,30,30,30,30,30,30,30,30],
+                                        "hot_hi":[90,90,90,90,90,90,90,90,90,90,90,90],
+                                        "cd":[20,20,20,20,20,20,20,20,20,20,20,20],
+                                        "cd_hi":[60,60,60,60,60,60,60,60,60,60,60,60]}}}}
+```
+
+Read as: a cell in group `BGR_40` that does not list March 2005 has 0.30 hotspots for that month, in a range of 0 to 0.90, and 0.20 fire days, in a range of 0 to 0.60. The example numbers are the same in every month and group on purpose, so nobody mistakes them for a prediction.
+
+**The daily files do not carry `g` and do not use the background.** Ruling 10 is a rule about monthly values. The daily window lists fire days only, and a day it does not list is 0, as section 9 says. If the conversion later produces a daily background, that is a contract change and needs the director's approval.
 
 ## 8. `globe/<year>.json`
 
@@ -404,7 +477,7 @@ Everything the "How we know it's right" page shows (M6). The page renders this f
 
 | Selection | Files |
 |---|---|
-| any first load | `meta.json` |
+| any first load | `meta.json`, `background.json` and `countries/index.json` |
 | a country | `countries/<ISO3>.json`, and `reported/<ISO3>.json` for the reported card |
 | a point plus a search distance | every `tiles/<key>.json.gz` that overlaps the selection's bounding box, then cells are kept by their centre: inside the distance, **plus the cell that contains the chosen point**, which is always kept because a cell centre can be up to about 19 km away `[V]` |
 | a drawn area | the same tiles for the area's bounding box, then cells whose centre is inside the polygon |
