@@ -1092,7 +1092,12 @@ def check_bakeoff(data: Path) -> dict:
             ),
             rng,
         )
-        want = pred[(pred["pipeline"] == "A2") & (pred["test"] == "t1") & (pred["unit"] == unit)]
+        want = pred[
+            (pred["pipeline"] == "A2")
+            & (pred["test"] == "t1")
+            & (pred["unit"] == unit)
+            & (pred["grid"] == "q25")
+        ]
         a, b = float(got["pred"].sum()), float(want["pred"].sum())
         out[unit] = {
             "refit_sum": a,
@@ -1103,6 +1108,49 @@ def check_bakeoff(data: Path) -> dict:
         print(f"bake-off consistency {unit}: refit {a:,.4f} vs A2 {b:,.4f} "
               f"(relative {abs(a - b) / b:.2e})")
         assert abs(a - b) / b < 1e-6, f"{unit} does not match the scored A2 rows"
+
+    # A3, the adopted model: refit t1 with the forms and time terms the
+    # bake-off picked and check the rows come back identical.
+    man = json.loads(
+        (data / "derived" / "bakeoff" / "A" / "manifest.json").read_text()
+    )
+    terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
+    for unit in M.UNITS:
+        inner = man["A3"]["inner_split"][f"t1_{unit}"]
+        pterm, pform = inner["time_term_from_a2"], inner["picks"]
+        aqua = cm[(cm["sat"] == "Aqua") & M.window_mask(cm["ym"], M.TESTS["t1"]["fit"])]
+        kr = M.K_RATIO_CD * float(aqua[unit].sum() / aqua["cd"].sum())
+        idx = M.activity_index(cm, unit, "Aqua", M.TESTS["t1"]["fit"])
+        full = M.pair_frame(univ, cm, months_in(M.TESTS["t1"]["fit"]), unit, "Aqua", True)
+        fut = M.pair_frame(univ, cm, months_in(M.TESTS["t1"]["pred"]), unit, "Aqua", False)
+        total = 0.0
+        for form in sorted(set(pform.values())):
+            for opt in sorted({pterm[c] for c, f in pform.items() if f == form}):
+                keep = {c for c, f in pform.items() if f == form and pterm[c] == opt}
+                n_t, k_m = terms[opt]
+                model = M.fit_convert(
+                    M.with_background(full, idx, form), kr, n_t,
+                    np.random.default_rng(M.SEED + 3), k_mult=k_m,
+                )
+                ff = M.with_background(fut, idx, form)
+                got = M.point_predict(model, ff[ff["country"].isin(keep)])
+                total += float(got.loc[got["pred"] > 0, "pred"].sum())
+                del model, got
+        want = pred[
+            (pred["pipeline"] == "A3")
+            & (pred["test"] == "t1")
+            & (pred["unit"] == unit)
+            & (pred["grid"] == "q25")
+        ]
+        b = float(want["pred"].sum())
+        rel = abs(total - b) / b
+        out[f"A3_{unit}"] = {
+            "refit_sum": total, "bakeoff_a3_sum": b,
+            "relative_difference": rel, "match_within_1e-6": bool(rel < 1e-6),
+        }
+        print(f"bake-off consistency A3 {unit}: refit {total:,.4f} vs A3 {b:,.4f} "
+              f"(relative {rel:.2e})")
+        assert rel < 1e-6, f"A3 {unit} does not match the adopted bake-off rows"
     return out
 
 
