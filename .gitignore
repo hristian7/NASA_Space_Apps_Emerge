@@ -1,6 +1,7 @@
 # Secrets: the FIRMS MAP_KEY lives here, never in git
 .env
 .env.*
+local-etc
 
 # Graphify output: local knowledge graph, rebuild with /graphify .
 graphify-out/
