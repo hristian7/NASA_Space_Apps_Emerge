@@ -76,10 +76,33 @@ PARTIAL_MONTHS = {(2012, 1)}
 DAILY_WINDOW_DAYS = 45
 MIN_COMPARE_DAYS = 8
 
+# Latitude bands are 5 degrees, the same height as a tile.
+GROUP_BAND_DEG = 5
+
+# Stand-in background values, in whole hundredths. The conversion predicts a
+# small value for a month before February 2012 in which the old sensors saw
+# nothing; it is the same for every cell of a group, so it is stored once per
+# group. These numbers are placeholders of a believable size, not a prediction.
+EXAMPLE_BACKGROUND = {"cd": 20, "cd_hi": 60, "hot": 30, "hot_hi": 90}
+
+# Stand-in conversion factors, in whole thousandths. They turn a raw daily
+# count from the period's sensor into a harmonized one (ruling 11).
+EXAMPLE_FACTORS = {"k_hot": 3000, "k_cd": 2700}
+BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
+FACTOR_UNITS = ["k_hot", "k_cd"]
+BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
+
+# The daily window holds raw counts, not harmonized ones, so each year says
+# which sensor produced them.
+SENSOR_LABELS = ["terra", "aqua", "snpp"]
+
+EXAMPLE_FLAG = True
+
 EXAMPLE_TILES = ["40_20", "40_25", "35_-120", "45_-115"]
 DAILY_TILES = ["40_20", "40_25"]
 GLOBE_YEARS = [2024]
 EXAMPLE_COUNTRIES = {"Bulgaria": "BGR", "United_States": "USA"}
+COUNTRY_NAMES = {"BGR": "Bulgaria", "USA": "United States"}
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +141,36 @@ def tile_key(lat: float, lon: float) -> str:
     return f"{int(lat0)}_{int(math.floor(lon / TILE_DEG) * TILE_DEG)}"
 
 
+def group_id(iso3: str, lat: float) -> str:
+    """Group of cells that share one background value.
+
+    A group is one country and one 5 degree latitude band. The app must treat
+    the id as an opaque key and never take it apart: the pipeline owns its
+    shape.
+    """
+    band = int(math.floor(lat / GROUP_BAND_DEG) * GROUP_BAND_DEG)
+    return f"{iso3}_{band}"
+
+
+def lon_box(lons: list[float]) -> tuple[float, float]:
+    """West and east edge of the smallest box holding every longitude.
+
+    The box is found by cutting at the widest empty gap, so a country that
+    reaches across the 180 degree line gets a box with west greater than east
+    instead of one that spans the whole world.
+    """
+    values = sorted(set(lons))
+    if len(values) == 1:
+        return values[0], values[0]
+    gap, cut = -1.0, 0
+    for i in range(len(values)):
+        nxt = values[(i + 1) % len(values)]
+        width = (nxt - values[i]) % 360
+        if width > gap:
+            gap, cut = width, i
+    return values[(cut + 1) % len(values)], values[cut]
+
+
 def haversine_km(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
     p1, p2 = math.radians(a_lat), math.radians(b_lat)
     dp = p2 - p1
@@ -145,6 +198,16 @@ def src_for(y: int, m: int) -> str:
 
 def is_measured(y: int, m: int) -> bool:
     return src_for(y, m) == "measured"
+
+
+def sensor_for(y: int, m: int) -> str:
+    """Which single sensor the daily raw value comes from (ruling 11)."""
+    i = month_index(y, m)
+    if i < month_index(2002, 7):
+        return "terra"
+    if i < month_index(2012, 2):
+        return "aqua"
+    return "snpp"
 
 
 def flags_for(y: int, m: int) -> list[str]:
@@ -250,6 +313,8 @@ SELECT
   max(CASE WHEN sat = 'SNPP' THEN 1 ELSE 0 END)::INT AS snpp_cd,
   (max(CASE WHEN sat = 'Terra' THEN 1 ELSE 0 END)
    + max(CASE WHEN sat = 'Aqua' THEN 1 ELSE 0 END))::INT AS modis_cd,
+  sum(CASE WHEN sat = 'Terra' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS terra_frp,
+  sum(CASE WHEN sat = 'Aqua'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS aqua_frp,
   sum(CASE WHEN sat = 'SNPP' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp,
   sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS modis_frp
 FROM read_parquet($parquet)
@@ -281,10 +346,12 @@ DAILY_SQL = """
 SELECT
   crow * 1440 + ccol AS cell_id,
   day,
+  sum(terra_n)::BIGINT   AS terra_n,
+  sum(aqua_n)::BIGINT    AS aqua_n,
   sum(snpp_n)::BIGINT    AS snpp_n,
-  sum(modis_n)::BIGINT   AS modis_n,
-  sum(snpp_frp)::BIGINT  AS snpp_frp,
-  sum(modis_frp)::BIGINT AS modis_frp
+  sum(terra_frp)::BIGINT AS terra_frp,
+  sum(aqua_frp)::BIGINT  AS aqua_frp,
+  sum(snpp_frp)::BIGINT  AS snpp_frp
 FROM small_cell_day
 WHERE (month(day) = 11 AND day(day) >= $start_day) OR month(day) = 12
 GROUP BY cell_id, day
@@ -329,11 +396,31 @@ def build_country_files(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     for country, cell_id in cells:
         centres.setdefault(country, []).append(cell_center(cell_id))
 
+    index = []
     for country, iso3 in sorted(EXAMPLE_COUNTRIES.items(), key=lambda kv: kv[1]):
         pts = centres[country]
         clat = sum(p[0] for p in pts) / len(pts)
         clon = sum(p[1] for p in pts) / len(pts)
-        radius = max(haversine_km(clat, clon, p[0], p[1]) for p in pts)
+        # A country whose fire all sits in one cell would otherwise get a
+        # radius of 0, which claims more precision than a 0.25 degree cell has.
+        # The floor is that cell's own precision radius.
+        radius = max(
+            max(haversine_km(clat, clon, p[0], p[1]) for p in pts),
+            precision_radius_km(clat),
+        )
+        west, east = lon_box([p[1] for p in pts])
+        index.append({
+            "iso3": iso3,
+            "name": COUNTRY_NAMES[iso3],
+            "lat": round(clat, 4),
+            "lon": round(clon, 4),
+            "bbox": [
+                round(west - CELL_DEG / 2, 4),
+                round(min(p[0] for p in pts) - CELL_DEG / 2, 4),
+                round(east + CELL_DEG / 2, 4),
+                round(max(p[0] for p in pts) + CELL_DEG / 2, 4),
+            ],
+        })
 
         months = []
         for (y, m) in months_between(FIRST_MONTH, LAST_MONTH):
@@ -373,6 +460,16 @@ def build_country_files(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                 "months": months,
             },
         )
+
+    write_json(
+        out / "countries" / "index.json",
+        {
+            "schema": f"emerge-country-index-{SCHEMA_VERSION}",
+            "example": True,
+            "built": BUILT,
+            "countries": index,
+        },
+    )
 
 
 # Only figures verified at the publishing authority go in. Everything else is
@@ -432,24 +529,31 @@ def cell_month_rows(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     return con.execute(
         """
         SELECT cell_id, y, m, terra_n, aqua_n, snpp_n, noaa20_n, modis_n,
-               snpp_cd, modis_cd, snpp_frp, modis_frp
+               snpp_cd, modis_cd, snpp_frp, modis_frp, country
         FROM cell_month ORDER BY cell_id, y, m
         """
     ).fetchall()
 
 
-def build_tiles(rows: list[tuple], out: Path) -> dict[int, dict]:
-    """Write the tile files. Returns the yearly totals the globe file needs."""
+def build_tiles(rows: list[tuple], out: Path) -> tuple[dict[int, dict], dict[int, str]]:
+    """Write the tile files.
+
+    Returns the yearly totals the globe file needs and the group of every cell
+    written, so background.json can hold exactly the groups the files point at
+    and the daily files can name the same group.
+    """
     wanted = set(EXAMPLE_TILES)
     per_tile: dict[str, dict[int, list[dict]]] = {k: {} for k in EXAMPLE_TILES}
+    groups: dict[int, str] = {}
     yearly: dict[int, dict[int, dict]] = {y: {} for y in GLOBE_YEARS}
 
     for (cell_id, y, m, terra_n, aqua_n, snpp_n, noaa20_n, modis_n,
-         snpp_cd, modis_cd, snpp_frp, modis_frp) in rows:
+         snpp_cd, modis_cd, snpp_frp, modis_frp, country) in rows:
         lat, lon = cell_center(cell_id)
         key = tile_key(lat, lon)
         if key not in wanted:
             continue
+        groups[cell_id] = group_id(EXAMPLE_COUNTRIES[country], lat)
         h = harmonize(y, m, int(snpp_n), int(snpp_cd), int(snpp_frp),
                       int(modis_n), int(modis_cd), int(modis_frp))
         h["mi"] = month_index(y, m)
@@ -479,6 +583,7 @@ def build_tiles(rows: list[tuple], out: Path) -> dict[int, dict]:
                 "lat": round(lat, 4),
                 "lon": round(lon, 4),
                 "precision_radius_km": round(precision_radius_km(lat), 3),
+                "g": groups[cell_id],
                 "mi": [r["mi"] for r in series],
             }
             for field in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi",
@@ -502,42 +607,68 @@ def build_tiles(rows: list[tuple], out: Path) -> dict[int, dict]:
                 "cells": cells,
             },
         )
-    return yearly
+    return yearly, groups
 
 
-def build_globe(yearly: dict[int, dict], out: Path) -> None:
-    for year in GLOBE_YEARS:
-        ids = sorted(yearly[year])
-        cols: dict[str, list] = {k: [] for k in (
-            "id", "lat", "lon", "precision_radius_km", "hot", "hot_lo", "hot_hi",
-            "cd", "cd_lo", "cd_hi", "frp", "src", "flags")}
-        for cell_id in ids:
-            acc = yearly[year][cell_id]
-            lat, lon = cell_center(cell_id)
-            cols["id"].append(cell_id)
-            cols["lat"].append(round(lat, 4))
-            cols["lon"].append(round(lon, 4))
-            cols["precision_radius_km"].append(round(precision_radius_km(lat), 3))
-            for field in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi"):
+def build_background(group_ids: set[str], out: Path) -> None:
+    """One background value per group, calendar month and period.
+
+    These are stand-ins of a believable size, not a prediction. The real
+    exporter writes the conversion's own numbers in the same shape.
+    """
+    one_period = {unit: [EXAMPLE_BACKGROUND[unit]] * 12 for unit in BACKGROUND_UNITS}
+    one_period.update({unit: [EXAMPLE_FACTORS[unit]] * 12 for unit in FACTOR_UNITS})
+    write_json(
+        out / "background.json",
+        {
+            "schema": f"emerge-background-{SCHEMA_VERSION}",
+            "example": True,
+            "built": BUILT,
+            "note": "Stand-in background values and conversion factors of a "
+                    "believable size, the same in every month and group. Not a "
+                    "prediction.",
+            "units": {"background": "hundredths", "factors": "thousandths"},
+            "periods": BACKGROUND_PERIODS,
+            "groups": {
+                gid: {period: dict(one_period) for period in BACKGROUND_PERIODS}
+                for gid in sorted(group_ids)
+            },
+        },
+    )
+
+
+def build_globe(yearly: dict[int, dict], out: Path) -> list[int]:
+    """One file per year, slim and pre-gzipped.
+
+    The globe layer only colours cells, so it carries the cell id and the
+    values and nothing else: lat, lon and the precision radius come from the
+    id through the frozen rule in section 2 of the contract, and the ranges
+    come from the tile when a cell is opened. At 188,000 cells and 26 years
+    the full record shape measured 140 MB, which no static budget can hold.
+    """
+    years = sorted(yearly)
+    for year in years:
+        cols: dict[str, list] = {k: [] for k in ("id", "hot", "cd", "frp")}
+        for cell in sorted(yearly[year]):
+            acc = yearly[year][cell]
+            cols["id"].append(cell)
+            for field in ("hot", "cd", "frp"):
                 cols[field].append(acc[field])
-            cols["frp"].append(acc["frp"])
-            cols["src"].append(acc["src"])
-            cols["flags"].append(acc["flags"])
-        write_json(
-            out / "globe" / f"{year}.json",
+        write_gzip_json(
+            out / "globe" / f"{year}.json.gz",
             {
                 "schema": f"emerge-globe-{SCHEMA_VERSION}",
-                "example": True,
+                "example": EXAMPLE_FLAG,
                 "built": BUILT,
                 "year": year,
                 "type": "cell",
                 "cell_deg": CELL_DEG,
-                "src_labels": SRC_LABELS,
-                "flag_labels": FLAG_LABELS,
-                "n": len(ids),
+                "point_from_id": True,
+                "n": len(cols["id"]),
                 "cols": cols,
             },
         )
+    return years
 
 
 def daily_window() -> tuple[dt.date, dt.date, list[int]]:
@@ -546,7 +677,7 @@ def daily_window() -> tuple[dt.date, dt.date, list[int]]:
     return start, LAST_DATA_DAY, years
 
 
-def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
+def build_daily(con: duckdb.DuckDBPyConnection, groups: dict[int, str], out: Path) -> None:
     start, end, years = daily_window()
     if (start.month, end.month) != (11, 12):
         raise SystemExit("the daily window query assumes a window inside November and December")
@@ -556,14 +687,16 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     per_tile: dict[str, dict[int, dict[int, list[tuple[int, int, int]]]]] = {
         k: {} for k in DAILY_TILES
     }
-    for cell_id, day, snpp_n, modis_n, snpp_frp, modis_frp in rows:
+    for (cell_id, day, terra_n, aqua_n, snpp_n,
+         terra_frp, aqua_frp, snpp_frp) in rows:
         lat, lon = cell_center(cell_id)
         key = tile_key(lat, lon)
         if key not in wanted:
             continue
-        measured = is_measured(day.year, day.month)
-        hot = int(snpp_n) if measured else round(EXAMPLE_RATIO * int(modis_n))
-        frp = int(snpp_frp) if measured else int(modis_frp)
+        # Raw, from the one sensor the year's block names (ruling 11).
+        counts = {"terra": (terra_n, terra_frp), "aqua": (aqua_n, aqua_frp),
+                  "snpp": (snpp_n, snpp_frp)}
+        hot, frp = (int(v) for v in counts[sensor_for(day.year, day.month)])
         if hot <= 0:
             continue
         offset = (day - dt.date(day.year, start.month, start.day)).days
@@ -584,6 +717,7 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                     "y": y,
                     "src": SRC_LABELS.index(src_for(y, 12)),
                     "flags": flag_bits(flags_for(y, 12)),
+                    "sensor": SENSOR_LABELS.index(sensor_for(y, 12)),
                     "d": [d[0] for d in days],
                     "hot": [d[1] for d in days],
                     "frp": [d[2] for d in days],
@@ -594,6 +728,7 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                 "lat": round(lat, 4),
                 "lon": round(lon, 4),
                 "precision_radius_km": round(precision_radius_km(lat), 3),
+                "g": groups[cell_id],
                 "years": year_blocks,
             })
         lat0, lon0 = (int(p) for p in key.split("_"))
@@ -606,6 +741,8 @@ def build_daily(con: duckdb.DuckDBPyConnection, out: Path) -> None:
                 "tile": {"lat0": lat0, "lon0": lon0, "deg": TILE_DEG},
                 "type": "cell",
                 "cell_deg": CELL_DEG,
+                "values": "raw",
+                "sensor_labels": SENSOR_LABELS,
                 "window": {
                     "days": DAILY_WINDOW_DAYS,
                     "latest_day": end.isoformat(),
@@ -816,6 +953,7 @@ def build_meta(out: Path) -> None:
                 "wraps_year": False,
                 "years": years,
                 "min_compare_days": MIN_COMPARE_DAYS,
+                "values": "raw",
             },
             "countries": sorted(EXAMPLE_COUNTRIES.values()),
             "reported": sorted(REPORTED),
@@ -846,9 +984,10 @@ def main() -> None:
     build_meta(out)
     build_country_files(con, out)
     build_reported_files(out)
-    yearly = build_tiles(rows, out)
+    yearly, cell_groups = build_tiles(rows, out)
+    build_background(set(cell_groups.values()), out)
     build_globe(yearly, out)
-    build_daily(con, out)
+    build_daily(con, cell_groups, out)
     build_validation(out)
 
     total = 0

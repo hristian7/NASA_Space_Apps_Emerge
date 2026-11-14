@@ -139,6 +139,11 @@ export interface TileCell extends PointHead {
   type: 'cell';
   /** Cell id: row * 1440 + col. */
   id: number;
+  /**
+   * Group this cell belongs to, for the background lookup in background.json.
+   * An opaque key: never take it apart.
+   */
+  g: string;
   /** Month indexes, ascending. January 2000 is 0. */
   mi: number[];
   hot: number[];
@@ -171,24 +176,78 @@ export interface TileFile {
   cells: TileCell[];
 }
 
-/** Columnar yearly totals. Every array has n entries and shares one index. */
-export interface GlobeColumns {
-  id: number[];
-  lat: number[];
-  lon: number[];
-  precision_radius_km: number[];
+/** The two periods that have a background value. */
+export type BackgroundPeriod = 'estimated_terra' | 'estimated_modis';
+
+/**
+ * One group's background and conversion factors for one period. Each array
+ * holds 12 values, January first.
+ *
+ * The background arrays are whole hundredths: 37 means 0.37. Their lower end
+ * is always 0, so it is not stored.
+ *
+ * The factor arrays are whole thousandths: 2700 means a factor of 2.7. They
+ * turn a raw daily count from that period's sensor into a harmonized value
+ * (ruling 11).
+ */
+export interface BackgroundSeries {
   hot: number[];
-  hot_lo: number[];
   hot_hi: number[];
   cd: number[];
-  cd_lo: number[];
   cd_hi: number[];
-  frp: number[];
-  src: number[];
-  flags: number[];
+  k_hot: number[];
+  k_cd: number[];
 }
 
-/** web/public/data/globe/<year>.json */
+/** web/public/data/background.json */
+export interface BackgroundFile {
+  schema: 'emerge-background-1';
+  example: boolean;
+  built: string;
+  /** Present only while the numbers are stand-ins. */
+  note?: string;
+  units: { background: 'hundredths'; factors: 'thousandths' };
+  periods: BackgroundPeriod[];
+  /** Keyed by the group id a tile cell carries in its `g` field. */
+  groups: Record<string, Record<BackgroundPeriod, BackgroundSeries>>;
+}
+
+/** One country in the search index. */
+export interface CountryIndexEntry {
+  iso3: string;
+  /** English name, for the search box. */
+  name: string;
+  /** The country file's summary point. */
+  lat: number;
+  lon: number;
+  /**
+   * [west, south, east, north] in degrees, around the country's fire cells.
+   * `west` greater than `east` means the box crosses the 180 degree line.
+   */
+  bbox: [number, number, number, number];
+}
+
+/** web/public/data/countries/index.json */
+export interface CountryIndexFile {
+  schema: 'emerge-country-index-1';
+  example: boolean;
+  built: string;
+  countries: CountryIndexEntry[];
+}
+
+/**
+ * Columnar yearly totals. Every array has n entries and shares one index.
+ * There is no lat, lon or precision_radius_km here: the globe layer works
+ * them out from `id` with cellCenter and precisionRadiusKm.
+ */
+export interface GlobeColumns {
+  id: number[];
+  hot: number[];
+  cd: number[];
+  frp: number[];
+}
+
+/** web/public/data/globe/<year>.json.gz, after unzipping. */
 export interface GlobeFile {
   schema: 'emerge-globe-1';
   example: boolean;
@@ -196,12 +255,18 @@ export interface GlobeFile {
   year: number;
   type: 'cell';
   cell_deg: number;
-  src_labels: SrcLabel[];
-  flag_labels: FlagLabel[];
+  /** Always true: the point is derived from the cell id, not stored. */
+  point_from_id: true;
   /** Number of cells, equal to the length of every array in cols. */
   n: number;
   cols: GlobeColumns;
 }
+
+/**
+ * Which single sensor a raw daily value came from: Terra before July 2002,
+ * Aqua from July 2002 to January 2012, S-NPP from February 2012.
+ */
+export type SensorLabel = 'terra' | 'aqua' | 'snpp';
 
 /** One year of the daily window for one cell. Only days with fire are listed. */
 export interface DailyYear {
@@ -211,9 +276,14 @@ export interface DailyYear {
   src: number;
   /** Bit set over the file's flag_labels, for the whole year's window. */
   flags: number;
+  /**
+   * Index into the file's sensor_labels. The daily values are RAW, so a year
+   * seen by MODIS cannot be compared with a VIIRS year without scaling.
+   */
+  sensor: number;
   /** Day offsets from the window start, 0 to days - 1, ascending. */
   d: number[];
-  /** Harmonized hotspots on that day. */
+  /** Raw hotspots that sensor counted on that day. Not harmonized. */
   hot: number[];
   /** Fire radiative power in MW on that day, whole numbers. */
   frp: number[];
@@ -223,6 +293,11 @@ export interface DailyYear {
 export interface DailyCell extends PointHead {
   type: 'cell';
   id: number;
+  /**
+   * Group this cell belongs to, for the conversion factor in background.json.
+   * An opaque key: never take it apart.
+   */
+  g: string;
   /** Only years with at least one fire day are listed, ascending. */
   years: DailyYear[];
 }
@@ -235,6 +310,10 @@ export interface DailyFile {
   tile: { lat0: number; lon0: number; deg: number };
   type: 'cell';
   cell_deg: number;
+  /** Always "raw": the daily values are not harmonized. */
+  values: 'raw';
+  /** Label for each index used in DailyYear.sensor. */
+  sensor_labels: SensorLabel[];
   window: {
     /** Length of the window in days. */
     days: number;
@@ -323,6 +402,8 @@ export interface MetaFile {
     years: number[];
     /** Shortest run of days that may be summed and compared. */
     min_compare_days: number;
+    /** Always "raw": the daily files hold raw counts, not harmonized ones. */
+    values: 'raw';
   };
   /** ISO3 codes with a countries/<ISO3>.json file. */
   countries: string[];
@@ -337,13 +418,25 @@ export interface MetaFile {
   sources: SourceEntry[];
 }
 
+/** What one scored row of the validation stands for. */
+export type ValidationScope =
+  | 'country_month'
+  | 'cell_month'
+  | 'circle_month'
+  | 'circle_month_weighted'
+  | 'cell_month_0p1';
+
 /** One hold-out run of the conversion. null until the run exists. */
 export interface HoldoutResult {
   /** "forward" = learn early years, test later ones. "reverse" = the other way. */
   direction: 'forward' | 'reverse';
   unit: 'hot' | 'cd';
-  /** What each scored row is: a country-month, a cell-month or a 50 km circle. */
-  scope: 'country_month' | 'cell_month' | 'circle_month';
+  /**
+   * What each scored row is. The last two are reported for information:
+   * circle_month_weighted weights each cell by the share of it inside the
+   * circle, and cell_month_0p1 is the finer 0.1 degree grid.
+   */
+  scope: ValidationScope;
   train_years: [number, number] | null;
   test_years: [number, number] | null;
   n: number | null;
@@ -390,7 +483,7 @@ export interface RangeCoverage {
   /** The range we claim, for example 90. */
   level_pct: number;
   unit: 'hot' | 'cd';
-  scope: 'country_month' | 'cell_month' | 'circle_month';
+  scope: ValidationScope;
   n: number | null;
   /** The share the range actually held. */
   observed_pct: number | null;
