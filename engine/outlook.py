@@ -19,6 +19,10 @@ import forecast as fc
 import fetch_power as fp
 
 TARGETS = {(2026, 12): 1, (2027, 1): 3, (2027, 2): 3}
+# MODIS exaggerates fire swings: VIIRS log-anomalies = 0.79 x MODIS log-anomalies
+# (median over 76 units, 2012-2021, verify/m21_viirs_anomalies.py). Factors are
+# also given at VIIRS level; probabilities don't change (terciles move together).
+VIIRS_SLOPE = 0.79
 DAILY = ("https://power.larc.nasa.gov/api/temporal/daily/point?parameters="
          "T2M_MAX,RH2M,PRECTOTCORR,GWETROOT,WS2M&community=AG"
          "&longitude={lon}&latitude={lat}&start=20260101&end=20261031&format=JSON")
@@ -133,6 +137,17 @@ if __name__ == "__main__":
                          **res[0], "drivers": {k: round(v, 2) for k, v in con.items()},
                          "skill_held_out": round(float(gated_skill), 3)})
     out = pd.DataFrame(rows)
+    for c in ("factor", "factor_lo", "factor_hi"):
+        out[c.replace("factor", "factor_viirs")] = np.exp(VIIRS_SLOPE * np.log(out[c]))
+    # Evidence tier (verify/m58_physics_only.csv): on unseen years 2022-2025 the
+    # weather and ocean factors beat history only in the wet tropics (|lat| < 23.5,
+    # > 1000 mm/yr). Elsewhere the skill rests on held-out years 2003-2021 only.
+    res = pd.read_csv("results.csv")[["country", "unit", "cls", "season", "abs_lat", "rain_mm_yr"]].drop_duplicates()
+    out = out.merge(res.rename(columns={"cls": "kind"}), on=["country", "unit", "kind", "season"], how="left")
+    wet_tropics = (out.abs_lat < 23.5) & (out.rain_mm_yr > 1000)
+    physical = out.groups.apply(lambda g: any(x in g for x in ("ocean", "dryness_memory", "fuel_growth")))
+    out["evidence"] = np.where(wet_tropics & physical, "confirmed on unseen years (wet tropics)",
+                      np.where(physical, "held-out years only", "recent level only (trend)"))
     out.to_csv("outlook_2026-11-15.csv", index=False)
     json.dump({"issued": "2026-11-15", "latest_month_used": "2026-10",
                "index_last_published": stale, "rows": len(out)}, open("outlook_meta.json", "w"), indent=1)

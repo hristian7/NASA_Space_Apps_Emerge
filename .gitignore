@@ -33,3 +33,10 @@ engine/*.csv
 engine/*.json
 engine/*.png
 engine/*.log
+engine/verify/*.csv
+engine/*.txt
+!engine/countries.txt
+engine/rerun.sh
+.hypothesis/
+engine/.hypothesis/
+.coverage

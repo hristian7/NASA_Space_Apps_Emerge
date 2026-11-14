@@ -1,0 +1,19 @@
+lead,zone,climate,n,physics_only_skill
+0,outside tropics,drier (<1000 mm),1756,0.001
+0,outside tropics,wetter (>1000 mm),224,-0.046
+0,tropics,drier (<1000 mm),540,0.012
+0,tropics,wetter (>1000 mm),1348,0.161
+1,outside tropics,drier (<1000 mm),1396,-0.01
+1,outside tropics,wetter (>1000 mm),136,-0.043
+1,tropics,drier (<1000 mm),576,-0.059
+1,tropics,wetter (>1000 mm),1256,0.15
+3,outside tropics,drier (<1000 mm),1088,0.013
+3,outside tropics,wetter (>1000 mm),184,-0.062
+3,tropics,drier (<1000 mm),440,-0.053
+3,tropics,wetter (>1000 mm),1168,0.043
+0,units not using ocean,,2664,0.017
+0,units using ocean,,1204,0.128
+1,units not using ocean,,1916,0.014
+1,units using ocean,,1448,0.058
+3,units not using ocean,,1644,0.005
+3,units using ocean,,1236,0.012

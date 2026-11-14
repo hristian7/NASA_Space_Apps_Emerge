@@ -10,7 +10,5 @@
   "ao": "2026-10",
   "sam": "2026-10"
  },
- "rows": 233,
- "model_years": "2003-2021 (Aqua MODIS)",
- "trend": "frozen at 2021 (never extrapolated)"
+ "rows": 230
 }

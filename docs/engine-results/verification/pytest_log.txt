@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.1.1, pluggy-1.6.0 -- /usr/local/bin/python3
+hypothesis profile 'default'
+rootdir: /home/claude/repo/NASA_Space_Apps_Emerge/engine
+plugins: platformdirs-4.13.5, anyio-4.15.1, hypothesis-6.170.15, cov-7.1.0
+collecting ... collected 26 items
+
+tests/test_engine.py::test_known_answer_planted_cause[1-dryness_memory] PASSED [  3%]
+tests/test_engine.py::test_known_answer_planted_cause[1-fuel_growth] PASSED [  7%]
+tests/test_engine.py::test_known_answer_planted_cause[1-ocean] PASSED    [ 11%]
+tests/test_engine.py::test_known_answer_planted_cause[1-none] PASSED     [ 15%]
+tests/test_engine.py::test_known_answer_planted_cause[2-dryness_memory] PASSED [ 19%]
+tests/test_engine.py::test_known_answer_planted_cause[2-fuel_growth] PASSED [ 23%]
+tests/test_engine.py::test_known_answer_planted_cause[2-ocean] PASSED    [ 26%]
+tests/test_engine.py::test_known_answer_planted_cause[2-none] PASSED     [ 30%]
+tests/test_engine.py::test_known_answer_planted_cause[3-dryness_memory] PASSED [ 34%]
+tests/test_engine.py::test_known_answer_planted_cause[3-fuel_growth] PASSED [ 38%]
+tests/test_engine.py::test_known_answer_planted_cause[3-ocean] PASSED    [ 42%]
+tests/test_engine.py::test_known_answer_planted_cause[3-none] PASSED     [ 46%]
+tests/test_engine.py::test_known_answer_signs PASSED                     [ 50%]
+tests/test_engine.py::test_shapley_weights_add_up PASSED                 [ 53%]
+tests/test_engine.py::test_shift_is_exactly_k_months PASSED              [ 57%]
+tests/test_engine.py::test_fire_seasons_are_valid PASSED                 [ 61%]
+tests/test_engine.py::test_outlook_is_internally_consistent PASSED       [ 65%]
+tests/test_engine.py::test_no_future_data_in_features PASSED             [ 69%]
+tests/test_engine.py::test_outage_month_is_not_zero_fire PASSED          [ 73%]
+tests/test_engine.py::test_result_files_within_limits PASSED             [ 76%]
+tests/test_engine.py::test_control_totals[Bulgaria] PASSED               [ 80%]
+tests/test_engine.py::test_control_totals[Greece] PASSED                 [ 84%]
+tests/test_engine.py::test_control_totals[Portugal] PASSED               [ 88%]
+tests/test_engine.py::test_control_totals[Guatemala] PASSED              [ 92%]
+tests/test_engine.py::test_audit_sample_unit_months PASSED               [ 96%]
+tests/test_engine.py::test_season_wraps_new_year PASSED                  [100%]
+
+============================= 26 passed in 13.69s ==============================

@@ -31,6 +31,9 @@ import numpy as np
 import pandas as pd
 
 TRAIN_YEARS = list(range(2003, 2022))
+# Months with no Aqua measurement for a large part of the month: NOT zero fire.
+# Aqua MODIS science data outage 16 Aug - 2 Sep 2020 (NASA Earthdata notice).
+NO_DATA = {(2020, 8)}
 ALPHA = 5.0
 GROUPS = ["dryness_now", "dryness_memory", "fuel_growth", "ocean", "trend"]
 LEADS = ["diag", 0, 1, 3]
@@ -154,6 +157,7 @@ def shapley(fire, w, ocean, lead, months_in=None, lat=0.0, perm=None):
     df = df[df.index.get_level_values("y").isin(TRAIN_YEARS)]
     if months_in is not None:
         df = df[df.index.get_level_values("mo").isin(months_in)]
+    df = df[~df.index.isin(list(NO_DATA))]
     allf = pd.concat([feats[gname].add_prefix(gname + ":") for gname in groups], axis=1).reindex(df.index)
     ok = allf.notna().all(1)
     df, allf = df[ok], allf[ok]

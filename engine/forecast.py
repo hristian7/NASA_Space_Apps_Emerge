@@ -20,7 +20,7 @@ def design(fire, w, ocean, lead, months, lat, groups):
     X = pd.concat([feats[g].add_prefix(g + ":") for g in groups], axis=1) if groups else \
         pd.DataFrame(index=w.index)
     y = np.log1p(fire.set_index(["y", "mo"]).cd.reindex(w.index).fillna(0))
-    keep = w.index.get_level_values("mo").isin(months)
+    keep = w.index.get_level_values("mo").isin(months) & ~w.index.isin(list(e.NO_DATA))
     return X[keep], y[keep]
 
 
@@ -87,6 +87,8 @@ def forward(fire, w, ocean, lead, months, lat, groups, years=(2022, 2023, 2024, 
     years. Aqua drifted after 2021, which shifts both the engine and the history
     baseline equally, so compare the two rather than reading absolute scores."""
     X, y = design(fire, w, ocean, lead, months, lat, groups)
+    if "trend:year" in X:                       # same rule as the live outlook: never
+        X["trend:year"] = X["trend:year"].clip(upper=max(e.TRAIN_YEARS))   # extrapolate the trend
     yrs = X.index.get_level_values("y").to_numpy()
     mos = X.index.get_level_values("mo").to_numpy()
     ok = X.notna().all(1).to_numpy()

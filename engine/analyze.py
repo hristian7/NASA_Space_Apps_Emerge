@@ -10,6 +10,7 @@
 5. Calibration of the gated forecasts (M112) and Brier skill vs history.
 """
 import json
+import os
 import numpy as np
 import pandas as pd
 import engine as e
@@ -18,9 +19,16 @@ import forecast as fc
 G = ["dryness_now", "dryness_memory", "fuel_growth", "ocean", "trend"]
 res = pd.read_csv("results.csv")
 null = pd.read_csv("null.csv")
+# Units with too few usable months (weather point over the sea: no soil moisture) are
+# excluded and listed, not silently counted as "no skill".
+MIN_ROWS = 30
+dropped = res[res.n < MIN_ROWS][["country", "unit", "cls", "season"]].drop_duplicates()
+res = res[res.n >= MIN_ROWS].copy()
+null = null.merge(res[["country", "unit", "cls", "season"]].drop_duplicates(), how="inner")
 res["lead"] = res["lead"].astype(str)
 null["lead"] = null["lead"].astype(str)
-report = {}
+report = {"units_used": int(res.groupby(["country", "unit", "cls", "season"]).ngroups),
+          "units_dropped_too_few_rows": dropped.astype(str).to_dict("records")}
 
 # 1. null thresholds
 thr = {}
@@ -87,6 +95,8 @@ for r in res[res.lead.isin(["0", "1", "3"])].itertuples():
     groups = [g for g in r.gated if g != "dryness_now"]
     h = fc.hindcast(fire, w, ocean, int(r.lead), months, r.lat, groups)
     h["lead"], h["gated_any"] = r.lead, len(groups) > 0
+    h["country"], h["unit"], h["cls"], h["season"] = r.country, r.unit, r.cls, r.season
+    h["rain_mm_yr"], h["abs_lat"], h["cd_per_year"] = r.rain_mm_yr, r.abs_lat, r.cd_per_year
     cal.append(h)
 cal = pd.concat(cal, ignore_index=True)
 cal.to_csv("hindcast.csv", index=False)
@@ -112,13 +122,20 @@ for r in res[res.lead.isin(["0", "1", "3"])].itertuples():
     groups = [g for g in r.gated if g != "dryness_now"]
     if not groups:
         continue
+    if os.environ.get("NO_TREND"):                 # sensitivity run: trend never allowed
+        groups = [g for g in groups if g != "trend"]
+        if not groups:
+            continue
     out = fc.forward(fire, w, ocean, int(r.lead), months, r.lat, groups)
     base = fc.forward(fire, w, ocean, int(r.lead), months, r.lat, [])
     out = out.merge(base[["y", "mo", "p_above"]].rename(columns={"p_above": "p_hist"}), on=["y", "mo"])
     out["lead"] = r.lead
+    out["country"], out["unit"], out["cls"], out["season"] = r.country, r.unit, r.cls, r.season
+    out["rain_mm_yr"], out["abs_lat"], out["cd_per_year"] = r.rain_mm_yr, r.abs_lat, r.cd_per_year
+    out["groups"] = "+".join(groups)
     fw.append(out)
 fw = pd.concat(fw, ignore_index=True)
-fw.to_csv("forward.csv", index=False)
+fw.to_csv(os.environ.get("FWD_OUT", "forward.csv"), index=False)
 fwd = []
 for lead, d in fw.groupby("lead"):
     bs, bh = np.mean((d.p_above - d.above) ** 2), np.mean((d.p_hist - d.above) ** 2)
