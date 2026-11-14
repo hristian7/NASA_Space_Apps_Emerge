@@ -1593,11 +1593,17 @@ def write_checks(cells: pd.DataFrame, countries: pd.DataFrame, bg: pd.DataFrame)
     assert (cells["cell"].between(0, 1036799)).all(), "cell id out of range"
     assert (cells["month"].between(1, 12)).all()
     assert (cells["year"] * 12 + cells["month"] - 1 >= ym(2000, 11)).all()
-    assert set(cells["src"]) <= {SRC_TERRA, SRC_MODIS, SRC_MEASURED}
+    assert set(cells["src"]) <= {
+        SRC_TERRA, SRC_MODIS, SRC_MEASURED, SRC_CALIBRATED, SRC_PROVISIONAL,
+    }, "src outside the five labels the data contract fixes"
     assert (bg["cd"] >= 0).all() and (bg["hot"] >= 0).all()
     assert (bg["cd"] <= bg["cd_hi"] + 1e-9).all()
-    meas = cells[cells["src"] == SRC_MEASURED]
-    assert (meas["year"] * 12 + meas["month"] - 1 >= ym(2012, 2)).all(), "measured before Feb 2012"
+    meas = cells[
+        cells["src"].isin({SRC_MEASURED, SRC_CALIBRATED, SRC_PROVISIONAL})
+    ]
+    assert (
+        meas["year"] * 12 + meas["month"] - 1 >= ym(2012, 2)
+    ).all(), "a measured label before Feb 2012"
 
 
 def control_totals(
