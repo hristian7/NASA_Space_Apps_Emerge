@@ -6,7 +6,7 @@
   --gap: 16px;
   --bar-h: 40px;
   --tool: 38px;
-  --time-h: 58px;
+  --time-h: 66px;
   /* Room the report panel takes on the right; zero while it is closed. */
   --report-space: 0px;
 }
@@ -365,6 +365,7 @@
   flex: 1;
   min-width: 0;
   position: relative;
+  padding-top: 18px;
   padding-bottom: 14px;
 }
 
@@ -642,4 +643,37 @@
   .top .icon-btn {
     padding: 0 8px;
   }
+}
+
+/* Monthly activity behind the year track, with a hairline between years. */
+.timeline-bars {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  height: 22px;
+  width: calc(100% - 16px);
+  pointer-events: none;
+}
+
+.timeline-bar {
+  fill: var(--ink-3);
+  opacity: 0.55;
+}
+
+.timeline-bar.on {
+  fill: var(--accent);
+  opacity: 1;
+}
+
+.timeline-sep {
+  stroke: var(--ink-3);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+}
+
+/* Forecast days: separators only, a little shorter. */
+.timeline-bars.days {
+  top: 8px;
+  height: 12px;
 }

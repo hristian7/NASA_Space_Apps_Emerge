@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCountryName } from "@/components/app/country-name";
+import { getSeries } from "@/lib/data/api";
 import type { Selection } from "@/types/ui";
 import MapView from "@/components/map/map-view";
 import { defaultBasemapId } from "@/config/basemaps";
@@ -71,6 +74,49 @@ export default function AppShell() {
   );
 
   const layers = useLayers();
+
+  // Monthly fire days for the strip behind the timeline: the chosen place's
+  // series (the report reads the same cached files), or the world's.
+  const shellText = useTranslations("shell");
+  const countryName = useCountryName(selection?.kind === "country" ? selection.iso3 : null);
+  const [activity, setActivity] = useState<{ first: string; values: (number | null)[] } | null>(null);
+  useEffect(() => {
+    let live = true;
+    const load = async () => {
+      if (selection === null) {
+        const response = await fetch("/geo/world-months.json");
+        if (!response.ok) throw new Error(String(response.status));
+        const world = (await response.json()) as { first: string; months: number[] };
+        return { first: world.first, values: world.months };
+      }
+      const series = await getSeries(selection, "cd");
+      const start = series.months[0];
+      if (start === undefined) return null;
+      return {
+        first: `${start.y}-${String(start.m).padStart(2, "0")}`,
+        values: series.months.map((month) => month.value),
+      };
+    };
+    load().then(
+      (next) => {
+        if (live) setActivity(next);
+      },
+      () => {
+        if (live) setActivity(null);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [selection]);
+  const activityPlace =
+    selection === null
+      ? null
+      : selection.kind === "country"
+        ? countryName
+        : selection.kind === "point"
+          ? shellText("activityPoint")
+          : shellText("activityArea");
 
   // The forecast opens with the official fire danger on, unless the reader
   // already chose forecast layers.
@@ -183,6 +229,7 @@ export default function AppShell() {
 
       <TimeSlider
         view={view}
+        activity={activity === null ? null : { ...activity, place: activityPlace }}
         fixedLayers={
           history
             ? []

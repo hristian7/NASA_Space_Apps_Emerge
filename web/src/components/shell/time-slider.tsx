@@ -14,6 +14,8 @@ type Props = {
   onDay: (day: number) => void;
   /** Layers on screen that show their own latest date and ignore the slider. */
   fixedLayers: { nameKey: string; date: string }[];
+  /** Monthly fire days drawn behind the year track: the chosen place's, or the world's. */
+  activity: { first: string; values: (number | null)[]; place: string | null } | null;
 };
 
 const stepMs = 1100;
@@ -22,7 +24,7 @@ const stepMs = 1100;
  * One time control for both views: the fire history moves by year, the
  * forecast by day. Play steps forward and stops at the end.
  */
-export default function TimeSlider({ view, years, year, onYear, day, onDay, fixedLayers }: Props) {
+export default function TimeSlider({ view, years, year, onYear, day, onDay, fixedLayers, activity }: Props) {
   const t = useTranslations("shell");
   const layerNames = useTranslations("layers");
   const locale = useLocale();
@@ -63,6 +65,25 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
 
   if (values.length === 0) return null;
 
+  // One thin bar per month, centred on its year's stop on the track, on a
+  // square-root scale so quiet years still show next to the busiest ones.
+  const span = Math.max(1, values.length - 1);
+  const bars: { x: number; w: number; h: number; on: boolean }[] = [];
+  if (history && activity !== null && values.length > 1) {
+    const [fy, fm] = activity.first.split("-").map(Number);
+    const top = Math.max(1, ...activity.values.map((value) => value ?? 0));
+    activity.values.forEach((value, index) => {
+      if (value === null || value <= 0) return;
+      const total = fm - 1 + index;
+      const y = fy + Math.floor(total / 12);
+      const m = (total % 12) + 1;
+      const x = (y - values[0] + (m - 0.5) / 12 - 0.5) / span;
+      if (x < -0.001 || x > 1.001) return;
+      bars.push({ x, w: 1 / 12 / span, h: Math.sqrt(value / top), on: y === year });
+    });
+  }
+
+
   return (
     <div className="timeline glass" role="group" aria-label={history ? t("historyTime") : t("forecastTime")}>
       {fixedLayers.length > 0 ? (
@@ -95,9 +116,40 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
       </button>
       <div className="timeline-now">
         <span className="timeline-value num">{history ? value : dayLabel(value)}</span>
-        <span className="timeline-kind">{history ? t("historyTime") : t("forecastTime")}</span>
+        <span className="timeline-kind">
+          {history
+            ? activity?.place
+              ? t("activityPlace", { place: activity.place })
+              : t("activityWorld")
+            : t("forecastTime")}
+        </span>
       </div>
       <div className="timeline-track">
+        {values.length > 1 ? (
+          <svg className={history ? "timeline-bars" : "timeline-bars days"} viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+            {values.slice(1).map((entry, index) => (
+              <line
+                key={entry}
+                className="timeline-sep"
+                x1={((index + 0.5) / span) * 1000}
+                x2={((index + 0.5) / span) * 1000}
+                y1={0}
+                y2={100}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+            {bars.map((bar) => (
+              <rect
+                key={bar.x}
+                className={bar.on ? "timeline-bar on" : "timeline-bar"}
+                x={bar.x * 1000 - (bar.w * 1000) / 2}
+                width={Math.max(0.6, bar.w * 1000 * 0.8)}
+                y={100 - bar.h * 100}
+                height={bar.h * 100}
+              />
+            ))}
+          </svg>
+        ) : null}
         <input
           type="range"
           min={0}

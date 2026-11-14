@@ -59,5 +59,9 @@
   "creditSearch": "Place search: Photon, with data from OpenStreetMap contributors (ODbL)",
   "creditBorders": "Country borders: Natural Earth",
   "menu": "Menu",
-  "timelineFixed": "The slider moves fire history and fire danger. These show their latest observation instead: {layers}."
+  "timelineFixed": "The slider moves fire history and fire danger. These show their latest observation instead: {layers}.",
+  "activityWorld": "Bars: monthly fire days, world",
+  "activityPlace": "Bars: monthly fire days, {place}",
+  "activityPoint": "this point",
+  "activityArea": "this area"
 }
