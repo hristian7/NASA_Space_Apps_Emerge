@@ -40,3 +40,13 @@ engine/rerun.sh
 .hypothesis/
 engine/.hypothesis/
 .coverage
+# Daily pre-positioning module working files (rebuild with engine/daily/*.py)
+engine/daily/*.parquet
+engine/daily/*.pkl
+engine/daily/*.csv
+engine/daily/*.json
+engine/daily/*.geojson
+engine/daily/viirs/
+engine/daily/wx/
+engine/daily/*.txt
+!engine/daily/model_L*_fc_live.json
