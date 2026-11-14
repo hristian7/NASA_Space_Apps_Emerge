@@ -1,8 +1,8 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
-import type { RiskSpot } from '@/types/risk';
+import type { PointSpot } from '@/lib/risk/here';
 import { historyHref } from '@/lib/risk/geo';
-export default function RiskSpotDetails({spot, crew = false, day = 'tomorrow'}: {spot: RiskSpot; crew?: boolean; day?: 'today'|'tomorrow'}) {
+export default function RiskSpotDetails({spot, crew = false, day = 'tomorrow'}: {spot: PointSpot; crew?: boolean; day?: 'today'|'tomorrow'}) {
  const t=useTranslations('risk');
  const locale=useLocale();
  const why=spot.why.filter(key=>t.has(`why.${key}`)).slice(0,4);

@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import type { RiskIndex, RiskSpot } from "@/types/risk";
 import { exampleMode, loadRiskCountry, loadRiskIndex, showForecast } from "@/lib/risk/loaders";
-import { distanceKm, nearestSpot } from "@/lib/risk/geo";
-import { loadSpotScore } from "@/lib/risk/spot-scores";
+import { distanceKm } from "@/lib/risk/geo";
+import { pointScore, type PointSpot } from "@/lib/risk/here";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
 import {
   blowsToward,
@@ -37,7 +37,7 @@ type ScoreResult =
       search: string;
       index: RiskIndex;
       open: boolean;
-      spot: RiskSpot | null;
+      spot: PointSpot | null;
       /** The closest ranked spot when the place itself is not one. */
       nearest: { spot: RiskSpot; km: number } | null;
       /** The place's own square, scored for every land square. */
@@ -64,7 +64,7 @@ async function lookupOnDay(
   lon: number,
   day: string,
   example: boolean,
-): Promise<{ spot: RiskSpot | null; nearest: { spot: RiskSpot; km: number } | null; square: { p: number; level: number } | null }> {
+): Promise<{ spot: PointSpot | null; nearest: { spot: RiskSpot; km: number } | null; square: { p: number; level: number } | null }> {
   if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return { spot: null, nearest: null, square: null };
   const reach = index.meta.grid_g * 112;
   const countries = [
@@ -77,24 +77,15 @@ async function lookupOnDay(
   const files = await Promise.all(countries.map((country) => loadRiskCountry(country, example)));
   const forest = files.flatMap(({ file }) => Object.values(file.regions).flatMap((days) => days[day] ?? []));
   const all = files.flatMap(({ file }) => Object.values(file.all_vegetation ?? {}).flatMap((days) => days[day] ?? []));
-  const spot = nearestSpot(forest, lat, lon) ?? nearestSpot(all, lat, lon);
-  if (spot !== null) return { spot, nearest: null, square: null };
+  const point = await pointScore(index, lat, lon, day, example);
+  if (point?.ranked) return { spot: point, nearest: null, square: null };
   const scored = [...forest, ...all].filter((candidate) => candidate.p !== null);
   let nearest: { spot: RiskSpot; km: number } | null = null;
   for (const candidate of scored) {
     const km = distanceKm(lat, lon, candidate.lat, candidate.lon);
     if (nearest === null || km < nearest.km) nearest = { spot: candidate, km };
   }
-  let square: { p: number; level: number } | null = null;
-  if (!example) {
-    for (const country of countries) {
-      const result = await loadSpotScore(country, day, lat, lon).catch(() => null);
-      if (result?.status === "ready") {
-        square = { p: result.p, level: result.level };
-        break;
-      }
-    }
-  }
+  const square = point !== null && point.p !== null ? { p: point.p, level: point.level } : null;
   return { spot: null, nearest, square };
 }
 
@@ -284,7 +275,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               <p className="fc-levelName">{t(`levelName${spot.level}`)}</p>
               <p className="fc-facts">
                 <span>{chance(spot.p)}</span>
-                <span>{fuel(spot.fire_type)}</span>
+                <span>{fuel(spot.fire_type ?? "")}</span>
               </p>
               {(() => {
                 const why = spot.why.filter((key) => tr.has(`why.${key}`)).slice(0, 4);

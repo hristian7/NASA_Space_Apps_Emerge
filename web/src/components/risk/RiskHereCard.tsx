@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { RiskIndex, RiskSpot } from '@/types/risk';
+import type { RiskIndex } from '@/types/risk';
 import { exampleMode, loadRiskIndex, showForecast, forecastIsStale } from '@/lib/risk/loaders';
-import { loadRiskHere } from '@/lib/risk/here';
+import { loadRiskHere, type PointSpot } from '@/lib/risk/here';
 import styles from '@/components/report/styles';
 import RiskSpotDetails from './RiskSpotDetails';
 import RiskPlaceholder from './RiskPlaceholder';
@@ -19,7 +19,7 @@ export interface RiskHereCardProps {
 /** Drop-in report card. It never substitutes a neighbouring spot outside its radius. */
 export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
  const t=useTranslations('risk');
- const [state,setState]=useState<{index:RiskIndex;spot:RiskSpot|null;example:boolean;country:string}|null>(null);
+ const [state,setState]=useState<{index:RiskIndex;spot:PointSpot|null;example:boolean;country:string}|null>(null);
  const [stale,setStale]=useState(false);
  useEffect(()=>{const update=()=>setStale(!!state?.index.meta && forecastIsStale(state.index.meta.days.tomorrow)); update(); const timer=setInterval(update,60000); return ()=>clearInterval(timer);},[state]);
  const [failed,setFailed]=useState(false);
