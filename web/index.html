@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Emerge</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: oklch(0.16 0.02 40);
+        --ink: oklch(0.96 0.01 80);
+        --muted: oklch(0.75 0.03 70);
+        --fire: oklch(0.72 0.18 45);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+      }
+      main {
+        max-width: 34rem;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 8vw, 3rem);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      h1 span {
+        color: var(--fire);
+      }
+      p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        text-wrap: pretty;
+      }
+      .check {
+        margin-top: 24px;
+        padding-top: 12px;
+        border-top: 1px solid oklch(1 0 0 / 0.12);
+        font-size: 14px;
+      }
+      code {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Emerge <span>·</span> hello world</h1>
+      <p>25 years of NASA fire data, one fair record. Coming soon.</p>
+      <p lang="bg">25 години пожарни данни от НАСА в един съпоставим запис. Очаквайте скоро.</p>
+      <p class="check">
+        Deploy test <code id="build">1</code>. If this number changes after a push to
+        <code>main</code>, automatic deployment works.
+      </p>
+    </main>
+  </body>
+</html>
