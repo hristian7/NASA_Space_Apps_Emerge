@@ -39,7 +39,7 @@ def explanations(row, mean, model):
             sums['mostly_forest'] += value
         elif name == 'shrub_grass' and row.fuel_class == 'shrub_grass':
             sums['mostly_grass'] += value
-        elif name in ('hist_p', 'last_year_same_month', 'days_since_log', 'no_previous_fire'):
+        elif name in ('hist_p', 'last_year_same_month', 'days_since_log', 'no_previous_fire') and not row.no_previous_fire:
             sums['history'] += value
         elif name == 'fire_near_3d' and row.fire_near_3d:
             sums['nearby_fire'] += value
