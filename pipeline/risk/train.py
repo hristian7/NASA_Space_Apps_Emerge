@@ -53,6 +53,9 @@ def main():
     dates = con.execute('SELECT min(day),max(day) FROM read_parquet(?)', [[str(p) for p in train_files]]).fetchone()
     if dates[0] < dt.date(2021, 1, 1) or dates[1] >= dt.date(2024, 1, 1):
         sys.exit('Invalid training date split')
+    validation_dates = con.execute('SELECT min(day),max(day) FROM read_parquet(?)', [[str(p) for p in valid_files]]).fetchone()
+    if validation_dates[0] < dt.date(2024, 1, 1) or validation_dates[1] >= dt.date(2025, 1, 1):
+        sys.exit('Invalid validation date split')
     print('loading training samples', flush=True)
     x, y, w = load(con, train_files)
     print('training rows', len(y), 'new fires', int(y.sum()), flush=True)
