@@ -3,11 +3,13 @@
   "sources": {
     "nifc": {
       "url": "https://www.nifc.gov/fire-information/statistics/wildfires",
-      "location": "Total Wildland Fires and Acres table"
+      "location": "Total Wildland Fires and Acres table",
+      "read_date": "2026-11-14"
     },
     "annual": {
       "url": "https://op.europa.eu/o/opportal-service/download-handler?identifier=1f960275-d187-11f0-8da2-01aa75ed71a1&format=pdf&language=en&productionSystem=cellar&part=",
-      "location": "printed pages 270 to 273, Tables 1 and 2"
+      "location": "printed pages 270 to 273, Tables 1 and 2",
+      "read_date": "2026-11-14"
     }
   },
   "rows": [
