@@ -73,5 +73,12 @@
   "noRegion": "No regions are available yet.",
   "sources": "Sources",
   "outlook": "Open risk outlook",
-  "mapSpotMissing": "Spot {rank}, no forecast here"
+  "mapSpotMissing": "Spot {rank}, no forecast here",
+  "vegetation": "Vegetation selection",
+  "forestSelection": "Forest and wildland",
+  "allSelection": "All vegetation fires",
+  "emptyForest": "No forest or wildland spots are available in this region for this date.",
+  "showAll": "Show all vegetation fires",
+  "stale": "Forecast made for {date}; not updated since",
+  "hereDated": "Risk outlook here"
 }

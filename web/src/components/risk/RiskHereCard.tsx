@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RiskIndex, RiskSpot } from '@/types/risk';
-import { exampleMode, loadRiskIndex, showForecast } from '@/lib/risk/loaders';
+import { exampleMode, loadRiskIndex, showForecast, forecastIsStale } from '@/lib/risk/loaders';
 import { loadRiskHere } from '@/lib/risk/here';
 import styles from '@/components/report/styles';
 import RiskSpotDetails from './RiskSpotDetails';
@@ -20,6 +20,8 @@ export interface RiskHereCardProps {
 export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
  const t=useTranslations('risk');
  const [state,setState]=useState<{index:RiskIndex;spot:RiskSpot|null;example:boolean;country:string}|null>(null);
+ const [stale,setStale]=useState(false);
+ useEffect(()=>{const update=()=>setStale(!!state?.index.meta && forecastIsStale(state.index.meta.days.tomorrow)); update(); const timer=setInterval(update,60000); return ()=>clearInterval(timer);},[state]);
  const [failed,setFailed]=useState(false);
  useEffect(()=>{
   let live=true;setState(null);setFailed(false);
@@ -32,10 +34,11 @@ export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
   })().catch(()=>{if(live)setFailed(true);});
   return ()=>{live=false;};
  },[point.lat,point.lon,example,country]);
- return <section className={`${styles.card} risk-here`} aria-label={t('here')}>
-  <h2 className={styles.heading}>{t('here')}</h2>
+ return <section className={`${styles.card} risk-here`} aria-label={t(stale?'hereDated':'here')}>
+  <h2 className={styles.heading}>{t(stale?'hereDated':'here')}</h2>
   {failed?<p role="alert">{t('failed')}</p>:!state?<p role="status">{t('loading')}</p>:<>
    {state.example&&<p className="risk-example">{t('example')} · {t('exampleNote')}</p>}
+   {stale&&showForecast(state.index.meta,state.example)&&<p role="status">{t('stale',{date:state.index.meta?.days.tomorrow??''})}</p>}
    {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:state.spot?<>
     <p className="risk-muted">{t('valid',{date:state.index.meta?.days.tomorrow??''})}</p>
     <RiskSpotDetails spot={state.spot}/>
