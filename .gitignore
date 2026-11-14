@@ -30,3 +30,4 @@ web/.next/
 web/test-results/
 web/playwright-report/
 web/*.tsbuildinfo
+fire-links/
