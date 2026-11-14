@@ -175,7 +175,7 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
   - country: its `countries/<ISO3>.json`, which uses NASA's own country assignment of each detection, so border cells can differ slightly from a drawn outline (stated in the app).
 - **Honest size:** harmonized numbers exist per 0.25° cell (about 28 km), so a small radius still reports the whole cell, labelled "low confidence". Raw points are filtered exactly by distance.
 - **Labels:** `src` is one of `estimated_terra` (Nov 2000 – Jun 2002), `estimated_modis` (Jul 2002 – 2011), `measured`, `measured_calibrated` (NOAA-20/21), or `provisional` (near-real-time months).
-- **Size: measure before choosing (decision D-9).** The 0.1° monthly grid per satellite is already 55.6 million rows, 345 MB `[V]`. A 0.25° table will be smaller but may still exceed Vercel's 100 MB static limit `[V]`, so the 60–80 MB estimate `[U]` is unreliable. If the measured size (gzipped) is over about 85 MB:
+- **Size: measured, too big for static files (decision D-9).** The world table at 0.25° monthly with every satellite's series measured **about 1.1 GB as JSON, about 150 MB gzipped** (14 Nov, [`../docs/vercel-setup.md`](../docs/vercel-setup.md)), above Vercel's 100 MB static limit `[V]`. The 0.1° monthly grid per satellite is 55.6 million rows, 345 MB `[V]`. A 0.25° table will be smaller but may still exceed Vercel's 100 MB static limit `[V]`, so the 60–80 MB estimate `[U]` is unreliable. If the measured size (gzipped) is over about 85 MB:
   - keep only the columns the app shows (harmonized values and ranges, as integers);
   - put per-satellite raw values behind the query function;
   - host the files on Vercel Blob, packed into a few large files read by byte range. Blob's free plan allows only 2,000 uploads a month `[V]`, so never upload one file per tile.
@@ -186,7 +186,7 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Hosting | **Vercel**, project `emerge` | Linked to GitHub `main` `[V]`. Builds are paused (ignore command `exit 0`) until `web/` exists; then set Root Directory to `web` and remove the pause |
+| Hosting | **Vercel**, project `emerge` | Linked to GitHub `main` `[V]`. A hello-world page is already in `web/`; the owner's switch-on steps are in [`../docs/vercel-setup.md`](../docs/vercel-setup.md) (Root Directory `web`, remove the `exit 0` pause). Teammates' pushes do trigger deployments: observed on 14 Nov, canceled by the pause `[V]` |
 | App | **Next.js** (App Router, TypeScript) in `web/` | The map is a client-only component |
 | Globe and map | **MapLibre GL JS** (globe since v5 `[V]`; current 6.x, BSD-3) with react-map-gl | Same code for globe and 2D |
 | Data layers | **deck.gl** 9.x on the MapLibre globe `[V]` | Fire cells, points, selection |
@@ -335,11 +335,11 @@ Drawn areas stay: NASA's challenge page names them.
 | D-2 | **Training and test years** | Train 2012–2018, test 2019–2025; or calibrate within 2012–2022 and test both ways | **Within 2012–2022, test both ways**: Terra drift shows from 2022 `[V]` | Sat 18:00 |
 | D-3 | Features suggestion 2 | Merge or not | **Merged 14 Nov evening**, updated to its 16:45 version (points-only model; C9 and C10 Could). Open detail: maximum search distance (500 km proposed `[U]`) | Done |
 | D-4 | GWIS licence | CC BY 4.0 vs EU Data Licence | Check before the demo; credit Copernicus either way | Sun 08:00 |
-| D-5 | Teammates' pushes on Vercel's free plan | Whether pushes by non-owners deploy | Test on the first push | Sat 18:00 |
+| D-5 | Teammates' pushes on Vercel's free plan | Whether pushes by non-owners deploy | **Answered:** they trigger deployments (seen 14 Nov; canceled only by the pause) | Done |
 | D-6 | Who pitches on site (J1) | — | Team | Sun 12:00 |
 | D-7 | **Calendar's default unit** | Hotspots (the brief's wording) vs fire days (fairer across sensors) | **Hotspots by default only if their conversion passes its own hold-out test** (Stream A owns it). Hotspot ratios vary more than fire-day ratios (Bulgaria 2.5–3.5 vs 1.7–2.6 `[V]`). If hotspots do worse, fire days are the default and hotspot counts are shown measured per satellite | Sat 18:00 |
 | D-8 | Industrial hotspots | The brief counts farm and industrial fires as burning activity; we filter static industrial sources (`type = 2`) | Keep the filter, say so in the app, and offer the unfiltered count on the proof page | Team |
-| D-9 | **Where the app's data lives** | Static files in the deployment · packed files on Vercel Blob · query function over Parquet | Decide at CP0 from the **measured** size and spike (a). Default: static for globe, countries, validation and reported numbers; tiles static if ≤ 85 MB gzipped, otherwise Blob | Sat 18:00 |
+| D-9 | **Where the app's data lives** | Static files in the deployment · packed files on Vercel Blob · query function over Parquet | Measured 150 MB gzipped with every column, so **tiles cannot all be static**. Proposed: static for globe, countries, validation and reported numbers; tiles as a few packed files on Blob (or a slimmer binary format with fewer columns). Final choice after spike (a) | Sat 18:00 |
 
 **Account steps only the account owner can do** (one-time, in the browser):
 - add Upstash Redis from the Vercel Marketplace (accept its terms);
