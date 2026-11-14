@@ -32,6 +32,7 @@ import csv
 import datetime as dt
 import json
 import math
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -51,7 +52,6 @@ from export_examples import (  # noqa: E402  the shared, frozen rules
     GRID_COLS,
     GRID_ROWS,
     MIN_COMPARE_DAYS,
-    REPORTED,
     SCHEMA_VERSION,
     SRC_LABELS,
     TILE_DEG,
@@ -569,30 +569,27 @@ def build_countries(
     return sorted(e["iso3"] for e in index), unmapped, totals, corrected
 
 
-def build_reported(out: Path) -> list[str]:
-    """The two verified figures, unchanged. No reported number is ever added."""
-    for iso3 in sorted(REPORTED):
-        spec = REPORTED[iso3]
-        lo, hi = spec["source"]["covers"]
-        years = []
-        for y in range(lo, hi + 1):
-            known = spec["known"].get(y, {})
-            years.append({"y": y, "fires": known.get("fires"),
-                          "burned_ha": known.get("burned_ha")})
-        write_json(
-            out / "reported" / f"{iso3}.json",
-            {
-                "schema": f"emerge-reported-{SCHEMA_VERSION}",
-                "example": True,
-                "built": BUILT,
-                "iso3": iso3,
-                "scope": "national",
-                "source": spec["source"],
-                "units": {"fires": "count", "burned_ha": "hectares"},
-                "years": years,
-            },
+def build_reported(data: Path, out: Path) -> list[str]:
+    """Copy the files pipeline/fetch_reported.py prepared, byte for byte.
+
+    Nothing is computed here: every figure comes from the source's own address
+    and is already written under <data>/derived/reported.
+    """
+    prepared = data / "derived" / "reported"
+    files = sorted(prepared.glob("*.json")) if prepared.is_dir() else []
+    if not files:
+        raise SystemExit(
+            f"no prepared reported files: {prepared} is missing or empty.\n"
+            "Run this first, which fetches the figures and writes them there:\n"
+            f"  python3 pipeline/fetch_reported.py --data {data}"
         )
-    return sorted(REPORTED)
+    target = out / "reported"
+    target.mkdir(parents=True, exist_ok=True)
+    for stale in target.glob("*.json"):
+        stale.unlink()
+    for path in files:
+        shutil.copyfile(path, target / path.name)
+    return [path.stem for path in files]
 
 
 # ---------------------------------------------------------------------------
@@ -1516,7 +1513,7 @@ def main() -> None:
         for name in unmapped:
             print(f"    {name}", flush=True)
 
-    reported = build_reported(out)
+    reported = build_reported(data, out)
 
     print("tiles ...", flush=True)
     built = build_tiles(con, groups, out)
