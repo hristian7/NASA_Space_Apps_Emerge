@@ -9,8 +9,16 @@
 
 export const historyYearStart = 2001;
 
-/** Lower edge of each class, in fire days. A cell below the first is not drawn. */
-export const historyBreaks: readonly number[] = [1, 3, 8, 21];
+/**
+ * Lower edge of each class, in fire days. A cell below the first is not drawn.
+ *
+ * Chosen on the whole world, every year from 2000 to 2025 together: these four
+ * classes hold 22, 29, 23 and 25 per cent of the cells over the full record,
+ * and no single year collapses into one class (2003 is 15/29/25/30, 2024 is
+ * 27/27/21/25). A yearly cell can reach the thousands, so a top class starting
+ * at 21 would have swallowed half the world.
+ */
+export const historyBreaks: readonly number[] = [1, 5, 25, 100];
 
 /** Ramp tokens, lightest class first. */
 export const historyRampTokens: readonly string[] = [

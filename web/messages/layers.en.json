@@ -3,7 +3,7 @@
   "onCount": "{count} on",
   "harmonizedHistory": "Fire history",
   "harmonizedHistoryExplain": "Fire days per 0.25 degree cell for one year, from the harmonized record.",
-  "harmonizedHistoryTime": "{year}, counted over the whole year. {cells} cells drawn.",
+  "harmonizedHistoryTime": "{year}, counted over the whole year. {cells} cells had fire.",
   "recentFires": "Recent fires",
   "recentFiresExplain": "Satellite detections from the last day or week. These rows carry no fire type, so industrial heat sources such as gas flares cannot be removed yet.",
   "recentFiresTime": "{shown} detections, from {from} to {to} UTC.",
@@ -36,5 +36,6 @@
     "veryHigh": "Very high",
     "extreme": "Extreme",
     "veryExtreme": "Very extreme"
-  }
+  },
+  "mergedNote": "Zoomed out, each square covers several cells and takes the colour of the worst one. Zoom in to see every cell."
 }

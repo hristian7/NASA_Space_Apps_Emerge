@@ -48,14 +48,22 @@ describe("the history ramp", () => {
     expect(historyClass(0)).toBe(-1);
     expect(historyClass(0.5)).toBe(-1);
     expect(historyClass(1)).toBe(0);
-    expect(historyClass(2)).toBe(0);
-    expect(historyClass(3)).toBe(1);
-    expect(historyClass(7)).toBe(1);
-    expect(historyClass(8)).toBe(2);
-    expect(historyClass(20)).toBe(2);
-    expect(historyClass(21)).toBe(3);
+    expect(historyClass(4)).toBe(0);
+    expect(historyClass(5)).toBe(1);
+    expect(historyClass(24)).toBe(1);
+    expect(historyClass(25)).toBe(2);
+    expect(historyClass(99)).toBe(2);
+    expect(historyClass(100)).toBe(3);
     expect(historyClass(5000)).toBe(3);
     expect(historyClass(Number.NaN)).toBe(-1);
+  });
+
+  it("keeps a top class a real yearly value can sit below", () => {
+    // A cell-year reaches the thousands in the real record, so the breaks have
+    // to leave room above the last one as well as below the first.
+    const top = historyBreaks[historyBreaks.length - 1];
+    expect(top).toBeGreaterThan(50);
+    expect(historyClass(top - 1)).toBe(historyBreaks.length - 2);
   });
 
   it("draws a cell as a square around its centre", () => {

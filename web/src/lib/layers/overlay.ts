@@ -67,6 +67,63 @@ export function historyCells(file: GlobeFile | null): HistoryCell[] {
   return cells;
 }
 
+/**
+ * How many cells to a side are merged into one square at this zoom.
+ *
+ * The world holds about 111,000 cells in a busy year. Drawing all of them
+ * costs more per frame than panning can afford, and below about zoom 4 a
+ * 0.25 degree cell is smaller than a pixel anyway, so the squares that are
+ * merged were never separately visible.
+ */
+export function mergeFactor(zoom: number): number {
+  if (!Number.isFinite(zoom)) return 1;
+  if (zoom >= 4.5) return 1;
+  if (zoom >= 3) return 2;
+  if (zoom >= 1.5) return 4;
+  return 8;
+}
+
+/**
+ * Merges cells into bigger squares, each taking the HIGHEST fire-days value
+ * inside it. The colour therefore still means "a cell with this many fire
+ * days is in here", never an average nobody measured, and a bad cell cannot
+ * be averaged away by its quiet neighbours. The panel says so while it is on.
+ */
+export function aggregateCells(
+  cells: HistoryCell[],
+  factor: number,
+  cellDeg: number,
+): HistoryCell[] {
+  if (factor <= 1) return cells;
+  const step = cellDeg * factor;
+  const blocks = new Map<string, HistoryCell>();
+  for (const cell of cells) {
+    const row = Math.floor((cell.lat + 90) / step);
+    const col = Math.floor((cell.lon + 180) / step);
+    const key = `${row}:${col}`;
+    const held = blocks.get(key);
+    if (held !== undefined) {
+      if (cell.fireDays > held.fireDays) {
+        held.fireDays = cell.fireDays;
+        held.klass = cell.klass;
+      }
+      held.hotspots += cell.hotspots;
+      continue;
+    }
+    const lat = row * step - 90 + step / 2;
+    const lon = col * step - 180 + step / 2;
+    blocks.set(key, {
+      polygon: cellPolygon(lat, lon, step),
+      fireDays: cell.fireDays,
+      hotspots: cell.hotspots,
+      lat,
+      lon,
+      klass: cell.klass,
+    });
+  }
+  return [...blocks.values()];
+}
+
 /** Detections unpacked from the compact reply. */
 export function recentPoints(payload: RecentPayload | null): RecentPoint[] {
   if (payload === null) return [];
