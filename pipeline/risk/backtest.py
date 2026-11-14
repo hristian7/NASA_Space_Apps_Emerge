@@ -190,8 +190,11 @@ def prepare_candidates(con, data, year, regions, predictions):
         con.execute('DELETE FROM grid WHERE lon NOT BETWEEN -25 AND 45 OR lat NOT BETWEEN 34 AND 72')
     if predictions:
         reader = 'read_parquet' if predictions.suffix.lower() == '.parquet' else 'read_csv_auto'
-        con.execute(f'CREATE OR REPLACE TEMP TABLE predictions AS SELECT grid_g,spot_id,day::DATE AS day,p FROM {reader}(?)', [str(predictions)])
-        invalid = con.execute('SELECT count(*) FROM predictions WHERE grid_g IS NULL OR grid_g<>0.25 OR spot_id IS NULL OR day IS NULL OR (p IS NOT NULL AND (NOT isfinite(p) OR p<0 OR p>1))').fetchone()[0]
+        con.execute(f'''CREATE OR REPLACE TEMP TABLE predictions AS
+                       SELECT grid_g,spot_id,day::DATE AS day,try_cast(p AS DOUBLE) AS p,
+                              p IS NOT NULL AND try_cast(p AS DOUBLE) IS NULL AS invalid_p
+                       FROM {reader}(?)''', [str(predictions)])
+        invalid = con.execute('SELECT count(*) FROM predictions WHERE grid_g IS NULL OR grid_g<>0.25 OR spot_id IS NULL OR day IS NULL OR invalid_p OR (p IS NOT NULL AND (NOT isfinite(p) OR p<0 OR p>1))').fetchone()[0]
         duplicates = con.execute('SELECT count(*) FROM (SELECT spot_id,day FROM predictions GROUP BY 1,2 HAVING count(*)>1)').fetchone()[0]
         if invalid or duplicates:
             raise ValueError(f'Invalid prediction rows: {invalid}; duplicate spot-days: {duplicates}')

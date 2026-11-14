@@ -91,6 +91,14 @@ def test_plugin_csv_and_region_outside_europe(tmp_path):
     assert result['coverage']['eligible_spot_days'] == 2
     assert result['coverage']['scored_spot_days'] == 1
     assert result['probability']['brier_skill'] == pytest.approx(0)
+    pred.write_text('grid_g,spot_id,day,p\n0.25,1,2024-01-01,\n0.25,2,2024-01-01,\n')
+    risk.prepare_candidates(con, tmp_path, 2024, ['X'], pred)
+    empty = risk.selection_scores(con, 'all_vegetation', 2024, True)
+    assert empty['coverage']['scored_spot_days'] == 0
+    assert empty['pooled']['new_fires'] == 1
+    pred.write_text('grid_g,spot_id,day,p\n0.25,1,2024-01-01,bad\n')
+    with pytest.raises(ValueError, match='Invalid prediction rows'):
+        risk.prepare_candidates(con, tmp_path, 2024, ['X'], pred)
     pred.write_text('grid_g,spot_id,day,p\n0.25,1,2024-01-01,0.4\n0.25,1,2024-01-01,0.5\n')
     with pytest.raises(ValueError, match='duplicate'):
         risk.prepare_candidates(con, tmp_path, 2024, ['X'], pred)
