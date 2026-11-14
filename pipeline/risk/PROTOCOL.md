@@ -27,3 +27,9 @@ For a model versus each baseline separately, resample non-overlapping seven-day 
 ## Plug-in file
 
 A prediction run is one CSV or Parquet file with `grid_g`, `spot_id`, `day`, and `p`. `grid_g` is the grid size in degrees, `spot_id` follows spec section 3, `day` is a UTC date, and `p` is a probability from 0 to 1 or null for no data [U]. Optional input-contribution columns may accompany it. A valid run has at most one row per spot and day and covers all land spots for each intended day. Supply one run for the held-out year and one for the demo day [U].
+
+## Deviations, 2026-11-14
+
+The original FIRMS point latitude is no longer available in the aggregated 0.01-degree cell-day table [V]. At an exact 0.25-degree latitude boundary, that table cannot distinguish a point on the boundary from points just north of it. The label pipeline assigns that 0.01-degree cell to the northern risk spot, while the section 3 point formula assigns the exact boundary to the southern spot [V]. The number of affected detections has not been measured [U]. This limitation remains in the 0.25-degree hold-out and live history; no result should be described as an exact point-level reproduction at those boundaries [U].
+
+The independent oracle's probability fixture includes no-fire region-days, while this scorer calculates Brier and reliability on fire-positive region-days [V]. The oracle's seeded tie example also uses a different seed and hash rule from the rule above [V]. These disagreements remain open for independent review [U].
