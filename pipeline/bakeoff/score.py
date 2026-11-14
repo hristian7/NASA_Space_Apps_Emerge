@@ -29,6 +29,9 @@ COUNTRIES = ["Bulgaria", "United_States"]
 SATS = ["Terra", "Aqua", "SNPP"]
 UNITS = ["cd", "hot"]
 GRIDS = ["q25", "d10"]
+GRIDS_IN_FILE = GRIDS + ["country"]
+ADOPT_MIN_NOT_WORSE = 3
+ADOPT_COVERAGE = (0.80, 0.97)
 TESTS = ["t1", "t2", "t3"]
 WINNER_TESTS = ["t1", "t2"]
 LEVELS = ["a", "b", "c", "d"]
@@ -36,6 +39,7 @@ LEVEL_NAMES = {
     "a": "country x month",
     "b": "q25 cell x month",
     "c": "50 km circle x month",
+    "a_joint": "country x month, jointly computed range (information)",
     "c2": "50 km circle, overlap-weighted (information)",
     "d": "d10 cell x month (information)",
 }
@@ -326,7 +330,7 @@ def validate_pred(df):
         raise ValueError("pred.parquet misses columns: %s" % missing)
     df = df[PRED_COLS].copy()
     notes = []
-    for col, ok in (("test", TESTS), ("unit", UNITS), ("country", COUNTRIES), ("grid", GRIDS)):
+    for col, ok in (("test", TESTS), ("unit", UNITS), ("country", COUNTRIES), ("grid", GRIDS_IN_FILE)):
         bad = ~df[col].isin(ok)
         if bad.any():
             raise ValueError("column %s has values outside %s: %s" % (col, ok, sorted(df.loc[bad, col].astype(str).unique())[:5]))
@@ -336,6 +340,8 @@ def validate_pred(df):
     if (df["pred"] < 0).any() or (df["lo"] < 0).any() or (df["hi"] < 0).any():
         raise ValueError("negative pred, lo or hi")
     df["cell"] = df["cell"].astype(np.int64)
+    if (df.loc[df["grid"] == "country", "cell"] != 0).any():
+        raise ValueError("rows with grid = country must have cell = 0")
     df["year"] = df["year"].astype(np.int64)
     df["month"] = df["month"].astype(np.int64)
     dup = df.duplicated(["pipeline", "test", "unit", "country", "grid", "cell", "year", "month"])
@@ -394,6 +400,12 @@ def score_label(truth, pred, label, band, circle_grid=None, circles=None):
                     add("b", "q25", tm.ravel(), pm.ravel(), lm.ravel(), hm.ravel())
                 else:
                     notes.append("%s %s %s %s: no q25 rows, levels a and b not scored" % (label, test, country, unit))
+                jr = sub[sub["grid"] == "country"]
+                if len(jr):
+                    ymj = np.array([ym_of(y, m) for y, m in months])
+                    aj = jr.groupby("ym")[["pred", "lo", "hi"]].sum().reindex(ymj, fill_value=0.0)
+                    add("a_joint", "country", truth.total_series(country, unit, months), aj["pred"].values,
+                        aj["lo"].values, aj["hi"].values)
                 if len(d):
                     cells = truth.scored_d10[country]
                     tm = truth.dense("d10", country, unit, months)
@@ -531,6 +543,49 @@ def md_table(df, cols=None, nd=4):
     return "\n".join(lines)
 
 
+def adoption_rule(scores, old="A2", new="A3"):
+    """Rows for the A2 vs A3 adoption table. Returns (rows, available, not_worse, coverage_ok)."""
+    rows = []
+    have = set(scores["pipeline"].unique())
+    if old not in have or new not in have:
+        return rows, False, 0, 0
+    not_worse = cov_ok = 0
+    for test in WINNER_TESTS:
+        for country in COUNTRIES:
+            def get(p, level, col):
+                g = scores[(scores.pipeline == p) & (scores.level == level) & (scores.test == test)
+                           & (scores.country == country) & (scores.unit == "cd")]
+                return float(g[col].iloc[0]) if len(g) else float("nan")
+            n_old, n_new = get(old, "a", "nrmse"), get(new, "a", "nrmse")
+            cov = get(new, "b", "coverage")
+            nw = (not math.isnan(n_old)) and (not math.isnan(n_new)) and n_new <= n_old
+            ok = (not math.isnan(cov)) and ADOPT_COVERAGE[0] <= cov <= ADOPT_COVERAGE[1]
+            not_worse += int(nw)
+            cov_ok += int(ok)
+            rows.append({"test": test, "country": country, "nRMSE " + old: n_old, "nRMSE " + new: n_new,
+                         "not worse": "yes" if nw else "no", "coverage b " + new: cov,
+                         "in range": "yes" if ok else "no"})
+    return rows, True, not_worse, cov_ok
+
+
+def adoption_section(scores, old="A2", new="A3"):
+    L = ["## For information: A2 vs A3 adoption rule [V]", ""]
+    rows, avail, nw, ck = adoption_rule(scores, old, new)
+    if not avail:
+        L += ["not available (needs both %s and %s)." % (old, new), ""]
+        return L
+    L.append("Unit `cd`. Level (a) nRMSE of %s and %s for t1 and t2 in both countries. %s is not worse when its nRMSE is at most that of %s; "
+             "the rule needs at least %d of 4 [U]. The level (b) coverage of %s must lie between %.2f and %.2f [U]."
+             % (old, new, new, old, ADOPT_MIN_NOT_WORSE, new, ADOPT_COVERAGE[0], ADOPT_COVERAGE[1]))
+    L.append("")
+    L.append(md_table(pd.DataFrame(rows)))
+    L.append("")
+    L.append("%s is not worse in %d of 4 cases (needs %d): %s. Coverage inside the range in %d of 4 cases (needs 4): %s."
+             % (new, nw, ADOPT_MIN_NOT_WORSE, "met" if nw >= ADOPT_MIN_NOT_WORSE else "not met", ck, "met" if ck == 4 else "not met"))
+    L.append("")
+    return L
+
+
 def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_ok, skipped):
     L = []
     L.append("# Bake-off results: pipeline A vs pipeline B")
@@ -606,22 +661,25 @@ def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_
         L.append("")
     L.append("## For information: every pipeline label side by side [V]")
     L.append("")
-    L.append("Not part of the winner rule. Levels (a), (b), (c) and (c2), nRMSE and bias per label. "
-             "Level (c2) weights each q25 cell by the share of its 625 sub-cells of 0.01 degrees inside the circle.")
+    L.append("Not part of the winner rule. Levels (a), (a_joint), (b), (c) and (c2), nRMSE, bias and coverage per label. "
+             "Level (c2) weights each q25 cell by the share of its 625 sub-cells of 0.01 degrees inside the circle. "
+             "Level (a_joint) scores the country-month rows (grid country) with their jointly computed range.")
     L.append("")
     labels = sorted(scores["pipeline"].unique())
     side = []
-    for (level, test, country, unit), g in scores[scores["level"].isin(["a", "b", "c", "c2"])].groupby(
+    for (level, test, country, unit), g in scores[scores["level"].isin(["a", "a_joint", "b", "c", "c2"])].groupby(
             ["level", "test", "country", "unit"], sort=True):
         row = {"level": level, "test": test, "country": country, "unit": unit}
         for lab in labels:
             gl = g[g["pipeline"] == lab]
             row["nRMSE " + lab] = float(gl["nrmse"].iloc[0]) if len(gl) else float("nan")
             row["bias " + lab] = float(gl["bias"].iloc[0]) if len(gl) else float("nan")
+            row["cov " + lab] = float(gl["coverage"].iloc[0]) if len(gl) else float("nan")
         side.append(row)
     if side:
         L.append(md_table(pd.DataFrame(side)))
     L.append("")
+    L.extend(adoption_section(scores))
     L.append("## Full tables [V]")
     L.append("")
     L.append("Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE = mean absolute error, "
@@ -856,6 +914,59 @@ def selftest(data):
         ck.ok(docs.exists() and "Pipeline A wins" in docs.read_text(), "the report is written and names the winner")
         text = docs.read_text()
         ck.ok("\u2014" not in text and "\u2013" not in text, "the report has no em or en dashes")
+
+        print("Self-test: country rows change nothing in the existing levels")
+        base_scores = pd.read_csv(base / "scores.csv")
+        jparts = []
+        for test in TESTS:
+            months = test_months(test)
+            for co in COUNTRIES:
+                for unit in UNITS:
+                    tot = truth.total_series(co, unit, months)
+                    for i, (yy, mm) in enumerate(months):
+                        if i == 0:
+                            continue
+                        jparts.append({"pipeline": "A", "test": test, "unit": unit, "country": co, "grid": "country",
+                                       "cell": 0, "year": yy, "month": mm, "pred": 2.0 * tot[i], "lo": tot[i], "hi": 2.0 * tot[i]})
+        Aj = pd.concat([A, pd.DataFrame(jparts)], ignore_index=True)
+        Aj.to_parquet(base / "A" / "pred.parquet")
+        run_quiet(lambda: run_scoring(tmp, truth, True, False))
+        sj = pd.read_csv(base / "scores.csv")
+        rest = sj[sj.level != "a_joint"].reset_index(drop=True)
+        ck.ok(rest.equals(base_scores), "adding grid = country rows leaves every existing score row unchanged")
+        jj = sj[sj.level == "a_joint"]
+        ck.ok(len(jj) == 12 and (jj.pipeline == "A").all(), "12 a_joint rows for A (3 tests x 2 countries x 2 units)")
+        t1 = truth.total_series("Bulgaria", "cd", test_months("t1"))
+        row = jj[(jj.test == "t1") & (jj.country == "Bulgaria") & (jj.unit == "cd")].iloc[0]
+        ck.close(row.bias, (2.0 * (t1.sum() - t1[0]) - t1.sum()) / t1.sum(), "a_joint bias, first month missing counts as 0")
+        ck.close(row.coverage, (len(t1) - (1 if t1[0] > 0 else 0)) / len(t1), "a_joint coverage, missing month has range 0 to 0")
+        ck.ok(int(row.n) == len(t1), "a_joint scores every month of the test")
+        bad_c = Aj.copy()
+        bad_c.loc[bad_c.grid == "country", "cell"] = 5
+        try:
+            validate_pred(bad_c)
+            ck.ok(False, "country rows with cell other than 0 must be rejected")
+        except ValueError:
+            ck.ok(True, "country rows with cell other than 0 rejected")
+        print("Self-test: A2 vs A3 adoption rule")
+        def fs(a2, a3, cov):
+            r = []
+            i = 0
+            for test in WINNER_TESTS:
+                for co in COUNTRIES:
+                    r.append({"pipeline": "A2", "level": "a", "test": test, "country": co, "unit": "cd", "nrmse": a2[i], "coverage": 0.9})
+                    r.append({"pipeline": "A3", "level": "a", "test": test, "country": co, "unit": "cd", "nrmse": a3[i], "coverage": 0.9})
+                    r.append({"pipeline": "A3", "level": "b", "test": test, "country": co, "unit": "cd", "nrmse": 0.5, "coverage": cov[i]})
+                    i += 1
+            return pd.DataFrame(r)
+        rws, av, nw, cc = adoption_rule(fs([0.2] * 4, [0.1, 0.1, 0.3, 0.2], [0.85, 0.9, 0.8, 0.97]))
+        ck.ok(av and nw == 3 and cc == 4, "3 of 4 not worse and all coverages inside 0.80 to 0.97, got %r" % ((av, nw, cc),))
+        rws, av, nw, cc = adoption_rule(fs([0.2] * 4, [0.3, 0.1, 0.3, 0.2], [0.79, 0.9, 0.98, 0.97]))
+        ck.ok(av and nw == 2 and cc == 2, "2 of 4 not worse, 2 coverages inside, got %r" % ((av, nw, cc),))
+        rws, av, nw, cc = adoption_rule(fs([0.2] * 4, [0.1] * 4, [0.9] * 4).query("pipeline != 'A3'"))
+        ck.ok(not av, "adoption table reports not available when A3 is missing")
+        ck.ok(adoption_section(fs([0.2] * 4, [0.1] * 4, [0.9] * 4).query("pipeline != 'A3'"))[2].startswith("not available"),
+              "the section prints not available")
 
         print("Self-test: swapped roles")
         A2 = fake_pred(truth, "A", 2.0, ["q25"])
