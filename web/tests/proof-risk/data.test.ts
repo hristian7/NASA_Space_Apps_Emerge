@@ -48,3 +48,25 @@ describe("risk scorecard contract", () => {
     expect(weakSlices(s).some(row=>row.name==="tiny")).toBe(true);
   });
 });
+describe("the published scorecard", () => {
+  it("parses the real file, including slices without a per-region breakdown", () => {
+    const real = JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8"));
+    const card = parseScorecard(real);
+    expect(card).not.toBeNull();
+    for (const scope of Object.values(card!.scopes)) {
+      for (const selection of Object.values(scope.years[String(card!.test_year)].selections)) {
+        expect(selection.regions).toBeTypeOf("object");
+      }
+    }
+  });
+});
+describe("compact region rows", () => {
+  it("expands every region of the published file into named rows that weakSlices can read", () => {
+    const card = parseScorecard(JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8")))!;
+    const s = card.scopes.europe.years[String(card.test_year)].selections.forest_wildland;
+    const rows = Object.values(s.regions);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) expect(row.methods).toBeTypeOf("object");
+    expect(() => weakSlices(s)).not.toThrow();
+  });
+});
