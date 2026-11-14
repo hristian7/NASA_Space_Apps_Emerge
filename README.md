@@ -11,6 +11,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 - **Research done (14 Nov):** data sources, storage, tech stack, forecasting checks and push alerts → [`specs/research-tasks.md`](specs/research-tasks.md).
 - **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)). App: a test page and a design preview are live at https://emerge-beta-ten.vercel.app (auto-deploy on every push to `main`).
 - **Plan:** [`specs/overview.md`](specs/overview.md) (short) and [`specs/specification.md`](specs/specification.md) (build spec).
+- **Plan 2, next-day fire risk (14 Nov night):** from an interview with a Bulgarian firefighter ([`docs/research/firefighter-interview.md`](docs/research/firefighter-interview.md)). For every region in the world, the spots most likely to catch fire tomorrow, checked daily against NASA detections. [`specs/plan-2-fire-risk/overview.md`](specs/plan-2-fire-risk/overview.md) (short) and [`specs/plan-2-fire-risk/specification.md`](specs/plan-2-fire-risk/specification.md) (build spec).
 
 ## Read first
 
@@ -18,6 +19,9 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 |---|---|
 | [`specs/overview.md`](specs/overview.md) | **Start here:** Emerge in one page (what we build now, what comes later) |
 | [`specs/specification.md`](specs/specification.md) | **The build spec:** scope, data, design, tests, order of work, open decisions |
+| [`specs/plan-2-fire-risk/overview.md`](specs/plan-2-fire-risk/overview.md) | **Plan 2 in one page:** next-day fire risk per region, worldwide |
+| [`specs/plan-2-fire-risk/specification.md`](specs/plan-2-fire-risk/specification.md) | **Plan 2 build spec:** data sources (checked 14 Nov), engine, scorecard, screens, file contract, tests, order of work |
+| [`docs/research/firefighter-interview.md`](docs/research/firefighter-interview.md) | Interview with a Bulgarian firefighter, the source of plan 2 |
 | [`docs/challenge-brief.md`](docs/challenge-brief.md) | NASA's challenge text (source of truth) |
 | [`docs/firms-data.md`](docs/firms-data.md) | Deep dive on the FIRMS fire data for this challenge: download URLs, columns, cleaning rules, sizes, how different the sensors are |
 | [`docs/challenges-overview.md`](docs/challenges-overview.md) | All 14 challenges at a glance, plus key rules (added by a teammate) |
