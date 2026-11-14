@@ -44,7 +44,7 @@ Each scored 1–5 on seven things (looks, 3D globe, many points, quick to build,
 | Fire-danger layer | **Copernicus GWIS** map tiles | Free, no key, works in our map `[V]` |
 | Push alerts | Vercel functions + `web-push` (open source, MPL-2.0 `[V]`) | Standard way to send phone notifications |
 
-**Why this wins:** everything is free and open source, needs no paid keys, runs on Vercel, works on phones, and AI coding agents know these tools well. It also gives both the "wow" 3D globe and a simple 2D fallback from the same code.
+**Why this wins:** all free and open source, no paid keys, runs on Vercel and phones, and AI agents know these tools well. One codebase gives both the 3D globe and a 2D fallback.
 
 ## Watch out
 

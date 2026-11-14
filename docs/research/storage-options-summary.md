@@ -39,10 +39,10 @@ Each scored 1–5 on five things (fits our data, fast on phones, fits Vercel, qu
 | Recent fires (24 h) | NASA's free 24 h file `[V]`, fetched and cached for about 1 hour | Always fresh |
 | Push-alert sign-ups | Upstash Redis (small online database) | Vercel Blob gets blocked for 30 days if a free limit is exceeded `[V]` |
 
-**Why this wins:** the hard work happens once, before the demo. The phone only downloads small files, so the app is fast, cheap and simple enough to build in a weekend.
+**Why this wins:** the hard work happens once, before the demo. Phones download only small files, so the app is fast, free and quick to build.
 
 ## Watch out
 
-- **Vercel's free plan allows 100 MB of uploaded static files** `[V]`. If all the files come out bigger (estimate 60–80 MB `[U]`), pack them into one file on Vercel Blob storage instead.
-- **firms-catalog:** filter by area with `ST_Intersects`, which ran in 5 s versus 49 s for the slow way `[V]`. Its `type` column is empty for the last 3–4 months, so a `type = 0` filter drops recent fires.
-- **Not verified yet:** whether DuckDB's map tools run inside a Vercel function, and real phone speed.
+- **Vercel's free plan allows 100 MB of static files** `[V]`. If ours exceed that (estimate 60–80 MB `[U]`), move them to Vercel Blob.
+- **firms-catalog:** filter with `ST_Intersects` (5 s vs 49 s `[V]`). `type` is empty for the last 3–4 months, so `type = 0` drops recent fires.
+- **Not verified:** DuckDB map tools inside a Vercel function; real phone speed.
