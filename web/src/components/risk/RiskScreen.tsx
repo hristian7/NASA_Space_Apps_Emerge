@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CountryResult, RiskIndex } from '@/types/risk';
-import { loadRiskCountry, loadRiskIndex, regionSpots, scorecardHref, showForecast } from '@/lib/risk/loaders';
+import { loadRiskCountry, loadRiskIndex, regionSpots, showForecast } from '@/lib/risk/loaders';
 import RiskMap from './RiskMap';
 import WeekOutlook from './WeekOutlook';
 import RiskSpotDetails from './RiskSpotDetails';
@@ -16,9 +16,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const [index,setIndex]=useState<RiskIndex|null>(null); const [failed,setFailed]=useState(false);
  const [regionId,setRegionId]=useState(''); const [day,setDay]=useState<'today'|'tomorrow'|'week'>('tomorrow');
  const [countryData,setCountryData]=useState<CountryResult|null>(null); const [countryFailed,setCountryFailed]=useState(false);
- const [proof,setProof]=useState('/proof');
  useEffect(()=>{let live=true;loadRiskIndex(example).then(data=>{if(live){setIndex(data);setRegionId(data.regions[0]?.region_id??'');}},()=>{if(live)setFailed(true);});
- scorecardHref(example).then(href=>{if(live)setProof(href);},()=>{});
  return ()=>{live=false;};},[example]);
  const region=index?.regions.find(r=>r.region_id===regionId);
  const country=region?.country??'BGR';
@@ -31,7 +29,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const selectSpot=useCallback((id:number)=>{const node=document.getElementById(`risk-spot-${id}`);node?.scrollIntoView({block:'nearest'});node?.focus({preventScroll:true});},[]);
  const countries=[...new Set(index?.regions.map(r=>r.country)??[])];
  return <main className="risk-page">
-  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href={proof}>{t('proof')}</a></nav></header>
+  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href={example?'/proof?risk=example#next-day-risk':'/proof#next-day-risk'}>{t('proof')}</a></nav></header>
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
   {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">

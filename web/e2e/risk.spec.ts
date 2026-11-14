@@ -14,13 +14,14 @@ test('engine not ready shows the placeholder and official services',async({page}
  await expect(page.getByText('Example data',{exact:false})).toHaveCount(0);
  await expect(page.getByRole('combobox')).toHaveCount(0);
  await expect(page.locator('.risk-placeholder li')).toHaveCount(3);
- await expect(page.getByRole('link',{name:'How we know it is right'})).toHaveAttribute('href','/proof');
+ await expect(page.getByRole('link',{name:'How we know it is right'})).toHaveAttribute('href','/proof#next-day-risk');
 });
 
 test('example outlook supports days, regions, map picks, probability and history',async({page})=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/risk?risk=example');
  await expect(page.getByText('Example data',{exact:false})).toBeVisible();
+ await expect(page.getByRole('link',{name:'How we know it is right'})).toHaveAttribute('href','/proof?risk=example#next-day-risk');
  await expect(page.getByRole('button',{name:'Tomorrow',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.risk-list > li')).toHaveCount(10);
  await expect(page.getByRole('button',{name:'Week',exact:true})).toBeEnabled();

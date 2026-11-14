@@ -41,7 +41,7 @@ export default function RiskScorecardSection() {
   const points = (value: Metric) => typeof value === "number" ? number(value * 100) : t("empty");
   const card = state.card;
 
-  return <section className={styles.scorecard} data-testid="proof-risk">
+  return <section className={styles.scorecard} id="next-day-risk" data-testid="proof-risk">
     <h2>{t("title")}</h2>
     <p>{t("experimental")}</p>
     {!card ? <p role="status">{t(state.status === "loading" ? "loading" : state.status === "failed" ? "failed" : "absent")}</p> : <>
