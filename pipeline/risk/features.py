@@ -4,16 +4,17 @@ Fuel inputs are majority-class indicators, not land-cover shares. A missing
 last-fire date is represented by a fixed value and a separate missing flag.
 """
 WEATHER = ('fwi', 'ffmc', 'dmc', 'dc', 'isi', 'bui', 'dsr')
-FEATURES = WEATHER + ('forest', 'shrub_grass', 'farmland', 'hist_p',
+FEATURES = WEATHER + ('forest', 'shrub_grass', 'farmland', 'fuel_unknown', 'hist_p',
     'last_year_same_month', 'days_since_log', 'no_previous_fire', 'fire_near_3d',
     'month_sin', 'month_cos', 'latitude', 'fwi_x_forest')
 
 
 def feature_sql():
     return """f.fwi, f.ffmc, f.dmc, f.dc, f.isi, f.bui, f.dsr,
-      (g.fuel_class='forest')::DOUBLE AS forest,
-      (g.fuel_class='shrub_grass')::DOUBLE AS shrub_grass,
-      (g.fuel_class='farmland')::DOUBLE AS farmland,
+      coalesce(g.fuel_class='forest',false)::DOUBLE AS forest,
+      coalesce(g.fuel_class='shrub_grass',false)::DOUBLE AS shrub_grass,
+      coalesce(g.fuel_class='farmland',false)::DOUBLE AS farmland,
+      (g.fuel_class IS NULL)::DOUBLE AS fuel_unknown,
       h.hist_p, h.last_year_same_month::DOUBLE AS last_year_same_month,
       ln(1 + coalesce(h.days_since_last_fire, 3650)) AS days_since_log,
       (h.days_since_last_fire IS NULL)::DOUBLE AS no_previous_fire,
@@ -21,7 +22,7 @@ def feature_sql():
       sin(2*pi()*(month(f.day)-1)/12) AS month_sin,
       cos(2*pi()*(month(f.day)-1)/12) AS month_cos,
       g.lat::DOUBLE AS latitude,
-      f.fwi * (g.fuel_class='forest')::INTEGER AS fwi_x_forest"""
+      f.fwi * coalesce(g.fuel_class='forest',false)::INTEGER AS fwi_x_forest"""
 
 
 def available_sql():
