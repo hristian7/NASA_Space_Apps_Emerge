@@ -70,6 +70,9 @@
       "noHistory": "No past {month} here has a measurement."
     },
     "window": {
+      "heatMissing": "Heat: no data",
+      "heatValue": "Heat: {value} MW",
+      "heatNote": "Heat is the sum of raw fire radiative power (FRP) observations. Sensors differ across years, so heat values are not harmonized.",
       "heading": "This fire against past fires, last {days} days",
       "chartLabel": "Hotspots in the same days of each year",
       "endsOn": "The window ends on {date}.",

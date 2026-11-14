@@ -47,12 +47,15 @@ export default function WindowCard({ comparison, locale }: WindowCardProps) {
                 value: formatCount(row.hot, locale),
                 unit: t("unit.hot.short"),
               });
+          const heat = row.frp === null
+            ? t("window.heatMissing")
+            : t("window.heatValue", { value: formatCount(row.frp, locale) });
           return (
             <div
               key={row.year}
               className={styles.barRow}
               role="listitem"
-              aria-label={`${label}${row.estimated ? `, ${t("source.estimated")}` : ""}`}
+              aria-label={`${label}${row.estimated ? `, ${t("source.estimated")}` : ""}, ${heat}`}
             >
               <span
                 className={`${styles.barLabel} ${row.estimated ? styles.barLabelEstimated : ""}`}
@@ -71,12 +74,14 @@ export default function WindowCard({ comparison, locale }: WindowCardProps) {
               </span>
               <span className={styles.barValue}>
                 {missing ? t("table.noData") : formatCount(row.hot, locale)}
+                <br />{heat}
               </span>
             </div>
           );
         })}
       </div>
       <p className={styles.sub}>{t("window.estimatedNote")}</p>
+      <p className={styles.sub}>{t("window.heatNote")}</p>
     </section>
   );
 }
