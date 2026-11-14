@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Sparkline } from '@/components/forecast/Sparkline';
 import { fetchPower, POWER_PARAMETERS, type PowerData, type PowerParameter } from '@/lib/forecast/power';
-import { loadPointScore, type PointScore } from '@/lib/risk/point-score';
 import './panel-data.css';
 
 const labels: Record<PowerParameter, string> = {
@@ -15,14 +14,11 @@ const places = [
 ];
 function Place({ place }: { place: typeof places[number] }) {
  const [weather, setWeather] = useState<PowerData | null>(null);
- const [score, setScore] = useState<PointScore | null>(null);
  const [weatherStatus, setWeatherStatus] = useState('Loading NASA POWER data');
- const [scoreStatus, setScoreStatus] = useState('Loading forecast');
  useEffect(() => {
   let active = true;
   const controller = new AbortController();
   fetchPower(place.lat, place.lon, controller.signal).then(data => { if (active) { setWeather(data); setWeatherStatus(''); } }).catch(() => { if (active) setWeatherStatus('POWER data unavailable'); });
-  loadPointScore(place).then(data => { if (active) { setScore(data); setScoreStatus(data ? '' : 'No forecast for this point'); } }).catch(() => { if (active) setScoreStatus('Forecast unavailable'); });
   return () => { active = false; controller.abort(); };
  }, [place]);
  return <section className="panel-place">
@@ -31,8 +27,6 @@ function Place({ place }: { place: typeof places[number] }) {
   {weatherStatus && <p role="status">{weatherStatus}</p>}
   {weather && <div className="panel-trends">{POWER_PARAMETERS.map(name => <Sparkline key={name} label={labels[name]} values={weather.series[name]} unit={weather.units[name]} />)}</div>}
   <h3>Published fire forecast</h3>
-  {scoreStatus && <p role="status">{scoreStatus}</p>}
-  {score && <p>Level {score.level} [U] · Chance {score.chance === null ? 'not available' : `${(score.chance * 100).toFixed(2)}% [U]`} · Reasons: {score.why.join(', ') || 'none listed'}<br />Spot: {score.spot.lat}, {score.spot.lon} [V] · {score.spot.day} [V]</p>}
  </section>;
 }
 export default function PanelDataPage() {
