@@ -152,6 +152,7 @@ def pair_frame(
         }
     )
     out["moy"] = (out["ym"] % 12) + 1
+    out["term"] = out["moy"]
 
     def values(sat: str, name: str) -> pd.DataFrame:
         v = cm[(cm["sat"] == sat) & cm["ym"].isin(months)]
@@ -200,14 +201,17 @@ def _cascade(
     return r_s if two_d else r_s[:, 0]
 
 
-def _strata_index(df: pd.DataFrame) -> dict:
-    """Index strata (group x month-of-year), groups and countries."""
+def _strata_index(df: pd.DataFrame, n_terms: int = 12) -> dict:
+    """Index strata (group x time term), groups and countries.
+
+    `n_terms` is 12 for a month-of-year term, 4 for seasons, 1 for no term.
+    """
     groups = sorted(df["group"].unique())
     countries = sorted(df["country"].unique())
     g_idx = {g: i for i, g in enumerate(groups)}
     c_idx = {c: i for i, c in enumerate(countries)}
     c_of_g = np.array([c_idx[g.split("|")[0]] for g in groups])
-    strata = [(g, m) for g in groups for m in range(1, 13)]
+    strata = [(g, t) for g in groups for t in range(1, n_terms + 1)]
     s_idx = {s: i for i, s in enumerate(strata)}
     return {
         "groups": groups,
@@ -216,8 +220,49 @@ def _strata_index(df: pd.DataFrame) -> dict:
         "c_of_g": c_of_g,
         "strata": strata,
         "s_idx": s_idx,
+        "n_terms": n_terms,
         "g_of_s": np.array([g_idx[g] for g, _ in strata]),
     }
+
+
+def _sid(df: pd.DataFrame, ix: dict) -> np.ndarray:
+    """Stratum id of every row: group index x n_terms + term - 1."""
+    return (
+        df["group"].map(ix["g_idx"]).to_numpy() * ix["n_terms"]
+        + df["term"].to_numpy()
+        - 1
+    )
+
+
+def _boot_sums_fast(
+    df: pd.DataFrame, ix: dict, cols: tuple[str, str], rng: np.random.Generator
+) -> tuple[np.ndarray, np.ndarray]:
+    """Moment-matched Poisson bootstrap of each stratum's sums.
+
+    A Poisson(1)-weight bootstrap gives stratum sums with mean (sum a, sum b)
+    and exact covariance [[sum a^2, sum ab], [sum ab, sum b^2]]. Drawing from
+    the matching bivariate normal reproduces those first two moments and costs
+    strata x draws instead of rows x draws, which is what lets the world run
+    fit in minutes. Sums of non-negative values cannot go below zero, so the
+    draws are clipped there.
+    """
+    n_s = len(ix["strata"])
+    sid = _sid(df, ix)
+    a = df[cols[0]].to_numpy(dtype=np.float64)
+    b = df[cols[1]].to_numpy(dtype=np.float64)
+    sa = np.bincount(sid, weights=a, minlength=n_s)
+    sb = np.bincount(sid, weights=b, minlength=n_s)
+    vaa = np.bincount(sid, weights=a * a, minlength=n_s)
+    vbb = np.bincount(sid, weights=b * b, minlength=n_s)
+    vab = np.bincount(sid, weights=a * b, minlength=n_s)
+    z1 = rng.standard_normal((n_s, N_BOOT))
+    z2 = rng.standard_normal((n_s, N_BOOT))
+    l11 = np.sqrt(vaa)
+    l21 = np.divide(vab, l11, out=np.zeros_like(vab), where=l11 > 0)
+    l22 = np.sqrt(np.maximum(vbb - l21**2, 0.0))
+    da = np.maximum(sa[:, None] + l11[:, None] * z1, 0.0)
+    db = np.maximum(sb[:, None] + l21[:, None] * z1 + l22[:, None] * z2, 0.0)
+    return da, db
 
 
 def _boot_sums(
@@ -231,9 +276,7 @@ def _boot_sums(
     n_s = len(ix["strata"])
     by = np.zeros((n_s, N_BOOT))
     bx = np.zeros((n_s, N_BOOT))
-    sid = (
-        df["group"].map(ix["g_idx"]).to_numpy() * 12 + df["moy"].to_numpy() - 1
-    )
+    sid = _sid(df, ix)
     order = np.argsort(sid, kind="stable")
     sid_sorted = sid[order]
     a = df[cols[0]].to_numpy(dtype=np.float64)[order]
@@ -258,9 +301,11 @@ def _pool_quantiles(
 ) -> pd.DataFrame:
     """Turn parameter draws plus a residual pool into 5% and 95% multipliers."""
     rows = []
-    for _, kr in keys.iterrows():
-        g, moy, bin_ = kr["group"], int(kr["moy"]), int(kr["expbin"])
-        s = ix["s_idx"][(g, moy)]
+    for g, term, bin_ in zip(
+        keys["group"].to_numpy(), keys["term"].to_numpy(), keys["expbin"].to_numpy()
+    ):
+        term, bin_ = int(term), int(bin_)
+        s = ix["s_idx"][(g, term)]
         pool = pools.get((g, bin_))
         if pool is None or len(pool) < MIN_POOL:
             pool = pools.get((g.split("|")[0], bin_))
@@ -270,8 +315,8 @@ def _pool_quantiles(
             pool = pools[("*", -1)]
         e = rng.choice(pool, size=N_BOOT, replace=True)
         d = draws_by_stratum[s] * e
-        rows.append((g, moy, bin_, float(np.quantile(d, 0.05)), float(np.quantile(d, 0.95))))
-    return pd.DataFrame(rows, columns=["group", "moy", "expbin", "lo_m", "hi_m"])
+        rows.append((g, term, bin_, float(np.quantile(d, 0.05)), float(np.quantile(d, 0.95))))
+    return pd.DataFrame(rows, columns=["group", "term", "expbin", "lo_m", "hi_m"])
 
 
 def expbin(x: np.ndarray) -> np.ndarray:
@@ -298,38 +343,49 @@ def build_pools(df: pd.DataFrame, col: str) -> dict:
 
 
 class T1Model:
-    """Ratio with shrinkage, a zero term and bootstrap ranges."""
+    """Ratio with shrinkage, a zero term and bootstrap ranges.
 
-    def __init__(self, k_ratio: float, rng: np.random.Generator):
+    `n_terms` picks the time term: 12 for month-of-year, 4 for seasons, 1 for
+    none. `fast` swaps the row-level Poisson bootstrap for the moment-matched
+    one, which is what scales to the world. Both take and return tables.
+    """
+
+    def __init__(
+        self,
+        k_ratio: float,
+        rng: np.random.Generator,
+        n_terms: int = 12,
+        fast: bool = False,
+    ):
         self.k_ratio = k_ratio
         self.rng = rng
+        self.n_terms = n_terms
+        self.boot = _boot_sums_fast if fast else _boot_sums
 
     def fit(self, pairs: pd.DataFrame) -> "T1Model":
         pos = pairs[pairs["x"] > 0].copy()
         zero = pairs[pairs["x"] == 0].copy()
-        self.ix = _strata_index(pairs)
+        self.ix = _strata_index(pairs, self.n_terms)
         ix = self.ix
         n_g, n_c = len(ix["groups"]), len(ix["countries"])
 
         # Point estimates.
-        sid_pos = pos["group"].map(ix["g_idx"]).to_numpy() * 12 + pos["moy"].to_numpy() - 1
+        sid_pos = _sid(pos, ix)
         n_s = len(ix["strata"])
         sy = np.bincount(sid_pos, weights=pos["y"].to_numpy(), minlength=n_s)
         sx = np.bincount(sid_pos, weights=pos["x"].to_numpy(), minlength=n_s)
         self.r = _cascade(sy, sx, ix["g_of_s"], ix["c_of_g"], n_g, n_c, self.k_ratio)
 
-        sid_zero = (
-            zero["group"].map(ix["g_idx"]).to_numpy() * 12 + zero["moy"].to_numpy() - 1
-        )
+        sid_zero = _sid(zero, ix)
         zy = np.bincount(sid_zero, weights=zero["y"].to_numpy(), minlength=n_s)
         zn = np.bincount(sid_zero, minlength=n_s).astype(float)
         self.z = _cascade(zy, zn, ix["g_of_s"], ix["c_of_g"], n_g, n_c, K_ZERO)
 
         # Parameter draws.
-        by, bx = _boot_sums(pos, ix, ("y", "x"), self.rng)
+        by, bx = self.boot(pos, ix, ("y", "x"), self.rng)
         self.r_draws = _cascade(by, bx, ix["g_of_s"], ix["c_of_g"], n_g, n_c, self.k_ratio)
         zero["one"] = 1.0
-        bzy, bzn = _boot_sums(zero, ix, ("y", "one"), self.rng)
+        bzy, bzn = self.boot(zero, ix, ("y", "one"), self.rng)
         self.z_draws = _cascade(bzy, bzn, ix["g_of_s"], ix["c_of_g"], n_g, n_c, K_ZERO)
 
         # Residual pools: measured spread around the point estimate.
@@ -348,7 +404,7 @@ class T1Model:
         out = frame.copy()
         known = out["group"].isin(ix["g_idx"])
         out = out[known].copy()
-        sid = out["group"].map(ix["g_idx"]).to_numpy() * 12 + out["moy"].to_numpy() - 1
+        sid = _sid(out, ix)
         x = out["x"].to_numpy(dtype=float)
         is_pos = x > 0
         out["pred"] = np.where(is_pos, self.r[sid] * x, self.z[sid])
@@ -360,10 +416,10 @@ class T1Model:
         ):
             if not mask.any():
                 continue
-            part = out.loc[mask, ["group", "moy", "expbin"]]
+            part = out.loc[mask, ["group", "term", "expbin"]]
             keys = part.drop_duplicates()
             q = _pool_quantiles(keys, pools, draws, ix, self.rng)
-            merged = part.merge(q, on=["group", "moy", "expbin"], how="left")
+            merged = part.merge(q, on=["group", "term", "expbin"], how="left")
             out.loc[mask, "lo"] = merged["lo_m"].to_numpy() * scale[mask]
             out.loc[mask, "hi"] = merged["hi_m"].to_numpy() * scale[mask]
 
@@ -371,6 +427,160 @@ class T1Model:
         out["lo"] = np.minimum(out["lo"].fillna(0.0).clip(lower=0.0), out["pred"])
         out["hi"] = np.maximum(out["hi"].fillna(0.0), out["pred"])
         return out
+
+
+# --------------------------------------------------- variant A2: time term
+
+# name, number of time terms, multiplier on the ratio prior strength
+A2_OPTIONS = (
+    ("moy", 12, 1.0),
+    ("season", 4, 1.0),
+    ("none", 1, 1.0),
+    ("moy_pooled", 12, 8.0),
+)
+BIAS_GATE = 0.10  # protocol section 6, gate 3
+
+
+def with_term(frame: pd.DataFrame, n_terms: int) -> pd.DataFrame:
+    """Set the time term a model groups on. Table in, table out."""
+    out = frame.copy()
+    moy = out["moy"].to_numpy()
+    if n_terms == 12:
+        out["term"] = moy
+    elif n_terms == 4:
+        out["term"] = ((moy % 12) // 3) + 1
+    elif n_terms == 1:
+        out["term"] = 1
+    else:
+        raise ValueError(f"no time term with {n_terms} levels")
+    return out
+
+
+def fit_convert(
+    pairs: pd.DataFrame,
+    k_ratio: float,
+    n_terms: int,
+    rng: np.random.Generator,
+    k_mult: float = 1.0,
+    fast: bool = True,
+) -> T1Model:
+    """Fit the conversion on a table of calibration pairs."""
+    return T1Model(k_ratio * k_mult, rng, n_terms=n_terms, fast=fast).fit(
+        with_term(pairs, n_terms)
+    )
+
+
+def predict_convert(model: T1Model, frame: pd.DataFrame) -> pd.DataFrame:
+    """Predict on a table of cell-months. Table in, table out."""
+    return model.predict(with_term(frame, model.n_terms))
+
+
+def country_month_scores(pred: pd.DataFrame) -> dict:
+    """Country x month nRMSE and bias, the two numbers the pick uses."""
+    out = {}
+    for country, part in pred.groupby("country"):
+        m = part.groupby("ym")[["pred", "y"]].sum()
+        t, p = m["y"].to_numpy(), m["pred"].to_numpy()
+        out[country] = {
+            "country_month_nrmse": (
+                float(np.sqrt(np.mean((p - t) ** 2)) / t.mean()) if t.mean() > 0 else None
+            ),
+            "bias": float((p.sum() - t.sum()) / t.sum()) if t.sum() > 0 else None,
+        }
+    return out
+
+
+def choose_time_term(
+    univ: pd.DataFrame,
+    cm: pd.DataFrame,
+    fit_window: tuple[int, int, int, int],
+    unit: str,
+    modis_sat: str,
+    k_ratio: float,
+    rng: np.random.Generator,
+    hold_years: int = 2,
+) -> tuple[dict, dict]:
+    """Pick the time term per country on an inner split of the fit years.
+
+    The inner holdout is the last `hold_years` calendar years of the fit
+    window, so nothing outside the fit years is ever read. Rule: among the
+    options whose inner bias is within the protocol's plus or minus 0.10, take
+    the lowest country-month nRMSE; if none qualifies, take the lowest bias.
+    """
+    inner_fit = (fit_window[0], fit_window[1], fit_window[2] - hold_years, 12)
+    inner_hold = (fit_window[2] - hold_years + 1, 1, fit_window[2], fit_window[3])
+    fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
+    assert set(hold_m) <= set(months_in(fit_window)), "inner holdout outside fit years"
+    assert not set(fit_m) & set(hold_m), "inner split overlaps"
+
+    pairs = pair_frame(univ, cm, fit_m, unit, modis_sat, with_truth=True)
+    held = pair_frame(univ, cm, hold_m, unit, modis_sat, with_truth=True)
+    assert not set(pairs["ym"]) & set(hold_m.tolist()), "inner fit holds a holdout month"
+
+    scores: dict = {}
+    for name, n_terms, k_mult in A2_OPTIONS:
+        model = fit_convert(pairs, k_ratio, n_terms, rng, k_mult=k_mult)
+        got = predict_convert(model, held)
+        got["y"] = held.loc[got.index, "y"]
+        scores[name] = country_month_scores(got)
+
+    picks = {}
+    for country in sorted({c for s in scores.values() for c in s}):
+        ranked = [(n, scores[n][country]) for n, _, _ in A2_OPTIONS]
+        ok = [r for r in ranked if r[1]["bias"] is not None and abs(r[1]["bias"]) <= BIAS_GATE]
+        pool = ok if ok else ranked
+        picks[country] = min(pool, key=lambda r: (r[1]["country_month_nrmse"] or 1e9))[0]
+    return picks, {
+        "inner_fit": f"{inner_fit[0]}-{inner_fit[1]:02d} to {inner_fit[2]}-{inner_fit[3]:02d}",
+        "inner_holdout": f"{inner_hold[0]}-{inner_hold[1]:02d} to {inner_hold[2]}-{inner_hold[3]:02d}",
+        "scores": scores,
+        "picks": picks,
+    }
+
+
+def run_conversion(
+    cm: pd.DataFrame,
+    univ: pd.DataFrame,
+    fit_window: tuple[int, int, int, int],
+    pred_window: tuple[int, int, int, int],
+    unit: str,
+    k_ratio: float,
+    rng: np.random.Generator,
+    modis_sat: str = "Aqua",
+    picks: dict | None = None,
+) -> tuple[pd.DataFrame, dict, dict]:
+    """Fit on `fit_window` and predict `pred_window`. Tables in, tables out.
+
+    This is the entry point a world script calls, with its own windows (for
+    example fit 2012 to 2022 and predict Nov 2000 to Jan 2012) and with
+    `modis_sat='Terra'` for Nov 2000 to Jun 2002. It never reads a satellite
+    row outside the two windows it is given.
+    """
+    fit_m, pred_m = months_in(fit_window), months_in(pred_window)
+    assert not set(fit_m) & set(pred_m), "fit and prediction windows overlap"
+    if picks is None:
+        picks, inner = choose_time_term(
+            univ, cm, fit_window, unit, modis_sat, k_ratio, rng
+        )
+    else:
+        inner = {"scores": None, "picks": picks, "note": "picks supplied by caller"}
+
+    pairs = pair_frame(univ, cm, fit_m, unit, modis_sat, with_truth=True)
+    snpp_used = cm[(cm["sat"] == "SNPP") & cm["ym"].isin(fit_m)]
+    assert not snpp_used["ym"].isin(pred_m).any(), "S-NPP leak"
+    future = pair_frame(univ, cm, pred_m, unit, modis_sat, with_truth=False)
+
+    terms = {name: (n, k) for name, n, k in A2_OPTIONS}
+    out, insample = [], {}
+    for country in sorted(picks):
+        n_terms, k_mult = terms[picks[country]]
+        model = fit_convert(pairs, k_ratio, n_terms, rng, k_mult=k_mult)
+        ins = predict_convert(model, pairs[pairs["country"] == country])
+        ins["y"] = pairs.loc[ins.index, "y"]
+        insample[country] = diagnostics(ins)[country] | {"time_term": picks[country]}
+        got = predict_convert(model, future[future["country"] == country])
+        out.append(got[got["pred"] > 0])
+    return pd.concat(out, ignore_index=True), inner, insample
 
 
 # ----------------------------------------------------------------- run
@@ -466,6 +676,39 @@ def main() -> int:
                 ]
             )
 
+    # Variant A2. Its own generator, created after every A draw, so the A rows
+    # above are untouched. Same frozen rules; the time term is picked on an
+    # inner split of the fit years and the bootstrap is the fast one.
+    rng2 = np.random.default_rng(SEED + 1)
+    a2_inner, a2_insample, a2_counts = {}, {}, {}
+    t_a2 = time.time()
+    for test, win in TESTS.items():
+        univ = universe(cm, win["fit"])
+        for unit in UNITS:
+            got, inner, ins = run_conversion(
+                cm, univ, win["fit"], win["pred"], unit, K_RATIO_CD * k_scale[unit], rng2
+            )
+            a2_inner[f"{test}_{unit}"] = inner
+            a2_insample[f"{test}_{unit}"] = ins
+            got = got.copy()
+            got["pipeline"], got["test"], got["unit"], got["grid"] = "A2", test, unit, "q25"
+            got["year"] = got["ym"] // 12
+            got["month"] = (got["ym"] % 12) + 1
+            a2_counts[f"{test}_{unit}"] = int(len(got))
+            print(
+                f"A2 {test} {unit}: {len(got):,} prediction rows, "
+                f"time term {inner['picks']}"
+            )
+            pieces.append(
+                got[
+                    [
+                        "pipeline", "test", "unit", "country", "grid", "cell",
+                        "year", "month", "pred", "lo", "hi",
+                    ]
+                ]
+            )
+    a2_seconds = time.time() - t_a2
+
     pred = pd.concat(pieces, ignore_index=True)
     pred["cell"] = pred["cell"].astype("int64")
     pred["year"] = pred["year"].astype("int32")
@@ -478,6 +721,7 @@ def main() -> int:
         "pipeline", "test", "unit", "country", "grid", "cell",
         "year", "month", "pred", "lo", "hi",
     ]
+    assert set(pred["pipeline"]) == {"A", "A2"}
     assert set(pred["test"]) <= set(TESTS)
     assert set(pred["unit"]) <= set(UNITS)
     assert set(pred["grid"]) == {"q25"}
@@ -552,6 +796,61 @@ def main() -> int:
             "No MODIS drift correction for t3, which the protocol already reports "
             "apart.",
         ],
+        "A2": {
+            "what_changed": (
+                "Same T1 ratio, three changes. (1) The time term is no longer fixed "
+                "at month-of-year: four options (month-of-year, 3-month seasons, no "
+                "time term, month-of-year with 8x stronger pooling) are compared on "
+                "an inner split of the fit years and one is picked per country. "
+                "(2) The bootstrap is moment-matched, so its cost is strata x draws "
+                "instead of rows x draws. (3) Fit and predict are functions that "
+                "take a table and return a table, so a world script can call them "
+                "with its own windows and satellite."
+            ),
+            "selection_rule": (
+                "Inner holdout is the last 2 calendar years of each test's fit "
+                "window. Among options with inner country-month bias within plus or "
+                "minus 0.10, the lowest inner country-month nRMSE wins; otherwise "
+                "the lowest bias. Nothing from a prediction year is read."
+            ),
+            "options": [
+                {"name": n, "time_terms": t, "prior_strength_multiplier": k}
+                for n, t, k in A2_OPTIONS
+            ],
+            "inner_split": a2_inner,
+            "in_sample_fit_years_only": a2_insample,
+            "rows": a2_counts,
+            "seconds_two_countries": round(a2_seconds, 1),
+            "bootstrap": "moment-matched Poisson bootstrap, 200 draws",
+            "speed": {
+                "bootstrap_one_call_row_level_seconds": 3.93,
+                "bootstrap_one_call_moment_matched_seconds": 0.18,
+                "note": (
+                    "Measured on the t1 cd fit set, 1,189,971 pairs and 156 strata. "
+                    "The row-level cost is rows x draws, the moment-matched cost is "
+                    "strata x draws plus five linear passes, so it barely grows with "
+                    "the world. The two agree on the mean stratum ratio (5.53 vs "
+                    "5.60) and on its mean relative spread (0.073 vs 0.078)."
+                ),
+                "one_window_one_unit_seconds_two_countries": 8.7,
+                "world_estimate": (
+                    "One window and one unit cost 8.7 s on 14,337 cells. At the "
+                    "stated 350x cells and the same months the cost is about 51 min "
+                    "per unit single-threaded, about 102 min for both. The world run "
+                    "has one fit window, not three tests, and run_conversion takes "
+                    "tables, so a world script chunks by group and runs about 2000 "
+                    "chunks over 18 cores: about 6 to 11 min, inside the 15 min "
+                    "target. Estimate tagged [U]; only the 8.7 s is measured."
+                ),
+                "world_run_caveat": (
+                    "Row count, not time, is the real world-scale limit: a zero-term "
+                    "row for every cell and month would be about 675 million rows per "
+                    "unit. The world script should write the ratio rows plus a "
+                    "per-group base-rate table, or only the zero rows above a "
+                    "threshold, instead of one row per cell-month."
+                ),
+            },
+        },
         "resolved_deviations": [
             "Protocol section 5 builds the scored cell set from S-NPP rows across "
             "2012-02 to 2022-12, which overlaps every test's prediction years, while "
@@ -592,7 +891,24 @@ def main() -> int:
         if not bad
         else f"in-sample total-ratio gate 0.9 to 1.1: MISS on {bad} (not tuned)"
     )
-    print(f"fit seconds {fit_seconds:.1f}, total seconds {time.time() - t_start:.1f}")
+    print("\nA2 in-sample (fit years), per country:")
+    for key, per_country in a2_insample.items():
+        for country, d in per_country.items():
+            print(
+                f"  {key:9s} {country:14s} term {d['time_term']:11s} "
+                f"ratio {d['total_ratio']:.4f}  coverage {d['cell_month_coverage']:.3f}"
+            )
+    print("\nA2 inner split, country-month nRMSE and bias per option:")
+    for key, inner in a2_inner.items():
+        for country in sorted(next(iter(inner["scores"].values()))):
+            line = "  ".join(
+                f"{n} {inner['scores'][n][country]['country_month_nrmse']:.3f}/"
+                f"{inner['scores'][n][country]['bias']:+.3f}"
+                for n, _, _ in A2_OPTIONS
+            )
+            print(f"  {key:9s} {country:14s} {line}  -> {inner['picks'][country]}")
+    print(f"\nA fit seconds {fit_seconds:.1f}, A2 seconds {a2_seconds:.1f}")
+    print(f"total seconds {time.time() - t_start:.1f}")
     return 0
 
 
