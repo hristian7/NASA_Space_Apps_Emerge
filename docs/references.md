@@ -7,6 +7,10 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | Resource | Used for | Link | Licence or terms |
 |---|---|---|---|
 | NASA FIRMS yearly country files: MODIS Collection 6.1 (Terra, Aqua), VIIRS 375 m (S-NPP, NOAA-20) | All fire detections, 2000 to 2025 | https://firms.modaps.eosdis.nasa.gov/data/country/ | NASA open data |
+| NASA FIRMS active fire files, last 24 hours and 7 days (MODIS C6.1, VIIRS NOAA-20, VIIRS NOAA-21) | Recent fires layer | https://firms.modaps.eosdis.nasa.gov/data/active_fire/ | NASA open data, no key |
+| Copernicus GWIS fire weather index (map service `ecmwf.fwi` and its legend) | Official fire danger layer, today to 9 days ahead | https://maps.effis.emergency.copernicus.eu/gwis | Copernicus GWIS (EFFIS); licence under review (decision D-4) |
+| firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
+| OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
 | NASA challenge page | Challenge text | https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/ | Public |
 
