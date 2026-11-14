@@ -1,0 +1,32 @@
+# NASA Space Apps 2026: Harmonization of MODIS and VIIRS Hot Spots
+
+Team project for the [official challenge](https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/) at the Sofia local event, 14–15 Nov 2026.
+
+**Goal:** merge 25 years of NASA satellite fire detections from two sensors (MODIS and VIIRS) into one consistent record, and show it as a fire calendar for any area in a web app.
+
+## Status (Sat 14 Nov)
+
+- **Specification:** in progress. The team answers [`specs/interview-questions.md`](specs/interview-questions.md), then we write `specs/specification.md`.
+- **Code:** not started.
+
+## Read first
+
+| File | What it is |
+|---|---|
+| [`docs/challenge-brief.md`](docs/challenge-brief.md) | NASA's challenge text (source of truth) |
+| [`docs/firms-data.md`](docs/firms-data.md) | Deep dive on the FIRMS fire data for this challenge: download URLs, columns, cleaning rules, sizes, how different the sensors are |
+| [`docs/challenges-overview.md`](docs/challenges-overview.md) | All 14 challenges at a glance, plus key rules (added by a teammate) |
+| [`docs/challenges-full.md`](docs/challenges-full.md) | Full NASA text and resources for all 14 challenges (added by a teammate) |
+| [`docs/data-sources.md`](docs/data-sources.md) | Plain-language guide to every data source named in the 14 challenges (added by a teammate) |
+| [`docs/rules-and-judging.md`](docs/rules-and-judging.md) | Deadlines, submission rules, open-source rules, judging criteria, awards |
+| [`docs/verification-plan.md`](docs/verification-plan.md) | How we prove the conversion and the app are right |
+| [`specs/interview-questions.md`](specs/interview-questions.md) | Questions the 6 of us answer to write the spec |
+
+## Key deadlines (Sofia time)
+
+- **Sun 15 Nov, 14:00:** Sofia demo video (30–60 s).
+- **Sun 15 Nov, 23:59:** NASA submission (video of up to 30 s, or up to 7 slides).
+
+## Tools
+
+**Graphify** maps this folder into a knowledge graph for AI agents. Run `/graphify .` here; the output goes to `graphify-out/`.

@@ -1,0 +1,17 @@
+# Secrets: the FIRMS MAP_KEY lives here, never in git
+.env
+.env.*
+
+# Graphify output: local knowledge graph, rebuild with /graphify .
+graphify-out/
+
+# OS and editor
+.DS_Store
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Data downloads (re-downloadable, can be large)
+data/raw/
