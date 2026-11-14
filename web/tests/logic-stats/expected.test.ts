@@ -3,16 +3,14 @@
  *
  * tests/expected/logic/ holds the expected answers, written by a separate
  * agent from docs/number-logic.md before this code existed. Nothing here is
- * adjusted to match our output: a difference is a failure of our code.
+ * adjusted to match our output: a difference is a failure of our code, and no
+ * tolerance is widened and no case skipped to make a run green.
  *
  * Every case file whose name starts with unusual_, chance_, window_, trend_ or
- * csv_ is loaded. Numbers are compared to 6 decimals, CSV text exactly. When
- * the folder is missing the suite FAILS: a silent skip would let the figures
- * ship unchecked.
- *
- * The case files are read field by field under normalized names (ratio_median
- * and ratioMedian are the same field), and only the fields a case states are
- * compared, so the oracle is free in how it spells and groups them.
+ * csv_ is loaded, and every field of every case's `expected` is asserted:
+ * numbers to 6 decimals, CSV text exactly, statuses and nulls as they stand.
+ * When the folder is missing the suite FAILS; a silent skip would let the
+ * figures ship unchecked.
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -21,16 +19,24 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import type { MonthPoint, Series, WindowYear } from "../../src/types/ui";
-import { monthlyCsv, summaryCsv } from "../../src/lib/csv";
+import type { MonthPoint, Series, Unit, WindowYear } from "../../src/types/ui";
+import {
+  csvField,
+  keyValueBody,
+  monthlyBody,
+  monthlyColumnLine,
+  monthlyCsv,
+  summaryColumnLine,
+  type CsvHeader,
+} from "../../src/lib/csv";
 import {
   chance,
+  completeYearTotals,
   extremes,
-  jeffreysRange,
+  isEstimatedYear,
   rankWindow,
   trend,
   unusual,
-  unusualFromHistory,
   unusualToDate,
 } from "../../src/lib/stats";
 
@@ -46,229 +52,210 @@ const expectedDir =
 
 type Json = Record<string, unknown>;
 
-function isObject(value: unknown): value is Json {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+interface Case {
+  name: string;
+  input: Json;
+  expected: Json;
 }
 
-/** Field names match ignoring case and underscores, so either spelling works. */
-function norm(key: string): string {
-  return key.replace(/_/g, "").toLowerCase();
-}
+/** How many decimals the expected answers carry. */
+const DECIMALS = 6;
 
-function field(source: unknown, ...names: string[]): unknown {
-  if (!isObject(source)) return undefined;
-  for (const name of names) {
-    const target = norm(name);
-    for (const key of Object.keys(source)) {
-      if (norm(key) === target) return source[key];
-    }
+/** A number, a string, a boolean, null, a list or an object, compared field by field. */
+function assertField(got: unknown, want: unknown, label: string): void {
+  if (want === null) {
+    expect(got, `${label} should be null`).toBeNull();
+    return;
   }
-  return undefined;
-}
-
-function numberField(source: unknown, ...names: string[]): number | undefined {
-  const value = field(source, ...names);
-  return typeof value === "number" ? value : undefined;
-}
-
-function numberList(value: unknown): number[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  if (!value.every((v) => typeof v === "number")) return undefined;
-  return value as number[];
-}
-
-/** Metadata the oracle may carry in a case; never compared as a result field. */
-const META_KEYS = new Set(
-  [
-    "name",
-    "case",
-    "id",
-    "label",
-    "note",
-    "notes",
-    "comment",
-    "rule",
-    "description",
-    "why",
-    "input",
-    "inputs",
-    "args",
-    "expected",
-    "want",
-    "result",
-    "output",
-    "series",
-    "history",
-    "pastvalues",
-    "past",
-    "kind",
-    "header",
-    "figures",
-  ].map(norm),
-);
-
-interface Compared {
-  count: number;
-}
-
-/** Compare every field the case states against our result. Counts what was compared. */
-function compareFields(got: unknown, want: unknown, where: string, seen: Compared): void {
   if (Array.isArray(want)) {
-    expect(Array.isArray(got), `${where} should be a list`).toBe(true);
+    expect(Array.isArray(got), `${label} should be a list`).toBe(true);
     const list = got as unknown[];
-    expect(list.length, `${where} length`).toBe(want.length);
-    want.forEach((item, i) => compareFields(list[i], item, `${where}[${i}]`, seen));
+    expect(list.length, `${label} length`).toBe(want.length);
+    want.forEach((item, i) => assertField(list[i], item, `${label}[${i}]`));
     return;
   }
-  if (isObject(want)) {
-    for (const key of Object.keys(want)) {
-      if (META_KEYS.has(norm(key))) continue;
-      const mine = field(got, key);
-      // Our result has no such field: the oracle may state inputs beside results.
-      if (mine === undefined) continue;
-      compareFields(mine, want[key], `${where}.${key}`, seen);
+  if (typeof want === "object") {
+    expect(got, `${label} should be an object`).toBeTypeOf("object");
+    expect(got, `${label} should not be null`).not.toBeNull();
+    const mine = got as Json;
+    const wanted = want as Json;
+    for (const key of Object.keys(wanted)) {
+      expect(Object.keys(mine), `${label}: our result has no field ${key}`).toContain(key);
+      assertField(mine[key], wanted[key], `${label}.${key}`);
     }
     return;
   }
-  seen.count += 1;
   if (typeof want === "number") {
-    if (got === null || got === undefined) {
-      expect(got, `${where} should be ${want}`).toBe(want);
-      return;
-    }
-    expect(typeof got, `${where} should be a number`).toBe("number");
-    expect(got as number, where).toBeCloseTo(want, 6);
+    expect(typeof got, `${label} should be a number, not ${JSON.stringify(got)}`).toBe("number");
+    expect(got as number, label).toBeCloseTo(want, DECIMALS);
     return;
   }
-  expect(got, where).toStrictEqual(want);
+  expect(got, label).toStrictEqual(want);
 }
 
-function asSeries(value: unknown): Series | undefined {
-  const monthsRaw = Array.isArray(value) ? value : field(value, "months");
-  if (!Array.isArray(monthsRaw)) return undefined;
-  const months: MonthPoint[] = monthsRaw.map((raw) => {
-    const y = numberField(raw, "y", "year") ?? 0;
-    const m = numberField(raw, "m", "month") ?? 0;
-    const value = field(raw, "value", "v");
-    const lo = field(raw, "lo", "low");
-    const hi = field(raw, "hi", "high");
-    const src = field(raw, "src", "source");
-    const flags = field(raw, "flags");
-    return {
-      y,
-      m,
-      value: typeof value === "number" ? value : null,
-      lo: typeof lo === "number" ? lo : null,
-      hi: typeof hi === "number" ? hi : null,
-      src: (typeof src === "string" ? src : null) as MonthPoint["src"],
-      flags: (Array.isArray(flags) ? flags : []) as MonthPoint["flags"],
-    };
-  });
-  const unit = field(value, "unit");
+/** Assert every field the case states, and nothing less. */
+function assertCase(got: Json, expected: Json, label: string): void {
+  const keys = Object.keys(expected);
+  expect(keys.length, `${label}: the case states no expected field`).toBeGreaterThan(0);
+  for (const key of keys) {
+    expect(Object.keys(got), `${label}: our result has no field ${key}`).toContain(key);
+    assertField(got[key], expected[key], `${label}.${key}`);
+  }
+}
+
+function monthPoints(raw: unknown): MonthPoint[] {
+  const list = raw as { y: number; m: number; value: number | null; lo?: number | null; hi?: number | null; src?: string | null; flags?: string[] }[];
+  return list.map((row) => ({
+    y: row.y,
+    m: row.m,
+    value: row.value ?? null,
+    lo: row.lo ?? null,
+    hi: row.hi ?? null,
+    src: (row.src ?? null) as MonthPoint["src"],
+    flags: (row.flags ?? []) as MonthPoint["flags"],
+  }));
+}
+
+function seriesOf(raw: unknown, unit: Unit = "hot"): Series {
+  return { unit, months: monthPoints(raw), cellCount: 1, lowConfidence: false };
+}
+
+/** A series from a year to twelve monthly values, index 0 being January. */
+function seriesOfYears(years: Record<string, (number | null)[]>): Series {
+  const months: MonthPoint[] = [];
+  for (const key of Object.keys(years).sort()) {
+    years[key].forEach((value, i) => {
+      months.push({ y: Number(key), m: i + 1, value, lo: null, hi: null, src: null, flags: [] });
+    });
+  }
+  return { unit: "hot", months, cellCount: 1, lowConfidence: false };
+}
+
+function windowYear(raw: unknown): WindowYear {
+  const row = raw as { year: number; hot: number | null; frp: number | null; estimated?: boolean };
+  return { year: row.year, hot: row.hot ?? null, frp: row.frp ?? null, estimated: row.estimated === true };
+}
+
+/** The header for a CSV case: the case files pin the body, not the wording of the comments. */
+const csvHeader: CsvHeader = {
+  title: "Emerge monthly fire history",
+  selection: "box 22 to 29 east and 41 to 45 north",
+  dateRange: "2000-11 to 2025-12",
+  dataDate: "2025-12-31",
+  sources: ["NASA FIRMS"],
+};
+
+function runUnusual(input: Json): Json {
+  if (input.historySums !== undefined) {
+    return unusualToDate(
+      (input.currentSum ?? null) as number | null,
+      input.historySums as number[],
+      input.dayOfMonth as number,
+    ) as unknown as Json;
+  }
+  const series = seriesOf(input.series);
+  return unusual(series, input.year as number, input.month as number) as unknown as Json;
+}
+
+function runChance(input: Json): Json {
+  const series = seriesOf(input.series);
+  return chance(series, input.month as number, input.year as number) as unknown as Json;
+}
+
+function runWindow(input: Json): Json {
+  if (input.years !== undefined) {
+    const estimated: Record<string, boolean> = {};
+    for (const year of input.years as number[]) estimated[String(year)] = isEstimatedYear(year);
+    return { estimated };
+  }
+  const comparison = rankWindow(
+    input.days as number,
+    input.end as string,
+    windowYear(input.current),
+    (input.past as unknown[]).map(windowYear),
+  );
+  const estimatedByYear: Record<string, boolean> = {};
+  for (const row of comparison.past) estimatedByYear[String(row.year)] = row.estimated;
   return {
-    unit: unit === "cd" ? "cd" : "hot",
-    months,
-    cellCount: numberField(value, "cellCount") ?? 1,
-    lowConfidence: field(value, "lowConfidence") === true,
+    days: comparison.days,
+    end: comparison.end,
+    rank: comparison.rank,
+    of: comparison.of,
+    rankedYears: comparison.past.filter((row) => row.hot !== null).map((row) => row.year),
+    estimatedByYear,
   };
 }
 
-function asWindowYear(value: unknown): WindowYear {
-  const hot = field(value, "hot");
-  const frp = field(value, "frp");
+function runTrend(input: Json): Json {
+  const series = seriesOfYears(input.years as Record<string, (number | null)[]>);
+  const completeYears: Record<string, number> = {};
+  for (const entry of completeYearTotals(series)) completeYears[String(entry.y)] = entry.total;
   return {
-    year: numberField(value, "year", "y") ?? 0,
-    hot: typeof hot === "number" ? hot : null,
-    frp: typeof frp === "number" ? frp : null,
-    estimated: field(value, "estimated") === true,
+    trend: trend(series) as unknown as Json,
+    extremes: extremes(series) as unknown as Json,
+    completeYears,
   };
 }
 
-function caseInput(c: Json): unknown {
-  const nested = field(c, "input", "inputs", "args");
-  return nested === undefined ? c : nested;
-}
-
-function caseExpected(c: Json): unknown {
-  const nested = field(c, "expected", "want", "result", "output");
-  return nested === undefined ? c : nested;
-}
-
-function caseName(c: Json, index: number): string {
-  const name = field(c, "name", "case", "id", "label");
-  return typeof name === "string" ? name : `case ${index + 1}`;
-}
-
-function casesOf(parsed: unknown): Json[] {
-  const list = Array.isArray(parsed) ? parsed : field(parsed, "cases", "tests", "items");
-  if (!Array.isArray(list)) return [];
-  return list.filter(isObject);
-}
-
-function runUnusual(input: unknown): unknown {
-  const history = numberList(field(input, "history", "pastValues", "past", "pastvalues"));
-  const day = numberField(input, "dayOfMonth", "day", "d", "days");
-  if (history) {
-    const value = field(input, "value", "currentValue", "current");
-    const current = typeof value === "number" ? value : null;
-    if (day !== undefined) return unusualToDate(current, history, day);
-    return unusualFromHistory(current, history);
+/** The checks a CSV case states as rules rather than as text. */
+function runCsvChecks(csv: string, checks: Json[], label: string): void {
+  const bodyRows = csv
+    .split("\n")
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .slice(1);
+  for (const check of checks) {
+    const where = `${label}: ${String(check.rule)}`;
+    switch (check.type) {
+      case "doesNotContain":
+        expect(csv.includes(check.text as string), where).toBe(false);
+        break;
+      case "everyLineEndsWith":
+        expect(csv.endsWith(check.text as string), where).toBe(true);
+        expect(csv.split("\n").pop(), `${where}: nothing after the last line end`).toBe("");
+        break;
+      case "rowEquals":
+        expect(bodyRows, where).toContain(check.row as string);
+        break;
+      case "csvFieldQuoted":
+        expect(csvField(check.sample as string), where).toBe(check.quoted as string);
+        break;
+      case "fieldCount":
+        for (const row of bodyRows) {
+          expect(row.split(",").length, `${where}: ${row}`).toBe(check.count as number);
+        }
+        break;
+      case "doesNotMatch":
+        // The rule is about the fire values, so it is read against the rows.
+        for (const row of bodyRows) {
+          expect(new RegExp(check.pattern as string).test(row), `${where}: ${row}`).toBe(false);
+        }
+        break;
+      default:
+        throw new Error(`${where}: this check type is not known: ${String(check.type)}`);
+    }
   }
-  const series = asSeries(field(input, "series", "months") ?? input);
-  const y = numberField(input, "y", "year");
-  const m = numberField(input, "m", "month");
-  if (series && y !== undefined && m !== undefined) return unusual(series, y, m);
-  throw new Error("an unusual case needs a history, or a series with a year and a month");
 }
 
-function runChance(input: unknown): unknown {
-  const series = asSeries(field(input, "series", "months") ?? input);
-  const y = numberField(input, "y", "year");
-  const m = numberField(input, "m", "month");
-  if (series && series.months.length > 0 && y !== undefined && m !== undefined) {
-    return chance(series, m, y);
+function runCsvCase(c: Case, label: string): void {
+  // A summary case states its own key and value rows.
+  if (c.input.rows !== undefined) {
+    const rows = c.input.rows as [string, string][];
+    if (c.expected.header !== undefined) {
+      expect(summaryColumnLine().trimEnd(), `${label}.header`).toBe(c.expected.header as string);
+    }
+    expect(keyValueBody(rows), `${label}.bodyRows`).toBe(c.expected.bodyRows as string);
+    return;
   }
-  const years = numberField(input, "years", "n");
-  const fireYears = numberField(input, "fireYears", "k", "successes");
-  if (years !== undefined && fireYears !== undefined) {
-    const range = jeffreysRange(fireYears, years);
-    return { p: years === 0 ? null : fireYears / years, ...range, fireYears, years };
+
+  const series = seriesOf(c.input.months, (c.input.unit ?? "hot") as Unit);
+  if (c.expected.checks !== undefined) {
+    runCsvChecks(monthlyCsv(series, csvHeader), c.expected.checks as Json[], label);
+    return;
   }
-  throw new Error("a chance case needs a series with a year and a month, or counts");
-}
-
-function runWindow(input: unknown): unknown {
-  const days = numberField(input, "days", "window") ?? 8;
-  const endRaw = field(input, "end", "endDate");
-  const end = typeof endRaw === "string" ? endRaw : "";
-  const current = asWindowYear(field(input, "current", "currentYear", "now"));
-  const pastRaw = field(input, "past", "pastYears", "years");
-  const past = Array.isArray(pastRaw) ? pastRaw.map(asWindowYear) : [];
-  return rankWindow(days, end, current, past);
-}
-
-function runTrend(input: unknown): unknown {
-  const series = asSeries(field(input, "series", "months") ?? input);
-  if (!series) throw new Error("a trend case needs a series");
-  return { ...trend(series), ...extremes(series) };
-}
-
-function runCsv(input: unknown): string {
-  const header = (field(input, "header") ?? input) as never;
-  const kindRaw = field(input, "kind", "csv", "which", "type");
-  const kind = typeof kindRaw === "string" ? kindRaw.toLowerCase() : "";
-  const series = asSeries(field(input, "series", "months"));
-  const figures = field(input, "figures", "summary");
-  if (kind.includes("summary") || (figures !== undefined && !kind.includes("month"))) {
-    return summaryCsv(figures as never, header);
+  if (c.expected.header !== undefined) {
+    expect(monthlyColumnLine().trimEnd(), `${label}.header`).toBe(c.expected.header as string);
   }
-  if (!series) throw new Error("a monthly csv case needs a series");
-  return monthlyCsv(series, header);
-}
-
-function expectedText(c: Json): string | undefined {
-  const value = field(c, "csv", "text", "expected", "want", "output", "content");
-  return typeof value === "string" ? value : undefined;
+  expect(monthlyBody(series), `${label}.bodyRows`).toBe(c.expected.bodyRows as string);
 }
 
 const dirExists = existsSync(expectedDir);
@@ -292,32 +279,27 @@ describe("the expected answers for the statistics and the downloads", () => {
 });
 
 for (const file of files) {
-  const parsed = JSON.parse(readFileSync(join(expectedDir, file), "utf8")) as unknown;
-  const cases = casesOf(parsed);
+  const parsed = JSON.parse(readFileSync(join(expectedDir, file), "utf8")) as { cases?: Case[] };
+  const cases = parsed.cases ?? [];
 
   describe(file, () => {
     it("holds cases", () => {
       expect(cases.length, `${file} holds no cases`).toBeGreaterThan(0);
     });
 
-    for (const [index, c] of cases.entries()) {
-      it(caseName(c, index), () => {
-        const input = caseInput(c);
+    for (const c of cases) {
+      it(c.name, () => {
+        const label = `${file} / ${c.name}`;
         if (file.startsWith("csv_")) {
-          const want = expectedText(c);
-          expect(want, `${file}: the case holds no expected CSV text`).toBeTypeOf("string");
-          expect(runCsv(input)).toBe(want);
+          runCsvCase(c, label);
           return;
         }
-        let got: unknown;
-        if (file.startsWith("unusual_")) got = runUnusual(input);
-        else if (file.startsWith("chance_")) got = runChance(input);
-        else if (file.startsWith("window_")) got = runWindow(input);
-        else got = runTrend(input);
-
-        const seen: Compared = { count: 0 };
-        compareFields(got, caseExpected(c), file, seen);
-        expect(seen.count, `${file}: no field of the case could be compared`).toBeGreaterThan(0);
+        let got: Json;
+        if (file.startsWith("unusual_")) got = runUnusual(c.input);
+        else if (file.startsWith("chance_")) got = runChance(c.input);
+        else if (file.startsWith("window_")) got = runWindow(c.input);
+        else got = runTrend(c.input);
+        assertCase(got, c.expected, label);
       });
     }
   });

@@ -45,10 +45,19 @@ export function summaryRows(figures: SummaryFigures): [string, string][] {
   ];
 }
 
+/** The column line on its own, line end included. */
+export function summaryColumnLine(): string {
+  return csvRow(SUMMARY_COLUMNS as readonly string[]);
+}
+
+/** Key and value rows under the column line. A key or value with a comma is quoted. */
+export function keyValueBody(rows: readonly (readonly [string, string])[]): string {
+  let out = "";
+  for (const [key, value] of rows) out += csvRow([key, value]);
+  return out;
+}
+
 /** The summary CSV, as one string. */
 export function summaryCsv(figures: SummaryFigures, header: CsvHeader): string {
-  let out = headerLines(header);
-  out += csvRow(SUMMARY_COLUMNS as readonly string[]);
-  for (const [key, value] of summaryRows(figures)) out += csvRow([key, value]);
-  return out;
+  return headerLines(header) + summaryColumnLine() + keyValueBody(summaryRows(figures));
 }

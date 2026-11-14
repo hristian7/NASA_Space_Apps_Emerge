@@ -24,10 +24,14 @@ export const MONTHLY_COLUMNS = [
 /** Several flags share one field, joined with a bar (number-logic section 9, ruling 8). */
 export const FLAG_SEPARATOR = "|";
 
-/** The monthly CSV for a series, as one string. */
-export function monthlyCsv(series: Series, header: CsvHeader): string {
-  let out = headerLines(header);
-  out += csvRow(MONTHLY_COLUMNS as readonly string[]);
+/** The column line on its own, line end included. */
+export function monthlyColumnLine(): string {
+  return csvRow(MONTHLY_COLUMNS as readonly string[]);
+}
+
+/** The rows under the column line, without the comments and the column line. */
+export function monthlyBody(series: Series): string {
+  let out = "";
   for (const point of series.months) {
     out += csvRow([
       String(point.y),
@@ -41,4 +45,9 @@ export function monthlyCsv(series: Series, header: CsvHeader): string {
     ]);
   }
   return out;
+}
+
+/** The monthly CSV for a series, as one string. */
+export function monthlyCsv(series: Series, header: CsvHeader): string {
+  return headerLines(header) + monthlyColumnLine() + monthlyBody(series);
 }
