@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en" data-theme="ember">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>Emerge design preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+    <style>
+      /* Tokens per design direction. */
+      :root,
+      [data-theme="ember"] {
+        --font-ui: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --font-head: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --font-num: "Familjen Grotesk", ui-sans-serif, sans-serif;
+        --space: oklch(0.12 0.01 40);
+        --panel: oklch(0.17 0.012 40 / 0.9);
+        --panel-solid: oklch(0.17 0.012 40);
+        --line: oklch(1 0 0 / 0.1);
+        --ink: oklch(0.95 0.01 70);
+        --ink-2: oklch(0.95 0.01 70 / 0.68);
+        --ink-3: oklch(0.95 0.01 70 / 0.45);
+        --accent: oklch(0.76 0.17 55);
+        --empty: oklch(1 0 0 / 0.04);
+        --ramp-0: oklch(0.3 0.08 20);
+        --ramp-1: oklch(0.5 0.17 30);
+        --ramp-2: oklch(0.7 0.18 55);
+        --ramp-3: oklch(0.93 0.12 95);
+        --radius: 14px;
+        --radius-s: 8px;
+        --hatch: oklch(1 0 0 / 0.16);
+      }
+      [data-theme="field"] {
+        --font-ui: "Public Sans", ui-sans-serif, sans-serif;
+        --font-head: "Newsreader", Georgia, serif;
+        --font-num: "Public Sans", ui-sans-serif, sans-serif;
+        --space: oklch(0.93 0.01 230);
+        --panel: oklch(0.99 0.003 90 / 0.94);
+        --panel-solid: oklch(0.99 0.003 90);
+        --line: oklch(0.2 0.02 250 / 0.12);
+        --ink: oklch(0.22 0.02 255);
+        --ink-2: oklch(0.22 0.02 255 / 0.72);
+        --ink-3: oklch(0.22 0.02 255 / 0.5);
+        --accent: oklch(0.55 0.19 35);
+        --empty: oklch(0.22 0.02 255 / 0.05);
+        --ramp-0: oklch(0.93 0.06 85);
+        --ramp-1: oklch(0.8 0.13 65);
+        --ramp-2: oklch(0.6 0.19 35);
+        --ramp-3: oklch(0.35 0.13 15);
+        --radius: 4px;
+        --radius-s: 2px;
+        --hatch: oklch(0.22 0.02 255 / 0.14);
+      }
+      [data-theme="ops"] {
+        --font-ui: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+        --font-head: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+        --font-num: "IBM Plex Mono", ui-monospace, monospace;
+        --space: oklch(0.15 0.015 250);
+        --panel: oklch(0.19 0.015 250 / 0.96);
+        --panel-solid: oklch(0.19 0.015 250);
+        --line: oklch(0.8 0.03 240 / 0.16);
+        --ink: oklch(0.93 0.01 240);
+        --ink-2: oklch(0.93 0.01 240 / 0.7);
+        --ink-3: oklch(0.93 0.01 240 / 0.45);
+        --accent: oklch(0.86 0.17 95);
+        --empty: oklch(1 0 0 / 0.035);
+        --ramp-0: oklch(0.32 0.05 260);
+        --ramp-1: oklch(0.55 0.12 300);
+        --ramp-2: oklch(0.72 0.17 35);
+        --ramp-3: oklch(0.92 0.15 100);
+        --radius: 2px;
+        --radius-s: 1px;
+        --hatch: oklch(1 0 0 / 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow-x: clip;
+        background: var(--space);
+        color: var(--ink);
+        font: 400 14px/1.45 var(--font-ui);
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .num {
+        font-family: var(--font-num);
+        font-variant-numeric: tabular-nums;
+      }
+      #map {
+        position: fixed;
+        inset: 0;
+      }
+      .maplibregl-ctrl-attrib {
+        display: none;
+      }
+
+      /* Top bar */
+      .top {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        right: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        pointer-events: none;
+        z-index: 3;
+      }
+      .top > * {
+        pointer-events: auto;
+      }
+      .brand {
+        font: 600 20px/1 var(--font-head);
+        letter-spacing: -0.01em;
+        margin-right: 4px;
+        text-shadow: 0 1px 8px oklch(0 0 0 / 0.4);
+      }
+      [data-theme="field"] .brand {
+        text-shadow: none;
+        padding: 9px 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px);
+      }
+      .search input {
+        width: 140px;
+        border: 0;
+        background: none;
+        padding: 6px 8px;
+        outline: none;
+      }
+      .search input::placeholder {
+        color: var(--ink-3);
+      }
+      .chip {
+        border: 0;
+        background: none;
+        padding: 6px 10px;
+        border-radius: var(--radius-s);
+        color: var(--ink-2);
+        white-space: nowrap;
+      }
+      .chip[aria-pressed="true"] {
+        background: var(--line);
+        color: var(--ink);
+      }
+      .spacer {
+        flex: 1;
+      }
+      .lang,
+      .layers-btn {
+        display: flex;
+        padding: 3px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px);
+      }
+
+      /* Layer panel */
+      .layers {
+        position: fixed;
+        left: 16px;
+        top: 72px;
+        width: 220px;
+        padding: 14px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px);
+        z-index: 2;
+      }
+      .layers h2,
+      .report h2 {
+        margin: 0 0 8px;
+        font: 600 12px/1.3 var(--font-ui);
+        color: var(--ink-2);
+      }
+      .layer {
+        display: grid;
+        grid-template-columns: 16px 1fr;
+        gap: 2px 8px;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .layer:last-of-type {
+        border-bottom: 0;
+      }
+      .layer input {
+        accent-color: var(--accent);
+        margin: 0;
+      }
+      .layer small {
+        grid-column: 2;
+        color: var(--ink-3);
+        font-size: 12px;
+      }
+      .base {
+        display: flex;
+        gap: 2px;
+        margin-top: 10px;
+      }
+
+      /* Report */
+      .report {
+        position: fixed;
+        top: 72px;
+        right: 16px;
+        bottom: 92px;
+        width: 400px;
+        overflow-y: auto;
+        padding: 18px 18px 14px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(16px);
+        z-index: 2;
+      }
+      .report h1 {
+        margin: 0;
+        font: 600 26px/1.15 var(--font-head);
+        letter-spacing: -0.01em;
+      }
+      .sub {
+        margin: 4px 0 14px;
+        color: var(--ink-3);
+        font-size: 12px;
+      }
+      .modes {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-s);
+        margin-bottom: 14px;
+      }
+      .modes .chip {
+        flex: 1;
+      }
+      section + section {
+        margin-top: 18px;
+      }
+
+      /* Calendar */
+      .cal {
+        display: grid;
+        grid-template-columns: 34px repeat(12, 1fr);
+        gap: 2px;
+        font-size: 11px;
+      }
+      .cal .mh {
+        text-align: center;
+        color: var(--ink-3);
+      }
+      .cal .yh {
+        color: var(--ink-3);
+        align-self: center;
+        font-family: var(--font-num);
+      }
+      .cal .yh.est {
+        color: var(--ink-2);
+      }
+      .cell {
+        height: 11px;
+        border: 0;
+        padding: 0;
+        border-radius: 1px;
+        background: var(--empty);
+      }
+      .cell.est {
+        background-image: repeating-linear-gradient(135deg, var(--hatch) 0 1px, transparent 1px 4px);
+      }
+      .cell.sel {
+        outline: 2px solid var(--ink);
+        outline-offset: 0;
+        position: relative;
+        z-index: 1;
+      }
+      .legend {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        color: var(--ink-3);
+        font-size: 11px;
+      }
+      .ramp {
+        width: 90px;
+        height: 6px;
+        border-radius: 1px;
+        background: linear-gradient(90deg, var(--ramp-0), var(--ramp-1), var(--ramp-2), var(--ramp-3));
+      }
+      .swatch-est {
+        width: 14px;
+        height: 8px;
+        background: repeating-linear-gradient(135deg, var(--ink-3) 0 1px, transparent 1px 4px);
+      }
+
+      /* Cards */
+      .cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .card {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-s);
+      }
+      .card .big {
+        font: 500 24px/1.1 var(--font-num);
+        font-variant-numeric: tabular-nums;
+        margin: 4px 0;
+      }
+      .card .big.up {
+        color: var(--accent);
+      }
+      .card p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 12px;
+        text-wrap: pretty;
+      }
+      .card h2 {
+        margin: 0;
+      }
+      .trend {
+        display: block;
+        width: 100%;
+        height: 96px;
+      }
+      .trend .bar {
+        fill: var(--ramp-2);
+      }
+      .trend .bar.est {
+        fill: url(#hatch);
+      }
+      .trend .whisk {
+        stroke: var(--ink-2);
+        stroke-width: 1;
+      }
+      .trend .sel {
+        fill: var(--accent);
+      }
+      .trend text {
+        fill: var(--ink-3);
+        font: 10px var(--font-num);
+      }
+      .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: none;
+        padding: 7px 12px;
+        border-radius: var(--radius-s);
+      }
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--space);
+        font-weight: 600;
+      }
+      .note {
+        margin: 14px 0 0;
+        color: var(--ink-3);
+        font-size: 12px;
+        text-wrap: pretty;
+      }
+
+      /* Timeline */
+      .timeline {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        display: grid;
+        grid-template-columns: auto auto 1fr;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 14px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        backdrop-filter: blur(14px);
+        z-index: 2;
+      }
+      .timeline .when {
+        font: 500 15px/1 var(--font-num);
+        min-width: 92px;
+      }
+      .play {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--line);
+        background: none;
+        font-size: 11px;
+      }
+      [data-theme="ops"] .play {
+        border-radius: var(--radius-s);
+      }
+      .track {
+        position: relative;
+      }
+      .track input {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        color: var(--ink-3);
+        font: 11px var(--font-num);
+      }
+      .switcher {
+        position: fixed;
+        left: 16px;
+        bottom: 84px;
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        z-index: 4;
+        font-size: 12px;
+      }
+      .switcher b {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      @media (max-width: 767px) {
+        .brand {
+          display: none;
+        }
+        .search {
+          flex: 1;
+          min-width: 0;
+        }
+        .search input {
+          flex: 1;
+          min-width: 0;
+          width: auto;
+        }
+        .spacer {
+          display: none;
+        }
+        .layers {
+          display: none;
+        }
+        .layers.open {
+          display: block;
+          top: 64px;
+          left: 16px;
+          right: 16px;
+          width: auto;
+        }
+        .report {
+          top: auto;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: auto;
+          max-height: 50dvh;
+          border-radius: var(--radius) var(--radius) 0 0;
+          padding-bottom: 24px;
+        }
+        .timeline {
+          bottom: calc(50dvh + 8px);
+          grid-template-columns: auto 1fr;
+          padding: 8px 10px;
+        }
+        .timeline .play {
+          display: none;
+        }
+        .switcher {
+          top: 60px;
+          bottom: auto;
+          right: 16px;
+          left: auto;
+        }
+        .top .lang {
+          display: none;
+        }
+      }
+      @media (min-width: 768px) {
+        .layers-btn {
+          display: none;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" aria-label="Globe showing fire activity"></div>
+
+    <header class="top">
+      <span class="brand">Emerge</span>
+      <div class="search" role="search">
+        <input id="q" type="search" data-i18n-ph="search" placeholder="Search a country" aria-label="Search a country" />
+        <button class="chip" data-country="BGR" aria-pressed="true">Bulgaria</button>
+        <button class="chip" data-country="USA" aria-pressed="false">USA</button>
+      </div>
+      <span class="spacer"></span>
+      <div class="lang" role="group" aria-label="Language">
+        <button class="chip" data-lang="en" aria-pressed="true">EN</button>
+        <button class="chip" data-lang="bg" aria-pressed="false">БГ</button>
+      </div>
+      <div class="layers-btn"><button class="chip" id="layersToggle" data-i18n="layers">Layers</button></div>
+    </header>
+
+    <aside class="layers" id="layers" aria-label="Map layers">
+      <h2 data-i18n="layersTitle">Layers</h2>
+      <label class="layer"><input type="checkbox" checked id="lyrHistory" /> <span data-i18n="history">Fire history</span><small data-i18n="historyNote">Monthly fire activity, 2000 to 2025</small></label>
+      <label class="layer"><input type="checkbox" disabled /> <span data-i18n="recent">Recent fires</span><small data-i18n="recentNote">Last 24 hours (coming)</small></label>
+      <label class="layer"><input type="checkbox" disabled /> <span data-i18n="danger">Fire danger</span><small data-i18n="dangerNote">Official forecast, next 9 days (coming)</small></label>
+      <div class="base" role="group" aria-label="Base map">
+        <button class="chip" data-base="day" aria-pressed="false" data-i18n="day">Day</button>
+        <button class="chip" data-base="night" aria-pressed="true" data-i18n="night">Night</button>
+      </div>
+    </aside>
+
+    <main class="report" id="report" aria-live="polite">
+      <h1 id="title">Bulgaria</h1>
+      <p class="sub" id="sub"></p>
+      <div class="modes" role="group" aria-label="Values">
+        <button class="chip" data-mode="harm" aria-pressed="true" data-i18n="harm">Harmonized</button>
+        <button class="chip" data-mode="raw" aria-pressed="false" data-i18n="raw">Measured</button>
+        <button class="chip" data-mode="frp" aria-pressed="false" data-i18n="frp">Intensity</button>
+      </div>
+      <section>
+        <h2 data-i18n="calendar">Fire calendar</h2>
+        <div class="cal" id="cal"></div>
+        <div class="legend"><span data-i18n="less">Less</span><span class="ramp"></span><span data-i18n="more">More</span><span class="swatch-est"></span><span data-i18n="estimated">Estimated from MODIS</span></div>
+      </section>
+      <section class="cards">
+        <div class="card">
+          <h2 data-i18n="unusual">Is this unusual?</h2>
+          <div class="big num" id="unusualBig"></div>
+          <p id="unusualText"></p>
+        </div>
+        <div class="card">
+          <h2 data-i18n="chance">Chance of a busy month</h2>
+          <div class="big num" id="chanceBig"></div>
+          <p id="chanceText"></p>
+        </div>
+      </section>
+      <section>
+        <h2 data-i18n="trend">Year by year</h2>
+        <svg class="trend" id="trend" viewBox="0 0 360 96" preserveAspectRatio="none" role="img"></svg>
+      </section>
+      <div class="actions">
+        <button class="btn primary" id="csv" data-i18n="csv">Download CSV</button>
+        <button class="btn" id="share" data-i18n="share">Share</button>
+        <button class="btn" disabled data-i18n="alert">Alert me here</button>
+      </div>
+      <p class="note" data-i18n="disclaimer">Research prototype. Not an official warning. Follow local authorities (112 / 911). Fire data: NASA FIRMS. Imagery: NASA GIBS. Values before 2012 are converted from MODIS with a placeholder ratio, not the final model.</p>
+    </main>
+
+    <div class="timeline" role="group" aria-label="Time">
+      <button class="play" id="play" aria-label="Play">▶</button>
+      <span class="when num" id="when"></span>
+      <div class="track">
+        <input type="range" id="slider" min="0" max="0" value="0" aria-label="Month" />
+        <div class="ticks num"><span>2001</span><span>2005</span><span>2010</span><span>2015</span><span>2020</span><span>2025</span></div>
+      </div>
+    </div>
+
+    <nav class="switcher" aria-label="Design direction">
+      <button class="chip" data-theme-pick="ember" aria-pressed="true"><b>A</b> Ember</button>
+      <button class="chip" data-theme-pick="field" aria-pressed="false"><b>B</b> Field report</button>
+      <button class="chip" data-theme-pick="ops" aria-pressed="false"><b>C</b> Operations</button>
+    </nav>
+
+    <script>
+      const T = {
+        en: {
+          search: "Search a country", layers: "Layers", layersTitle: "Layers", history: "Fire history",
+          historyNote: "Monthly fire activity, 2000 to 2025", recent: "Recent fires", recentNote: "Last 24 hours (coming)",
+          danger: "Fire danger", dangerNote: "Official forecast, next 9 days (coming)", day: "Day", night: "Night",
+          harm: "Harmonized", raw: "Measured", frp: "Intensity", calendar: "Fire calendar", less: "Less", more: "More",
+          estimated: "Estimated from MODIS", unusual: "Is this unusual?", chance: "Chance of a busy month",
+          trend: "Year by year", csv: "Download CSV", share: "Share", alert: "Alert me here",
+          disclaimer: "Research prototype. Not an official warning. Follow local authorities (112 / 911). Fire data: NASA FIRMS. Imagery: NASA GIBS. Values before 2012 are converted from MODIS with a placeholder ratio, not the final model.",
+          months: ["J","F","M","A","M","J","J","A","S","O","N","D"],
+          monthNames: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+          names: { BGR: "Bulgaria", USA: "United States" },
+          sub: (n) => `Fire cell-days, Nov 2000 to Dec 2025 · ${n}`,
+          sources: { harm: "harmonized to VIIRS level", raw: "as each satellite measured", frp: "fire heat output (MW)" },
+          above: (p) => `${p}% above the usual level for this month`,
+          below: (p) => `${p}% below the usual level for this month`,
+          normal: "About the usual level for this month",
+          none: "No fires recorded this month",
+          chanceText: (k, n, mon) => `${mon} was a busy month in ${k} of ${n} years`,
+        },
+        bg: {
+          search: "Търсене на държава", layers: "Слоеве", layersTitle: "Слоеве", history: "История на пожарите",
+          historyNote: "Месечна пожарна активност, 2000 до 2025", recent: "Скорошни пожари", recentNote: "Последните 24 часа (предстои)",
+          danger: "Пожарна опасност", dangerNote: "Официална прогноза, следващите 9 дни (предстои)", day: "Ден", night: "Нощ",
+          harm: "Съпоставими", raw: "Измерени", frp: "Интензитет", calendar: "Пожарен календар", less: "По-малко", more: "Повече",
+          estimated: "Оценка от MODIS", unusual: "Необичайно ли е?", chance: "Шанс за активен месец",
+          trend: "По години", csv: "Изтегли CSV", share: "Сподели", alert: "Известявай ме",
+          disclaimer: "Изследователски прототип. Не е официално предупреждение. Следвайте местните власти (112). Данни за пожари: NASA FIRMS. Изображения: NASA GIBS. Стойностите преди 2012 г. са преобразувани от MODIS с временен коефициент.",
+          months: ["Я","Ф","М","А","М","Ю","Ю","А","С","О","Н","Д"],
+          monthNames: ["яну","фев","мар","апр","май","юни","юли","авг","сеп","окт","ное","дек"],
+          names: { BGR: "България", USA: "САЩ" },
+          sub: (n) => `Пожарни клетки-дни, ноем. 2000 до дек. 2025 · ${n}`,
+          sources: { harm: "приравнени към VIIRS", raw: "както е измерил всеки сателит", frp: "топлинна мощност на пожарите (MW)" },
+          above: (p) => `${p}% над обичайното за този месец`,
+          below: (p) => `${p}% под обичайното за този месец`,
+          normal: "Около обичайното за този месец",
+          none: "Няма регистрирани пожари този месец",
+          chanceText: (k, n, mon) => `${mon} е бил активен месец в ${k} от ${n} години`,
+        },
+      };
+
+      const state = { theme: "ember", lang: "en", country: "BGR", mode: "harm", idx: 0, base: "night" };
+      const data = {};
+      let cells = null;
+      let map;
+
+      const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+      const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+      const rgb = (n) => {
+        probe.clearRect(0, 0, 1, 1);
+        probe.fillStyle = "#000";
+        probe.fillStyle = css(n);
+        probe.fillRect(0, 0, 1, 1);
+        const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+        return `rgb(${r},${g},${b})`;
+      };
+      const t = (k) => T[state.lang][k];
+
+      function value(r) {
+        if (state.mode === "frp") return r.frp || 0;
+        if (state.mode === "raw") return r.y >= 2012 ? (r.snpp ?? 0) : r.y < 2002 || (r.y === 2002 && r.m < 7) ? r.terra : r.aqua;
+        return r.harm || 0;
+      }
+
+      function rampColor(f) {
+        const stops = [css("--ramp-0"), css("--ramp-1"), css("--ramp-2"), css("--ramp-3")];
+        const i = Math.min(2, Math.floor(f * 3));
+        const k = Math.min(1, Math.max(0, f * 3 - i));
+        return `color-mix(in oklch, ${stops[i]} ${Math.round((1 - k) * 100)}%, ${stops[i + 1]})`;
+      }
+
+      function series() {
+        return data[state.country];
+      }
+
+      function renderCalendar() {
+        const s = series();
+        const cal = document.getElementById("cal");
+        const vals = s.map(value);
+        const sorted = vals.filter((v) => v > 0).sort((a, b) => a - b);
+        const rank = (v) => {
+          let lo = 0, hi = sorted.length;
+          while (lo < hi) { const mid = (lo + hi) >> 1; sorted[mid] < v ? (lo = mid + 1) : (hi = mid); }
+          return sorted.length > 1 ? lo / (sorted.length - 1) : 1;
+        };
+        let html = '<span></span>' + t("months").map((m) => `<span class="mh">${m}</span>`).join("");
+        for (let y = 2000; y <= 2025; y++) {
+          const est = y < 2012;
+          html += `<span class="yh${est ? " est" : ""}">${y}</span>`;
+          for (let m = 1; m <= 12; m++) {
+            const i = s.findIndex((r) => r.y === y && r.m === m);
+            if (i < 0) { html += '<span></span>'; continue; }
+            const v = vals[i];
+            const bg = v > 0 ? `background-color:${rampColor(rank(v))}` : "";
+            const label = `${t("monthNames")[m - 1]} ${y}: ${Math.round(v).toLocaleString()}`;
+            html += `<button class="cell${est && state.mode !== "frp" ? " est" : ""}${i === state.idx ? " sel" : ""}" data-i="${i}" style="${bg}" title="${label}" aria-label="${label}"></button>`;
+          }
+        }
+        cal.innerHTML = html;
+      }
+
+      function renderCards() {
+        const s = series();
+        const r = s[state.idx];
+        const same = s.filter((x) => x.m === r.m && x.y !== r.y).map(value).sort((a, b) => a - b);
+        const med = same[Math.floor(same.length / 2)] || 0;
+        const v = value(r);
+        const big = document.getElementById("unusualBig");
+        const txt = document.getElementById("unusualText");
+        if (v === 0) { big.textContent = "0"; big.className = "big num"; txt.textContent = t("none"); }
+        else if (med === 0) { big.textContent = "+"; big.className = "big num up"; txt.textContent = t("above")("∞"); }
+        else {
+          const p = Math.round(((v - med) / med) * 100);
+          big.textContent = `${p > 0 ? "+" : ""}${p}%`;
+          big.className = "big num" + (p > 25 ? " up" : "");
+          txt.textContent = Math.abs(p) <= 25 ? t("normal") : p > 0 ? t("above")(p) : t("below")(-p);
+        }
+        const all = s.map(value).sort((a, b) => a - b);
+        const busy = all[Math.floor(all.length * 0.75)];
+        const years = s.filter((x) => x.m === r.m);
+        const k = years.filter((x) => value(x) >= busy).length;
+        document.getElementById("chanceBig").textContent = `${Math.round((k / years.length) * 100)}%`;
+        document.getElementById("chanceText").textContent = t("chanceText")(k, years.length, t("monthNames")[r.m - 1]);
+      }
+
+      function renderTrend() {
+        const s = series();
+        const years = [];
+        for (let y = 2001; y <= 2025; y++) {
+          const rows = s.filter((r) => r.y === y);
+          years.push({
+            y, v: rows.reduce((a, r) => a + value(r), 0),
+            lo: rows.reduce((a, r) => a + (r.lo ?? value(r)), 0),
+            hi: rows.reduce((a, r) => a + (r.hi ?? value(r)), 0),
+          });
+        }
+        const showBand = state.mode === "harm";
+        const max = Math.max(...years.map((d) => (showBand ? d.hi : d.v)));
+        const w = 360 / years.length;
+        const selY = s[state.idx].y;
+        let g = `<defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="${css("--ramp-2")}" opacity="0.35"/><line x1="0" y1="0" x2="0" y2="4" stroke="${css("--ramp-2")}" stroke-width="2"/></pattern></defs>`;
+        years.forEach((d, i) => {
+          const h = (d.v / max) * 82;
+          const est = d.y < 2012 && state.mode !== "frp";
+          g += `<rect class="bar${est ? " est" : ""}${d.y === selY ? " sel" : ""}" x="${i * w + 1}" y="${84 - h}" width="${w - 2}" height="${h}"><title>${d.y}: ${Math.round(d.v).toLocaleString()}</title></rect>`;
+          if (showBand && d.y < 2012) {
+            const cx = i * w + w / 2;
+            g += `<line class="whisk" x1="${cx}" x2="${cx}" y1="${84 - (d.lo / max) * 82}" y2="${84 - (d.hi / max) * 82}"/>`;
+          }
+        });
+        [2001, 2012, 2025].forEach((y) => {
+          g += `<text x="${(y - 2001) * w + (y === 2025 ? w : 0)}" y="95" text-anchor="${y === 2025 ? "end" : y === 2012 ? "middle" : "start"}">${y}</text>`;
+        });
+        document.getElementById("trend").innerHTML = g;
+      }
+
+      function renderText() {
+        document.documentElement.lang = state.lang;
+        document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+        document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = t(el.dataset.i18nPh)));
+        document.getElementById("title").textContent = t("names")[state.country];
+        document.getElementById("sub").textContent = t("sub")(t("sources")[state.mode]);
+        document.querySelectorAll("[data-country]").forEach((b) => (b.textContent = t("names")[b.dataset.country].replace("United States", "USA")));
+      }
+
+      function renderWhen() {
+        const r = series()[state.idx];
+        document.getElementById("when").textContent = `${t("monthNames")[r.m - 1]} ${r.y}`;
+        document.getElementById("slider").value = state.idx;
+      }
+
+      function renderGlobe() {
+        if (!map || !cells || !map.getSource("fires")) return;
+        const r = series()[state.idx];
+        const ym = r.y * 100 + r.m;
+        const rows = cells[ym] || [];
+        map.getSource("fires").setData({
+          type: "FeatureCollection",
+          features: rows.map(([gy, gx, v]) => ({
+            type: "Feature",
+            properties: { v },
+            geometry: { type: "Point", coordinates: [(gx + 0.5) * 0.25, (gy + 0.5) * 0.25] },
+          })),
+        });
+      }
+
+      function renderAll() {
+        renderText();
+        renderCalendar();
+        renderCards();
+        renderTrend();
+        renderWhen();
+        renderGlobe();
+      }
+
+      function setIdx(i) {
+        state.idx = Math.max(0, Math.min(series().length - 1, i));
+        document.querySelectorAll(".cell.sel").forEach((c) => c.classList.remove("sel"));
+        document.querySelector(`.cell[data-i="${state.idx}"]`)?.classList.add("sel");
+        renderCards();
+        renderTrend();
+        renderWhen();
+        renderGlobe();
+      }
+
+      function press(selector, attr, val) {
+        document.querySelectorAll(selector).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset[attr] === val)));
+      }
+
+      const GIBS = {
+        day: "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg",
+        night: "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png",
+      };
+
+      function fireStyle() {
+        return {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, ["*", 0.9, ["sqrt", ["get", "v"]]], 5, ["*", 2.2, ["sqrt", ["get", "v"]]]],
+          "circle-color": ["interpolate", ["linear"], ["get", "v"], 1, rgb("--ramp-1"), 20, rgb("--ramp-2"), 120, rgb("--ramp-3")],
+          "circle-opacity": 0.85,
+          "circle-blur": state.theme === "ember" ? 0.6 : 0.15,
+          "circle-stroke-width": state.theme === "field" ? 0.5 : 0,
+          "circle-stroke-color": rgb("--ramp-3"),
+        };
+      }
+
+      function applyMapTheme() {
+        if (!map || !map.getLayer("fires")) return;
+        for (const [k, v] of Object.entries(fireStyle())) map.setPaintProperty("fires", k, v);
+        map.setPaintProperty("base", "raster-saturation", state.theme === "ops" ? -0.85 : 0);
+        map.setPaintProperty("base", "raster-brightness-max", state.theme === "ops" ? 0.6 : 1);
+        map.setSky?.({ "sky-color": rgb("--space"), "horizon-color": rgb("--space"), "atmosphere-blend": state.theme === "field" ? 0.3 : 0.8 });
+      }
+
+      function setBase(base) {
+        state.base = base;
+        press("[data-base]", "base", base);
+        map?.getSource("base")?.setTiles([GIBS[base]]);
+      }
+
+      function setTheme(theme) {
+        state.theme = theme;
+        document.documentElement.dataset.theme = theme;
+        press("[data-theme-pick]", "themePick", theme);
+        setBase(theme === "ember" ? "night" : "day");
+        renderCalendar();
+        renderTrend();
+        applyMapTheme();
+        try { localStorage.setItem("emerge-preview-theme", theme); } catch {}
+        const u = new URL(location.href);
+        u.searchParams.set("d", theme);
+        history.replaceState(null, "", u);
+      }
+
+      function fly() {
+        const c = state.country === "BGR" ? { center: [25.3, 42.7], zoom: 4.6 } : { center: [-98, 39], zoom: 2.4 };
+        map?.flyTo({ ...c, duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1600, padding: innerWidth >= 768 ? { right: 420, left: 240 } : { bottom: innerHeight * 0.5 } });
+      }
+
+      const BASE = location.pathname.endsWith("/") ? location.pathname : location.pathname + "/";
+
+      async function init() {
+        const [bgr, usa] = await Promise.all(["BGR", "USA"].map((k) => fetch(`${BASE}data/${k}.json`).then((r) => r.json())));
+        data.BGR = bgr;
+        data.USA = usa;
+        const asked = new URLSearchParams(location.search).get("d");
+        let saved = null;
+        try { saved = localStorage.getItem("emerge-preview-theme"); } catch {}
+        state.theme = ["ember", "field", "ops"].includes(asked) ? asked : ["ember", "field", "ops"].includes(saved) ? saved : "ember";
+        document.documentElement.dataset.theme = state.theme;
+        press("[data-theme-pick]", "themePick", state.theme);
+        state.base = state.theme === "ember" ? "night" : "day";
+        press("[data-base]", "base", state.base);
+        state.idx = bgr.findIndex((r) => r.y === 2024 && r.m === 8);
+        const slider = document.getElementById("slider");
+        slider.max = bgr.length - 1;
+        renderAll();
+
+        map = new maplibregl.Map({
+          container: "map",
+          style: {
+            version: 8,
+            projection: { type: "globe" },
+            sources: { base: { type: "raster", tiles: [GIBS[state.base]], tileSize: 256, maxzoom: 8 } },
+            layers: [{ id: "base", type: "raster", source: "base" }],
+          },
+          center: [25.3, 42.7],
+          zoom: 1.6,
+          attributionControl: false,
+        });
+        map.on("load", () => {
+          map.addSource("fires", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+          map.addLayer({ id: "fires", type: "circle", source: "fires", paint: fireStyle() });
+          applyMapTheme();
+          renderGlobe();
+          fly();
+        });
+        window.__preview = { map, state };
+
+        const text = await fetch(`${BASE}data/cells.csv`).then((r) => r.text());
+        const out = {};
+        const lines = text.split("\n");
+        for (let i = 1; i < lines.length; i++) {
+          const [k, ym, gy, gx, v] = lines[i].split(",");
+          if (!ym) continue;
+          (out[ym] ||= []).push([+gy, +gx, +v]);
+        }
+        cells = out;
+        renderGlobe();
+      }
+
+      document.getElementById("cal").addEventListener("click", (e) => {
+        const c = e.target.closest(".cell");
+        if (c) setIdx(+c.dataset.i);
+      });
+      document.getElementById("slider").addEventListener("input", (e) => setIdx(+e.target.value));
+      let timer = null;
+      document.getElementById("play").addEventListener("click", (e) => {
+        if (timer) { clearInterval(timer); timer = null; e.currentTarget.textContent = "▶"; return; }
+        e.currentTarget.textContent = "❚❚";
+        timer = setInterval(() => setIdx(state.idx + 1 >= series().length ? 0 : state.idx + 1), 260);
+      });
+      document.querySelectorAll("[data-country]").forEach((b) =>
+        b.addEventListener("click", () => {
+          const r = series()[state.idx];
+          state.country = b.dataset.country;
+          press("[data-country]", "country", state.country);
+          state.idx = Math.max(0, series().findIndex((x) => x.y === r.y && x.m === r.m));
+          renderAll();
+          fly();
+        }),
+      );
+      document.getElementById("q").addEventListener("input", (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        const hit = q.length > 1 && Object.entries({ ...T.en.names, ...T.bg.names }).find(([, n]) => n.toLowerCase().startsWith(q));
+        if (hit) document.querySelector(`[data-country="${hit[0]}"]`).click();
+      });
+      document.querySelectorAll("[data-mode]").forEach((b) =>
+        b.addEventListener("click", () => {
+          state.mode = b.dataset.mode;
+          press("[data-mode]", "mode", state.mode);
+          renderAll();
+        }),
+      );
+      document.querySelectorAll("[data-lang]").forEach((b) =>
+        b.addEventListener("click", () => {
+          state.lang = b.dataset.lang;
+          press("[data-lang]", "lang", state.lang);
+          renderAll();
+        }),
+      );
+      document.querySelectorAll("[data-base]").forEach((b) => b.addEventListener("click", () => setBase(b.dataset.base)));
+      document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.themePick)));
+      document.getElementById("layersToggle").addEventListener("click", () => document.getElementById("layers").classList.toggle("open"));
+      document.getElementById("lyrHistory").addEventListener("change", (e) => map?.setLayoutProperty("fires", "visibility", e.target.checked ? "visible" : "none"));
+      document.getElementById("csv").addEventListener("click", () => {
+        const rows = series();
+        const head = "year,month,harmonized,low,high,terra,aqua,snpp,noaa20,frp_mw,source,flags";
+        const body = rows.map((r) => [r.y, r.m, r.harm, r.lo ?? "", r.hi ?? "", r.terra, r.aqua, r.snpp ?? "", r.noaa20 ?? "", r.frp, r.src, r.flags].join(","));
+        const blob = new Blob([[head, ...body].join("\n")], { type: "text/csv" });
+        const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `emerge-${state.country}.csv` });
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+      document.getElementById("share").addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(location.href); } catch {}
+      });
+      init().catch((e) => {
+        document.getElementById("sub").textContent = `Data failed to load: ${e.message}`;
+      });
+    </script>
+  </body>
+</html>
