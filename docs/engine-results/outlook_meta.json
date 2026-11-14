@@ -1,0 +1,16 @@
+{
+ "issued": "2026-11-15",
+ "latest_month_used": "2026-10",
+ "index_last_published": {
+  "nino34": "2026-10",
+  "iod": "2026-8",
+  "tna": "2026-9",
+  "pdo": "2026-10",
+  "nao": "2026-10",
+  "ao": "2026-10",
+  "sam": "2026-10"
+ },
+ "rows": 233,
+ "model_years": "2003-2021 (Aqua MODIS)",
+ "trend": "frozen at 2021 (never extrapolated)"
+}

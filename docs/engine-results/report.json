@@ -1,0 +1,410 @@
+{
+ "null_thresholds": {
+  "diag": {
+   "dryness_now": 0.0402680327431615,
+   "dryness_memory": 0.049550508055075,
+   "fuel_growth": 0.0733880865272794,
+   "ocean": 0.08607411956947172,
+   "trend": 0.05
+  },
+  "0": {
+   "dryness_memory": 0.05500354431058453,
+   "fuel_growth": 0.07005086159106172,
+   "ocean": 0.08546796040539961,
+   "trend": 0.05
+  },
+  "1": {
+   "dryness_memory": 0.047626857280106724,
+   "fuel_growth": 0.07036998279112634,
+   "ocean": 0.0823700163849614,
+   "trend": 0.05
+  },
+  "3": {
+   "dryness_memory": 0.04915524024098412,
+   "fuel_growth": 0.05724616637159521,
+   "ocean": 0.088573485487773,
+   "trend": 0.05
+  }
+ },
+ "pass_rates": [
+  {
+   "lead": "diag",
+   "group": "dryness_now",
+   "units_passing_%": 74.9,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "diag",
+   "group": "dryness_memory",
+   "units_passing_%": 29.6,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "diag",
+   "group": "fuel_growth",
+   "units_passing_%": 15.0,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "diag",
+   "group": "ocean",
+   "units_passing_%": 10.3,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "diag",
+   "group": "trend",
+   "units_passing_%": 26.1,
+   "expected_by_chance_%": null
+  },
+  {
+   "lead": "0",
+   "group": "dryness_memory",
+   "units_passing_%": 32.9,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "0",
+   "group": "fuel_growth",
+   "units_passing_%": 14.0,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "0",
+   "group": "ocean",
+   "units_passing_%": 14.4,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "0",
+   "group": "trend",
+   "units_passing_%": 26.1,
+   "expected_by_chance_%": null
+  },
+  {
+   "lead": "1",
+   "group": "dryness_memory",
+   "units_passing_%": 20.8,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "1",
+   "group": "fuel_growth",
+   "units_passing_%": 14.8,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "1",
+   "group": "ocean",
+   "units_passing_%": 18.7,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "1",
+   "group": "trend",
+   "units_passing_%": 25.9,
+   "expected_by_chance_%": null
+  },
+  {
+   "lead": "3",
+   "group": "dryness_memory",
+   "units_passing_%": 12.6,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "3",
+   "group": "fuel_growth",
+   "units_passing_%": 16.9,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "3",
+   "group": "ocean",
+   "units_passing_%": 16.0,
+   "expected_by_chance_%": 5.0
+  },
+  {
+   "lead": "3",
+   "group": "trend",
+   "units_passing_%": 24.9,
+   "expected_by_chance_%": null
+  }
+ ],
+ "fuel_sign_by_aridity": [
+  {
+   "aridity": "arid <500 mm",
+   "units": "81",
+   "median_coef": "0.182",
+   "share_positive": "0.83"
+  },
+  {
+   "aridity": "semi-arid 500-1000",
+   "units": "194",
+   "median_coef": "0.101",
+   "share_positive": "0.73"
+  },
+  {
+   "aridity": "sub-humid 1000-1600",
+   "units": "132",
+   "median_coef": "0.024",
+   "share_positive": "0.58"
+  },
+  {
+   "aridity": "humid >1600",
+   "units": "92",
+   "median_coef": "0.021",
+   "share_positive": "0.54"
+  }
+ ],
+ "soil_sign_by_aridity": [
+  {
+   "aridity": "arid <500 mm",
+   "median_coef_soil": "-0.036",
+   "share_wetter_means_less_fire": "0.58"
+  },
+  {
+   "aridity": "semi-arid 500-1000",
+   "median_coef_soil": "0.01",
+   "share_wetter_means_less_fire": "0.45"
+  },
+  {
+   "aridity": "sub-humid 1000-1600",
+   "median_coef_soil": "-0.051",
+   "share_wetter_means_less_fire": "0.63"
+  },
+  {
+   "aridity": "humid >1600",
+   "median_coef_soil": "-0.022",
+   "share_wetter_means_less_fire": "0.55"
+  }
+ ],
+ "calibration": [
+  {
+   "lead": "0",
+   "set": "all units",
+   "n": 38285,
+   "brier_skill_above_normal": 0.087,
+   "reliability": [
+    {
+     "forecast": 0.12,
+     "observed": 0.12,
+     "n": 5131
+    },
+    {
+     "forecast": 0.28,
+     "observed": 0.27,
+     "n": 9681
+    },
+    {
+     "forecast": 0.38,
+     "observed": 0.38,
+     "n": 18761
+    },
+    {
+     "forecast": 0.57,
+     "observed": 0.57,
+     "n": 3760
+    },
+    {
+     "forecast": 0.79,
+     "observed": 0.71,
+     "n": 952
+    }
+   ]
+  },
+  {
+   "lead": "0",
+   "set": "units with a gated factor",
+   "n": 24529,
+   "brier_skill_above_normal": 0.136,
+   "reliability": [
+    {
+     "forecast": 0.12,
+     "observed": 0.12,
+     "n": 5131
+    },
+    {
+     "forecast": 0.27,
+     "observed": 0.25,
+     "n": 6776
+    },
+    {
+     "forecast": 0.41,
+     "observed": 0.41,
+     "n": 8062
+    },
+    {
+     "forecast": 0.58,
+     "observed": 0.58,
+     "n": 3608
+    },
+    {
+     "forecast": 0.79,
+     "observed": 0.71,
+     "n": 952
+    }
+   ]
+  },
+  {
+   "lead": "1",
+   "set": "all units",
+   "n": 38285,
+   "brier_skill_above_normal": 0.075,
+   "reliability": [
+    {
+     "forecast": 0.12,
+     "observed": 0.12,
+     "n": 4677
+    },
+    {
+     "forecast": 0.28,
+     "observed": 0.28,
+     "n": 9764
+    },
+    {
+     "forecast": 0.38,
+     "observed": 0.38,
+     "n": 19541
+    },
+    {
+     "forecast": 0.57,
+     "observed": 0.57,
+     "n": 3470
+    },
+    {
+     "forecast": 0.79,
+     "observed": 0.68,
+     "n": 833
+    }
+   ]
+  },
+  {
+   "lead": "1",
+   "set": "units with a gated factor",
+   "n": 22534,
+   "brier_skill_above_normal": 0.128,
+   "reliability": [
+    {
+     "forecast": 0.12,
+     "observed": 0.12,
+     "n": 4677
+    },
+    {
+     "forecast": 0.27,
+     "observed": 0.26,
+     "n": 6281
+    },
+    {
+     "forecast": 0.41,
+     "observed": 0.42,
+     "n": 7457
+    },
+    {
+     "forecast": 0.58,
+     "observed": 0.58,
+     "n": 3286
+    },
+    {
+     "forecast": 0.79,
+     "observed": 0.68,
+     "n": 833
+    }
+   ]
+  },
+  {
+   "lead": "3",
+   "set": "all units",
+   "n": 38285,
+   "brier_skill_above_normal": 0.068,
+   "reliability": [
+    {
+     "forecast": 0.13,
+     "observed": 0.12,
+     "n": 4294
+    },
+    {
+     "forecast": 0.28,
+     "observed": 0.28,
+     "n": 9472
+    },
+    {
+     "forecast": 0.38,
+     "observed": 0.38,
+     "n": 20591
+    },
+    {
+     "forecast": 0.57,
+     "observed": 0.57,
+     "n": 3188
+    },
+    {
+     "forecast": 0.78,
+     "observed": 0.67,
+     "n": 740
+    }
+   ]
+  },
+  {
+   "lead": "3",
+   "set": "units with a gated factor",
+   "n": 20710,
+   "brier_skill_above_normal": 0.123,
+   "reliability": [
+    {
+     "forecast": 0.13,
+     "observed": 0.12,
+     "n": 4294
+    },
+    {
+     "forecast": 0.27,
+     "observed": 0.26,
+     "n": 6017
+    },
+    {
+     "forecast": 0.41,
+     "observed": 0.43,
+     "n": 6655
+    },
+    {
+     "forecast": 0.58,
+     "observed": 0.58,
+     "n": 3004
+    },
+    {
+     "forecast": 0.78,
+     "observed": 0.67,
+     "n": 740
+    }
+   ]
+  }
+ ],
+ "forward_test": [
+  {
+   "lead": "0",
+   "n": 5164,
+   "brier_engine": 0.1952,
+   "brier_history": 0.2175,
+   "skill_vs_history": 0.103,
+   "corr_pred_obs": 0.408,
+   "observed_above_rate": 0.32
+  },
+  {
+   "lead": "1",
+   "n": 4744,
+   "brier_engine": 0.1963,
+   "brier_history": 0.2137,
+   "skill_vs_history": 0.081,
+   "corr_pred_obs": 0.375,
+   "observed_above_rate": 0.31
+  },
+  {
+   "lead": "3",
+   "n": 4360,
+   "brier_engine": 0.1974,
+   "brier_history": 0.212,
+   "skill_vs_history": 0.069,
+   "corr_pred_obs": 0.349,
+   "observed_above_rate": 0.3
+  }
+ ]
+}

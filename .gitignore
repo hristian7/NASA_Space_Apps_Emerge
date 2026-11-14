@@ -23,3 +23,13 @@ data/derived/
 # Vercel link and local env files (hold tokens), never in git
 .vercel
 .env*
+
+# Prediction engine working files (rebuild with engine/*.py); results go to docs/engine-results/
+engine/fire/
+engine/weather/
+engine/power/
+engine/idx/
+engine/*.csv
+engine/*.json
+engine/*.png
+engine/*.log

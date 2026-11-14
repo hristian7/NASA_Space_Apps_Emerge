@@ -31,6 +31,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`specs/features-moscow.md`](specs/features-moscow.md) | All features in priority order (MoSCoW), 2–3 sentences each |
 | [`specs/research-tasks.md`](specs/research-tasks.md) | Open research tasks with briefs, and what's still waiting on the team |
 | [`docs/research/forecast-options.md`](docs/research/forecast-options.md) | First pass on fire-risk forecasting options |
+| [`docs/prediction-engine.md`](docs/prediction-engine.md) | **Prediction engine:** which factors (dryness, ocean/El Niño, fuel growth, trend) drive fire where and how far ahead; validation; live outlook for Dec 2026 – Feb 2027 |
 | [`docs/research/storage-options.md`](docs/research/storage-options.md) | 15 storage options ranked, and the pick for Vercel |
 | [`docs/research/stack-options.md`](docs/research/stack-options.md) | 20 stack options ranked, and the recommended stack |
 | [`docs/research/data-sources-satellites.md`](docs/research/data-sources-satellites.md) | Data before 2000, 2026 data, other satellites, country statistics |
