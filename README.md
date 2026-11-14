@@ -4,14 +4,11 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 
 **Goal:** merge 25 years of NASA satellite fire detections from two sensors (MODIS and VIIRS) into one consistent record, and show it as a fire calendar for any area in a web app.
 
-## Status (Sat 14 Nov)
+## Status
 
-- **Interview answered:** decisions are in [`specs/interview-answers.md`](specs/interview-answers.md).
-- **Features chosen (14 Nov evening):** [`specs/features-moscow.md`](specs/features-moscow.md): all Musts and Shoulds; push alerts, combined data and the installable app removed to save time. Hosting on Vercel.
-- **Research done (14 Nov):** data sources, storage, tech stack, forecasting checks and push alerts → [`specs/research-tasks.md`](specs/research-tasks.md).
-- **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)). App: a test page and a design preview are live at https://emerge-beta-ten.vercel.app (auto-deploy on every push to `main`).
-- **Plan:** [`specs/overview.md`](specs/overview.md) (short) and [`specs/specification.md`](specs/specification.md) (build spec).
-- **Plan 2, next-day fire risk (14 Nov night):** from an interview with a Bulgarian firefighter ([`docs/research/firefighter-interview.md`](docs/research/firefighter-interview.md)). For every region in the world, the spots most likely to catch fire tomorrow, checked daily against NASA detections. [`specs/plan-2-fire-risk/overview.md`](specs/plan-2-fire-risk/overview.md) (short) and [`specs/plan-2-fire-risk/specification.md`](specs/plan-2-fire-risk/specification.md) (build spec).
+- **Live:** [Emerge](https://emerge-beta-ten.vercel.app), with real world fire data from Nov 2000 to 14 Nov 2026 `[V]`. The A3 conversion model was tested on held-out years for every country `[V]`; national reports and satellite estimates are labelled separately.
+- **In progress:** [plan 2](specs/plan-2-fire-risk/overview.md), next-day fire risk, started Sat 14 Nov at 23:00 Sofia time `[V]`.
+- **Freeze:** Sun 15 Nov at 08:00 Sofia time `[U]`.
 
 ## Read first
 
