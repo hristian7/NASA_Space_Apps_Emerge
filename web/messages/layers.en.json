@@ -4,6 +4,7 @@
   "harmonizedHistory": "Fire history",
   "harmonizedHistoryExplain": "Fire days per 0.25 degree cell for one year, from the harmonized record.",
   "harmonizedHistoryTime": "{year}, counted over the whole year. {cells} cells had fire.",
+  "harmonizedHistoryPartialTime": "{year}, counted to {date}. {cells} cells had fire.",
   "recentFires": "Recent fires",
   "recentFiresExplain": "Satellite detections from the last day or week. These rows carry no fire type, so industrial heat sources such as gas flares cannot be removed yet.",
   "recentFiresTime": "{shown} detections, from {from} to {to} UTC.",
