@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "allowed_in_training": true,
+      "day": "2023-12-31",
+      "latest_input_day": "2023-12-29",
+      "name": "training permitted"
+    },
+    {
+      "allowed_in_training": false,
+      "day": "2023-12-31",
+      "latest_input_day": "2023-12-30",
+      "name": "training cutoff violated"
+    },
+    {
+      "allowed_in_training": false,
+      "day": "2024-01-01",
+      "latest_input_day": "2023-12-30",
+      "name": "validation date in training"
+    },
+    {
+      "allowed_in_training": false,
+      "day": "2025-01-01",
+      "latest_input_day": "2024-12-30",
+      "name": "test date in training"
+    },
+    {
+      "allowed_in_training": true,
+      "day": "2023-06-01",
+      "latest_input_day": "2023-05-29",
+      "name": "training older input"
+    },
+    {
+      "allowed_in_training": false,
+      "day": "2023-06-01",
+      "latest_input_day": "2023-06-01",
+      "name": "same day input"
+    }
+  ],
+  "input_cutoff": "end of D-2 UTC",
+  "test": "2025",
+  "train": "before 2024-01-01",
+  "validation": "2024"
+}
