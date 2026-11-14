@@ -163,3 +163,23 @@ describe("the proof page", () => {
     expect(markup).toContain(translate("controls.failed"));
   });
 });
+
+it("localizes shipped validation text and preserves decimal precision in Bulgarian", async () => {
+  const proofBg = (await import("../../messages/proof.bg.json")).default;
+  const validation = (await import("../../public/data/validation.json")).default as unknown as ValidationFile;
+  const bg: typeof translate = (key, values) => {
+    const message = key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], proofBg);
+    if (typeof message !== "string") throw new Error(`No Bulgarian message for ${key}`);
+    return message.replace(/\{(\w+)\}/g, (whole, name: string) => values?.[name] === undefined ? whole : String(values[name]));
+  };
+  const markup = renderToStaticMarkup(createElement(ProofTables, { validation, t: bg }));
+  expect(markup).toContain("0,25");
+  expect(markup).toContain("0,198284");
+  expect(markup).toContain("България");
+  expect(markup).toContain("Съединени щати");
+  expect(markup).toContain(" и ");
+  expect(markup).not.toContain("Ratio of sums");
+  expect(markup).not.toContain("Harmonized numbers exist");
+  expect(markup).not.toContain("matches exactly");
+  expect(markup).not.toContain(" and ");
+});

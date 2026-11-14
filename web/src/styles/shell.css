@@ -93,7 +93,8 @@ ol {
 
 .chip[aria-pressed="true"],
 .chip[aria-expanded="true"],
-.chip[aria-current="true"] {
+.chip[aria-current="true"],
+.chip[aria-current="page"] {
   background: var(--line);
   color: var(--ink);
 }
@@ -239,14 +240,42 @@ ol {
 }
 
 .brand {
-  font: 600 20px/1 var(--font-head);
-  letter-spacing: -0.01em;
-  padding: 9px 12px;
+  --brand-mark: #f2792c;
+  display: inline-flex;
+  align-items: center;
+  font-size: 25px;
+  line-height: 1;
+  color: var(--ink);
+  padding: 0 8px 0 2px;
+}
+
+/* The viewBox is 1.0996 em tall, so 1.1em keeps the name at the brand size. */
+.brand-logo {
+  display: block;
+  height: 1.1em;
+  width: auto;
 }
 
 .top .spacer {
   flex: 1;
   min-width: 0;
+}
+
+/* The forecast view scrolls as a page, so its bar sits in the flow above it
+   instead of floating over a map. */
+.top.top-flow {
+  position: relative;
+  top: 0;
+  left: auto;
+  right: auto;
+  padding: 16px;
+  background: var(--space);
+  border-bottom: 1px solid var(--line);
+}
+
+.view-tabs .chip {
+  text-decoration: none;
+  padding-inline: 16px;
 }
 
 .popover {
@@ -476,8 +505,8 @@ ol {
   }
 
   .brand {
-    font-size: 17px;
-    padding: 8px 10px;
+    font-size: 19px;
+    padding: 0 6px 0 2px;
   }
 
   .popover {
@@ -590,5 +619,35 @@ ol {
 @media (prefers-reduced-motion: reduce) {
   .report {
     transition: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Two rows on a phone: name, menus and language first, then the
+     History / Forecast switch beside the page links. */
+  .top .lang {
+    order: 1;
+  }
+
+  .top .view-tabs {
+    order: 2;
+    flex: 1 1 auto;
+  }
+
+  .top .view-tabs .chip {
+    flex: 1;
+    text-align: center;
+    padding-inline: 8px;
+  }
+
+  .top .top-links {
+    order: 3;
+  }
+
+  .top.top-flow {
+    top: 0;
+    left: auto;
+    right: auto;
+    padding: 10px;
   }
 }

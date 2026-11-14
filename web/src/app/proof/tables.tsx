@@ -8,6 +8,8 @@
  * no React tree around it.
  */
 
+import proofEn from "../../../messages/proof.en.json";
+
 import type {
   AgreementResult,
   ControlTotal,
@@ -26,11 +28,12 @@ export type Translate = (
 export interface ProofTablesProps {
   validation: ValidationFile;
   t: Translate;
+  locale?: string;
 }
 
 /** A number exactly as the file holds it, or the "not measured yet" words. */
 function figure(value: number | null | undefined, t: Translate): string {
-  return value === null || value === undefined ? t("empty") : String(value);
+  return value === null || value === undefined ? t("empty") : String(value).replace(".", t("decimalSeparator"));
 }
 
 function years(
@@ -55,6 +58,13 @@ function scopeWord(scope: string, t: Translate): string {
   return scope;
 }
 
+
+function dataWord(value: string | null | undefined, t: Translate): string {
+  if (value == null) return t("empty");
+  const match = Object.entries(proofEn.dataText).find(([, source]) => source === value);
+  return match ? t(`dataText.${match[0]}`) : value;
+}
+
 /**
  * The file carries more than the frozen shape in web/src/types declares: which
  * country and which hold-out a row belongs to, and a note about the method.
@@ -63,7 +73,7 @@ function scopeWord(scope: string, t: Translate): string {
  */
 function extra(row: unknown, key: string): string | null {
   const value = (row as Record<string, unknown>)[key];
-  if (typeof value === "string") return value.replace(/_/g, " ");
+  if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
   return null;
 }
@@ -76,10 +86,10 @@ function flag(passed: boolean | null, t: Translate): string {
 function Method({ validation, t }: ProofTablesProps) {
   const method = validation.method;
   const rows: [string, string][] = [
-    [t("method.gridDeg"), String(method.grid_deg)],
-    [t("method.timeStep"), method.time_step],
+    [t("method.gridDeg"), figure(method.grid_deg, t)],
+    [t("method.timeStep"), dataWord(method.time_step, t)],
     [t("method.model"), method.model ?? t("empty")],
-    [t("method.reference"), method.reference],
+    [t("method.reference"), dataWord(method.reference, t)],
     [t("method.trainYears"), years(method.train_years, t)],
     [t("method.testYears"), years(method.test_years, t)],
     [
@@ -88,21 +98,21 @@ function Method({ validation, t }: ProofTablesProps) {
         ? t("empty")
         : t(method.pre_registered ? "yes" : "no"),
     ],
-    [t("method.leakageCheck"), method.leakage_check ?? t("empty")],
+    [t("method.leakageCheck"), dataWord(method.leakage_check, t)],
   ];
   const modelNote = extra(method, "model_note");
   const testedOn = extra(method, "tested_countries_note");
   const fitCountries = extra(method, "world_fit_countries");
   const fitMonths = extra(method, "fit_months");
   if (fitCountries !== null) {
-    rows.push([t("method.worldFit"), t("method.worldFitValue", { countries: fitCountries, months: fitMonths ?? "" })]);
+    rows.push([t("method.worldFit"), t("method.worldFitValue", { countries: fitCountries, months: (fitMonths ?? "").replace(" to ", t("dateRangeJoiner")) })]);
   }
 
   return (
     <section>
       <h2>{t("method.heading")}</h2>
-      {modelNote === null ? null : <p>{modelNote}</p>}
-      {testedOn === null ? null : <p>{testedOn}</p>}
+      {modelNote === null ? null : <p>{dataWord(modelNote, t)}</p>}
+      {testedOn === null ? null : <p>{dataWord(testedOn, t)}</p>}
       <table>
         <tbody>
           {rows.map(([label, value]) => (
@@ -141,8 +151,8 @@ function Holdout({ rows, t }: { rows: HoldoutResult[]; t: Translate }) {
         </thead>
         <tbody>
           {rows.map((row, at) => (
-            <tr key={`${row.direction}-${row.unit}-${row.scope}-${at}`}>
-              <td>{extra(row, "country") ?? t("empty")}</td>
+            <tr key={`${row.direction}-${row.unit}-${dataWord(row.scope, t)}-${at}`}>
+              <td>{dataWord(extra(row, "country"), t)}</td>
               <td>{extra(row, "test") ?? t("empty")}</td>
               <td>{t(`holdout.${row.direction}`)}</td>
               <td>{unitWord(row.unit, t)}</td>
@@ -182,9 +192,9 @@ function Slices({ rows, t }: { rows: SliceResult[]; t: Translate }) {
           </thead>
           <tbody>
             {rows.map((row, at) => (
-              <tr key={`${row.slice}-${row.key}-${row.unit}-${at}`}>
-                <td>{row.slice}</td>
-                <td>{row.key}</td>
+              <tr key={`${dataWord(row.slice, t)}-${dataWord(row.key, t)}-${row.unit}-${at}`}>
+                <td>{dataWord(row.slice, t)}</td>
+                <td>{dataWord(row.key, t)}</td>
                 <td>{unitWord(row.unit, t)}</td>
                 <td className="num">{figure(row.n, t)}</td>
                 <td className="num">{figure(row.nrmse, t)}</td>
@@ -218,8 +228,8 @@ function Agreement({ rows, t }: { rows: AgreementResult[]; t: Translate }) {
           </thead>
           <tbody>
             {rows.map((row, at) => (
-              <tr key={`${row.pair}-${row.unit}-${at}`}>
-                <td>{row.pair}</td>
+              <tr key={`${row.pair.replace(" vs ", t("versusJoiner"))}-${row.unit}-${at}`}>
+                <td>{row.pair.replace(" vs ", t("versusJoiner"))}</td>
                 <td>{unitWord(row.unit, t)}</td>
                 <td>{years(row.years, t)}</td>
                 <td className="num">{figure(row.n, t)}</td>
@@ -254,13 +264,13 @@ function Ratios({ rows, t }: { rows: PublishedRatio[]; t: Translate }) {
           </thead>
           <tbody>
             {rows.map((row, at) => (
-              <tr key={`${row.scope}-${row.unit}-${at}`}>
-                <td>{row.scope}</td>
+              <tr key={`${dataWord(row.scope, t)}-${row.unit}-${at}`}>
+                <td>{dataWord(row.scope, t)}</td>
                 <td>{unitWord(row.unit, t)}</td>
                 <td className="num">{figure(row.ours, t)}</td>
                 <td className="num">{figure(row.published, t)}</td>
                 <td>{row.published_source ?? t("empty")}</td>
-                <td>{row.note ?? t("empty")}</td>
+                <td>{dataWord(row.note, t)}</td>
               </tr>
             ))}
           </tbody>
@@ -291,8 +301,8 @@ function Coverage({ rows, t }: { rows: RangeCoverage[]; t: Translate }) {
           </thead>
           <tbody>
             {rows.map((row, at) => (
-              <tr key={`${row.level_pct}-${row.unit}-${row.scope}-${at}`}>
-                <td>{extra(row, "country") ?? t("empty")}</td>
+              <tr key={`${row.level_pct}-${row.unit}-${dataWord(row.scope, t)}-${at}`}>
+                <td>{dataWord(extra(row, "country"), t)}</td>
                 <td className="num">{String(row.level_pct)}</td>
                 <td>{unitWord(row.unit, t)}</td>
                 <td>{scopeWord(row.scope, t)}</td>
@@ -332,7 +342,7 @@ function ChanceCheck({ validation, t }: ProofTablesProps) {
             {bins.map((bin, at) => (
               <tr key={`${bin.bin[0]}-${bin.bin[1]}-${at}`}>
                 <td className="num">
-                  {t("chance.binRange", { low: bin.bin[0], high: bin.bin[1] })}
+                  {t("chance.binRange", { low: figure(bin.bin[0], t), high: figure(bin.bin[1], t) })}
                 </td>
                 <td className="num">{figure(bin.predicted, t)}</td>
                 <td className="num">{figure(bin.observed, t)}</td>
@@ -364,10 +374,10 @@ function Controls({ rows, t }: { rows: ControlTotal[]; t: Translate }) {
           </thead>
           <tbody>
             {rows.map((row, at) => (
-              <tr key={`${row.check}-${at}`}>
-                <td>{row.check}</td>
+              <tr key={`${dataWord(row.check, t)}-${at}`}>
+                <td>{dataWord(row.check, t)}</td>
                 <td>{flag(row.passed, t)}</td>
-                <td>{row.detail ?? t("empty")}</td>
+                <td>{dataWord(row.detail, t)}</td>
               </tr>
             ))}
           </tbody>
@@ -411,7 +421,7 @@ function WorldScope({ validation, t }: ProofTablesProps) {
   return (
     <section>
       <h2>{t("world.heading")}</h2>
-      {note === null ? null : <p>{note}</p>}
+      {note === null ? null : <p>{dataWord(note, t)}</p>}
 
       {pooled.length === 0 ? null : (
         <table>
@@ -522,7 +532,7 @@ function Verdict({ validation, t }: ProofTablesProps) {
     <section data-testid="proof-verdict">
       <h2>{t("verdict.heading")}</h2>
       <ul>
-        <li>{t("verdict.world", { errors: worldErrors.join(" and "), tests: pooled.length })}</li>
+        <li>{t("verdict.world", { errors: worldErrors.join(t("listJoiner")), tests: pooled.length })}</li>
         {largeError === null ? null : (
           <li>{t("verdict.large", { error: largeError })}</li>
         )}
@@ -566,7 +576,7 @@ export default function ProofTables({ validation, t }: ProofTablesProps) {
         ) : (
           <ul>
             {validation.limits.map((limit) => (
-              <li key={limit.id}>{limit.text}</li>
+              <li key={limit.id}>{dataWord(limit.text, t)}</li>
             ))}
           </ul>
         )}

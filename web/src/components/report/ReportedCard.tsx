@@ -1,5 +1,7 @@
 "use client";
 
+import reportEn from "../../../messages/report.en.json";
+
 import { useTranslations } from "next-intl";
 import type { ReportedFile } from "@/types/data";
 import type { Scope, YearTotal } from "./types";
@@ -58,6 +60,12 @@ export default function ReportedCard({
         <p className={styles.sub}>{t("reported.countryContext")}</p>
       ) : null}
 
+      {!views.some((view) => view.kind === "national_report") ? (
+        <p className={styles.cardLine}>{t("reported.none")}</p>
+      ) : null}
+
+      <ReportedChart views={views} ours={ours} t={t} />
+
       {views.length === 0 ? (
         <p className={styles.cardLine}>{t("reported.noYears")}</p>
       ) : (
@@ -84,6 +92,60 @@ export default function ReportedCard({
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
 
+/**
+ * Paired bars per year: the national count of fires and our satellite fire
+ * days. They measure different things, so each is scaled to its own largest
+ * year and only the shapes are meant to be compared.
+ */
+function ReportedChart({
+  views,
+  ours,
+  t,
+}: {
+  views: ReturnType<typeof seriesViews>;
+  ours: YearTotal[];
+  t: Translate;
+}) {
+  const national = views.find((view) => view.kind === "national_report");
+  if (national === undefined) return null;
+  const detected = new Map(ours.map((total) => [total.y, total.value ?? 0]));
+  const pairs = national.years
+    .filter((row) => row.fires !== null && detected.has(row.y))
+    .map((row) => ({ y: row.y, reported: row.fires ?? 0, ours: detected.get(row.y) ?? 0 }))
+    .sort((a, b) => a.y - b.y);
+  if (pairs.length < 2) return null;
+  const topReported = Math.max(1, ...pairs.map((pair) => pair.reported));
+  const topOurs = Math.max(1, ...pairs.map((pair) => pair.ours));
+  const step = 100 / pairs.length;
+  const bar = step * 0.34;
+  return (
+    <figure className="rp-paired">
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label={t("reported.chartLabel")}>
+        {pairs.map((pair, index) => {
+          const x = index * step + step * 0.12;
+          const hr = (pair.reported / topReported) * 36;
+          const ho = (pair.ours / topOurs) * 36;
+          return (
+            <g key={pair.y}>
+              <rect className="rp-paired-reported" x={x} y={40 - hr} width={bar} height={hr} />
+              <rect className="rp-paired-ours" x={x + bar + step * 0.06} y={40 - ho} width={bar} height={ho} />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="rp-paired-axis num">
+        <span>{pairs[0].y}</span>
+        <span>{pairs[pairs.length - 1].y}</span>
+      </div>
+      <figcaption className="rp-paired-key">
+        <span><i className="rp-paired-reported" aria-hidden="true" />{t("reported.chartReported")}</span>
+        <span><i className="rp-paired-ours" aria-hidden="true" />{t("reported.chartOurs")}</span>
+        <span className="rp-paired-note">{t("reported.chartNote")}</span>
+      </figcaption>
+    </figure>
+  );
+}
+
 /** One published series: what it is, who made it, and its years. */
 function Series({
   view,
@@ -102,7 +164,7 @@ function Series({
       <h3 className={styles.heading}>
         {national ? t("reported.kindNational") : t("reported.kindEstimate")}
       </h3>
-      <p className={styles.sub}>{view.name}</p>
+      <p className={styles.sub}>{reportedText(view.name, t)}</p>
 
       {latest === null ? null : (
         <p className={styles.cardLine}>
@@ -163,7 +225,7 @@ function Series({
         </div>
       )}
 
-      {view.note === null ? null : <p className={styles.sub}>{view.note}</p>}
+      {view.note === null ? null : <p className={styles.sub}>{reportedText(view.note, t)}</p>}
       <p className={styles.sub}>
         {view.url === null ? null : (
           <a href={view.url} target="_blank" rel="noreferrer">
@@ -233,4 +295,9 @@ function OurDetections({
       )}
     </div>
   );
+}
+
+function reportedText(value: string, t: Translate): string {
+  const match = Object.entries(reportEn.report.reported.dataText).find(([, source]) => source === value);
+  return match ? t(`reported.dataText.${match[0]}`) : value;
 }

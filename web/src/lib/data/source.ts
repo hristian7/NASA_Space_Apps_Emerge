@@ -53,6 +53,8 @@ export function httpFetcher(): Fetcher {
     } catch (cause) {
       throw new DataError('fetch', url, `could not reach ${url}: ${String(cause)}`);
     }
+    // An unread error body keeps the connection open, so it is cancelled.
+    if (!res.ok) void res.body?.cancel().catch(() => {});
     if (res.status === 404 || res.status === 410) return null;
     if (!res.ok) {
       throw new DataError('fetch', url, `${url} answered ${res.status}`, res.status);

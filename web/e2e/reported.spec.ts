@@ -30,6 +30,8 @@ test("Bulgaria shows both kinds, labelled apart", async ({ page }) => {
   const card = page.locator('[aria-labelledby="report-reported"]');
   await expect(card).toBeVisible();
 
+  await expect(card).not.toContainText("No official national reported numbers available.");
+
   const reported = card.locator('[data-kind="national_report"]').first();
   await expect(reported).toContainText("Reported by national authorities");
   await expect(reported).toContainText(national?.source.name.slice(0, 40) ?? "");
@@ -64,8 +66,19 @@ test("a country with an estimate only never calls it a report", async ({ page })
   const card = page.locator('[aria-labelledby="report-reported"]');
   await expect(card).toBeVisible();
   await expect(card.locator('[data-kind="national_report"]')).toHaveCount(0);
+  const missing = card.getByText("No official national reported numbers available.", { exact: true });
+  await expect(missing).toBeVisible();
+  expect(await missing.evaluate((node) => Boolean(node.compareDocumentPosition(document.querySelector('[data-kind="satellite_estimate"]')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   await expect(card.locator('[data-kind="satellite_estimate"]').first()).toContainText(
     "Estimated from satellite mapping",
   );
   await expect(card).toContainText(series[0].source.name.slice(0, 30));
+});
+
+
+test("Brazil explains missing national numbers in Bulgarian", async ({ page, context }) => {
+  await context.addCookies([{ name: "emerge-locale", value: "bg", url: "http://localhost:4346" }]);
+  await openReport(page, "/?sel=c:BRA");
+  const card = page.locator('[aria-labelledby="report-reported"]');
+  await expect(card.getByText("Няма налични официално докладвани национални данни.", { exact: true })).toBeVisible();
 });

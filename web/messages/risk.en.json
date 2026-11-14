@@ -1,4 +1,7 @@
 {
+  "weekTitle": "Week",
+  "weekNotice": "Fire weather only, less certain, not scored yet.",
+  "weekFwi": "NASA fire-weather index: {value}",
   "_review": "English source text. Forecast values are estimates [U].",
   "title": "Risk outlook (unofficial)",
   "back": "History map",
@@ -14,7 +17,7 @@
     "USA": "United States"
   },
   "example": "Example data",
-  "exampleNote": "Hand-made values [U], not predictions.",
+  "exampleNote": "Hand-made values, not predictions.",
   "loading": "Loading risk outlook…",
   "failed": "Risk data could not be loaded. Try again later; follow official services.",
   "noForecast": "no forecast here",
@@ -59,9 +62,9 @@
   "valid": "Valid for {date}",
   "made": "Made {date}",
   "weatherRun": "Fire-weather run: {date}",
-  "estimates": "Ranks, levels, chances and point locations are research estimates [U].",
+  "estimates": "Ranks, levels, chances and point locations are research estimates.",
   "map": "Map of ranked risk spots",
-  "mapHint": "Tap a region label or the map to choose a region. Points are sized by level [U].",
+  "mapHint": "Tap a region label or the map to choose a region. Points are sized by level.",
   "mapFailed": "Map unavailable. Use the region picker above.",
   "tilesUnavailable": "Base imagery unavailable. Ranked points and the region picker still work.",
   "chooseRegion": "Choose {name}",
@@ -70,5 +73,12 @@
   "noRegion": "No regions are available yet.",
   "sources": "Sources",
   "outlook": "Open risk outlook",
-  "mapSpotMissing": "Spot {rank}, no forecast here"
+  "mapSpotMissing": "Spot {rank}, no forecast here",
+  "vegetation": "Vegetation selection",
+  "forestSelection": "Forest and wildland",
+  "allSelection": "All vegetation fires",
+  "emptyForest": "No forest or wildland spots are available in this region for this date.",
+  "showAll": "Show all vegetation fires",
+  "stale": "Forecast made for {date}; not updated since",
+  "hereDated": "Risk outlook here"
 }

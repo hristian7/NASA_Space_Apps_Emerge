@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type { FeatureCollection, Point } from "geojson";
 import type { TerraDraw } from "terra-draw";
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
 import { LAYERS, layerUrl } from "@/config/layers";
-import { CELL_DEG } from "@/lib/data/cell";
 import {
   countryBounds,
   emptyFeatures,
@@ -18,18 +18,10 @@ import {
 } from "@/lib/ui/geo";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
 import type { CountryIndexEntry } from "@/types/data";
-import {
-  historyRampTokens,
-} from "@/lib/layers/history";
-import {
-  aggregateCells,
-  mergeFactor,
-  rgbaFrom,
-  recentRadiusPx,
-  type HistoryCell,
-  type RecentPoint,
-} from "@/lib/layers/overlay";
+import { historyRampTokens } from "@/lib/layers/history";
+import type { HistoryCell, RecentPoint } from "@/lib/layers/overlay";
 import { useWindLayer } from "./wind-layer";
+import { useTemperatureLayer } from "./temperature-field";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -44,7 +36,11 @@ type Props = {
   /** Recent detections. Empty when the layer is off. */
   recentPoints: RecentPoint[];
   rasterDates: Record<string, string>;
+  /** The country drawn with an outline: the chosen country, or the one a chosen point lies in. */
+  outlineIso3: string | null;
   onPickPoint: (lat: number, lon: number) => void;
+  /** The country under a clicked point, or null at sea. */
+  onPointCountry: (iso3: string | null) => void;
   onPickRecent: (lat: number, lon: number) => void;
   onDrawArea: (ring: [lon: number, lat: number][]) => void;
   onDrawingEnd: () => void;
@@ -55,6 +51,49 @@ const selectionSource = "emerge-selection";
 const fillLayer = "emerge-selection-fill";
 const lineLayer = "emerge-selection-line";
 const pointLayer = "emerge-selection-point";
+const countrySource = "emerge-countries";
+const countryHitLayer = "emerge-countries-hit";
+const countryBorderLayer = "emerge-countries-border";
+const countryChosenFill = "emerge-country-chosen-fill";
+const countryChosenLine = "emerge-country-chosen-line";
+const countriesUrl = "/geo/countries.json";
+const historySource = "emerge-history";
+const historyHeat = "emerge-history-heat";
+const recentSource = "emerge-recent";
+const recentLayer = "emerge-recent-dots";
+
+type FirePoints = FeatureCollection<Point, { k: number; d: number }>;
+type RecentPoints = FeatureCollection<Point, { frp: number; conf: number }>;
+const noPoints = { type: "FeatureCollection", features: [] } as FeatureCollection<Point, never>;
+
+/** One point per cell, built once per loaded year. */
+const pointsByCells = new WeakMap<HistoryCell[], FirePoints>();
+function firePoints(cells: HistoryCell[]): FirePoints {
+  let built = pointsByCells.get(cells);
+  if (built === undefined) {
+    built = {
+      type: "FeatureCollection",
+      features: cells.map((cell) => ({
+        type: "Feature",
+        properties: { k: cell.klass, d: cell.fireDays },
+        geometry: { type: "Point", coordinates: [cell.lon, cell.lat] },
+      })),
+    };
+    pointsByCells.set(cells, built);
+  }
+  return built;
+}
+
+function recentFeatures(points: RecentPoint[]): RecentPoints {
+  return {
+    type: "FeatureCollection",
+    features: points.map((point) => ({
+      type: "Feature",
+      properties: { frp: point.frp, conf: point.conf },
+      geometry: { type: "Point", coordinates: point.position },
+    })),
+  };
+}
 
 
 function rasterStyle(id: string): StyleSpecification | string {
@@ -75,7 +114,13 @@ function rasterStyle(id: string): StyleSpecification | string {
     },
     layers: [
       { id: "space", type: "background", paint: { "background-color": "rgb(10,10,12)" } },
-      { id: "base", type: "raster", source: "base" },
+      // Greyed and dimmed so the data layers carry the colour.
+      {
+        id: "base",
+        type: "raster",
+        source: "base",
+        paint: { "raster-saturation": -0.82, "raster-brightness-max": 0.62, "raster-contrast": 0.05 },
+      },
     ],
   } satisfies StyleSpecification;
 }
@@ -135,7 +180,9 @@ export default function MapView({
   historyCells,
   recentPoints,
   rasterDates,
+  outlineIso3,
   onPickPoint,
+  onPointCountry,
   onPickRecent,
   onDrawArea,
   onDrawingEnd,
@@ -152,20 +199,28 @@ export default function MapView({
   boxes.current = countryBoxes;
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
-  // Only how many cells are merged into one square, not the zoom itself, so a
-  // small camera move does not rebuild the layer.
-  const [factor, setFactor] = useState(8);
-  const overlay = useRef<{ setProps: (props: { layers: unknown[] }) => void } | null>(null);
+  const fireData = useRef<{ history: FirePoints | typeof noPoints; recent: RecentPoints | typeof noPoints }>({
+    history: noPoints,
+    recent: noPoints,
+  });
   const pickRecent = useRef(onPickRecent);
   pickRecent.current = onPickRecent;
   const rasters = useRef(rasterDates);
   rasters.current = rasterDates;
   const paintDangerRef = useRef<(() => void) | null>(null);
+  const paintCountriesRef = useRef<(() => void) | null>(null);
+  const measureRef = useRef<(() => void) | null>(null);
+  const paintFireRef = useRef<(() => void) | null>(null);
   const rasterKey = JSON.stringify(rasterDates);
   useWindLayer(map, ready, Boolean(rasterDates.wind));
+  useTemperatureLayer(map, ready);
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
+  const pointCountry = useRef(onPointCountry);
+  pointCountry.current = onPointCountry;
+  const outline = useRef(outlineIso3);
+  outline.current = outlineIso3;
   const area = useRef(onDrawArea);
   const drawEnd = useRef(onDrawingEnd);
   const isDrawing = useRef(drawing);
@@ -203,14 +258,14 @@ export default function MapView({
         });
         map.current = instance;
 
-        instance.addControl(
-          new maplibregl.AttributionControl({ compact: false }),
-          "bottom-right",
-        );
-        instance.addControl(
-          new maplibregl.NavigationControl({ showCompass: false }),
-          "bottom-left",
-        );
+        // Credits are listed once, in the information menu of the top bar.
+        // Zoom buttons live in the shell's tool column, which asks by event.
+        const zoomBy = (event: Event) => {
+          const step = (event as CustomEvent<number>).detail;
+          if (step > 0) instance.zoomIn();
+          else instance.zoomOut();
+        };
+        window.addEventListener("emerge-zoom", zoomBy);
 
         instance.on("error", (event) => {
           // A missing tile must not blank the page; the credit bar and the
@@ -260,19 +315,151 @@ export default function MapView({
           source?.setData(selectionFeatures(current.current));
         };
 
+        const paintCountries = () => {
+          if (instance.getSource(countrySource) === undefined) {
+            instance.addSource(countrySource, { type: "geojson", data: countriesUrl });
+          }
+          const stroke = tokenColor("--outline");
+          const accent = tokenColor("--accent");
+          const chosen = outline.current ?? "";
+          const before = instance.getLayer(fillLayer) ? fillLayer : undefined;
+          if (instance.getLayer(countryHitLayer) === undefined) {
+            // Invisible, but it is what a click is tested against.
+            instance.addLayer(
+              { id: countryHitLayer, type: "fill", source: countrySource, paint: { "fill-color": "#000", "fill-opacity": 0 } },
+              before,
+            );
+          }
+          if (instance.getLayer(countryBorderLayer) === undefined) {
+            instance.addLayer(
+              {
+                id: countryBorderLayer,
+                type: "line",
+                source: countrySource,
+                paint: { "line-color": "rgba(255,255,255,0.16)", "line-width": 0.6 },
+              },
+              before,
+            );
+          }
+          if (instance.getLayer(countryChosenFill) === undefined) {
+            instance.addLayer({
+              id: countryChosenFill,
+              type: "fill",
+              source: countrySource,
+              filter: ["==", ["get", "iso3"], chosen],
+              paint: { "fill-color": accent, "fill-opacity": 0.07 },
+            });
+          }
+          if (instance.getLayer(countryChosenLine) === undefined) {
+            instance.addLayer({
+              id: countryChosenLine,
+              type: "line",
+              source: countrySource,
+              filter: ["==", ["get", "iso3"], chosen],
+              paint: { "line-color": stroke, "line-width": 1.8 },
+            });
+          }
+        };
+        paintCountriesRef.current = paintCountries;
+
         // A new style wipes every source, so the tiles are put back the same
         // way the selection is.
+        // Fire history as a glow weighted by fire days when far away, fading
+        // into one soft dot per 0.25 degree cell close up; recent detections
+        // as small dots above it. Drawn by the map itself, so they move with
+        // it and sit under the country outline.
+        const paintFire = () => {
+          const ramp = historyRampTokens.map((token) => tokenColor(token));
+          const below = instance.getLayer(countryBorderLayer) ? countryBorderLayer : undefined;
+          if (instance.getSource(historySource) === undefined) {
+            instance.addSource(historySource, { type: "geojson", data: fireData.current.history, buffer: 32 });
+          }
+          if (instance.getLayer(historyHeat) === undefined) {
+            instance.addLayer(
+              {
+                id: historyHeat,
+                type: "heatmap",
+                source: historySource,
+                paint: {
+                  "heatmap-weight": ["interpolate", ["linear"], ["get", "d"], 1, 0.25, 5, 0.45, 25, 0.7, 100, 0.95, 300, 1],
+                  // Overlapping glows add up to about 0.28 x (radius / cell spacing) squared;
+                  // from zoom 5 on that ratio is fixed, and this keeps a cell's
+                  // colour near its own fire-day level.
+                  "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.25, 2, 0.45, 3, 0.85, 5, 0.9, 9, 0.9],
+                  // Grows with the cells' spacing on screen, so neighbouring
+                  // cells blend into one surface at every zoom.
+                  "heatmap-radius": ["interpolate", ["exponential", 2], ["zoom"], 0, 2, 3, 5.5, 5, 23, 7, 92, 9, 368, 11, 1472],
+                  "heatmap-color": [
+                    "interpolate",
+                    ["linear"],
+                    ["heatmap-density"],
+                    0, "rgba(0,0,0,0)",
+                    0.06, ramp[0].replace("rgb(", "rgba(").replace(")", ",0.4)"),
+                    0.18, ramp[0],
+                    0.38, ramp[1],
+                    0.62, ramp[2],
+                    0.9, ramp[3],
+                  ],
+                  "heatmap-opacity": 0.86,
+                },
+              },
+              below,
+            );
+          }
+          if (instance.getSource(recentSource) === undefined) {
+            instance.addSource(recentSource, { type: "geojson", data: fireData.current.recent });
+          }
+          if (instance.getLayer(recentLayer) === undefined) {
+            instance.addLayer({
+              id: recentLayer,
+              type: "circle",
+              source: recentSource,
+              paint: {
+                "circle-radius": ["step", ["get", "frp"], 2.8, 20, 4, 100, 5.5],
+                "circle-color": ["case", ["==", ["get", "conf"], 1], ramp[3], tokenColor("--accent")],
+                "circle-opacity": 0.92,
+                "circle-stroke-width": 0.6,
+                "circle-stroke-color": "rgba(0,0,0,0.5)",
+              },
+            });
+          }
+        };
+        paintFireRef.current = paintFire;
+
+        // Only a layer whose tiles changed is rebuilt; the others keep their
+        // loaded tiles, so switching one layer does not flash the rest.
+        const shownTiles = new Map<string, string>();
         const paintDanger = () => {
           for (const definition of LAYERS.filter((entry) => entry.kind === "raster_tiles")) {
             const source = `emerge-raster-${definition.id}`;
             const layer = `${source}-tiles`;
-            if (instance.getLayer(layer)) instance.removeLayer(layer);
-            if (instance.getSource(source)) instance.removeSource(source);
             const date = rasters.current[definition.id];
-            const tiles = date && layerUrl(definition.source, date);
+            const tiles = date && definition.source.kind === "tile_template" ? layerUrl(definition.source, date) : "";
+            const present = instance.getSource(source) !== undefined;
+            if (present && shownTiles.get(definition.id) === tiles) continue;
+            if (instance.getLayer(layer)) instance.removeLayer(layer);
+            if (present) instance.removeSource(source);
+            shownTiles.delete(definition.id);
             if (!tiles || definition.source.kind !== "tile_template") continue;
-            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit });
-            instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, instance.getLayer(fillLayer) ? fillLayer : undefined);
+            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.kind === "tile_template" && definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
+            const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
+            // Smooth resampling for every driver layer. Air temperature comes in
+            // hard-edged satellite swaths, so it is also fainter and flatter.
+            const soft = definition.id === "air-temperature";
+            instance.addLayer(
+              {
+                id: layer,
+                type: "raster",
+                source,
+                paint: {
+                  "raster-opacity": soft ? 0.3 : 0.42,
+                  "raster-resampling": "linear",
+                  ...(soft ? { "raster-contrast": -0.25, "raster-saturation": -0.15 } : {}),
+                },
+              },
+              below,
+            );
+            shownTiles.set(definition.id, tiles);
           }
         };
         paintDangerRef.current = paintDanger;
@@ -280,12 +467,15 @@ export default function MapView({
         // The report panel covers part of the map, so the camera is told how
         // much room it really has. A phone's sheet changes height, hence the
         // observer rather than a one-off measurement.
+        // Setting padding stops any camera move under way, so it is applied
+        // only when the free space really changed.
+        let lastPadding = "";
         const applyPadding = () => {
           const panel = document.getElementById("report");
           const box = panel?.getBoundingClientRect();
           const narrow = window.innerWidth < 768;
           const topBar = document.querySelector(".top")?.getBoundingClientRect();
-          instance.setPadding(
+          const padding =
             narrow
               ? {
                   top: Math.round((topBar?.bottom ?? 96) + 8),
@@ -298,8 +488,11 @@ export default function MapView({
                   right: box ? Math.max(0, window.innerWidth - box.left) : 16,
                   bottom: 24,
                   left: 16,
-                },
-          );
+                };
+          const key = JSON.stringify(padding);
+          if (key === lastPadding) return;
+          lastPadding = key;
+          instance.setPadding(padding);
         };
 
         /**
@@ -329,9 +522,15 @@ export default function MapView({
         ].filter((node): node is HTMLElement => node !== null);
         const observer = new ResizeObserver(() => measure());
         for (const node of watched) observer.observe(node);
+        measureRef.current = () => {
+          const panel = document.getElementById("report");
+          if (panel !== null) observer.observe(panel);
+          measure();
+        };
         window.addEventListener("resize", measure);
         measure();
         cleanUp.current = () => {
+          window.removeEventListener("emerge-zoom", zoomBy);
           observer.disconnect();
           window.removeEventListener("resize", measure);
           document.documentElement.style.removeProperty("--credit-h");
@@ -357,28 +556,43 @@ export default function MapView({
           instance.setProjection({ type: projection });
           measure();
           paintSelection();
+          paintCountries();
+          paintFire();
           paintDanger();
           // A selection read from the address bar is already set by now.
           frameSelection(instance, current.current, boxes.current);
-          setFactor(mergeFactor(instance.getZoom()));
           setReady(true);
         });
 
         // A new style drops every source and layer, so they are put back.
         instance.on("style.load", () => {
+          shownTiles.clear();
           instance.setProjection({ type: projection });
           paintSelection();
+          paintCountries();
+          paintFire();
           paintDanger();
-        });
-
-        instance.on("zoomend", () => {
-          setFactor(mergeFactor(instance.getZoom()));
         });
 
         instance.on("click", (event) => {
           if (isDrawing.current || closingClick.current) return;
+          const detection = instance.getLayer(recentLayer)
+            ? instance.queryRenderedFeatures(event.point, { layers: [recentLayer] })[0]
+            : undefined;
+          if (detection?.geometry.type === "Point") {
+            const [lon, lat] = detection.geometry.coordinates as [number, number];
+            pickRecent.current(lat, lon);
+            return;
+          }
+          const hit = instance.getLayer(countryHitLayer)
+            ? instance.queryRenderedFeatures(event.point, { layers: [countryHitLayer] })
+            : [];
+          const iso3 = hit[0]?.properties?.iso3;
           pick.current(event.lngLat.lat, event.lngLat.lng);
+          pointCountry.current(typeof iso3 === "string" && iso3 !== "" ? iso3 : null);
         });
+
+        instance.getCanvas().style.cursor = "crosshair";
       } catch (error) {
         console.warn("map", error);
         if (!cancelled) setFailed(true);
@@ -417,10 +631,17 @@ export default function MapView({
     if (instance === null) return;
     const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
     source?.setData(selectionFeatures(selection));
+    const chosen = outlineIso3 ?? "";
+    for (const layer of [countryChosenFill, countryChosenLine]) {
+      if (instance.getLayer(layer)) instance.setFilter(layer, ["==", ["get", "iso3"], chosen]);
+    }
+    // The report panel opens or closes with the selection, so the free space
+    // is measured before the camera moves into it.
+    measureRef.current?.();
     // The country boxes arrive with their file, which can be after a link
     // naming a country has already been read, so this runs again then.
     frameSelection(instance, selection, countryBoxes);
-  }, [selection, countryBoxes]);
+  }, [selection, countryBoxes, outlineIso3]);
 
   // Fire danger: the day changed, so the old tiles go and the new ones come.
   useEffect(() => {
@@ -429,82 +650,22 @@ export default function MapView({
     paintDangerRef.current?.();
   }, [rasterKey, ready]);
 
-  // What the history layer actually draws at this zoom. Merging is done here
-  // rather than in the loader, because only the map knows how close the
-  // camera is.
-  const drawnCells = useMemo(
-    () => aggregateCells(historyCells, factor, CELL_DEG),
-    [historyCells, factor],
-  );
-
-  // History cells and recent detections, drawn over the map by deck.gl.
+  // Handing a year to the map costs tens of milliseconds, so while the year
+  // slider is being dragged only the year it rests on is handed over.
   useEffect(() => {
-    const instance = map.current;
-    if (instance === null || !ready) return;
-    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      fireData.current.history = historyCells.length > 0 ? firePoints(historyCells) : noPoints;
+      const source = map.current?.getSource(historySource) as GeoJSONSource | undefined;
+      source?.setData(fireData.current.history);
+    }, 140);
+    return () => window.clearTimeout(timer);
+  }, [historyCells, ready]);
 
-    (async () => {
-      const [{ MapboxOverlay }, { SolidPolygonLayer, ScatterplotLayer }] = await Promise.all([
-        import("@deck.gl/mapbox"),
-        import("@deck.gl/layers"),
-      ]);
-      if (cancelled || map.current === null) return;
-
-      const ramp = historyRampTokens.map((token) => rgbaFrom(tokenColor(token), 170));
-      const edge = rgbaFrom(tokenColor("--ramp-3"), 90);
-      const dot = rgbaFrom(tokenColor("--accent"), 230);
-      const hot = rgbaFrom(tokenColor("--ramp-3"), 240);
-
-      const layers: unknown[] = [];
-      if (drawnCells.length > 0) {
-        layers.push(
-          new SolidPolygonLayer<HistoryCell>({
-            id: "emerge-history",
-            data: drawnCells,
-            getPolygon: (cell) => cell.polygon,
-            getFillColor: (cell) => ramp[cell.klass] ?? ramp[0],
-            filled: true,
-            extruded: false,
-            pickable: false,
-            updateTriggers: { getFillColor: [drawnCells.length] },
-          }),
-        );
-      }
-      if (recentPoints.length > 0) {
-        layers.push(
-          new ScatterplotLayer<RecentPoint>({
-            id: "emerge-recent",
-            data: recentPoints,
-            getPosition: (point) => point.position,
-            getRadius: (point) => recentRadiusPx(point.frp),
-            radiusUnits: "pixels",
-            radiusMinPixels: 2,
-            getFillColor: (point) => (point.conf === 1 ? hot : dot),
-            stroked: false,
-            pickable: true,
-            onClick: (info: { object?: RecentPoint }) => {
-              const point = info.object;
-              if (point === undefined) return false;
-              pickRecent.current(point.position[1], point.position[0]);
-              return true;
-            },
-          }),
-        );
-      }
-
-      if (overlay.current === null) {
-        const control = new MapboxOverlay({ interleaved: false, layers: layers as never[] });
-        overlay.current = control as unknown as { setProps: (props: { layers: unknown[] }) => void };
-        instance.addControl(control as never);
-      } else {
-        overlay.current.setProps({ layers });
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [drawnCells, recentPoints, ready]);
+  useEffect(() => {
+    fireData.current.recent = recentPoints.length > 0 ? recentFeatures(recentPoints) : noPoints;
+    const source = map.current?.getSource(recentSource) as GeoJSONSource | undefined;
+    source?.setData(fireData.current.recent);
+  }, [recentPoints, ready]);
 
   useEffect(() => {
     const instance = map.current;

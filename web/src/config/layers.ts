@@ -16,7 +16,8 @@ export type LayerKind =
   | 'harmonized_cells'
   | 'detections'
   | 'raster_tiles'
-  | 'wind';
+  | 'wind'
+  | 'temperature_field';
 
 /** How the layer steps through time. */
 export type LayerTimeStep = 'month' | 'year' | 'day' | 'none';
@@ -45,6 +46,11 @@ export type LayerSource =
       firstDate: string | null;
       /** Fixed observation date, when the tiles are not a forecast. */
       date?: string;
+      /**
+       * Deepest zoom the service has tiles for. Beyond it the service answers
+       * with an error, so the map must enlarge this level instead of asking.
+       */
+      maxzoom?: number;
     };
 
 /** Which reader turns the source into numbers the screens can use. */
@@ -204,33 +210,40 @@ export const LAYERS: readonly LayerDefinition[] = [
   },
   {
     id: 'soil-moisture', nameKey: 'layers.soilMoisture', kind: 'raster_tiles', units: [], timeStep: 'day',
-    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/SMAP_L3_Passive_Enhanced_Day_Soil_Moisture/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-11' },
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/SMAP_L3_Passive_Enhanced_Day_Soil_Moisture/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-11', maxzoom: 6 },
     credit: 'NASA SMAP / NASA GIBS', loader: { status: 'none' }, verified: true,
     panel: { order: 5, explainKey: 'layers.soilMoistureExplain', timeKey: 'layers.soilMoistureTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 's' },
   },
   {
     id: 'greenness', nameKey: 'layers.greenness', kind: 'raster_tiles', units: [], timeStep: 'day',
-    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_NOAA20_NDVI_8Day/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-13' },
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_NOAA20_NDVI_8Day/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-13', maxzoom: 8 },
     credit: 'NOAA-20 VIIRS / NASA GIBS', loader: { status: 'none' }, verified: true,
     panel: { order: 6, explainKey: 'layers.greennessExplain', timeKey: 'layers.greennessTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'g' },
   },
   {
     id: 'land-type', nameKey: 'layers.landType', kind: 'raster_tiles', units: [], timeStep: 'day',
-    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2024-01-01' },
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual/default/{date}/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2024-01-01', maxzoom: 8 },
     credit: 'NASA MODIS / NASA GIBS', loader: { status: 'none' }, verified: true,
     panel: { order: 7, explainKey: 'layers.landTypeExplain', timeKey: 'layers.landTypeTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'l' },
   },
   {
-    id: 'air-temperature', nameKey: 'layers.airTemperature', kind: 'raster_tiles', units: [], timeStep: 'day',
-    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AIRS_L2_Surface_Air_Temperature_Day/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-14' },
-    credit: 'NASA AIRS / NASA GIBS', loader: { status: 'none' }, verified: true,
-    panel: { order: 8, explainKey: 'layers.airTemperatureExplain', timeKey: 'layers.airTemperatureTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 't' },
+    id: 'air-temperature', nameKey: 'layers.airTemperature', kind: 'temperature_field', units: [], timeStep: 'day',
+    source: { kind: 'api_route', path: 'https://api.open-meteo.com/v1/forecast' },
+    credit: 'Weather data by Open-Meteo.com', loader: { status: 'built', module: 'lib/layers/temperature', fn: 'fetchTemperature' }, verified: true,
+    panel: { order: 8, explainKey: 'layers.airTemperatureExplain', timeKey: 'layers.airTemperatureTime', control: 'danger_day', legend: { kind: 'classes' }, defaultOn: false, urlKey: 't' },
   },
   {
     id: 'wind', nameKey: 'layers.wind', kind: 'wind', units: [], timeStep: 'day',
     source: { kind: 'api_route', path: 'https://api.open-meteo.com/v1/forecast' },
     credit: 'Weather data by Open-Meteo.com', loader: { status: 'built', module: 'lib/layers/wind', fn: 'fetchWind' }, verified: true,
     panel: { order: 9, explainKey: 'layers.windExplain', timeKey: 'layers.windTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'w' },
+  },
+  {
+    id: 'rain', nameKey: 'layers.rain', kind: 'raster_tiles', units: [], timeStep: 'day',
+    // Latest capabilities date [V]. Refresh: node tests/layers/refresh-rain.mjs (from web).
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: '2000-06-01', date: '2026-11-13', maxzoom: 6 },
+    credit: 'NASA GPM IMERG / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 10, explainKey: 'layers.rainExplain', timeKey: 'layers.rainTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'p' },
   },
 ];
 

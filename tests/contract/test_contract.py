@@ -322,7 +322,10 @@ REPORTED_FAMILIES = {
 # Bulgaria in 2024 is its own satellite estimate, not what Bulgaria reported.
 VERIFIED_REPORTED = {
     ("BGR", "effis_estimate", 2024): {"fires": 133, "burned_ha": 44745},
-    ("BGR", "annual_report", 2024): {"fires": 595, "burned_ha": 17116.4},
+    # The Forest Agency's 2025 report revises its 2024 count from 595 to 565
+    # on the same area; the specification (D-16) shows the revised count.
+    ("BGR", "annual_report", 2024): {"fires": 565, "burned_ha": 17116.4},
+    ("BGR", "annual_report", 2025): {"fires": 546, "burned_ha": 15458.8},
     ("USA", "nifc", 2024): {"fires": 64897, "burned_ha": 3611772.4},
 }
 

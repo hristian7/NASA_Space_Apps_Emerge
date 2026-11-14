@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { getMeta } from "@/lib/data/api";
+import { formatCount, formatIsoDate, type ReportLocale } from "@/components/report/lib/format";
 import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
-import { dangerClasses, dangerDate, dangerDays } from "@/lib/layers/danger";
-import { historyBreaks, historyRampTokens, historyYears } from "@/lib/layers/history";
+import { dangerClasses, dangerDate } from "@/lib/layers/danger";
+import DriverLegend from "./driver-legend";
+import { historyRampTokens } from "@/lib/layers/history";
 import { recentWindows, type RecentWindow } from "@/lib/layers/firms";
 import type { RecentPayload } from "@/lib/layers/recent";
 import type { LayerDefinition } from "@/config/layers";
 import Disclaimer from "./disclaimer";
-import "@/styles/layers.css";
+import { useTemperatureStatus } from "@/components/map/temperature-field";
+import { temperatureGradient } from "@/lib/layers/temperature";
 
 export type LoadStatus = "off" | "loading" | "ready" | "empty" | "failed";
 
@@ -22,24 +26,22 @@ type Props = {
   recentStatus: LoadStatus;
   recent: RecentPayload | null;
   onToggle: (id: string) => void;
-  onYear: (year: number) => void;
   onWindow: (window: RecentWindow) => void;
-  onDay: (day: number) => void;
-  /** True while a menu from the top bar covers the same corner. */
-  covered: boolean;
+  /** Opened and closed from the map's tool column. */
+  open: boolean;
+  onClose: () => void;
+  view: "history" | "forecast";
+};
+
+/** Which layers each view lists. Recent fires belong to both. */
+const viewLayers: Record<Props["view"], string[]> = {
+  history: ["harmonized-history", "recent-fires"],
+  forecast: ["fire-danger", "nasa-fwi", "wind", "air-temperature", "rain", "soil-moisture", "greenness", "land-type", "recent-fires"],
 };
 
 /** Registry keys carry their namespace; `useTranslations` already has it. */
 function short(key: string): string {
   return key.startsWith("layers.") ? key.slice("layers.".length) : key;
-}
-
-/** "1 to 2", "21 or more": the numbers a ramp colour stands for. */
-function breakLabel(index: number, more: string): string {
-  const low = historyBreaks[index];
-  const next = historyBreaks[index + 1];
-  if (next === undefined) return `${low}${more}`;
-  return next - low === 1 ? `${low}` : `${low} to ${next - 1}`;
 }
 
 export default function LayerPanel({
@@ -50,13 +52,25 @@ export default function LayerPanel({
   recentStatus,
   recent,
   onToggle,
-  onYear,
   onWindow,
-  onDay,
-  covered,
+  open,
+  onClose,
+  view,
 }: Props) {
   const t = useTranslations("layers");
-  const [open, setOpen] = useState(true);
+  const locale = useLocale() as ReportLocale;
+  const [lastDay, setLastDay] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    getMeta().then((meta) => {
+      if (!cancelled) setLastDay(meta.last_data_day);
+    }).catch(() => {
+      if (!cancelled) setLastDay(null);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  const shell = useTranslations("shell");
+  const keyText = useTranslations("legend");
   const [rasterErrors, setRasterErrors] = useState<string[]>([]);
   const [wind, setWind] = useState({ state: "loading", time: "" });
   useEffect(() => {
@@ -71,25 +85,8 @@ export default function LayerPanel({
     return () => window.removeEventListener("emerge-raster-error", update);
   }, []);
 
-  // A phone opens with the list folded away, so the map and the report sheet
-  // keep their room; a wide screen has space for it from the start.
-  useEffect(() => {
-    setOpen(window.innerWidth >= 768);
-  }, []);
-
-  // On a phone the list and the report sheet share the lower half of the
-  // screen, so opening the list lowers the sheet, the same move the top bar's
-  // own menus make.
-  const show = (next: boolean) => {
-    setOpen(next);
-    if (next && window.innerWidth < 768) {
-      document.documentElement.setAttribute("data-sheet", "peek");
-    }
-  };
-
-  const layers = panelLayers();
+  const layers = panelLayers().filter((entry) => viewLayers[view].includes(entry.id));
   const onCount = layers.filter((entry) => state.on.includes(entry.id)).length;
-  const years = historyYears(lastMonth);
   const dangerOn = layers.some(
     (entry) => entry.panel?.showsDisclaimer === true && state.on.includes(entry.id),
   );
@@ -97,45 +94,9 @@ export default function LayerPanel({
   const control = (definition: LayerDefinition) => {
     switch (definition.panel?.control) {
       case "history_year":
-        return (
-          <div className="layer-control">
-            <label className="label" htmlFor="layer-year">
-              {t("yearLabel")}
-            </label>
-            <div className="layer-steps">
-              <button
-                type="button"
-                className="btn step"
-                onClick={() => onYear(state.historyYear - 1)}
-                disabled={state.historyYear <= years[0]}
-                aria-label={t("yearBack")}
-              >
-                {"<"}
-              </button>
-              <select
-                id="layer-year"
-                className="field num"
-                value={state.historyYear}
-                onChange={(event) => onYear(Number(event.target.value))}
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn step"
-                onClick={() => onYear(state.historyYear + 1)}
-                disabled={state.historyYear >= years[years.length - 1]}
-                aria-label={t("yearForward")}
-              >
-                {">"}
-              </button>
-            </div>
-          </div>
-        );
+      case "danger_day":
+        // The time slider at the bottom of the map sets these.
+        return null;
       case "recent_window":
         return (
           <div className="layer-control">
@@ -157,28 +118,6 @@ export default function LayerPanel({
             </div>
           </div>
         );
-      case "danger_day":
-        return (
-          <div className="layer-control">
-            <label className="label" htmlFor={`layer-day-${definition.id}`}>
-              {t("dayLabel")}
-            </label>
-            <select
-              id={`layer-day-${definition.id}`}
-              className="field"
-              value={state.dangerDay}
-              onChange={(event) => onDay(Number(event.target.value))}
-            >
-              {dangerDays().map((day) => (
-                <option key={day} value={day}>
-                  {day === 0
-                    ? `${t("today")} (${dangerDate(0)})`
-                    : `${t("inDays", { days: day })} (${dangerDate(day)})`}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
       default:
         return null;
     }
@@ -189,20 +128,18 @@ export default function LayerPanel({
       case "ramp":
         return (
           <>
-            <ul className="legend">
-              {historyRampTokens.map((token, index) => (
-                <li key={token}>
-                  <span
-                    className="swatch"
-                    style={{ background: `var(${token})` }}
-                    aria-hidden="true"
-                  />
-                  <span className="num">{breakLabel(index, t("orMore"))}</span>
-                  <span className="legend-word">{t("fireDays")}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="hint">{t("mergedNote")}</p>
+            <div className="ramp-key">
+              <div
+                className="ramp-bar"
+                aria-hidden="true"
+                style={{ background: `linear-gradient(to right, ${historyRampTokens.map((token) => `var(${token})`).join(", ")})` }}
+              />
+              <div className="ramp-ends">
+                <span>{keyText("heatLess")}</span>
+                <span>{keyText("heatMore")}</span>
+              </div>
+            </div>
+            <p className="hint">{keyText("heatNote")}</p>
           </>
         );
       case "points":
@@ -223,17 +160,9 @@ export default function LayerPanel({
           </ul>
         );
       case "classes":
-        if (definition.id === "wind") return <p className="hint">➤ km/h</p>;
-        if (definition.id !== "fire-danger") {
-          const legends: Record<string, string> = {
-            "nasa-fwi": "https://maps.effis.emergency.copernicus.eu/gwis?service=WMS&request=GetLegendGraphic&version=1.1.1&format=image/png&layer=nasa_geos5.fwi",
-            "soil-moisture": "https://gibs.earthdata.nasa.gov/legends/SMAP_Soil_Moisture_H.svg",
-            "greenness": "https://gibs.earthdata.nasa.gov/legends/MODIS_NDVI_H.svg",
-            "land-type": "https://gibs.earthdata.nasa.gov/legends/MODIS_IGBP_Land_Cover_Type_H.svg",
-            "air-temperature": "https://gibs.earthdata.nasa.gov/legends/AIRS_Temperature_H.svg",
-          };
-          return <><img src={legends[definition.id]} alt={t("providerLegend")} style={{ maxWidth: "100%", height: "auto", background: "white" }} />{definition.id === "land-type" ? <p className="hint">{t("landLegend")}</p> : null}</>;
-        }
+        if (definition.id === "air-temperature") return <TemperatureLegend day={state.dangerDay} />;
+        if (definition.id === "rain") return <RainLegend />;
+        if (definition.id !== "fire-danger") return <DriverLegend id={definition.id} />;
         return (
           <ul className="legend">
             {dangerClasses.map((entry) => (
@@ -256,7 +185,14 @@ export default function LayerPanel({
       if (historyStatus === "loading") return t("loading");
       if (historyStatus === "empty") return t("noYearData", { year: state.historyYear });
       if (historyStatus === "failed") return t("failed");
-      return t(key, { year: state.historyYear, cells: historyCellCount });
+      if (lastDay === undefined) return t("loading");
+      if (lastDay === null) return t("failed");
+      if (lastDay.slice(0, 4) === String(state.historyYear) && !lastDay.endsWith("-12-31")) {
+        return t("harmonizedHistoryPartialTime", {
+          year: state.historyYear, date: formatIsoDate(lastDay, locale), cells: formatCount(historyCellCount, locale),
+        });
+      }
+      return t(key, { year: state.historyYear, cells: formatCount(historyCellCount, locale) });
     }
     if (definition.id === "recent-fires") {
       if (recentStatus === "loading") return t("loading");
@@ -287,21 +223,18 @@ export default function LayerPanel({
   };
 
   return (
-    <section className="layers glass" aria-label={t("title")} hidden={covered}>
-      <h2>
-        <button
-          type="button"
-          className="layers-head"
-          aria-expanded={open}
-          aria-controls="layer-list"
-          onClick={() => show(!open)}
-        >
-          <span>{t("title")}</span>
-          <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+    <section className="layers glass" id="layer-panel" aria-label={t("title")} hidden={!open}>
+      <div className="layers-head">
+        <h2>{t("title")}</h2>
+        <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+        <button type="button" className="layers-close" aria-label={shell("closeMenu")} onClick={onClose}>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
         </button>
-      </h2>
+      </div>
 
-      <div id="layer-list" className="layers-body" hidden={!open}>
+      <div id="layer-list" className="layers-body">
         {layers.map((definition) => {
           const on = state.on.includes(definition.id);
           return (
@@ -324,7 +257,6 @@ export default function LayerPanel({
                   <p className="hint" aria-live="polite">
                     {timeLine(definition)}
                   </p>
-                  <p className="hint credit">{definition.credit}</p>
                 </div>
               ) : null}
             </div>
@@ -340,3 +272,58 @@ export default function LayerPanel({
     </section>
   );
 }
+
+/** Weather legends share the established ramp layout and typography. */
+function TemperatureLegend({ day }: { day: number }) {
+  const t = useTranslations("layers");
+  const status = useTemperatureStatus();
+  const date = status.date || dangerDate(day);
+  return (
+    <div className="ramp-key" data-temperature-state={status.state}>
+      <div className="ramp-bar" aria-hidden="true" style={{ background: temperatureGradient }} />
+      <div className="ramp-ticks num">
+        <span style={{ left: "0%" }} data-edge="start">≤ -40</span>
+        <span style={{ left: "44.444%" }}>0</span>
+        <span style={{ left: "100%" }} data-edge="end">≥ 50</span>
+      </div>
+      <p className="ramp-unit">{t("temperatureUnit")}</p>
+      <p className="hint" aria-live="polite">
+        {t("temperatureDate", { date })} {day > 1 || status.state === "empty" || status.state === "failed" ? t("temperatureNoData") : status.state === "ready" ? t("temperatureCredit") : t("loading")}
+      </p>
+    </div>
+  );
+}
+
+function RainLegend() {
+  const t = useTranslations("layers");
+  return (
+    <div className="ramp-key">
+      {rainRamps.map((ramp) => (
+        <div key={ramp.key}>
+          <p className="ramp-unit">{t(ramp.key)}</p>
+          <div className="ramp-bar" aria-hidden="true" style={{ background: ramp.gradient }} />
+          <div className="ramp-ticks num">
+            <span style={{ left: "0%" }} data-edge="start">0.1</span>
+            <span style={{ left: "36.697%" }}>1</span>
+            <span style={{ left: "73.394%" }}>10</span>
+            <span style={{ left: "100%" }} data-edge="end">≥ 53.1</span>
+          </div>
+        </div>
+      ))}
+      <p className="hint">{t("rainNoData")}</p>
+      <p className="hint">NASA GPM IMERG / NASA GIBS</p>
+    </div>
+  );
+}
+
+// NASA GIBS GPM_Precipitation_Rate colour map, logarithmic rates [V].
+const rainRamps = [
+  {
+    "key": "rainUnit",
+    "gradient": "linear-gradient(to right, rgb(0,118,78), rgb(0,145,41), rgb(16,173,0), rgb(95,200,0), rgb(195,228,0), rgb(255,194,1), rgb(255,115,28), rgb(255,38,38), rgb(231,0,0), rgb(169,0,0), rgb(106,0,0), rgb(51,0,0))"
+  },
+  {
+    "key": "snowUnit",
+    "gradient": "linear-gradient(to right, rgb(177,250,238), rgb(146,238,242), rgb(118,201,230), rgb(95,158,215), rgb(79,115,196), rgb(67,80,208), rgb(74,55,219), rgb(106,43,231), rgb(119,11,209), rgb(121,8,157), rgb(102,5,105), rgb(58,3,48))"
+  }
+];

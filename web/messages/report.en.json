@@ -69,7 +69,17 @@
       "expectedDetail": "A typical {month} here, from the past years with a measurement.",
       "noHistory": "No past {month} here has a measurement."
     },
+    "cumulative": {
+      "exportKey": "Solid: {year}; dashed: past median",
+      "heading": "Season so far",
+      "summary": "Cumulative {unit} in {year} and the median of earlier years, through completed months.",
+      "key": "Solid: {year}. Dashed: median of earlier years with complete data from January. Gaps mean no cumulative total is available.",
+      "download": "Download season chart PNG"
+    },
     "window": {
+      "heatMissing": "Heat: no data",
+      "heatValue": "Heat: {value} MW",
+      "heatNote": "Heat is the sum of raw fire radiative power (FRP) observations. Sensors differ across years, so heat values are not harmonized.",
       "heading": "This fire against past fires, last {days} days",
       "chartLabel": "Hotspots in the same days of each year",
       "endsOn": "The window ends on {date}.",
@@ -86,7 +96,7 @@
       "countryContext": "Country total, for context: the selection is smaller than the country.",
       "fires": "Reported fires",
       "burned": "Burned hectares",
-      "none": "No official reported numbers available.",
+      "none": "No official national reported numbers available.",
       "noYears": "The source covers this place but has published no figures yet.",
       "notComparable": "The three blocks count different things, so a number from one does not belong next to a number from another.",
       "kindNational": "Reported by national authorities",
@@ -100,7 +110,23 @@
       "covers": "Years {first} to {last}",
       "oneYear": "One year only: {year}",
       "sourceLink": "The source",
-      "fetched": "Taken on {date}"
+      "fetched": "Taken on {date}",
+      "dataText": {
+        "v0": "GWIS (Global Wildfire Information System), estimates of burned areas and number of fires",
+        "v1": "Not a report. GWIS, the Global Wildfire Information System, makes this estimate by mapping the burned area it can see in satellite images world-wide, so small fires are missing.",
+        "v2": "EFFIS (European Forest Fire Information System), estimates of burned areas and number of fires",
+        "v3": "Not a report. EFFIS, the European Forest Fire Information System, makes this estimate by mapping the burned area it can see in satellite images, and it maps mainly fires of about 30 hectares or more, so smaller fires are missing.",
+        "v4": "EFFIS annual report, Forest Fires in Europe, Middle East and North Africa 2024, Publications Office of the European Union, annex Tables 101 to 104 with Table 1 for 2024, source JRC's elaboration of the country reports",
+        "v5": "What the countries' own national fire services reported, year by year, as the annex of the EFFIS annual report prints it (JRC's wording: its elaboration of the country reports). Each country counts fires and burned area by its own rules, so a fire its service does not record is missing and countries are not directly comparable.",
+        "v6": "EFFIS annual report, Forest Fires in Europe, Middle East and North Africa 2024, Publications Office of the European Union, annex Tables 101 to 104 with Table 1 for 2024, source JRC's elaboration of the country reports, Table 2 for Bulgaria, and the Forest Agency 2025 report",
+        "v7": "What the Executive Forest Agency reported for forest fires, from the EFFIS annual report annex and Bulgaria chapter, and the agency's 2025 report (https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf, page 35). The latter revises the 2024 count to 565 from 595 and reports 546 fires on 154588 decares (15458.8 hectares) in 2025. For 2019, the EFFIS report's Table 2 gives 5619 hectares while its annex gives 5620; the Table 2 value is used. Fires on other land are missing.",
+        "v8": "NIFC (National Interagency Fire Center), Total Wildland Fires and Acres (1983-2025), source the National Interagency Coordination Center",
+        "v9": "What the National Interagency Coordination Center reported: all wildland fires and the area they burned, counted from the records of the federal and state wildland fire agencies, so a fire none of them recorded is missing. Acres in the source are converted to hectares, 1 acre = 0.40468564224 hectares. The source marks 2004 with an asterisk: 2004 fires and acres do not include state lands for North Carolina."
+      },
+      "chartLabel": "Reported fires and our fire days per year",
+      "chartReported": "Reported fires",
+      "chartOurs": "Our fire days",
+      "chartNote": "Each series is scaled to its own largest year, so compare the shape, not the height."
     },
     "extremes": {
       "worstMonth": "Worst month",
@@ -203,6 +229,13 @@
       "gwisDanger": "GWIS: today's fire danger map (opens on the world)",
       "newTab": "(new tab)",
       "wholeCountry": "For the whole country, not only the selection."
+    },
+    "parts": {
+      "label": "Parts of the report",
+      "overview": "Overview",
+      "charts": "Charts",
+      "data": "Data",
+      "sources": "Sources"
     }
   }
 }

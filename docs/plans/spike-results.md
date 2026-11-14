@@ -103,3 +103,42 @@ Rules for the route:
 - Land cover: `MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual`, latest `2024-01-01` [V], `GoogleMapsCompatible_Level8`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; this is an annual product, outside the daily or monthly freshness criterion.
 - Air temperature: `AIRS_L2_Surface_Air_Temperature_Day`, latest `2026-11-14` [V], `GoogleMapsCompatible_Level6`, PNG. Tile returned HTTP 200 with visible pixels and rendered on the globe [V]; swath coverage has gaps. The daily L3 alternative ends `2026-11-08` [V].
 - Source: [NASA GIBS WMTS capabilities](https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml) [V]. Tile pattern: `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{layer}/default/{date}/{matrix}/{z}/{y}/{x}.png`; checked at `2/1/2` [V]. Dates reflect the capabilities checked on `2026-11-14` [V].
+
+## Plan 2 spikes
+
+### (a) Fire weather and raw weather
+- Rila (42.15, 23.45) [V], nearest forecast cell, valid 2024-05-01: FWI 2.84984 [V].
+- Valid 2024-05-02: FWI 0.01741 [V], from the next file.
+- The corresponding run dates are 2024-04-28 and 2024-04-29, both lead +3 [V].
+- Only one lead +3 file exists per valid date in this download [V], so two adjacent valid dates were checked.
+- One Open-Meteo request returned daily maximum temperature, maximum wind speed and dominant direction for 10 locations [V]: https://api.open-meteo.com/v1/forecast.
+
+### (b) Forecast download rate
+- The local directory held 208 forecast files at measurement [V].
+- First observed file modification time: 2026-11-14 22:40:59 EET [V].
+- Last observed file modification time: 2026-11-14 22:55:25 EET [V].
+- Elapsed-file rate: 14.35 files per minute [V], from first and last modification times.
+- The download was still running; the rate is a snapshot, not a guarantee [D].
+
+### (c) Satellite plant greenness
+- Waiting on the Earthdata login [V].
+- The requested monthly MOD13C2 greenness is not available locally [V].
+- Tonight's fallback is the 2021 majority land class [V].
+- The fallback supplies a fuel category, not greenness [U].
+- Source: https://lpdaac.usgs.gov/products/mod13c2v061/.
+
+### (d) Land-cover shares
+- Waiting on the Earthdata login [V].
+- Tonight's fallback is the 2021 majority land class [V].
+- Forest is IGBP 1-5; shrub and grass 6-10; farmland 12 and 14 [V].
+- A majority class is not a land-cover share [U]; D-17 remains a fallback.
+- Source: https://lpdaac.usgs.gov/products/mcd12c1v061/.
+
+### (e) Administrative regions
+- Natural Earth admin-1 GeoJSON has 4,596 features [V].
+- The 0.25-degree global grid has 342,924 centres in a polygon [V].
+- Those spots cover 3,548 distinct ISO 3166-2 region identifiers [V].
+- Some features share identifiers: 95 repeated feature identifiers [V].
+- Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson.
+
+Country codes in the admin-1 file are Natural Earth administrative codes, not always ISO alpha-3: for example, South Sudan is `SDS` in admin-1 [V]. The grid uses the corresponding ISO values from Natural Earth's [admin-0 countries file](https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_countries.geojson) [V]. Where that source has no ISO value for a disputed unit, the country is null rather than guessed [U].

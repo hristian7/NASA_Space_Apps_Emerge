@@ -1,0 +1,4 @@
+.panel-data { background: var(--space); color: var(--ink); font-family: var(--font-ui); min-height: 100vh; padding: 1.5rem; }
+.panel-data h1, .panel-data h2, .panel-data h3 { font-family: var(--font-head); }
+.panel-place { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); margin: 1rem 0; padding: 1rem; }
+.panel-trends { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: 1rem; }

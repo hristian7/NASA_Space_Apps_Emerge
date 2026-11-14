@@ -1,0 +1,12 @@
+{
+  "label": "Search a place",
+  "placeholder": "Country, city or lat, lon",
+  "results": "Places found",
+  "coords": "{lat}, {lon}",
+  "kindPoint": "Point",
+  "kindCountry": "Country",
+  "searching": "Searching…",
+  "failed": "Place search is not answering. Countries and coordinates still work.",
+  "keepTyping": "Keep typing",
+  "none": "Nothing found"
+}

@@ -109,13 +109,13 @@ NIFC_NOTE = (
     "0.40468564224 hectares."
 )
 REPORT_BULGARIA_NOTE = (
-    "What the Executive Forest Agency reported, from its own database of "
-    "forest fires, as the EFFIS annual report prints it in its annex and in "
-    "Table 2 of its Bulgaria chapter. Forest fires only, so fires on other "
-    "land are missing. The agency's own 2025 report later gives 2024 as 565 "
-    "fires on the same area, 171 164 decares, which is 17 116.4 hectares "
-    "(https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf); the "
-    "figure here is the 595 the 2024 report printed."
+    "What the Executive Forest Agency reported for forest fires, from the "
+    "EFFIS annual report annex and Bulgaria chapter, and the agency's 2025 "
+    "report (https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf, "
+    "page 35). The latter revises the 2024 count to 565 from 595 and reports "
+    "546 fires on 154588 decares (15458.8 hectares) in 2025. For 2019, the "
+    "EFFIS report's Table 2 gives 5619 hectares while its annex gives 5620; "
+    "the Table 2 value is used. Fires on other land are missing."
 )
 
 # The names Table 1 of the annual report prints, and the three-letter code for
@@ -500,6 +500,12 @@ def report_annex(layout: str) -> tuple[dict[str, dict[int, dict[str, float | int
                 values = annex_cells(line)
                 if values is None:
                     continue
+                # Table 103 leaves the Netherlands cell blank in 2023. The
+                # surrounding fixed positions establish the empty column.
+                if (key == "fires_other" and values[0] == "2023"
+                        and len(values) - 1 == width - 1
+                        and not line[148:173].strip()):
+                    values.insert(15, "-")
                 if len(values) - 1 != width:
                     trouble.append(
                         f"{key} {values[0]}: {len(values) - 1} columns, not {width}")
@@ -674,11 +680,17 @@ def build(data: Path, offline: bool) -> dict[str, int]:
             row = national_rows.setdefault("BGR", {}).setdefault(year, {})
             row["fires"], row["burned_ha"] = fires, hectares
 
+        # Agency 2025 annual report, page 35: later revision and new year.
+        # Its areas are in decares; ten decares make one hectare.
+        if bulgaria:
+            national_rows["BGR"][2024] = {"fires": 565, "burned_ha": 17116.4}
+            national_rows["BGR"][2025] = {"fires": 546, "burned_ha": 15458.8}
+
         for iso3, years in sorted(national_rows.items()):
             note = REPORT_ANNEX_NOTE
             name = report_name
             if iso3 == "BGR" and bulgaria:
-                name += ", and Table 2 for Bulgaria"
+                name += ", Table 2 for Bulgaria, and the Forest Agency 2025 report"
                 note = REPORT_BULGARIA_NOTE
             add(iso3, make_series(
                 NATIONAL, name, REPORT_DOI, fetched, REPORT_LICENCE, note,

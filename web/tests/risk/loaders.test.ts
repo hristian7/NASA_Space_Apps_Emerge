@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exampleMode, loadRiskCountry, loadRiskIndex, regionSpots, showForecast } from "../../src/lib/risk/loaders";
+import { forecastIsStale, exampleMode, loadRiskCountry, loadRiskIndex, regionSpots, showForecast } from "../../src/lib/risk/loaders";
 import type { RiskCountry, RiskMeta, RiskSpot } from "../../src/types/risk";
 const fetch404 = (async () => new Response(null, { status: 404 })) as typeof fetch;
 describe("risk static contract", () => {
@@ -10,6 +10,19 @@ describe("risk static contract", () => {
     expect(result.map(s => s.rank)).toEqual([1, 2]);
     expect(result.map(s => s.p)).toEqual([0, null]);
     expect(records[0].rank).toBe(2);
+  });
+  it("selects all vegetation separately and handles older files", () => {
+    const forest = [{ rank: 1 }] as RiskSpot[];
+    const farmland = [{ rank: 1, fire_type: "farmland" }] as RiskSpot[];
+    const file: RiskCountry = { country: "BGR", days: ["d"], regions: { r: { d: forest } }, all_vegetation: { r: { d: farmland } } };
+    expect(regionSpots(file, "r", "d")).toEqual(forest);
+    expect(regionSpots(file, "r", "d", "all")).toEqual(farmland);
+    expect(regionSpots({ ...file, all_vegetation: undefined }, "r", "d", "all")).toEqual([]);
+  });
+  it("uses the viewer's local calendar and only marks dates after the last day stale", () => {
+    expect(forecastIsStale("2026-11-15", new Date(2026, 10, 14, 23, 59))).toBe(false);
+    expect(forecastIsStale("2026-11-15", new Date(2026, 10, 15, 23, 59))).toBe(false);
+    expect(forecastIsStale("2026-11-15", new Date(2026, 10, 16, 0, 0))).toBe(true);
   });
   it("labels an absent country and returns no records", async () => {
     expect(await loadRiskCountry("USA", false, fetch404)).toEqual({ status: "missing", file: { country: "USA", days: [], regions: {} } });
