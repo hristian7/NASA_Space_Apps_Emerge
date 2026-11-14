@@ -1,8 +1,8 @@
 {
   "engine_ready": true,
   "example": false,
-  "model_version": "logistic-v1",
-  "made_at": "2026-11-14T22:18:23.805023Z",
+  "model_version": "lightgbm-v2",
+  "made_at": "2026-11-14T22:32:59.869389Z",
   "grid_g": 0.25,
   "days": {
     "today": "2026-11-14",

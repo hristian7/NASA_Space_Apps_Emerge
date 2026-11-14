@@ -35,6 +35,8 @@ def main():
     ap.add_argument('--europe', type=Path, default=DATA / 'scorecard_model_europe.json')
     ap.add_argument('--world', type=Path, default=DATA / 'scorecard_model_world.json')
     ap.add_argument('--out', type=Path, default=WEB / 'scorecard.json')
+    ap.add_argument('--model', type=Path, help='selected model metadata')
+    ap.add_argument('--selection', type=Path, help='2024-only model selection record')
     args = ap.parse_args()
     scopes = {name: json.loads(path.read_text()) for name, path in [('europe', args.europe), ('world', args.world)]}
     verdict = []
@@ -61,6 +63,12 @@ def main():
                      'Aggregated detections cannot distinguish exact latitude-boundary points from points immediately north [V].',
                      'Registered reliability and Brier skill use scored spots on fire-positive region-days [U]. Additional all-scored-day results include no-fire days [U].',
                      'The world and Europe tests use the same single held-out prediction run [V].']}
+    if args.model:
+        obj['model_version'] = json.loads(args.model.read_text())['model_version']
+    if args.selection:
+        obj['validation_selection'] = json.loads(args.selection.read_text())
+        if args.model and not obj['model_version'].endswith('-' + obj['validation_selection']['winner']):
+            raise ValueError('Selected model does not match validation winner')
     args.out.parent.mkdir(parents=True, exist_ok=True)
     tmp = args.out.with_suffix('.tmp')
     tmp.write_text(json.dumps(obj, ensure_ascii=False, separators=(',', ':'), allow_nan=False) + '\n')

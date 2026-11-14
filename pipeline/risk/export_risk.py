@@ -27,8 +27,11 @@ def scalar(value):
 def explanations(row, mean, model):
     if pd.isna(row.p):
         return []
-    weights = np.asarray(model['coefficients']) * model['calibration_slope'] / np.asarray(model['scale'])
-    contributions = (row[list(FEATURES)].to_numpy(dtype=float) - mean) * weights
+    if model.get('kind') == 'lightgbm':
+        contributions = row[[f'contrib_{name}' for name in FEATURES]].to_numpy(dtype=float) - mean
+    else:
+        weights = np.asarray(model['coefficients']) * model['calibration_slope'] / np.asarray(model['scale'])
+        contributions = (row[list(FEATURES)].to_numpy(dtype=float) - mean) * weights
     sums = defaultdict(float)
     for name, value in zip(FEATURES, contributions):
         if not np.isfinite(value) or value <= 0:
@@ -66,6 +69,10 @@ def main():
     model = json.loads(args.model.read_text())
     card = json.loads(args.scorecard.read_text())
     ready = ready_from_scorecard(card)
+    booster = None
+    if model.get('kind') == 'lightgbm':
+        import lightgbm as lgb
+        booster = lgb.Booster(model_file=str(args.model.parent / model['booster_file']))
     con = duckdb.connect()
     con.execute('SET threads=4')
     con.execute("SET memory_limit='8GB'")
@@ -92,7 +99,18 @@ def main():
         duplicates, prediction_count = con.execute('SELECT count(*)-count(distinct spot_id),count(*) FROM predictions WHERE day=?', [day]).fetchone()
         if duplicates or prediction_count != expected:
             raise ValueError(f'{day}: predictions must contain exactly one row per land spot')
-        means = rows.groupby('region_id', sort=False)[list(FEATURES)].mean()
+        if booster is not None:
+            available = rows.p.notna().to_numpy()
+            contributions = np.full((len(rows), len(FEATURES)), np.nan)
+            if available.any():
+                x = rows.loc[available, list(FEATURES)].to_numpy(dtype=float)
+                values = booster.predict(x, pred_contrib=True, num_threads=4)
+                contributions[available] = values[:, :-1] * model['calibration_slope']
+            contribution_names = [f'contrib_{name}' for name in FEATURES]
+            rows = pd.concat([rows, pd.DataFrame(contributions, columns=contribution_names, index=rows.index)], axis=1)
+            means = rows.groupby('region_id', sort=False)[contribution_names].mean()
+        else:
+            means = rows.groupby('region_id', sort=False)[list(FEATURES)].mean()
         chosen = rows[rows.fuel_class.isin(['forest', 'shrub_grass'])].copy()
         total_null_country += int(chosen.country.isna().sum())
         chosen = chosen[chosen.country.notna()]
