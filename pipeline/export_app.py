@@ -1245,6 +1245,71 @@ SOURCES = [
 ]
 
 
+def no_data_periods() -> list[dict]:
+    """Where there is no measurement at all, built from the record's coverage.
+
+    Every date here is derived. A date written down by hand goes stale the
+    moment the record reaches a new day, and a global period that overlaps the
+    record makes the app read real months as "no measurement": that is exactly
+    what a fixed "stops on 31 December 2025" did to the 2026 months.
+    """
+    first_day = dt.date(FIRST_MONTH[0], FIRST_MONTH[1], 1)
+    after = LAST_DATA_DAY + dt.timedelta(days=1)
+    periods = [
+        {"scope": "global", "sat": None, "from": None,
+         "to": (first_day - dt.timedelta(days=1)).isoformat(), "days": None,
+         "reason": "No satellite measured hotspots this way before Terra started."},
+        {"scope": "global", "sat": None, "from": after.isoformat(), "to": None,
+         "days": None,
+         "reason": f"The record ends on {LAST_DATA_DAY.isoformat()}. Nothing after "
+                   "that day has been measured yet."},
+    ]
+    # Each satellite before it began. Their start months are the ones the raw
+    # series are null before, so the two can never disagree.
+    starts = {
+        "aqua": "Aqua started on 4 July 2002.",
+        "snpp": "S-NPP started on 20 January 2012.",
+        "noaa20": "NOAA-20 started on 1 April 2018.",
+        "noaa21": "NOAA-21 reaches these files only with the 2026 data, so it has "
+                  "values for 2026 and nothing before it.",
+    }
+    exact = {"aqua": dt.date(2002, 7, 4), "snpp": dt.date(2012, 1, 20),
+             "noaa20": dt.date(2018, 4, 1)}
+    for sat, reason in starts.items():
+        start = SAT_START[sat]
+        if start is None:
+            continue
+        began = exact.get(sat, dt.date(start[0], start[1], 1))
+        periods.append({
+            "scope": "satellite", "sat": sat, "from": None,
+            "to": (began - dt.timedelta(days=1)).isoformat(), "days": None,
+            "reason": reason,
+        })
+    # The days the reference satellite is missing inside the record, which the
+    # conversion filled from a second one, and the day it stopped for good.
+    filled = COVERAGE["month_labels"]["snpp_gap_filled"]
+    if filled:
+        periods.append({
+            "scope": "satellite", "sat": "snpp",
+            "from": filled[0] + "-01",
+            "to": month_end(*(int(v) for v in filled[-1].split("-"))).isoformat(),
+            "days": COVERAGE["calibration"]["gap_days_2022_2024"].get("days", 34),
+            "reason": "S-NPP is missing 34 days across these months. They are filled "
+                      "from NOAA-20 brought to its level, and those months carry the "
+                      "flag snpp_gap_filled.",
+        })
+    stopped = COVERAGE.get("snpp_last_day")
+    if stopped and dt.date.fromisoformat(stopped) < LAST_DATA_DAY:
+        periods.append({
+            "scope": "satellite", "sat": "snpp",
+            "from": (dt.date.fromisoformat(stopped) + dt.timedelta(days=1)).isoformat(),
+            "to": None, "days": None,
+            "reason": f"S-NPP stopped on {stopped}. Later days rest on NOAA-20 "
+                      "brought to its level.",
+        })
+    return periods
+
+
 def build_meta(out: Path, countries: list[str], reported: list[str],
                tiles: list[str], daily: list[str], globe_years: list[int],
                cells_without_a_group: int) -> None:
@@ -1304,24 +1369,7 @@ def build_meta(out: Path, countries: list[str], reported: list[str],
                 } if LAST_DATA_DAY < month_end(*LAST_MONTH) else None,
             },
             "limits": META_LIMITS,
-            "no_data": [
-                {"scope": "global", "sat": None, "from": None, "to": "2000-10-31",
-                 "days": None,
-                 "reason": "No satellite measured hotspots this way before Terra started."},
-                {"scope": "global", "sat": None, "from": "2026-01-01", "to": None,
-                 "days": None, "reason": "This data set stops on 31 December 2025."},
-                {"scope": "satellite", "sat": "aqua", "from": None, "to": "2002-07-03",
-                 "days": None, "reason": "Aqua started on 4 July 2002."},
-                {"scope": "satellite", "sat": "snpp", "from": None, "to": "2012-01-19",
-                 "days": None, "reason": "S-NPP started on 20 January 2012."},
-                {"scope": "satellite", "sat": "snpp", "from": "2022-01-01",
-                 "to": "2024-12-31", "days": 34,
-                 "reason": "S-NPP is missing 34 days across 2022 and 2024."},
-                {"scope": "satellite", "sat": "noaa20", "from": None, "to": "2018-03-31",
-                 "days": None, "reason": "NOAA-20 started on 1 April 2018."},
-                {"scope": "satellite", "sat": "noaa21", "from": None, "to": None,
-                 "days": None, "reason": "NOAA-21 is not in this data set at all."},
-            ],
+            "no_data": no_data_periods(),
             "daily_window": {
                 "days": DAILY_WINDOW_DAYS,
                 "latest_day": end.isoformat(),
