@@ -33,6 +33,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`docs/research/stack-options.md`](docs/research/stack-options.md) | 20 stack options ranked, and the recommended stack |
 | [`docs/research/data-sources-satellites.md`](docs/research/data-sources-satellites.md) | Data before 2000, 2026 data, other satellites, country statistics |
 | [`docs/research/push-alerts.md`](docs/research/push-alerts.md) | Push-alert design on Vercel (S11) |
+| Short versions for review (≤ 500 words each) | [storage](docs/research/storage-options-summary.md) · [stack](docs/research/stack-options-summary.md) · [data sources](docs/research/data-sources-summary.md) · [push alerts](docs/research/push-alerts-summary.md) |
 
 ## Key deadlines (Sofia time)
 
