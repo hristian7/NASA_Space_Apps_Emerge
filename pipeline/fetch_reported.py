@@ -500,6 +500,12 @@ def report_annex(layout: str) -> tuple[dict[str, dict[int, dict[str, float | int
                 values = annex_cells(line)
                 if values is None:
                     continue
+                # Table 103 leaves the Netherlands cell blank in 2023. The
+                # surrounding fixed positions establish the empty column.
+                if (key == "fires_other" and values[0] == "2023"
+                        and len(values) - 1 == width - 1
+                        and not line[148:173].strip()):
+                    values.insert(15, "-")
                 if len(values) - 1 != width:
                     trouble.append(
                         f"{key} {values[0]}: {len(values) - 1} columns, not {width}")
