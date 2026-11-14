@@ -1,0 +1,345 @@
+{
+ "rule": "row = floor((90 - lat) / 0.25); col = floor((lon + 180) / 0.25); cell_id = row * 1440 + col. Longitude is first wrapped into [-180, 180). Latitude 90 gives row 0. Latitude -90 is clamped to row 719. Centre = (90 - (row + 0.5) * 0.25, -180 + (col + 0.5) * 0.25).",
+ "cases": [
+  {
+   "name": "Sofia",
+   "lat": 42.6977,
+   "lon": 23.3219,
+   "row": 189,
+   "col": 813,
+   "cell_id": 272973,
+   "center_lat": 42.625,
+   "center_lon": 23.375
+  },
+  {
+   "name": "San Francisco",
+   "lat": 37.7749,
+   "lon": -122.4194,
+   "row": 208,
+   "col": 230,
+   "cell_id": 299750,
+   "center_lat": 37.875,
+   "center_lon": -122.375
+  },
+  {
+   "name": "Equator and prime meridian",
+   "lat": 0.0,
+   "lon": 0.0,
+   "row": 360,
+   "col": 720,
+   "cell_id": 519120,
+   "center_lat": -0.125,
+   "center_lon": 0.125
+  },
+  {
+   "name": "Just south of equator, just west of meridian",
+   "lat": -0.0001,
+   "lon": -0.0001,
+   "row": 360,
+   "col": 719,
+   "cell_id": 519119,
+   "center_lat": -0.125,
+   "center_lon": -0.125
+  },
+  {
+   "name": "Just north of equator, just east of meridian",
+   "lat": 0.0001,
+   "lon": 0.0001,
+   "row": 359,
+   "col": 720,
+   "cell_id": 517680,
+   "center_lat": 0.125,
+   "center_lon": 0.125
+  },
+  {
+   "name": "North pole, lon 0",
+   "lat": 90.0,
+   "lon": 0.0,
+   "row": 0,
+   "col": 720,
+   "cell_id": 720,
+   "center_lat": 89.875,
+   "center_lon": 0.125
+  },
+  {
+   "name": "North pole, lon -180",
+   "lat": 90.0,
+   "lon": -180.0,
+   "row": 0,
+   "col": 0,
+   "cell_id": 0,
+   "center_lat": 89.875,
+   "center_lon": -179.875
+  },
+  {
+   "name": "Just below north pole, last column",
+   "lat": 89.9999,
+   "lon": 179.9999,
+   "row": 0,
+   "col": 1439,
+   "cell_id": 1439,
+   "center_lat": 89.875,
+   "center_lon": 179.875
+  },
+  {
+   "name": "South pole, lon 0 (clamped to row 719)",
+   "lat": -90.0,
+   "lon": 0.0,
+   "row": 719,
+   "col": 720,
+   "cell_id": 1036080,
+   "center_lat": -89.875,
+   "center_lon": 0.125
+  },
+  {
+   "name": "South pole, lon 180 (wraps to col 0)",
+   "lat": -90.0,
+   "lon": 180.0,
+   "row": 719,
+   "col": 0,
+   "cell_id": 1035360,
+   "center_lat": -89.875,
+   "center_lon": -179.875
+  },
+  {
+   "name": "Just above south pole",
+   "lat": -89.9999,
+   "lon": 0.0,
+   "row": 719,
+   "col": 720,
+   "cell_id": 1036080,
+   "center_lat": -89.875,
+   "center_lon": 0.125
+  },
+  {
+   "name": "Lon 180 wraps to -180",
+   "lat": 0.0,
+   "lon": 180.0,
+   "row": 360,
+   "col": 0,
+   "cell_id": 518400,
+   "center_lat": -0.125,
+   "center_lon": -179.875
+  },
+  {
+   "name": "Lon -180",
+   "lat": 0.0,
+   "lon": -180.0,
+   "row": 360,
+   "col": 0,
+   "cell_id": 518400,
+   "center_lat": -0.125,
+   "center_lon": -179.875
+  },
+  {
+   "name": "Last column",
+   "lat": 10.0,
+   "lon": 179.9999,
+   "row": 320,
+   "col": 1439,
+   "cell_id": 462239,
+   "center_lat": 9.875,
+   "center_lon": 179.875
+  },
+  {
+   "name": "Lon 180.0001 wraps to -179.9999",
+   "lat": 10.0,
+   "lon": 180.0001,
+   "row": 320,
+   "col": 0,
+   "cell_id": 460800,
+   "center_lat": 9.875,
+   "center_lon": -179.875
+  },
+  {
+   "name": "Lon 190 wraps to -170",
+   "lat": 10.0,
+   "lon": 190.0,
+   "row": 320,
+   "col": 40,
+   "cell_id": 460840,
+   "center_lat": 9.875,
+   "center_lon": -169.875
+  },
+  {
+   "name": "Lon -190 wraps to 170",
+   "lat": 10.0,
+   "lon": -190.0,
+   "row": 320,
+   "col": 1400,
+   "cell_id": 462200,
+   "center_lat": 9.875,
+   "center_lon": 170.125
+  },
+  {
+   "name": "Lat on a cell edge belongs to the cell south of it (row 191)",
+   "lat": 42.25,
+   "lon": 23.0,
+   "row": 191,
+   "col": 812,
+   "cell_id": 275852,
+   "center_lat": 42.125,
+   "center_lon": 23.125
+  },
+  {
+   "name": "Lat just north of the edge (row 190)",
+   "lat": 42.2501,
+   "lon": 23.0,
+   "row": 190,
+   "col": 812,
+   "cell_id": 274412,
+   "center_lat": 42.375,
+   "center_lon": 23.125
+  },
+  {
+   "name": "Lat just south of the edge (row 191)",
+   "lat": 42.2499,
+   "lon": 23.0,
+   "row": 191,
+   "col": 812,
+   "cell_id": 275852,
+   "center_lat": 42.125,
+   "center_lon": 23.125
+  },
+  {
+   "name": "Lon on a cell edge belongs to the cell east of it (col 813)",
+   "lat": 42.0,
+   "lon": 23.25,
+   "row": 192,
+   "col": 813,
+   "cell_id": 277293,
+   "center_lat": 41.875,
+   "center_lon": 23.375
+  },
+  {
+   "name": "Lon just west of the edge (col 812)",
+   "lat": 42.0,
+   "lon": 23.2499,
+   "row": 192,
+   "col": 812,
+   "cell_id": 277292,
+   "center_lat": 41.875,
+   "center_lon": 23.125
+  },
+  {
+   "name": "Lon just east of the edge (col 813)",
+   "lat": 42.0,
+   "lon": 23.2501,
+   "row": 192,
+   "col": 813,
+   "cell_id": 277293,
+   "center_lat": 41.875,
+   "center_lon": 23.375
+  },
+  {
+   "name": "Row 719 starts exactly at lat -89.75 (included)",
+   "lat": -89.75,
+   "lon": 10.0,
+   "row": 719,
+   "col": 760,
+   "cell_id": 1036120,
+   "center_lat": -89.875,
+   "center_lon": 10.125
+  },
+  {
+   "name": "Row 719, just south of -89.75",
+   "lat": -89.7501,
+   "lon": 10.0,
+   "row": 719,
+   "col": 760,
+   "cell_id": 1036120,
+   "center_lat": -89.875,
+   "center_lon": 10.125
+  },
+  {
+   "name": "Row 718, just north of -89.75",
+   "lat": -89.7499,
+   "lon": 10.0,
+   "row": 718,
+   "col": 760,
+   "cell_id": 1034680,
+   "center_lat": -89.625,
+   "center_lon": 10.125
+  },
+  {
+   "name": "Sydney, south and east",
+   "lat": -33.8688,
+   "lon": 151.2093,
+   "row": 495,
+   "col": 1324,
+   "cell_id": 714124,
+   "center_lat": -33.875,
+   "center_lon": 151.125
+  },
+  {
+   "name": "Cape Town, south and east",
+   "lat": -33.9249,
+   "lon": 18.4241,
+   "row": 495,
+   "col": 793,
+   "cell_id": 713593,
+   "center_lat": -33.875,
+   "center_lon": 18.375
+  },
+  {
+   "name": "Buenos Aires, south and west",
+   "lat": -34.6037,
+   "lon": -58.3816,
+   "row": 498,
+   "col": 486,
+   "cell_id": 717606,
+   "center_lat": -34.625,
+   "center_lon": -58.375
+  },
+  {
+   "name": "Lima, south and west",
+   "lat": -12.0464,
+   "lon": -77.0428,
+   "row": 408,
+   "col": 411,
+   "cell_id": 587931,
+   "center_lat": -12.125,
+   "center_lon": -77.125
+  },
+  {
+   "name": "Honolulu, north and far west",
+   "lat": 21.3069,
+   "lon": -157.8583,
+   "row": 274,
+   "col": 88,
+   "cell_id": 394648,
+   "center_lat": 21.375,
+   "center_lon": -157.875
+  },
+  {
+   "name": "Anchorage, high north and west",
+   "lat": 61.2181,
+   "lon": -149.9003,
+   "row": 115,
+   "col": 120,
+   "cell_id": 165720,
+   "center_lat": 61.125,
+   "center_lon": -149.875
+  },
+  {
+   "name": "Tromso, high north and east",
+   "lat": 69.6492,
+   "lon": 18.9553,
+   "row": 81,
+   "col": 795,
+   "cell_id": 117435,
+   "center_lat": 69.625,
+   "center_lon": 18.875
+  },
+  {
+   "name": "A cell centre maps back to its own cell",
+   "lat": 42.625,
+   "lon": 23.375,
+   "row": 189,
+   "col": 813,
+   "cell_id": 272973,
+   "center_lat": 42.625,
+   "center_lon": 23.375
+  }
+ ]
+}
