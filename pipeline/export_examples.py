@@ -970,8 +970,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--data", default=str(here / "data"),
                     help="folder holding derived/bg_us/cell_days.parquet")
-    ap.add_argument("--out", default=str(here / "web" / "public" / "data"),
-                    help="folder to write the example files into")
+    ap.add_argument("--out", default=str(here / "tests" / "fixtures" / "data"),
+                    help="folder to write the example files into. The default is "
+                         "the fixed copy the tests read, which the world export "
+                         "never touches")
     args = ap.parse_args()
 
     parquet = Path(args.data) / "derived" / "bg_us" / "cell_days.parquet"

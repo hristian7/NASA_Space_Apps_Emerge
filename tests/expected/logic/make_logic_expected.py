@@ -16,7 +16,7 @@ from scipy.stats import beta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-DATA = os.path.join(ROOT, "web", "public", "data")
+DATA = os.path.join(ROOT, "tests", "fixtures", "data")
 R_EARTH = 6371.0088
 FLAG_LABELS = ["example", "partial_month", "snpp_gap_filled", "low_confidence"]
 

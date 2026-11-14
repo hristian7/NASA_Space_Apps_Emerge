@@ -16,7 +16,7 @@ Facts found while writing the samples:
 
 ## `logic/`: expected answers for the app's number logic
 
-Written on 14 Nov 2026 from `docs/number-logic.md`, `web/src/types/ui.ts` and `docs/data-contract.md`, before the logic code existed. The author never read `web/src/lib` or `web/src/components`. Plain Python with numpy and scipy (`scipy.stats.beta` for the Jeffreys range, `numpy.polyfit` as a cross-check of an exact-fraction least-squares fit). The example files under `web/public/data` are read with `json` and `gzip` only. `logic/make_logic_expected.py` regenerates every file and is deterministic.
+Written on 14 Nov 2026 from `docs/number-logic.md`, `web/src/types/ui.ts` and `docs/data-contract.md`, before the logic code existed. The author never read `web/src/lib` or `web/src/components`. Plain Python with numpy and scipy (`scipy.stats.beta` for the Jeffreys range, `numpy.polyfit` as a cross-check of an exact-fraction least-squares fit). The example files under `tests/fixtures/data` are read with `json` and `gzip` only. `logic/make_logic_expected.py` regenerates every file and is deterministic.
 
 | File | Section | What it pins |
 |---|---|---|

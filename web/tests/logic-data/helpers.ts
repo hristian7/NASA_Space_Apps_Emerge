@@ -1,6 +1,6 @@
 /**
  * Shared setup for the data-layer tests: a source reading the real example
- * files from web/public/data on disk, with node:zlib for the gzipped ones.
+ * files from tests/fixtures/data on disk, with node:zlib for the gzipped ones.
  *
  * These tests import by relative path because the vitest config carries no
  * alias for the tsconfig paths and another stream owns that config.
@@ -14,8 +14,8 @@ import { diskSource, nodeGunzip } from '../../src/lib/data/source.node';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/** web/public/data */
-export const DATA_DIR = path.resolve(here, '../../public/data');
+/** tests/fixtures/data, the fixed copy of the example set */
+export const DATA_DIR = path.resolve(here, '../../../tests/fixtures/data');
 
 /** The repository root, for the expected answers under tests/. */
 export const REPO_ROOT = path.resolve(here, '../../..');

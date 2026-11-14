@@ -140,8 +140,10 @@ export interface TileCell extends PointHead {
   /** Cell id: row * 1440 + col. */
   id: number;
   /**
-   * Group this cell belongs to, for the background lookup in background.json.
-   * An opaque key: never take it apart.
+   * Group this cell belongs to, for the background and factor lookup in
+   * background.json. An opaque key: never take it apart. The empty string
+   * means the conversion gave this cell no group, so it has no background
+   * (count it as 0) and its daily values cannot be scaled.
    */
   g: string;
   /** Month indexes, ascending. January 2000 is 0. */
@@ -295,7 +297,9 @@ export interface DailyCell extends PointHead {
   id: number;
   /**
    * Group this cell belongs to, for the conversion factor in background.json.
-   * An opaque key: never take it apart.
+   * An opaque key: never take it apart. The empty string means the conversion
+   * gave this cell no group, so its values before February 2012 cannot be
+   * scaled and the app shows them as estimated only.
    */
   g: string;
   /** Only years with at least one fire day are listed, ascending. */
@@ -421,6 +425,7 @@ export interface MetaFile {
 /** What one scored row of the validation stands for. */
 export type ValidationScope =
   | 'country_month'
+  | 'country_month_joint_range'
   | 'cell_month'
   | 'circle_month'
   | 'circle_month_weighted'
