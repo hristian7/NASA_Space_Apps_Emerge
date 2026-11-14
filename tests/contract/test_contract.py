@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import glob
+import os
 import gzip
 import json
 import math
@@ -17,7 +18,16 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
-DATA = REPO / "web" / "public" / "data"
+
+# The example set by default. Point EMERGE_OUT at another export, such as the
+# world one, to check that against the same contract. The checks that only make
+# sense for the two-country example set are skipped when the set says it is not
+# an example.
+DATA = Path(os.environ.get("EMERGE_OUT") or (REPO / "web" / "public" / "data"))
+IS_EXAMPLE = json.loads((DATA / "meta.json").read_text())["example"]
+example_only = pytest.mark.skipif(
+    not IS_EXAMPLE, reason="only the two-country example set has this"
+)
 
 SRC_LABELS = [
     "estimated_terra",
@@ -63,6 +73,11 @@ def cell_id_of(lat: float, lon: float) -> int:
     row = min(max(math.floor((90 - lat) / CELL_DEG), 0), GRID_ROWS - 1)
     col = min(max(math.floor((lon + 180) / CELL_DEG), 0), GRID_COLS - 1)
     return row * GRID_COLS + col
+
+
+def cell_center(cell_id: int) -> tuple[float, float]:
+    row, col = divmod(cell_id, GRID_COLS)
+    return (90 - CELL_DEG * row - CELL_DEG / 2, -180 + CELL_DEG * col + CELL_DEG / 2)
 
 
 def half_diagonal_km(lat: float) -> float:
@@ -122,6 +137,18 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+SENSOR_LABELS = ["terra", "aqua", "snpp"]
+# Levels the independent scorer reports. The last two are shown for information.
+VALIDATION_SCOPES = (
+    "country_month", "cell_month", "circle_month",
+    "circle_month_weighted", "cell_month_0p1",
+)
+BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
+BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
+FACTOR_UNITS = ["k_hot", "k_cd"]
+BACKGROUND_GROUPS = set(read_json(DATA / "background.json")["groups"])
+
+
 @pytest.fixture(scope="module")
 def meta() -> dict:
     return read_json(DATA / "meta.json")
@@ -129,7 +156,7 @@ def meta() -> dict:
 
 def test_meta_shape(meta):
     assert meta["schema"] == "emerge-meta-1"
-    assert meta["example"] is True
+    assert meta["example"] is IS_EXAMPLE
     assert meta["first_month"] == "2000-11"
     assert meta["last_month"] == "2025-12"
     assert meta["grid"] == {
@@ -141,6 +168,7 @@ def test_meta_shape(meta):
     assert meta["daily_window"]["days"] == 45
     assert meta["daily_window"]["min_compare_days"] == 8
     assert meta["daily_window"]["latest_day"] == "2025-12-31"
+    assert meta["daily_window"]["values"] == "raw"
     for period in meta["src_periods"]:
         assert period["src"] in SRC_LABELS
     for nd in meta["no_data"]:
@@ -152,7 +180,7 @@ def test_meta_shape(meta):
 
 def test_meta_indexes_match_the_files(meta):
     assert meta["countries"] == sorted(
-        p.stem for p in (DATA / "countries").glob("*.json")
+        p.stem for p in (DATA / "countries").glob("*.json") if p.stem != "index"
     )
     assert meta["reported"] == sorted(
         p.stem for p in (DATA / "reported").glob("*.json")
@@ -164,7 +192,7 @@ def test_meta_indexes_match_the_files(meta):
         p.name[: -len(".json.gz")] for p in (DATA / "daily").glob("*.json.gz")
     )
     assert meta["globe_years"] == sorted(
-        int(p.stem) for p in (DATA / "globe").glob("*.json")
+        int(p.name[: -len(".json.gz")]) for p in (DATA / "globe").glob("*.json.gz")
     )
 
 
@@ -172,12 +200,15 @@ def test_meta_indexes_match_the_files(meta):
 # countries/<ISO3>.json
 # ---------------------------------------------------------------------------
 
-COUNTRY_FILES = sorted((DATA / "countries").glob("*.json"))
+COUNTRY_FILES = sorted(
+    p for p in (DATA / "countries").glob("*.json") if p.stem != "index"
+)
 TILE_FILES = sorted((DATA / "tiles").glob("*.json.gz"))
 DAILY_FILES = sorted((DATA / "daily").glob("*.json.gz"))
-GLOBE_FILES = sorted((DATA / "globe").glob("*.json"))
+GLOBE_FILES = sorted((DATA / "globe").glob("*.json.gz"))
 
 
+@example_only
 def test_the_example_set_exists():
     assert [p.stem for p in COUNTRY_FILES] == ["BGR", "USA"]
     assert len(TILE_FILES) == 4
@@ -189,7 +220,7 @@ def test_the_example_set_exists():
 def test_country_file(path: Path):
     doc = read_json(path)
     assert doc["schema"] == "emerge-country-1"
-    assert doc["example"] is True
+    assert doc["example"] is IS_EXAMPLE
     assert doc["iso3"] == path.stem
     assert doc["name_key"] == f"country.{path.stem}"
     check_point_head(doc, path.name, "country")
@@ -206,7 +237,9 @@ def test_country_file(path: Path):
         assert isinstance(rec["flags"], list), where
         for flag in rec["flags"]:
             assert flag in FLAG_LABELS, f"{where}: unknown flag {flag}"
-        if rec["src"].startswith("estimated"):
+        if not IS_EXAMPLE:
+            assert "example" not in rec["flags"], f"{where}: a real export has no example flag"
+        elif rec["src"].startswith("estimated"):
             assert "example" in rec["flags"], f"{where}: estimated months must be flagged"
         else:
             assert "example" not in rec["flags"], f"{where}: measured months are not examples"
@@ -246,7 +279,10 @@ VERIFIED_REPORTED = {
 def test_reported_file(path: Path):
     doc = read_json(path)
     assert doc["schema"] == "emerge-reported-1"
-    assert doc["example"] is True
+    assert doc["example"] is True, (
+        "the reported figures are the two verified ones and stay flagged as an "
+        "example until the rest are fetched"
+    )
     assert doc["scope"] == "national"
     assert doc["units"] == {"fires": "count", "burned_ha": "hectares"}
     src = doc["source"]
@@ -280,7 +316,7 @@ def test_tile_file(path: Path):
     key = path.name[: -len(".json.gz")]
     doc = read_gzip_json(path)
     assert doc["schema"] == "emerge-tile-1"
-    assert doc["example"] is True
+    assert doc["example"] is IS_EXAMPLE
     assert doc["type"] == "cell"
     assert doc["cell_deg"] == CELL_DEG
     assert doc["src_labels"] == SRC_LABELS
@@ -303,6 +339,9 @@ def test_tile_file(path: Path):
         want = half_diagonal_km(cell["lat"])
         assert abs(cell["precision_radius_km"] - want) <= 0.01 * want, f"{where}: precision radius off"
 
+        assert isinstance(cell["g"], str) and cell["g"], f"{where}: missing group id"
+        assert cell["g"] in BACKGROUND_GROUPS, f"{where}: group {cell['g']} is not in background.json"
+
         n = len(cell["mi"])
         assert n > 0, where
         assert cell["mi"] == sorted(cell["mi"]), f"{where}: months out of order"
@@ -324,7 +363,10 @@ def test_tile_file(path: Path):
             bits = cell["flags"][pos]
             assert is_whole(bits) and 0 <= bits < (1 << len(FLAG_LABELS)), where
             example_bit = 1 << FLAG_LABELS.index("example")
-            if SRC_LABELS[src_i].startswith("estimated"):
+            if not IS_EXAMPLE:
+                # A real conversion's estimated months are real numbers.
+                assert not bits & example_bit, f"{where} {y}-{m:02d}: a real export has no example flag"
+            elif SRC_LABELS[src_i].startswith("estimated"):
                 assert bits & example_bit, f"{where} {y}-{m:02d}: estimated months must be flagged"
             else:
                 assert not bits & example_bit, f"{where} {y}-{m:02d}: measured months are not examples"
@@ -350,33 +392,35 @@ def test_bulgaria_is_fully_covered_by_its_tiles():
 
 @pytest.mark.parametrize("path", GLOBE_FILES, ids=lambda p: p.name)
 def test_globe_file(path: Path):
-    doc = read_json(path)
+    doc = read_gzip_json(path)
     assert doc["schema"] == "emerge-globe-1"
-    assert doc["example"] is True
+    assert doc["example"] is IS_EXAMPLE
     assert doc["type"] == "cell"
-    assert doc["year"] == int(path.stem)
-    assert doc["src_labels"] == SRC_LABELS
+    assert doc["year"] == int(path.name[: -len(".json.gz")])
+    assert doc["point_from_id"] is True
+    assert doc["cell_deg"] == CELL_DEG
     cols = doc["cols"]
+    assert list(cols) == ["id", "hot", "cd", "frp"], (
+        "the globe layer is slim on purpose: id and values only"
+    )
     n = doc["n"]
     for name, values in cols.items():
         assert len(values) == n, f"{path.name}: column {name} has the wrong length"
     assert cols["id"] == sorted(cols["id"])
+    assert len(set(cols["id"])) == n, f"{path.name}: a cell is listed twice"
 
     for i in range(n):
         where = f"{path.name} cell {cols['id'][i]}"
-        head = {name: cols[name][i] for name in ("lat", "lon", "precision_radius_km")}
-        head["type"] = doc["type"]
-        check_point_head(head, where, "cell")
-        assert cols["id"][i] == cell_id_of(head["lat"], head["lon"]), f"{where}: cell id does not match lat/lon"
-        want = half_diagonal_km(head["lat"])
-        assert abs(head["precision_radius_km"] - want) <= 0.01 * want, f"{where}: precision radius off"
-        for field in HARM_FIELDS:
+        cell_id = cols["id"][i]
+        assert 0 <= cell_id < GRID_ROWS * GRID_COLS, where
+        # The point must be reachable from the id alone, which is why it is
+        # not stored.
+        lat, lon = cell_center(cell_id)
+        assert -90 <= lat <= 90 and -180 <= lon <= 180, where
+        assert cell_id == cell_id_of(lat, lon), f"{where}: id does not round-trip"
+        for field in ("hot", "cd", "frp"):
             v = cols[field][i]
             assert is_whole(v) and v >= 0, f"{where}: {field} must be a whole number, 0 or more"
-        assert cols["hot_lo"][i] <= cols["hot"][i] <= cols["hot_hi"][i], where
-        assert cols["cd_lo"][i] <= cols["cd"][i] <= cols["cd_hi"][i], where
-        assert 0 <= cols["src"][i] < len(SRC_LABELS), where
-        assert 0 <= cols["flags"][i] < (1 << len(FLAG_LABELS)), where
 
 
 # ---------------------------------------------------------------------------
@@ -389,7 +433,7 @@ def test_daily_file(path: Path):
     key = path.name[: -len(".json.gz")]
     doc = read_gzip_json(path)
     assert doc["schema"] == "emerge-daily-1"
-    assert doc["example"] is True
+    assert doc["example"] is IS_EXAMPLE
     assert doc["type"] == "cell"
     assert doc["src_labels"] == SRC_LABELS
     window = doc["window"]
@@ -398,6 +442,8 @@ def test_daily_file(path: Path):
     assert window["start_md"] == "11-17"
     assert window["end_md"] == "12-31"
     assert window["wraps_year"] is False
+    assert doc["values"] == "raw", "the daily files hold raw counts"
+    assert doc["sensor_labels"] == SENSOR_LABELS
     assert doc["years"] == list(range(2000, 2026))
 
     cells = doc["cells"]
@@ -420,6 +466,15 @@ def test_daily_file(path: Path):
             assert 0 <= block["src"] < len(SRC_LABELS), w2
             assert SRC_LABELS[block["src"]] == expected_src(block["y"], 12), f"{w2}: wrong src label"
             assert 0 <= block["flags"] < (1 << len(FLAG_LABELS)), w2
+            # Terra before Jul 2002, Aqua to Jan 2012, S-NPP after (ruling 11).
+            # Every window here sits in November and December.
+            if block["y"] < 2002:
+                want_sensor = "terra"
+            elif block["y"] < 2012:
+                want_sensor = "aqua"
+            else:
+                want_sensor = "snpp"
+            assert SENSOR_LABELS[block["sensor"]] == want_sensor, f"{w2}: wrong sensor"
             n = len(block["d"])
             assert n > 0, w2
             assert len(block["hot"]) == n and len(block["frp"]) == n, w2
@@ -439,7 +494,7 @@ def test_daily_file(path: Path):
 def test_validation_file_has_everything_the_proof_page_needs():
     doc = read_json(DATA / "validation.json")
     assert doc["schema"] == "emerge-validation-1"
-    assert doc["example"] is True
+    assert doc["example"] is IS_EXAMPLE
     for section in ("method", "holdout", "slices", "satellite_agreement",
                     "published_ratios", "range_coverage", "chance_of_fire",
                     "control_totals", "limits"):
@@ -452,7 +507,7 @@ def test_validation_file_has_everything_the_proof_page_needs():
     for entry in doc["holdout"]:
         assert entry["direction"] in ("forward", "reverse")
         assert entry["unit"] in ("hot", "cd")
-        assert entry["scope"] in ("country_month", "cell_month", "circle_month")
+        assert entry["scope"] in VALIDATION_SCOPES
         for field in ("n", "nrmse", "mae", "bias_pct", "r", "slope"):
             assert field in entry
     for entry in doc["slices"]:
@@ -463,7 +518,8 @@ def test_validation_file_has_everything_the_proof_page_needs():
     for entry in doc["published_ratios"]:
         assert entry["scope"] and "ours" in entry and "published" in entry
     for entry in doc["range_coverage"]:
-        assert entry["level_pct"] == 90 and "observed_pct" in entry
+        assert entry["level_pct"] in (80, 90) and "observed_pct" in entry
+        assert entry["scope"] in VALIDATION_SCOPES
     assert len(doc["chance_of_fire"]["reliability"]) == 10
     for entry in doc["control_totals"]:
         assert entry["check"] and entry["passed"] in (True, False, None)
@@ -624,8 +680,112 @@ def test_fire_days_are_not_capped_at_the_days_in_a_month():
     assert big, "no cell-month above 31 fire days: the old cap may be back"
     assert max(big) > 100
 
-    # Section 3.1 of the contract cites this cell-month as its worked example.
-    cell = next(c for c in doc["cells"] if c["id"] == 302642)
-    pos = cell["mi"].index(248)  # September 2020
-    assert cell["cd"][pos] == 2448
-    assert cell["hot"][pos] == 10382
+    if IS_EXAMPLE:
+        # Section 3.1 of the contract cites this cell-month as its worked example.
+        cell = next(c for c in doc["cells"] if c["id"] == 302642)
+        pos = cell["mi"].index(248)  # September 2020
+        assert cell["cd"][pos] == 2448
+        assert cell["hot"][pos] == 10382
+
+
+# ---------------------------------------------------------------------------
+# background.json and countries/index.json
+# ---------------------------------------------------------------------------
+
+
+def test_background_file():
+    doc = read_json(DATA / "background.json")
+    assert doc["schema"] == "emerge-background-1"
+    assert doc["example"] is IS_EXAMPLE
+    assert doc["units"] == {"background": "hundredths", "factors": "thousandths"}
+    assert doc["periods"] == BACKGROUND_PERIODS
+    if doc["example"]:
+        assert doc["note"], "a stand-in background must say so in the file"
+    assert doc["groups"], "background.json has no groups"
+    assert list(doc["groups"]) == sorted(doc["groups"]), "groups must be sorted"
+
+    for gid, periods in doc["groups"].items():
+        assert list(periods) == BACKGROUND_PERIODS, f"{gid}: wrong periods"
+        for period, series in periods.items():
+            where = f"{gid} {period}"
+            assert list(series) == BACKGROUND_UNITS + FACTOR_UNITS, f"{where}: wrong units"
+            for unit, values in series.items():
+                assert len(values) == 12, f"{where} {unit}: needs 12 months"
+                for v in values:
+                    assert is_whole(v), f"{where} {unit}: not a whole number"
+                    assert v >= 0, f"{where} {unit}: negative"
+            # The app multiplies a raw daily count by this, so a zero factor
+            # would silently show the pre-2012 daily window far too low.
+            for unit in FACTOR_UNITS:
+                for m in range(12):
+                    assert series[unit][m] > 0, f"{where} {unit} month {m + 1}: no factor"
+            for m in range(12):
+                assert series["hot"][m] <= series["hot_hi"][m], f"{where}: hot above its upper end"
+                assert series["cd"][m] <= series["cd_hi"][m], f"{where}: cd above its upper end"
+
+
+@example_only
+def test_every_background_group_is_used_by_a_tile():
+    """No group may be listed that no cell points at, and none may be missing."""
+    used = set()
+    for path in TILE_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            used.add(cell["g"])
+    assert used == BACKGROUND_GROUPS, (
+        f"groups only in the tiles: {sorted(used - BACKGROUND_GROUPS)}; "
+        f"groups only in background.json: {sorted(BACKGROUND_GROUPS - used)}"
+    )
+
+
+def test_every_daily_cell_names_a_group_with_a_factor():
+    """Ruling 11: the app scales a pre-2012 raw count by that group's k_hot."""
+    doc = read_json(DATA / "background.json")
+    for path in DAILY_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            gid = cell["g"]
+            assert gid in doc["groups"], f"{path.name} cell {cell['id']}: group {gid} is unknown"
+            for period in BACKGROUND_PERIODS:
+                for unit in FACTOR_UNITS:
+                    assert len(doc["groups"][gid][period][unit]) == 12
+
+
+def test_country_index():
+    doc = read_json(DATA / "countries" / "index.json")
+    assert doc["schema"] == "emerge-country-index-1"
+    assert doc["example"] is IS_EXAMPLE
+    entries = doc["countries"]
+    assert [e["iso3"] for e in entries] == sorted(e["iso3"] for e in entries)
+    assert [e["iso3"] for e in entries] == [p.stem for p in COUNTRY_FILES], (
+        "the index must name exactly the country files that exist"
+    )
+    for e in entries:
+        where = f"index {e['iso3']}"
+        assert e["name"], where
+        country = read_json(DATA / "countries" / f"{e['iso3']}.json")
+        assert e["lat"] == country["lat"] and e["lon"] == country["lon"], (
+            f"{where}: the point must match the country file"
+        )
+        west, south, east, north = e["bbox"]
+        assert -90 <= south < north <= 90, f"{where}: latitudes out of order"
+        for v in (west, east):
+            assert -180 <= v <= 180, f"{where}: longitude outside the range"
+        assert south <= e["lat"] <= north, f"{where}: the point is outside its own box"
+
+
+@example_only
+def test_the_country_box_holds_every_cell_of_that_country():
+    """Including the case where the box crosses the 180 degree line."""
+    boxes = {
+        e["iso3"]: e["bbox"]
+        for e in read_json(DATA / "countries" / "index.json")["countries"]
+    }
+    west, south, east, north = boxes["USA"]
+    assert west > east, "the USA box is expected to cross the 180 degree line"
+
+    for path in TILE_FILES:
+        for cell in read_gzip_json(path)["cells"]:
+            iso3 = cell["g"].split("_")[0]
+            w, s, e, n = boxes[iso3]
+            assert s <= cell["lat"] <= n, f"{iso3} cell {cell['id']} outside its box"
+            inside = (cell["lon"] >= w or cell["lon"] <= e) if w > e else (w <= cell["lon"] <= e)
+            assert inside, f"{iso3} cell {cell['id']} outside its box in longitude"

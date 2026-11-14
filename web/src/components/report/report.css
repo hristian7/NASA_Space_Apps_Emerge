@@ -1,0 +1,627 @@
+/*
+ * The report panel's own styles. Colour, radius and type come only from the
+ * theme tokens, the diverging anomaly scale among them: it lives in
+ * src/styles/themes.css with the three looks.
+ */
+
+.rp-report {
+  display: grid;
+  gap: 18px;
+  font: 400 14px/1.45 var(--font-ui);
+  color: var(--ink);
+}
+
+.rp-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rp-heading {
+  margin: 0;
+  font: 600 12px/1.3 var(--font-ui);
+  color: var(--ink-2);
+  letter-spacing: 0.01em;
+}
+
+.rp-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.rp-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Unit toggle */
+
+.rp-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
+.rp-chip {
+  flex: 1 1 auto;
+  border: 0;
+  background: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.rp-chip[aria-pressed="true"] {
+  background: var(--line);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.rp-chip:focus-visible,
+.rp-cell:focus-visible,
+.rp-btn:focus-visible,
+.rp-term:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Calendar */
+
+.rp-calendarWrap {
+  position: relative;
+  min-width: 0;
+}
+
+.rp-calendar {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.rp-calendar text {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-monthHead,
+.rp-yearHead {
+  fill: var(--ink-3);
+  font-size: 9.5px;
+}
+
+.rp-yearHeadEstimated {
+  fill: var(--ink-2);
+}
+
+.rp-cell {
+  cursor: pointer;
+}
+
+.rp-cellZero {
+  fill: var(--empty);
+}
+
+.rp-cellNoData {
+  fill: none;
+  stroke: var(--nodata);
+  stroke-width: 1px;
+}
+
+.rp-cellNoDataSlash {
+  stroke: var(--nodata);
+  stroke-width: 1px;
+}
+
+/* The pattern reference is set as an attribute: its id is made per instance,
+   so two calendars on one page cannot collide. */
+.rp-cellHatch {
+  pointer-events: none;
+}
+
+.rp-cellSelected {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2px;
+}
+
+.rp-hatchLine {
+  stroke: var(--ink-3);
+  stroke-width: 0.6px;
+  stroke-opacity: 0.75;
+}
+
+.rp-estimatedMark {
+  fill: var(--ink-3);
+}
+
+.rp-total {
+  fill: var(--ink-3);
+}
+
+.rp-totalSelected {
+  fill: var(--accent);
+}
+
+.rp-totalTrack {
+  fill: var(--empty);
+}
+
+/* Tooltip */
+
+.rp-tip {
+  position: absolute;
+  z-index: 2;
+  min-width: 150px;
+  max-width: 230px;
+  padding: 8px 10px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+  pointer-events: none;
+  box-shadow: 0 6px 18px oklch(0 0 0 / 0.3);
+}
+
+.rp-tipTitle {
+  display: block;
+  font-weight: 600;
+}
+
+.rp-tipRow {
+  display: block;
+  color: var(--ink-2);
+}
+
+/* Legend */
+
+.rp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.rp-legendKey {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rp-legendSteps {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.rp-legendSwatch {
+  width: 18px;
+  height: 9px;
+  border-radius: 1px;
+}
+
+.rp-legendSwatchZero {
+  background: var(--empty);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.rp-legendSwatchNoData {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--nodata);
+  background-image: linear-gradient(
+    135deg,
+    transparent 46%,
+    var(--nodata) 46%,
+    var(--nodata) 54%,
+    transparent 54%
+  );
+}
+
+.rp-legendSwatchEstimated {
+  background: var(--ramp-2);
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--panel-solid) 0 1px,
+    transparent 1px 5px
+  );
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* Cards */
+
+.rp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.rp-card {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  min-width: 0;
+}
+
+.rp-cardFigure {
+  font: 500 24px/1.1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-cardFigureUp {
+  color: var(--accent);
+}
+
+.rp-cardLine {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  text-wrap: pretty;
+}
+
+.rp-cardList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.rp-cardList li::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: 0.3em;
+  background: var(--ink-3);
+}
+
+/* Tables */
+
+.rp-tableScroll {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.rp-table caption {
+  padding: 8px 10px;
+  text-align: left;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.rp-table th,
+.rp-table td {
+  padding: 5px 8px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.rp-table th:first-child,
+.rp-table td:first-child {
+  text-align: left;
+}
+
+.rp-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel-solid);
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 11px;
+  z-index: 1;
+}
+
+.rp-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.rp-table td {
+  color: var(--ink-2);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-table td:first-child {
+  color: var(--ink);
+}
+
+.rp-flagEstimated {
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+/* Bars and charts */
+
+.rp-bars {
+  display: grid;
+  gap: 3px;
+}
+
+.rp-barRow {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.rp-barLabel {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-barLabelEstimated {
+  box-shadow: inset 2px 0 0 var(--ink-3);
+  padding-left: 6px;
+}
+
+.rp-barTrack {
+  position: relative;
+  height: 9px;
+  background: var(--empty);
+  border-radius: 1px;
+  min-width: 0;
+}
+
+.rp-barFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ink-3);
+  border-radius: 1px;
+}
+
+.rp-barFillCurrent {
+  background: var(--accent);
+}
+
+/* Stripes cut out of the bar in the panel's own colour, so the mark reads
+   the same way in a light look and in a dark one. */
+.rp-barFillEstimated {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--panel-solid) 0 1px,
+    transparent 1px 5px
+  );
+}
+
+.rp-barValue {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.rp-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rp-chart text {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  fill: var(--ink-3);
+  font-size: 9.5px;
+}
+
+.rp-band {
+  fill: var(--ink-3);
+  opacity: 0.22;
+}
+
+.rp-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5px;
+}
+
+.rp-lineEstimated {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.5px;
+  stroke-dasharray: 3 3;
+}
+
+.rp-dot {
+  fill: var(--accent);
+}
+
+.rp-axis {
+  stroke: var(--line);
+  stroke-width: 1px;
+}
+
+/* Buttons */
+
+.rp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rp-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  padding: 7px 12px;
+  border-radius: var(--radius-s);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rp-btn:hover:not(:disabled) {
+  border-color: var(--ink-3);
+}
+
+.rp-btnPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--space);
+  font-weight: 600;
+}
+
+.rp-btn:disabled {
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+/* Glossary */
+
+.rp-glossary {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rp-glossaryRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 30%) 1fr;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rp-glossaryRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.rp-glossaryTerm {
+  margin: 0;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.rp-glossaryText {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  text-wrap: pretty;
+}
+
+/* Inline term with an explanation on hover or focus */
+
+.rp-termWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.rp-term {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: help;
+  text-decoration: underline dotted var(--ink-3);
+  text-underline-offset: 3px;
+}
+
+.rp-termTip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 3;
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 9px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink-2);
+  text-wrap: pretty;
+  box-shadow: 0 6px 18px oklch(0 0 0 / 0.3);
+}
+
+.rp-srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 420px) {
+  .rp-glossaryRow {
+    grid-template-columns: 1fr;
+  }
+
+  .rp-barRow {
+    grid-template-columns: 34px 1fr auto;
+    gap: 6px;
+  }
+}
+
+.rp-outsideList {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.rp-outsideList li {
+  display: grid;
+  gap: 2px;
+}
+
+.rp-outsideLink {
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.rp-outsideLink:hover {
+  text-decoration-color: var(--accent);
+}
+
+.rp-outsideNote {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.rp-outsideList li > .rp-outsideNote {
+  margin-left: 0;
+}

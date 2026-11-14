@@ -18,5 +18,6 @@ export async function setLocale(formData: FormData) {
     sameSite: "lax",
   });
 
-  revalidatePath("/");
+  // Every page reads the language, so the whole layout is refreshed.
+  revalidatePath("/", "layout");
 }

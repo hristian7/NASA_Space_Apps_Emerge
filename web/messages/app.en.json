@@ -1,0 +1,22 @@
+{
+  "backgroundMissing": "The pre-2012 background file was not loaded, so months before February 2012 may read low.",
+  "dataDate": "Satellite data to {date}",
+  "drawnArea": "Drawn area",
+  "failed": "The fire record for this place could not be read.",
+  "failedDetail": "What went wrong: {reason}",
+  "hotspotsLink": "Hotspots, CSV, for {year}",
+  "hotspotsNote": "The hotspots file holds one row per detection. It covers at most 366 days, so it opens with {year}. A point is capped at 200 km; a country or a drawn area is read as the box around it, so the file covers the box, not the exact shape.",
+  "hotspotsSlow": "Large areas take a while: the file is read from the public archive.",
+  "loading": "Reading the fire record for this place.",
+  "lowConfidence": "This area is smaller than one grid square, so the figures are for the whole square around it.",
+  "noFires": "No fires recorded here since {month}",
+  "rangeFrom": "From",
+  "rangeHeading": "Date range",
+  "rangeNote": "The calendar, the table and the downloads cover this range only.",
+  "rangeReset": "Whole record",
+  "rangeTo": "To",
+  "retry": "Try again",
+  "satelliteCountryOnly": "Counts per satellite are held for whole countries only. Pick a country to see them.",
+  "selectMonthHint": "Pick a month in the calendar to change the two cards below.",
+  "selectedMonth": "Selected month: {month}"
+}
