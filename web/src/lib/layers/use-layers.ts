@@ -9,7 +9,7 @@
  * parameter is never touched here.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { GlobeFile } from '../../types/data';
 import { getMeta, loadGlobeYear } from '../data/api';
 import { LAYERS } from '../../config/layers';
@@ -59,7 +59,6 @@ export function useLayers(): LayersValue {
   const [historyStatus, setHistoryStatus] = useState<LoadStatus>('off');
   const [recent, setRecent] = useState<RecentPayload | null>(null);
   const [recentStatus, setRecentStatus] = useState<LoadStatus>('off');
-  const started = useRef(false);
   // Nothing is fetched before the address bar and the last data year are both
   // known, or the first paint would ask for a year nobody chose.
   const [hydrated, setHydrated] = useState(false);
@@ -67,8 +66,6 @@ export function useLayers(): LayersValue {
   // The last data year decides where the year control stops, so the state is
   // read from the address bar only once that is known.
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
     let cancelled = false;
     (async () => {
       let month: string | null = null;
