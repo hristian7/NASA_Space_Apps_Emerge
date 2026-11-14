@@ -22,8 +22,17 @@ const fonts =
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
 
+  // The inline script in the head applies a remembered look to <html> before
+  // React starts, so that element's attributes do not match the ones rendered
+  // on the server. The difference is intended, and suppressing the warning on
+  // this one element is how React is told so.
   return (
-    <html lang={locale} data-look={defaultLook} data-sheet="half">
+    <html
+      lang={locale}
+      data-look={defaultLook}
+      data-sheet="half"
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

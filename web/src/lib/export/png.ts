@@ -42,8 +42,27 @@ export interface EmbeddedFont {
   style?: string;
 }
 
+/**
+ * One piece of the legend band drawn under the picture. A legend that lives in
+ * HTML beside an SVG does not travel into the PNG, so the caller hands it over
+ * as data: plain words, a run of touching colour swatches, and the keys for
+ * zero, no data and estimated.
+ */
+export type PngLegendItem =
+  | { kind: "text"; text: string }
+  | { kind: "swatch"; colour: string }
+  | {
+      kind: "key";
+      text: string;
+      /** null draws the no-data key: an outline with a slash through it. */
+      colour: string | null;
+      pattern?: "stripes";
+    };
+
 export interface PngOptions {
   caption: PngCaption;
+  /** Drawn in a band under the picture, in the order given. */
+  legend?: readonly PngLegendItem[];
   /** Pixels per SVG unit. Two by default, as the spike measured. */
   scale?: number;
   /** Any CSS colour. Resolved to rgb before it is painted. */
@@ -243,6 +262,98 @@ function captionNode(
   return group;
 }
 
+const LEGEND_SWATCH = 10;
+const LEGEND_GAP = 6;
+const LEGEND_TEXT = 10;
+const LEGEND_PAD = 8;
+
+/** Height of the legend band, 0 when there is nothing to draw. */
+function legendHeight(items: readonly PngLegendItem[] | undefined): number {
+  return items === undefined || items.length === 0
+    ? 0
+    : LEGEND_PAD + LEGEND_SWATCH + 4;
+}
+
+/**
+ * The legend band: swatches of the same size as the calendar's keys, each with
+ * its words beside it, laid left to right. Everything is written as attributes
+ * because no stylesheet survives the copy.
+ */
+function legendNode(
+  document_: Document,
+  items: readonly PngLegendItem[],
+  width: number,
+  options: { textColour: string; lineColour: string; fontFamily: string },
+): SVGGElement {
+  const group = document_.createElementNS(SVG_NS, "g") as SVGGElement;
+  const top = LEGEND_PAD / 2;
+  let x = CAPTION_PAD;
+
+  function words(text: string, after: number): void {
+    const node = document_.createElementNS(SVG_NS, "text");
+    node.setAttribute("x", String(x));
+    node.setAttribute("y", String(top + LEGEND_SWATCH - 1));
+    node.setAttribute("fill", options.textColour);
+    node.setAttribute("font-family", options.fontFamily);
+    node.setAttribute("font-size", `${LEGEND_TEXT}px`);
+    node.setAttribute("font-weight", "400");
+    node.textContent = text;
+    group.appendChild(node);
+    // A rough width per character, which is enough to keep the pieces apart.
+    x += text.length * LEGEND_TEXT * 0.52 + after;
+  }
+
+  function box(colour: string | null, pattern?: "stripes"): void {
+    const rect = document_.createElementNS(SVG_NS, "rect");
+    rect.setAttribute("x", String(x));
+    rect.setAttribute("y", String(top));
+    rect.setAttribute("width", String(LEGEND_SWATCH));
+    rect.setAttribute("height", String(LEGEND_SWATCH));
+    rect.setAttribute("fill", colour ?? "none");
+    rect.setAttribute("stroke", options.lineColour);
+    rect.setAttribute("stroke-width", "0.8");
+    group.appendChild(rect);
+    if (colour === null) {
+      const slash = document_.createElementNS(SVG_NS, "line");
+      slash.setAttribute("x1", String(x + 1.5));
+      slash.setAttribute("y1", String(top + LEGEND_SWATCH - 1.5));
+      slash.setAttribute("x2", String(x + LEGEND_SWATCH - 1.5));
+      slash.setAttribute("y2", String(top + 1.5));
+      slash.setAttribute("stroke", options.lineColour);
+      slash.setAttribute("stroke-width", "0.8");
+      group.appendChild(slash);
+    }
+    if (pattern === "stripes") {
+      for (let i = 1; i < 4; i += 1) {
+        const line = document_.createElementNS(SVG_NS, "line");
+        line.setAttribute("x1", String(x + i * 2.5));
+        line.setAttribute("y1", String(top + LEGEND_SWATCH));
+        line.setAttribute("x2", String(x + i * 2.5 + LEGEND_SWATCH / 2));
+        line.setAttribute("y2", String(top));
+        line.setAttribute("stroke", options.textColour);
+        line.setAttribute("stroke-width", "0.6");
+        group.appendChild(line);
+      }
+    }
+  }
+
+  for (const item of items) {
+    if (x > width - 40) break;
+    if (item.kind === "text") {
+      words(item.text, LEGEND_GAP);
+    } else if (item.kind === "swatch") {
+      box(item.colour);
+      x += LEGEND_SWATCH;
+    } else {
+      box(item.colour, item.pattern);
+      x += LEGEND_SWATCH + 3;
+      words(item.text, LEGEND_GAP + 4);
+    }
+  }
+
+  return group;
+}
+
 function sourceSize(source: SVGSVGElement): { width: number; height: number } {
   const box = source.viewBox.baseVal;
   if (box !== null && box.width > 0 && box.height > 0) {
@@ -259,7 +370,13 @@ function sourceSize(source: SVGSVGElement): { width: number; height: number } {
 export function buildExportSvg(
   source: SVGSVGElement,
   options: PngOptions,
-): { markup: string; width: number; height: number; captionHeight: number } {
+): {
+  markup: string;
+  width: number;
+  height: number;
+  captionHeight: number;
+  legendHeight: number;
+} {
   const resolveColour = createColourResolver();
   const computed = window.getComputedStyle(source);
   const background = resolveColour(
@@ -270,9 +387,14 @@ export function buildExportSvg(
     ? textColour.replace("rgb(", "rgba(").replace(")", ",0.72)")
     : textColour;
 
+  const lineColour = textColour.startsWith("rgb(")
+    ? textColour.replace("rgb(", "rgba(").replace(")", ",0.35)")
+    : textColour;
+
   const { width, height } = sourceSize(source);
   const captionHeight = CAPTION_HEIGHT;
-  const totalHeight = height + captionHeight;
+  const legend = legendHeight(options.legend);
+  const totalHeight = height + captionHeight + legend;
 
   const root = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
   // Rule 4.
@@ -327,11 +449,22 @@ export function buildExportSvg(
   copy.removeAttribute("aria-label");
   root.appendChild(copy);
 
+  if (options.legend !== undefined && options.legend.length > 0) {
+    const band = legendNode(document, options.legend, width, {
+      textColour,
+      lineColour,
+      fontFamily,
+    });
+    band.setAttribute("transform", `translate(0,${captionHeight + height})`);
+    root.appendChild(band);
+  }
+
   return {
     markup: new XMLSerializer().serializeToString(root),
     width,
     height: totalHeight,
     captionHeight,
+    legendHeight: legend,
   };
 }
 
@@ -394,7 +527,7 @@ export async function svgToPng(
       width: canvas.width,
       height: canvas.height,
       sourceWidth: built.width,
-      sourceHeight: built.height - built.captionHeight,
+      sourceHeight: built.height - built.captionHeight - built.legendHeight,
       captionHeight: Math.round(built.captionHeight * scale),
     };
   } finally {

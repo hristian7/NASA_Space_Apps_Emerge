@@ -2,7 +2,8 @@
 
 import { useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
-import { downloadSvgAsPng, pngFilename } from "@/lib/export/png";
+import { downloadSvgAsPng, pngFilename, type PngLegendItem } from "@/lib/export/png";
+import type { UnitMode } from "./types";
 import styles from "./styles";
 
 export interface DownloadsMenuProps {
@@ -17,6 +18,11 @@ export interface DownloadsMenuProps {
   dates: string;
   /** True while a CSV is being fetched, so the buttons can say so. */
   busy?: boolean;
+  /** The hotspots file is a plain address, so it can be opened in a new tab. */
+  hotspotsHref?: string;
+  hotspotsLabel?: string;
+  /** Which colour steps the exported calendar legend has to carry. */
+  legendMode?: UnitMode;
 }
 
 export default function DownloadsMenu({
@@ -28,9 +34,46 @@ export default function DownloadsMenu({
   place,
   dates,
   busy = false,
+  hotspotsHref,
+  hotspotsLabel,
+  legendMode = "cd",
 }: DownloadsMenuProps) {
   const t = useTranslations("report");
   const [problem, setProblem] = useState<string | null>(null);
+
+  /**
+   * The calendar's legend lives in HTML beside the picture, so it would be
+   * missing from the PNG. It is handed to the exporter as data instead, with
+   * the colours read off the live element so the look travels with it.
+   */
+  function calendarLegend(svg: SVGSVGElement): PngLegendItem[] {
+    const style = window.getComputedStyle(svg);
+    const token = (name: string) => style.getPropertyValue(name).trim();
+    const steps =
+      legendMode === "anomaly"
+        ? ["--anom-0", "--anom-1", "--anom-2", "--anom-3", "--anom-4", "--anom-5"]
+        : ["--ramp-0", "--ramp-1", "--ramp-2", "--ramp-3"];
+    const items: PngLegendItem[] = [
+      {
+        kind: "text",
+        text: legendMode === "anomaly" ? t("legend.below") : t("legend.less"),
+      },
+      ...steps.map((name) => ({ kind: "swatch" as const, colour: token(name) })),
+      {
+        kind: "text",
+        text: legendMode === "anomaly" ? t("legend.above") : t("legend.more"),
+      },
+      { kind: "key", colour: token("--empty"), text: t("legend.zero") },
+      { kind: "key", colour: null, text: t("legend.noData") },
+      {
+        kind: "key",
+        colour: token("--empty"),
+        pattern: "stripes",
+        text: t("legend.estimated"),
+      },
+    ];
+    return items;
+  }
 
   async function savePng(
     target: RefObject<SVGSVGElement | null>,
@@ -46,6 +89,7 @@ export default function DownloadsMenu({
     try {
       await downloadSvgAsPng(svg, pngFilename(["emerge", stem, place]), {
         caption: { title: t(titleKey), place, dates },
+        legend: stem === "calendar" ? calendarLegend(svg) : undefined,
       });
     } catch {
       setProblem(t("downloads.pngFailed"));
@@ -74,14 +118,26 @@ export default function DownloadsMenu({
         >
           {t("downloads.summaryCsv")}
         </button>
-        <button
-          type="button"
-          className={styles.btn}
-          onClick={onHotspotsCsv}
-          disabled={busy}
-        >
-          {t("downloads.hotspotsCsv")}
-        </button>
+        {hotspotsHref === undefined ? (
+          <button
+            type="button"
+            className={styles.btn}
+            onClick={onHotspotsCsv}
+            disabled={busy}
+          >
+            {t("downloads.hotspotsCsv")}
+          </button>
+        ) : (
+          <a
+            className={styles.btn}
+            href={hotspotsHref}
+            target="_blank"
+            rel="noreferrer"
+            download
+          >
+            {hotspotsLabel ?? t("downloads.hotspotsCsv")}
+          </a>
+        )}
         <button
           type="button"
           className={styles.btn}

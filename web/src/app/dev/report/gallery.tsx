@@ -30,7 +30,6 @@ import {
 } from "./adapter";
 import * as fixtures from "./fixtures";
 import styles from "./dev-styles";
-import "./preview-tokens.css";
 
 export type Look = "ember" | "field" | "ops";
 
@@ -93,7 +92,7 @@ export default function Gallery({ look, locale, messages }: GalleryProps) {
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <div className={styles.page} data-theme={look} lang={locale}>
+      <div className={styles.page} data-look={look} lang={locale}>
         <header className={styles.top}>
           <h1 className={styles.title}>Report panel, every component</h1>
           <nav className={styles.switches} aria-label="Design direction">

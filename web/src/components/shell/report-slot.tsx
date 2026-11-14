@@ -3,18 +3,19 @@
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { cornerCount } from "@/lib/ui/geo";
+import ReportView from "@/components/app/report-view";
+import reportStyles from "@/components/report/styles";
 
 type Props = { selection: Selection | null };
 
 /**
- * The place the fire report is rendered into. Until that part of the team
- * fills it, it states the selection in words and nothing more: the wording
- * for an empty record belongs with the report, not with the shell.
+ * The place the fire report is rendered into: the selection in words, then the
+ * report itself. With nothing selected the wording comes from the shell,
+ * because there is no record to describe yet.
  */
 export default function ReportSlot({ selection }: Props) {
   const t = useTranslations("selection");
   const names = useTranslations("country");
-  const shell = useTranslations("shell");
 
   if (selection === null) {
     return <p className="hint">{t("none")}</p>;
@@ -52,7 +53,9 @@ export default function ReportSlot({ selection }: Props) {
         <dt>{kind}</dt>
         <dd>{what}</dd>
       </dl>
-      <p className="hint">{shell("reportPlaceholder")}</p>
+      <div className={reportStyles.report}>
+        <ReportView selection={selection} />
+      </div>
     </>
   );
 }
