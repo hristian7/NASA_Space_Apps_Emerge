@@ -58,6 +58,14 @@ def ready_from_scorecard(card):
     return True
 
 
+def ranked_spots(rows):
+    """Rank only available probabilities, retaining the registered tie order."""
+    chosen = rows[rows.p.notna()].sort_values(
+        ['region_id', 'p', 'hist_p', 'tie_order', 'spot_id'],
+        ascending=[True, False, False, True, True], na_position='last')
+    return chosen.groupby(['country', 'region_id'], sort=False).head(10)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', type=Path, default=DATA / 'model_v1.json')
@@ -87,6 +95,7 @@ def main():
         for region in regions:
             all_regions[country][region] = {day: [] for day in DAYS}
     total_null_country = 0
+    scores = defaultdict(dict)
     for day in DAYS:
         weather = args.data / 'fwi_0.25' / f'month={day[:7]}' / f'{day}.parquet'
         history = args.data / 'history_0.25' / f'month={day[:7]}' / 'history.parquet'
@@ -103,6 +112,13 @@ def main():
         duplicates, prediction_count = con.execute('SELECT count(*)-count(distinct spot_id),count(*) FROM predictions WHERE day=?', [day]).fetchone()
         if duplicates or prediction_count != expected:
             raise ValueError(f'{day}: predictions must contain exactly one row per land spot')
+        for country, group in rows[rows.country.notna()].sort_values('spot_id').groupby('country', sort=False):
+            records = []
+            for spot_id, probability in zip(group.spot_id, group.p):
+                p = scalar(probability)
+                level = None if p is None else int(np.searchsorted(model['level_probability_limits'], p, side='right') + 1)
+                records.append([int(spot_id), None if p is None else round(p, 4), level])
+            scores[country][day] = records
         if booster is not None:
             available = rows.p.notna().to_numpy()
             contributions = np.full((len(rows), len(FEATURES)), np.nan)
@@ -123,9 +139,7 @@ def main():
             if selection == 'forest_wildland':
                 total_null_country += int(chosen.country.isna().sum())
             chosen = chosen[chosen.country.notna()]
-            chosen = chosen.sort_values(['region_id', 'p', 'hist_p', 'tie_order', 'spot_id'],
-                                        ascending=[True, False, False, True, True], na_position='last')
-            chosen = chosen.groupby('region_id', sort=False).head(10)
+            chosen = ranked_spots(chosen)
             for (country, region), group in chosen.groupby(['country', 'region_id'], sort=False):
                 spots = []
                 mean = means.loc[region].to_numpy(dtype=float)
@@ -151,6 +165,11 @@ def main():
             raise ValueError(f'invalid country code {country}')
         obj = {'country': country, 'days': list(DAYS), 'regions': regions, 'all_vegetation': all_regions[country]}
         (folder / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), ensure_ascii=False, allow_nan=False) + '\n')
+    scores_folder = args.dest / 'scores'
+    scores_folder.mkdir(parents=True, exist_ok=True)
+    for country, days in scores.items():
+        obj = {'grid_g': 0.25, 'days': days}
+        (scores_folder / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), allow_nan=False) + '\n')
     meta = {'engine_ready': ready, 'example': False, 'model_version': model['model_version'],
             'made_at': dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00', 'Z'), 'grid_g': 0.25,
             'days': {'today': DAYS[0], 'tomorrow': DAYS[1]}, 'fire_weather_run': '2026-11-12',
