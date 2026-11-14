@@ -6,6 +6,7 @@
       "location": "Total Wildland Fires and Acres table",
       "read_date": "2026-11-14"
     },
+    "agency_2025": {"url": "https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf", "location": "page 35", "read_date": "2026-11-15"},
     "annual": {
       "url": "https://op.europa.eu/o/opportal-service/download-handler?identifier=1f960275-d187-11f0-8da2-01aa75ed71a1&format=pdf&language=en&productionSystem=cellar&part=",
       "location": "printed pages 270 to 273, Tables 1 and 2",
@@ -616,10 +617,18 @@
     {
       "country": "BGR",
       "year": 2024,
-      "fires": 595,
+      "fires": 565,
       "burned_ha": 17116.4,
-      "source": "annual",
-      "page": "272, Bulgaria Table 2"
+      "source": "agency_2025",
+      "page": "35"
+    },
+    {
+      "country": "BGR",
+      "year": 2025,
+      "fires": 546,
+      "burned_ha": 15458.8,
+      "source": "agency_2025",
+      "page": "35"
     },
     {
       "country": "PRT",
