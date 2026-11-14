@@ -257,30 +257,48 @@ The USA entry shows the wrap: its fire cells run from the Aleutians past the 180
 
 ## 6. `reported/<ISO3>.json`
 
-Officially reported fires and burned area, for the "detected vs reported" card (M28). These are **national totals**: shown in full for a country selection, and as "country total, for context" for a point or a drawn area.
+Fires and burned area per year, for the "detected vs reported" card (M28). These are **national totals**: shown in full for a country selection, and as "country total, for context" for a point or a drawn area.
+
+**Two kinds of series, never mixed in one series and never renamed.**
+
+| `kind` | What it is |
+|---|---|
+| `national_report` | what a national authority reported: counts of fires and burned area by that authority's own definition |
+| `satellite_estimate` | an agency's estimate made by mapping burned areas in satellite images, such as EFFIS and GWIS. It misses small fires, so it is not a report |
 
 | Field | Type | Notes |
 |---|---|---|
-| `schema` | `"emerge-reported-1"` | |
-| `example` | boolean | |
+| `schema` | `"emerge-reported-2"` | |
+| `example` | boolean | `false` for fetched data |
 | `built` | `"YYYY-MM-DD"` | |
 | `iso3` | string | |
 | `scope` | `"national"` | the only value for now |
-| `source` | object | `{name, url, fetched, covers, note}`; `covers` is `[firstYear, lastYear]`; `note` is the caveat the app shows |
+| `kind` | `"national_report"` or `"satellite_estimate"` | the kind of the primary series, the one `source` and `years` hold |
+| `source` | object | the primary series' source: `{name, url, fetched, licence, covers, note}`; `covers` is `[firstYear, lastYear]`; `note` is the caveat the app shows; `licence` is the licence or terms as the source states them, or "terms not stated" where the source states none |
 | `units` | object | `{fires: "count", burned_ha: "hectares"}` |
-| `years` | list | one entry per year the source covers |
+| `years` | list | the primary series' years: one entry per year from `covers[0]` to `covers[1]`, in order, with no gaps |
+| `series` | list | every series for the country, the primary one first; each is `{kind, source, years}` with the same shapes as above |
 
-A year entry is `{y, fires, burned_ha}`. **`null` means not published or not yet fetched, never zero.** The example files carry only figures verified at the publishing authority: Bulgaria 2024 is 133 fires and 44,745 ha `[V]`; the USA 2024 is 64,897 fires `[V]`, with burned area `null` because we have not verified it. Every other year is `null` in both columns. No reported number is ever invented, not even as an example.
+**The primary series is the national report when the country has one, otherwise the satellite estimate.** `source` and `years` repeat the primary series so a reader that knows nothing of `series` still sees the right numbers under the right label.
+
+A year entry is `{y, fires, burned_ha}`. **`null` means not published or not fetched, never zero.** Burned area is in hectares; where a source publishes acres they are converted here, 1 acre = 0.40468564224 ha, and the series note says so. No figure is ever invented: every number comes from the source's own address, fetched and saved by `pipeline/fetch_reported.py`.
+
+Fetched files are written by that script into `<data>/derived/reported/` and copied into the output by `pipeline/export_app.py`, which lists the codes in `meta.json` under `reported`. The example files in `tests/fixtures/data/reported/` carry one row each and are flagged `example: true`.
 
 ```json
-{"schema":"emerge-reported-1","example":true,"built":"2026-11-14","iso3":"BGR",
- "scope":"national",
- "source":{"name":"EFFIS (European Forest Fire Information System)","url":null,
-           "fetched":null,"covers":[2006,2026],
-           "note":"National totals. EFFIS maps mainly fires of about 30 ha or more."},
+{"schema":"emerge-reported-2","example":true,"built":"2026-11-14","iso3":"BGR",
+ "scope":"national","kind":"satellite_estimate",
+ "source":{"name":"EFFIS (European Forest Fire Information System), estimates of burned areas and number of fires",
+           "url":"https://forest-fire.emergency.copernicus.eu/apps/effis.statistics/estimates",
+           "fetched":"2026-11-14","licence":"CC BY 4.0, as stated on the EFFIS Data License page",
+           "covers":[2023,2024],
+           "note":"Not a report. An estimate the agency makes by mapping burned areas in satellite images, and it maps mainly fires of about 30 hectares or more."},
  "units":{"fires":"count","burned_ha":"hectares"},
  "years":[{"y":2023,"fires":null,"burned_ha":null},
-          {"y":2024,"fires":133,"burned_ha":44745}]}
+          {"y":2024,"fires":133,"burned_ha":44745}],
+ "series":[{"kind":"satellite_estimate","source":{"...":"as above"},
+            "years":[{"y":2023,"fires":null,"burned_ha":null},
+                     {"y":2024,"fires":133,"burned_ha":44745}]}]}
 ```
 
 ---

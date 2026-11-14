@@ -9,6 +9,10 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | NASA FIRMS yearly country files: MODIS Collection 6.1 (Terra, Aqua), VIIRS 375 m (S-NPP, NOAA-20) | All fire detections, 2000 to 2025 | https://firms.modaps.eosdis.nasa.gov/data/country/ | NASA open data |
 | NASA FIRMS active fire files, last 24 hours and 7 days (MODIS C6.1, VIIRS NOAA-20, VIIRS NOAA-21) | Recent fires layer | https://firms.modaps.eosdis.nasa.gov/data/active_fire/ | NASA open data, no key |
 | Copernicus GWIS fire weather index (map service `ecmwf.fwi` and its legend) | Official fire danger layer, today to 9 days ahead | https://maps.effis.emergency.copernicus.eu/gwis | Copernicus GWIS (EFFIS); licence under review (decision D-4) |
+| EFFIS statistics portal, estimates by country (the JSON behind the page: `statistics/v2/effis/estimatesbycountry`) | Satellite estimates of burned area and number of fires per year, 65 countries in Europe, the Middle East and North Africa | https://forest-fire.emergency.copernicus.eu/apps/effis.statistics/estimates | CC BY 4.0 per the EFFIS Data License page, https://forest-fire.emergency.copernicus.eu/about-effis/data-license; Copyright European Union, 1995-2025 |
+| GWIS statistics portal, estimates by country (the JSON behind the page: `statistics/v2/gwis/estimatesbycountry`) | The same satellite estimates world-wide, 256 countries | https://gwis.jrc.ec.europa.eu/apps/gwis.statistics/estimates | CC BY 4.0 per the GWIS Data License page, https://gwis.jrc.ec.europa.eu/about-gwis/data-license; Copyright European Union, 1995-2025 |
+| NIFC statistics, "Total Wildland Fires and Acres" (source the National Interagency Coordination Center) | What the USA reported: fires and acres per year, 1983 to 2025 | https://www.nifc.gov/fire-information/statistics/wildfires | Terms not stated; the site links only a disclaimer of liability, https://www.doi.gov/disclaimer |
+| EFFIS annual report, Forest Fires in Europe, Middle East and North Africa 2024 (Table 1 and Table 2) | What national fire services reported for 2024, 29 countries, and ten years for Bulgaria from the Executive Forest Agency | https://dx.doi.org/10.2760/0649290 | CC BY 4.0 per the report's own copyright page; Copyright European Union, 2025 |
 | firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
 | OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
@@ -20,6 +24,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 |---|---|---|---|
 | DuckDB | Pipeline: cleaning and counting | https://duckdb.org | MIT |
 | Python with pandas, NumPy, PyArrow, scikit-learn, LightGBM, SciPy, pytest | Pipeline: models, scoring, tests | https://www.python.org | BSD / MIT / Apache-2.0 / PSF |
+| Poppler `pdftotext` | Reading the two national tables out of the EFFIS annual report | https://poppler.freedesktop.org | GPL-2.0 |
 | MapLibre GL JS | Map and globe in the preview and the app | https://maplibre.org | BSD-3-Clause |
 | Next.js | The app in `web/`: App Router, TypeScript, build and hosting | https://nextjs.org | MIT |
 | React with React DOM | The app's interface | https://react.dev | MIT |

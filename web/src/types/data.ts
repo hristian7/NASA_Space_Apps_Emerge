@@ -105,29 +105,57 @@ export interface ReportedYear {
   burned_ha: number | null;
 }
 
+/**
+ * What a set of figures is. The two kinds are never mixed in one series.
+ *
+ * `national_report` is what a national authority reported: counts of fires and
+ * burned area by its own definition. `satellite_estimate` is an agency's
+ * estimate made by mapping burned areas in satellite images, such as EFFIS and
+ * GWIS; it misses small fires and is not a report.
+ */
+export type ReportedKind = 'national_report' | 'satellite_estimate';
+
 /** Where a set of reported figures came from. */
 export interface ReportedSource {
   name: string;
   url: string | null;
   /** ISO date the figures were fetched, or null. */
   fetched: string | null;
+  /** The licence or terms as the source states them. */
+  licence?: string | null;
   /** First and last year the source covers. */
   covers: [number, number];
   /** Plain-language caveat shown next to the figures. */
   note: string | null;
 }
 
+/** One labelled series of figures for a country. */
+export interface ReportedSeries {
+  kind: ReportedKind;
+  source: ReportedSource;
+  /** One entry per year from the first to the last the source covers. */
+  years: ReportedYear[];
+}
+
 /** web/public/data/reported/<ISO3>.json */
 export interface ReportedFile {
-  schema: 'emerge-reported-1';
+  schema: 'emerge-reported-1' | 'emerge-reported-2';
   example: boolean;
   built: string;
   iso3: string;
   /** National totals. Shown in full for a country, as context for a smaller area. */
   scope: 'national';
+  /** The kind of the primary series, the one `source` and `years` hold. */
+  kind?: ReportedKind;
   source: ReportedSource;
   units: { fires: 'count'; burned_ha: 'hectares' };
   years: ReportedYear[];
+  /**
+   * Every series for the country, the primary one first. The primary series is
+   * the national report when the country has one, otherwise the satellite
+   * estimate.
+   */
+  series?: ReportedSeries[];
 }
 
 /**
