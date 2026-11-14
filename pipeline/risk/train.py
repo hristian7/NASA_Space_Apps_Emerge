@@ -59,12 +59,14 @@ def main():
     print('loading training samples', flush=True)
     x, y, w = load(con, train_files)
     print('training rows', len(y), 'new fires', int(y.sum()), flush=True)
+    training_rows, training_positives = len(y), int(y.sum())
     scaler = StandardScaler().fit(x, sample_weight=w)
     x = scaler.transform(x)
     print('loading validation samples', flush=True)
     vx, vy, vw = load(con, valid_files)
     vx = scaler.transform(vx)
     print('validation rows', len(vy), 'new fires', int(vy.sum()), flush=True)
+    validation_rows, validation_positives = len(vy), int(vy.sum())
     best = None
     trials = []
     for c in (0.1, 1.0):
@@ -94,6 +96,9 @@ def main():
              'calibration_slope': slope, 'calibration_intercept': intercept,
              'level_probability_limits': cuts, 'level_limit_rule': 'weighted validation probability quantiles 0.50, 0.75, 0.90, 0.97',
              'training_years': [2021, 2022, 2023], 'validation_year': 2024,
+             'training_sample_rows_with_required_inputs': training_rows, 'training_new_fires_with_required_inputs': training_positives,
+             'validation_sample_rows_with_required_inputs': validation_rows, 'validation_new_fires_with_required_inputs': validation_positives,
+             'fuel_class_available_from': '2023-09-23',
              'sample_seed': 20261114, 'negative_sample_rate': 0.05,
              'trials': trials, 'selected_C': c,
              'calibrated_validation_log_loss': float(log_loss(vy, prob, sample_weight=vw, labels=[0, 1])),
