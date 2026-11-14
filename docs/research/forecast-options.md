@@ -2,6 +2,8 @@
 
 Researched 2026-11-14 under an 8-minute time box. Tags: `[V]` verified at a primary source · `[D]` directional (secondary or search summary, not opened in full) · `[U]` our inference. Most items here are `[D]`, because the time box allowed search summaries only. Before demo day, open the links marked "check".
 
+> **Plan 2 note (14 Nov night):** the team has since approved plan 2, a next-day fire-risk engine built on the weather, scored daily against NASA detections and two baselines ([`../../specs/plan-2-fire-risk/specification.md`](../../specs/plan-2-fire-risk/specification.md)). For next-day risk, plan 2 decides; this file is the earlier research.
+
 ## Executive summary
 
 - **Don't invent a fire-danger forecast. Show the official ones.** EFFIS/GWIS (Copernicus, run by ECMWF for the EU's Joint Research Centre) already give worldwide fire danger for 1–9/10 days and a seasonal outlook up to 7 months. NIFC gives US outlooks for 7 days and 4 months. Bulgaria's weather service, NIMH, publishes a daily fire-danger map by district.

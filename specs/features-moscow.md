@@ -15,7 +15,7 @@
 - **Removed to save time (16:50):** push alerts (S11), combined data (M22) and the installable app (M15). They are listed under Won't. (Suggestion 2 still lists M22; this file decides.)
 - **Suggestion 2 merged (evening):** adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
 - **Every item on NASA's challenge page is a Must (evening):** added M27 and M28, and widened M3, M4, M5 and M11. The checklist is in [`specification.md`](specification.md), section 2 ("Challenge-page checklist").
-- **Plan 2 added (14 Nov, night): next-day fire risk**, from an interview with a Bulgarian firefighter ([`../docs/research/firefighter-interview.md`](../docs/research/firefighter-interview.md)). Approved: Musts M30–M35 and Shoulds S12–S15 (section "Plan 2" below). Recorded for later: Coulds C11–C13 and C15, Won'ts W9–W12. Dropped: a fire-spread hint. Build plan: [`plan-2-fire-risk/overview.md`](plan-2-fire-risk/overview.md) (short) and [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md) (build spec).
+- **Plan 2 added (14 Nov, night): next-day fire risk**, from an interview with a Bulgarian firefighter ([`../docs/research/firefighter-interview.md`](../docs/research/firefighter-interview.md)). Approved: Musts M30–M35 and Shoulds S12–S15 (section "Plan 2" below); later the same night M36–M39 and S16–S17 from the competitor research. Recorded for later: Coulds C11–C13, C15 and C16, Won'ts W9–W12. Dropped: a fire-spread hint. Build plan: [`plan-2-fire-risk/overview.md`](plan-2-fire-risk/overview.md) (short) and [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md) (build spec).
 
 Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](interview-answers.md)) and updated the same day. The research files are linked where a feature depends on them. The build details are in [`specification.md`](specification.md).
 
@@ -72,7 +72,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | S3 ⭐ | **Fire-risk outlook (official forecasts)** | The next days' fire danger from official forecasts as coloured zones with levels. Worldwide from Copernicus GWIS (`ecmwf.fwi` `[V]`), USA from the NIFC 4-month outlook. We display and credit trusted forecasts rather than inventing our own ([`../docs/research/forecast-options.md`](../docs/research/forecast-options.md)) | M |
 | S5 ⭐ | **Recent fires (last 24 h / 7 days)** | The latest NASA detections on the map, so the app shows today, not only history | S |
 | S6 ⭐ | **Hazard-style navigation** | A compact layer menu over a full-screen globe: layers on and off, base-map switcher, short legends | M |
-| S8 | **Advice for crews and volunteers** | A plain panel: "High risk and historically active area: consider pre-positioning". Built from rules, with a clear disclaimer and links to official services | S–M |
+| S8 | **Advice for crews and volunteers** (plan 2's S14 builds on it) | A plain panel: "High risk and historically active area: consider pre-positioning". Built from rules, with a clear disclaimer and links to official services | S–M |
 | S9 | **Fire-intensity visuals** | Shows how strong fires are (FRP, the fire's heat output), not just how many | S |
 | S10 | **Shareable links** | The link remembers the place, radius or area, dates and layers | S |
 
@@ -87,18 +87,26 @@ From the firefighter interview. The same logic works for every country in the wo
 | M30 | **Top risk spots per region** | Any fire service in any country opens its own area and sees the places most likely to catch fire today and tomorrow, ranked from number one down. | M |
 | M31 | **Next-day risk engine** | The engine gives every small square of land on Earth a fire-risk score for tomorrow, learned from that place's own seasons and past fires. | M–L |
 | M32 | **All the data that drives fire** | For every place on Earth we collect temperature, wind, humidity, rain, how dry the plants are, whether it is forest or grass, and 25 years of past fires. | L |
-| M33 | **Scorecard: predicted vs what happened** | Every day we check yesterday's predictions against the fires NASA satellites actually saw, and publish how often we were right compared with the official fire-danger index. | M |
+| M33 | **Scorecard: predicted vs what happened** | Every day we check yesterday's predictions against the fires NASA satellites actually saw, and publish how often we were right compared with the NASA fire-weather index shown in the EU's GWIS and with fire history alone. | M |
 | M34 | **"Why this spot"** | Each risky spot comes with a short plain reason, such as "very hot, strong wind, dry forest, burned in 6 of the last 25 Julys." | S |
-| M35 | **One screen instead of 10 websites** | Tomorrow's danger, fires burning now, fire history and links to the official services sit on one simple page, so crews stop switching between ten websites. Needs S3 and S5 from plan 1, so build those early. | S |
+| M35 | **One screen instead of 10 websites** | Tomorrow's danger, fires burning now, fire history and links to the official services sit on one simple page, so crews stop switching between ten websites. Needs S3 and S5 from plan 1, so build those early. Until the engine passes its test, it shows a placeholder. | S |
+| M36 | **Real official fire numbers** (fixes M28) | Show each country's own reported fire numbers (Bulgaria's Forest Agency, EU countries via EFFIS, the USA via NIFC), labelled apart from satellite estimates. | M |
+| M37 | **Date and source on every number** | Every result says which period it covers and where it comes from, so old history and today's live map are never mixed up. | S |
+| M38 | **Name the comparison years** | "Is this unusual?" lists the exact past years it compared against, and its "above/below normal" sentence is built from the numbers, never typed by hand. | S |
+| M39 | **Plain verdict on the proof page** | Above the test tables, two or three plain lines say what we tested, what passed and what failed. | S |
 
 **Should have**
 
 | # | Feature | What it means, in one sentence | Effort |
 |---|---|---|---|
-| S12 | **Week outlook** | Shows the risk for the next 7 days, clearly marked as less certain than tomorrow. | S |
+| S12 | **Week outlook** | Shows the risk for the following days, up to about a week, ranked by fire weather and clearly marked as less certain than tomorrow. | S |
 | S13 | **Wind on the map** | Arrows show how strong the wind is and which way it blows, now and tomorrow. | S–M |
 | S14 | **Crew suggestion** (builds on S8) | Gives a plain suggestion such as "consider a standby team near spot 1", which the fire service is free to follow or ignore. | S |
 | S15 | **Fire type label** | Tags every fire and risky spot as forest, farmland or grass, so crews know what kind of fire to expect. | S |
+| S16 | **Fire heat in "this fire vs past fires"** | Show how hot today's fires burn (heat output, with units) next to the same days in past years. | S |
+| S17 | **Season-so-far chart** | A line adds up this year's fires month by month against a normal year, so a bad season stands out at a glance. | M |
+
+M36–M39, S16 and S17 come from the competitor research ([`../docs/research/feature-map.md`](../docs/research/feature-map.md), shortlist ranks 1–5 and 7), approved 14 Nov night. Not added: a label explaining "history chance vs weather forecast" (the prediction placeholder replaces it).
 
 **Links to plan 1:** M31 uses the chance of fire this month (M13) as one input, replaces our own forecast model (C2), and covers the Bulgarian provinces view (C6) for every country.
 
@@ -106,11 +114,11 @@ From the firefighter interview. The same logic works for every country in the wo
 
 | # | Feature | What it is (plain language) | Effort |
 |---|---|---|---|
-| C2 | **Our own forecast model** | Predicts fire chance from weather and history. Only credible if it beats the simple historical chance (M13) | L |
+| C2 | **Our own forecast model** (now M31 in plan 2) | Predicts fire chance from weather and history. Only credible if it beats the simple historical chance (M13) | L |
 | C3 | **Second source of truth** | A statistical comparison of our record with EFFIS and US records on the proof page. Showing the reported numbers themselves is now M28 | M |
 | C4 | **Data before 2000 or from more satellites** | Older sensors or other satellites (Sentinel-3, geostationary). Research says no honest pre-2000 extension: [`../docs/research/data-sources-summary.md`](../docs/research/data-sources-summary.md) | L |
 | C5 | **Time-lapse animation** | Play 25 years of fires on the globe. Great for the demo video | S–M |
-| C6 | **Bulgarian regions view** | Statistics per Bulgarian province (oblast) for local crews | S |
+| C6 | **Bulgarian regions view** (now inside M30 in plan 2, for every country) | Statistics per Bulgarian province (oblast) for local crews | S |
 | C7 | **More base maps, actually added** | Offer more base maps than NASA and OpenStreetMap, not just room for them (M25) | S |
 | C9 | **Several base maps** (was M16) | Switch the background, 2D or 3D: NASA imagery, OpenStreetMap and others. The layer menu (S6) already switches NASA day and night views | S |
 | C10 | **Several data layers** (was M17) | Show and use different kinds of data: MODIS, VIIRS, temperature, wind and more | M |
@@ -119,6 +127,7 @@ From the firefighter interview. The same logic works for every country in the wo
 | C12 | **Sharper spots** (plan 2) | Narrows risky spots from about 10 km squares to 1–2 km, closer to "this slope of this mountain" | L |
 | C13 | **Printable daily brief** (plan 2) | Puts tomorrow's top spots for a region on one page, ready for the morning crew briefing | S |
 | C15 | **Method sheet for fire chiefs** (plan 2) | A short document on how the prediction works and how accurate it is, so fire-service managers can approve official use | S |
+| C16 | **Later ideas from the competitor research** (plan 2) | The "later" items in [`../docs/research/feature-map.md`](../docs/research/feature-map.md): switches per satellite, a confidence filter, dated satellite pictures, saved places, fixed report snapshots, monthly reported charts, burned area and fire size, causes and costs, more danger indices, the US seasonal outlook, an independent sensor check, a raw download for the exact shape, land-cover, population and protected-area overlays, fire outlines, weather next to fires, smoke and air quality, emissions, time-lapse, named incidents, faster detection from weather satellites, fire-season length, a short text per country | S–L each |
 
 ## Won't have this weekend
 
@@ -140,6 +149,7 @@ From the firefighter interview. The same logic works for every country in the wo
 ## Build order and cuts `[U]`
 
 - **Before building:** freeze the data contract and run four short risk tests (see [`specification.md`](specification.md), sections 7 and 8).
+- **Plan 2 order and cuts:** [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md), section 11. The report fixes (M36–M39, S16, S17) need no new data and can start at once.
 - **First, the core:** M2, M14, M18–M20 (data model), M25–M26 (room for more maps and layers), then M1, M3–M6, M11, M13, M27, M28 and the rest of the Musts.
 - **Then the Shoulds, in this order:** S6 → S1 → S5 → S3 → S10 → S9 → S8.
 - **Scope check:** suggestion 2 and the challenge-page items add about 15–22 hours of work (less about 11–18 h after the 16:50 removals) `[U]`, spread across six parallel streams ([`specification.md`](specification.md), section 7).

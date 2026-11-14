@@ -2,6 +2,8 @@
 
 Written Sat 14 Nov 2026, 17:30 EET, after reading the whole repo. This is the **execution plan** for the build computer. It does not replace [`../../specs/specification.md`](../../specs/specification.md) (the master plan) or [`../../specs/features-moscow.md`](../../specs/features-moscow.md) (feature priority). Where this file and the spec disagree, section 1 below says which one to change.
 
+**Plan 2 (next-day fire risk, approved 14 Nov night)** has its own build spec and lanes: [`../../specs/plan-2-fire-risk/specification.md`](../../specs/plan-2-fire-risk/specification.md), section 11. It shares this computer and these checkpoints.
+
 **Tags:** `[V]` verified at a primary source or measured by us · `[D]` directional · `[U]` our inference.
 
 ---
