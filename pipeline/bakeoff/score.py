@@ -792,7 +792,7 @@ def selftest(data):
         ck.ok(nr and all(g[3] is True for g in nr), "nRMSE 0 passes the gate")
         ck.ok(docs.exists() and "Pipeline A wins" in docs.read_text(), "the report is written and names the winner")
         text = docs.read_text()
-        ck.ok("—" not in text and "–" not in text, "the report has no em or en dashes")
+        ck.ok("\u2014" not in text and "\u2013" not in text, "the report has no em or en dashes")
 
         print("Self-test: swapped roles")
         A2 = fake_pred(truth, "A", 2.0, ["q25"])
