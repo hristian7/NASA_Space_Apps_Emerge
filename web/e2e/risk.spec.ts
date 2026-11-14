@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 // Required for all headless input, including a future shell integration.
 test.use({ launchOptions: { args: ['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader'] } });
+test.beforeEach(async ({page}) => { await page.clock.setFixedTime(new Date('2026-11-15T12:00:00')); });
 const exampleFile=(path:string)=>readFileSync(join(process.cwd(),'public/data/risk/example',path),'utf8');
 
 test('engine not ready shows the placeholder and official services',async({page})=>{
@@ -86,7 +87,7 @@ test('outlook renders without horizontal scroll at every required width',async({
 });
 
 test('Bulgarian outlook and placeholder keep the same controls and fit a phone',async({page,context},testInfo)=>{
- await context.addCookies([{name:'emerge-locale',value:'bg',url:'http://localhost:4315'}]);
+ await context.addCookies([{name:'emerge-locale',value:'bg',url:process.env.EMERGE_E2E_URL??`http://localhost:${process.env.EMERGE_E2E_PORT??4311}`}]);
  await page.setViewportSize({width:375,height:900});
  await page.goto('/risk?risk=example');
  await expect(page.getByRole('heading',{name:'Прогноза за риска (неофициална)'})).toBeVisible();
@@ -97,9 +98,25 @@ test('Bulgarian outlook and placeholder keep the same controls and fit a phone',
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
  await expect(page.getByRole('button',{name:'Място 1, Ниво 4',exact:true})).toBeVisible();
  await page.screenshot({path:testInfo.outputPath('risk-bg-375.png'),fullPage:true});
+ await page.route('**/data/risk/meta.json',route=>route.fulfill({json:{...JSON.parse(exampleFile('meta.json')),example:false,engine_ready:false}}));
  await page.goto('/risk');
  await expect(page.getByRole('heading',{name:'Рискът от пожар утре: в процес на разработка и проверка. Ето какво ще показва.'})).toBeVisible();
  await expect(page.locator('.risk-placeholder li')).toHaveCount(3);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
  await page.screenshot({path:testInfo.outputPath('risk-placeholder-bg-375.png'),fullPage:true});
+});
+
+
+test('farmland region switches to all vegetation and stale forecasts use dates',async({page})=>{
+ await page.clock.setFixedTime(new Date('2026-11-17T12:00:00'));
+ await page.goto('/risk');
+ await page.getByLabel('Country',{exact:true}).selectOption('BGR');
+ await page.getByLabel('Region',{exact:true}).selectOption('BG-03');
+ await expect(page.getByText('No forest or wildland spots are available in this region for this date.')).toBeVisible();
+ await expect(page.getByText('Forecast made for 2026-11-15; not updated since')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Tomorrow',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Show all vegetation fires'}).click();
+ await expect(page.getByRole('button',{name:'All vegetation fires',exact:true})).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('.risk-list > li')).toHaveCount(4);
+ await expect(page.locator('.risk-list > li').first()).toContainText('farmland');
 });

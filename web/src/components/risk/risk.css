@@ -11,6 +11,7 @@
 .risk-days { gap: 4px; }
 .risk-days button { min-height: 44px; padding: 8px 12px; background: none; border: 1px solid var(--line); border-radius: var(--radius-s); }
 .risk-days button[aria-pressed="true"] { background: var(--line); color: var(--accent); }
+.risk-switch-link { min-height: 44px; color: var(--accent); text-decoration: underline; }
 .risk-days button:disabled { opacity: .55; cursor: default; }
 .risk-workspace { position: relative; min-width: 0; }
 .risk-map-wrap { position: sticky; top: 0; height: 48dvh; min-height: 290px; }

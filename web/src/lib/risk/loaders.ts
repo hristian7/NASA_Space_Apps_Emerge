@@ -25,8 +25,9 @@ export async function loadRiskCountry(country: string, example: boolean, fetcher
   const file = await read<RiskCountry>(`${riskRoot(example)}/latest/${country}.json`, fetcher);
   return file ? { status: "ready", file } : { status: "missing", file: { country, days: [], regions: {} } };
 }
-export function regionSpots(file: RiskCountry | null, region: string, day: string): RiskSpot[] {
-  return [...(file?.regions[region]?.[day] ?? [])].sort((a, b) => a.rank - b.rank).slice(0, 10);
+export function regionSpots(file: RiskCountry | null, region: string, day: string, selection: "forest" | "all" = "forest"): RiskSpot[] {
+  const regions = selection === "all" ? file?.all_vegetation : file?.regions;
+  return [...(regions?.[region]?.[day] ?? [])].sort((a, b) => a.rank - b.rank).slice(0, 10);
 }
 export function showForecast(meta: RiskMeta | null, example: boolean): boolean {
   return meta !== null && (example || (meta.engine_ready && !meta.example));
@@ -40,4 +41,10 @@ export async function loadRiskWeek(country: string, example: boolean, fetcher = 
   if (!/^[A-Z]{3}$/.test(country)) throw new Error("Invalid country code");
   const file = await read<RiskCountry>(`${riskRoot(example)}/week/${country}.json`, fetcher);
   return file ? { status: "ready", file } : { status: "missing", file: { country, days: [], regions: {} } };
+}
+
+/** Compare ISO dates in the viewer's local calendar, not UTC. */
+export function forecastIsStale(lastDay: string, now = new Date()): boolean {
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  return today > lastDay;
 }

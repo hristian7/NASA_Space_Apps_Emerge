@@ -39,6 +39,7 @@ export interface RiskCountry {
   country: string;
   days: string[];
   regions: Record<string, Record<string, RiskSpot[]>>;
+  all_vegetation?: Record<string, Record<string, RiskSpot[]>>;
 }
 export interface RiskIndex { meta: RiskMeta | null; regions: RiskRegion[] }
 export type CountryResult = { status: "ready" | "missing"; file: RiskCountry };
