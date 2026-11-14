@@ -241,3 +241,64 @@
     transition: none;
   }
 }
+
+/* Driver layer keys: a continuous bar with ticks, or swatch rows. */
+
+.ramp-key {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ramp-bar {
+  height: 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line);
+}
+
+.ramp-ticks {
+  position: relative;
+  height: 15px;
+}
+
+.ramp-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.ramp-ticks span[data-edge="start"] {
+  transform: none;
+}
+
+.ramp-ticks span[data-edge="end"] {
+  transform: translateX(-100%);
+}
+
+.ramp-unit {
+  color: var(--ink-3);
+}
+
+.legend .swatch-run {
+  flex: none;
+  display: flex;
+  gap: 1px;
+}
+
+.legend .swatch-run .swatch {
+  width: 9px;
+}
+
+.legend .legend-note {
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.legend .wind-key {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  color: var(--ink);
+}

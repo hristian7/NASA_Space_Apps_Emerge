@@ -1,0 +1,679 @@
+/* The map screen's frame: top bar, search, tool column, layer list, time
+   slider, report panel and the one credits button. Loaded after shell.css
+   and layers.css and wins over them where both set a rule. */
+
+.shell {
+  --gap: 16px;
+  --bar-h: 40px;
+  --tool: 38px;
+  --time-h: 66px;
+  /* Room the report panel takes on the right; zero while it is closed. */
+  --report-space: 0px;
+}
+
+.shell[data-has-report="true"] {
+  --report-space: 416px;
+}
+
+/* Top bar */
+
+.top {
+  top: var(--gap);
+  left: var(--gap);
+  right: var(--gap);
+  flex-wrap: nowrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  height: var(--bar-h);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.top .chip-group,
+.chip-solo,
+.icon-btn {
+  height: var(--bar-h);
+}
+
+.top .chip {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.chip-solo,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 13px;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.chip-solo:hover,
+.icon-btn:hover,
+.chip-solo[aria-expanded="true"],
+.icon-btn[aria-expanded="true"] {
+  color: var(--ink);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.icon-btn-text {
+  font: 500 12px/1 var(--font-ui);
+  letter-spacing: 0.04em;
+}
+
+/* Search */
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--bar-h);
+  width: 300px;
+  min-width: 0;
+  padding: 0 12px;
+  gap: 8px;
+  color: var(--ink-3);
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--ink);
+}
+
+.search input::placeholder {
+  color: var(--ink-3);
+}
+
+.search:focus-within {
+  border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
+}
+
+.search input::-webkit-search-cancel-button {
+  filter: invert(1) opacity(0.5);
+}
+
+.search-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel-solid);
+  max-height: min(380px, calc(100dvh - 120px));
+  overflow-y: auto;
+  z-index: 6;
+}
+
+.search-list li[role="option"] {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.search-list li[aria-selected="true"] {
+  background: var(--line);
+}
+
+.search-name {
+  color: var(--ink);
+}
+
+.search-detail,
+.search-state {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.search-state {
+  padding: 8px 10px;
+}
+
+/* Small menus in the top bar */
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  padding: 4px;
+  display: grid;
+  background: var(--panel-solid);
+  z-index: 6;
+}
+
+.dropdown-item {
+  display: block;
+  text-align: left;
+  padding: 9px 11px;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item[aria-current="true"] {
+  background: var(--line);
+  color: var(--ink);
+}
+
+/* Tool column, lower left */
+
+.tools {
+  position: fixed;
+  left: var(--gap);
+  bottom: calc(var(--gap) + var(--time-h) + 10px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+}
+
+.tool {
+  width: var(--tool);
+  height: var(--tool);
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+}
+
+.tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tool:hover {
+  color: var(--ink);
+  background: var(--empty);
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--space);
+}
+
+.tool-tip {
+  position: absolute;
+  left: calc(var(--tool) + 6px + 12px);
+  top: 0;
+  width: 260px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.tool-radius {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-radius input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.tool-radius output {
+  min-width: 56px;
+  text-align: right;
+  color: var(--ink);
+}
+
+/* Layer list, opened from the tool column */
+
+.layers {
+  top: auto;
+  left: calc(var(--gap) + var(--tool) + 6px + 12px);
+  bottom: calc(var(--gap) + var(--time-h) + 10px);
+  width: 300px;
+  max-height: calc(100dvh - var(--gap) - var(--time-h) - 10px - 84px);
+}
+
+.layers-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px 8px 13px;
+}
+
+.layers-head::after {
+  content: none;
+}
+
+.layers-head h2 {
+  font: 600 13px/1.3 var(--font-ui);
+  color: var(--ink);
+}
+
+.layers-count {
+  margin-right: auto;
+}
+
+.layers-close {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+}
+
+.layers-close:hover {
+  background: var(--empty);
+  color: var(--ink);
+}
+
+.layers-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Time slider, along the bottom */
+
+/* The timeline floats over everything at the bottom, like a phone's tab
+   bar; an open panel slides behind it instead of pushing it. */
+.timeline {
+  position: fixed;
+  left: var(--gap);
+  right: var(--gap);
+  bottom: var(--gap);
+  height: var(--time-h);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 0 9px;
+}
+
+.timeline .play {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.timeline-now {
+  flex: none;
+  display: grid;
+  min-width: 112px;
+}
+
+.timeline-value {
+  font: 600 17px/1.15 var(--font-head);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.timeline-kind {
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.timeline-track {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding-top: 18px;
+  padding-bottom: 14px;
+}
+
+.timeline-track input {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.timeline-ticks {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -2px;
+  height: 14px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.timeline-ticks span {
+  position: absolute;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+/* Report panel: only while a place is chosen */
+
+/* On a wide screen the panel may cover the right end of the top bar; the
+   language and information buttons come back when it closes. */
+.report {
+  top: var(--gap);
+  bottom: var(--gap);
+  z-index: 5;
+  padding-bottom: calc(var(--time-h) + 10px);
+}
+
+.report-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.report-head h1 {
+  overflow-wrap: anywhere;
+}
+
+.report-kind {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Phones */
+
+@media (max-width: 767px) {
+  .shell {
+    --gap: 10px;
+    --bar-h: 38px;
+    --tool: 36px;
+    --report-space: 0px;
+  }
+
+  /* One row: the name, the History / Forecast switch, the search icon and
+     the menu. The search unfolds into its own row when asked for. */
+  .top {
+    flex-wrap: wrap;
+  }
+
+  .top .lang-menu,
+  .top .info-menu {
+    display: none;
+  }
+
+  .top .view-tabs {
+    order: 0;
+    flex: 0 1 auto;
+  }
+
+  .top .view-tabs .chip {
+    flex: none;
+    padding-inline: 10px;
+  }
+
+  .top .brand {
+    font-size: 17px;
+    padding: 0 2px 0 0;
+  }
+
+  .top {
+    gap: 6px;
+  }
+
+  .top .spacer {
+    min-width: 0;
+  }
+
+  .top .icon-btn {
+    padding: 0 10px;
+  }
+
+  .top .view-tabs .chip {
+    padding-inline: 8px;
+  }
+
+  .top .search {
+    display: none;
+    order: 5;
+    flex: 1 1 100%;
+    width: auto;
+  }
+
+  .top[data-search-open="true"] .search {
+    display: flex;
+  }
+
+  .top .spacer {
+    display: block;
+  }
+
+  .tools {
+    left: var(--gap);
+    bottom: calc(var(--gap) + var(--time-h) + 10px);
+  }
+
+  .shell[data-has-report="true"] .tools {
+    bottom: calc(var(--sheet) + 10px);
+  }
+
+  .tool-tip {
+    width: min(260px, calc(100vw - var(--tool) - 40px));
+  }
+
+  .timeline-now {
+    min-width: 0;
+  }
+
+  .timeline-kind,
+  .timeline-ticks [data-minor] {
+    display: none;
+  }
+
+  .timeline-value {
+    font-size: 15px;
+  }
+
+  .layers {
+    left: calc(var(--gap) + var(--tool) + 14px);
+    right: var(--gap);
+    width: auto;
+    top: auto;
+    bottom: calc(var(--gap) + var(--time-h) + 10px);
+    max-height: calc(100dvh - var(--top-bar-h, 60px) - var(--time-h) - 50px);
+  }
+
+  .shell[data-has-report="true"] .layers {
+    bottom: calc(var(--sheet) + 10px);
+    max-height: calc(100dvh - var(--top-bar-h, 60px) - var(--sheet) - 30px);
+  }
+
+  /* The sheet runs behind the floating timeline. */
+  .report {
+    top: auto;
+    padding-bottom: calc(var(--time-h) + var(--gap) + 4px);
+  }
+}
+
+@media (min-width: 768px) {
+  .search-toggle,
+  .mobile-menu {
+    display: none;
+  }
+}
+
+/* Mid-size screens: a narrower panel leaves the slider room. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .shell[data-has-report="true"] {
+    --report-space: 356px;
+  }
+
+  .report {
+    width: 340px;
+  }
+}
+
+/* A short slider keeps only its first and last labels. */
+.timeline-track {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .timeline-ticks span:not(:first-child):not(:last-child) {
+    display: none;
+  }
+}
+
+.ramp-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.whole-country {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.whole-country:hover {
+  color: var(--ink);
+  border-color: color-mix(in oklch, var(--accent) 50%, var(--line));
+}
+
+/* Information menu */
+
+.info-list {
+  width: min(340px, calc(100vw - 2 * var(--gap)));
+  max-height: calc(100dvh - var(--bar-h) - 3 * var(--gap));
+  overflow-y: auto;
+}
+
+.info-heading {
+  margin: 10px 11px 4px;
+  font: 600 12px/1.3 var(--font-ui);
+  color: var(--ink-2);
+}
+
+.info-credits {
+  margin: 0;
+  padding: 0 11px 8px 26px;
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.menu-langs {
+  display: grid;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+/* Which layers the slider does not move, said where the slider is. */
+.timeline-note {
+  position: absolute;
+  /* Clear of the tool column, which stands above the left end. */
+  left: calc(var(--tool) + 18px);
+  bottom: calc(100% + 6px);
+  max-width: min(640px, 100%);
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* The narrowest phones keep the top bar on one row. */
+@media (max-width: 359px) {
+  .top .brand {
+    font-size: 14px;
+  }
+
+  .top .view-tabs .chip {
+    padding-inline: 6px;
+    font-size: 12px;
+  }
+
+  .top .icon-btn {
+    padding: 0 8px;
+  }
+}
+
+/* Monthly activity behind the year track, with a hairline between years. */
+.timeline-bars {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 0;
+  height: 22px;
+  width: calc(100% - 16px);
+  pointer-events: none;
+}
+
+.timeline-bar {
+  fill: var(--ink-3);
+  opacity: 0.55;
+}
+
+.timeline-bar.on {
+  fill: var(--accent);
+  opacity: 1;
+}
+
+.timeline-sep {
+  stroke: var(--ink-3);
+  stroke-opacity: 0.45;
+  stroke-width: 1;
+}
+
+/* Forecast days: separators only, a little shorter. */
+.timeline-bars.days {
+  top: 8px;
+  height: 12px;
+}

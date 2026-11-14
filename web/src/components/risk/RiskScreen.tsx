@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CountryResult, RiskIndex } from '@/types/risk';
-import { loadRiskCountry, loadRiskIndex, regionSpots, scorecardHref, showForecast, forecastIsStale } from '@/lib/risk/loaders';
+import { loadRiskCountry, loadRiskIndex, regionSpots, showForecast, forecastIsStale } from '@/lib/risk/loaders';
+import { formatIsoDateTime } from '@/components/report/lib/format';
 import RiskMap from './RiskMap';
 import WeekOutlook from './WeekOutlook';
 import RiskSpotDetails from './RiskSpotDetails';
@@ -18,9 +19,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const [selection,setSelection]=useState<'forest'|'all'>('forest');
  const [stale,setStale]=useState(false);
  useEffect(()=>{const update=()=>setStale(!!index?.meta && forecastIsStale(index.meta.days.tomorrow)); update(); const timer=setInterval(update,60000); return ()=>clearInterval(timer);},[index]);
- const [proof,setProof]=useState('/proof');
  useEffect(()=>{let live=true;loadRiskIndex(example).then(data=>{if(live){setIndex(data);setRegionId(data.regions[0]?.region_id??'');}},()=>{if(live)setFailed(true);});
- scorecardHref(example).then(href=>{if(live)setProof(href);},()=>{});
  return ()=>{live=false;};},[example]);
  const region=index?.regions.find(r=>r.region_id===regionId);
  const country=region?.country??'BGR';
@@ -34,7 +33,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const countryLabel=(code:string)=>tc.has(code)?tc(code):code;
  const countries=[...new Set(index?.regions.map(r=>r.country)??[])].sort((a,b)=>countryLabel(a).localeCompare(countryLabel(b),locale));
  return <main className="risk-page">
-  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href="/">{t('back')}</a><a href={proof}>{t('proof')}</a></nav></header>
+  <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href={example?'/proof?risk=example#next-day-risk':'/proof#next-day-risk'}>{t('proof')}</a></nav></header>
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
   {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">
@@ -47,7 +46,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
     <RiskMap regions={index.regions} region={region} spots={spots} onRegion={selectRegion} onSpot={selectSpot}/>
     <section className="risk-sheet" aria-label={t('title')}>
      <h2>{locale==='bg'?region.name_local:region.name_en}</h2>
-     <div className="risk-meta"><p>{t('valid',{date})}</p><p>{t('made',{date:index.meta?.made_at??''})}</p><p>{t('weatherRun',{date:index.meta?.fire_weather_run??''})}</p><p>{t('estimates')}</p></div>
+     <div className="risk-meta"><p>{t('valid',{date})}</p><p>{t('made',{date:formatIsoDateTime(index.meta?.made_at??'',locale==='bg'?'bg':'en')})}</p><p>{t('weatherRun',{date:index.meta?.fire_weather_run??''})}</p><p>{t('estimates')}</p></div>
      {stale&&<p role="status">{t('stale',{date:index.meta?.days.tomorrow??''})}</p>}
      {countryFailed?<p role="alert">{t('failed')}</p>:!countryData?<p role="status">{t('loading')}</p>:countryData.status==='missing'?<p role="status">{t('missingCountry')}</p>:spots.length===0?<div role="status"><p>{t(selection==='forest'?'emptyForest':'empty')}</p>{selection==='forest'&&<button className="risk-switch-link" onClick={()=>setSelection('all')}>{t('showAll')}</button>}</div>:<ol className="risk-list" aria-label={t('title')}>{spots.map(spot=><li key={spot.spot_id} id={`risk-spot-${spot.spot_id}`} tabIndex={-1}><span className="risk-rank">{spot.rank}</span><div className="risk-spot"><RiskSpotDetails spot={spot} crew={!stale&&spot.rank===1} day={day}/></div></li>)}</ol>}
     </section>

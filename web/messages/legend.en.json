@@ -1,0 +1,17 @@
+{
+  "unitSoil": "Water in the topsoil, m³ per m³",
+  "unitNdvi": "Plant greenness index (NDVI), 0 is bare, 1 is lush",
+  "unitCelsius": "Air temperature near the ground, °C",
+  "below": "below {value}",
+  "range": "{from} to {to}",
+  "orMore": "{value} and more",
+  "fwiNote": "Index values. Our risk levels are separate and do not use these bands.",
+  "landForest": "Forest",
+  "landShrubGrass": "Shrubs, savanna and grass",
+  "landFarmland": "Farmland",
+  "landOther": "Wetland, towns, snow, bare ground, water",
+  "windArrow": "Points where the wind blows to",
+  "heatLess": "Fewer fire days",
+  "heatMore": "More fire days",
+  "heatNote": "The glow blends neighbouring 0.25 degree cells so patterns read at any zoom. The report on the right gives the exact figures for a place."
+}

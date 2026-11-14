@@ -14,6 +14,6 @@ export function regionAt(regions: RiskRegion[], lat: number, lon: number): RiskR
  return regions.filter(({bbox:[w,s,e,n]})=>lon>=w&&lon<=e&&lat>=s&&lat<=n)
   .sort((a,b)=>distanceKm(lat,lon,(a.bbox[1]+a.bbox[3])/2,(a.bbox[0]+a.bbox[2])/2)-distanceKm(lat,lon,(b.bbox[1]+b.bbox[3])/2,(b.bbox[0]+b.bbox[2])/2))[0] ?? null;
 }
-export function historyHref(spot: RiskSpot): string {
+export function historyHref(spot: Pick<RiskSpot, 'lat' | 'lon' | 'precision_radius_km'>): string {
  return `/?sel=${encodeSelection({kind:'point',lat:spot.lat,lon:spot.lon,radiusKm:spot.precision_radius_km})}`;
 }

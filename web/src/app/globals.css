@@ -2,6 +2,8 @@
 @import "../styles/themes.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
 @import "../styles/shell.css";
+@import "../styles/layers.css";
+@import "../styles/chrome.css";
 
 @theme {
   --color-ink: var(--ink);

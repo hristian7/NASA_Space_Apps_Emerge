@@ -183,6 +183,24 @@ export function formatIsoDate(iso: string, locale: ReportLocale): string {
   }).format(Date.UTC(Number(y), Number(m) - 1, Number(d)));
 }
 
+/** "14 Nov 2026, 21:00 UTC" from a full ISO time; anything else comes back as given. */
+export function formatIsoDateTime(iso: string, locale: ReportLocale): string {
+  const time = Date.parse(iso);
+  if (!/^\d{4}-\d{2}-\d{2}T/.test(iso) || Number.isNaN(time)) {
+    return iso;
+  }
+  const text = new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "UTC",
+  }).format(time);
+  return `${text} UTC`;
+}
+
 /** "159 to 295", or an empty string when either end is missing. */
 export function formatRange(
   lo: number | null,

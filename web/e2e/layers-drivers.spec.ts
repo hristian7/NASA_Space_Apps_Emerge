@@ -14,7 +14,9 @@ test('each driver requests its own data and displays its date', async ({ page })
     const result = (url.searchParams.get('latitude') ?? '').split(',').map(() => ({ current: { wind_speed_10m: 12, wind_direction_10m: 90, time: '2026-11-14T12:00' } }));
     await route.fulfill({ json: result, headers: { 'access-control-allow-origin': '*' } });
   });
-  await page.goto('/?lay=', { waitUntil: 'domcontentloaded' });
+  // The driver layers belong to the Forecast view; the list opens from the map's tool column.
+  await page.goto('/?v=f&lay=', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Layers and legend' }).click();
   for (const driver of drivers) {
     const row = page.locator('.layer-row').filter({ has: page.getByRole('switch', { name: driver.name, exact: true }) });
     const request = page.waitForRequest(req => req.url().includes(driver.address) && (req.url().includes('GetMap') || /\/\d+\/\d+\/\d+\.png/.test(req.url())));

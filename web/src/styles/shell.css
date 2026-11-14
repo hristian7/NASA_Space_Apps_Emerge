@@ -93,7 +93,8 @@ ol {
 
 .chip[aria-pressed="true"],
 .chip[aria-expanded="true"],
-.chip[aria-current="true"] {
+.chip[aria-current="true"],
+.chip[aria-current="page"] {
   background: var(--line);
   color: var(--ink);
 }
@@ -258,6 +259,23 @@ ol {
 .top .spacer {
   flex: 1;
   min-width: 0;
+}
+
+/* The forecast view scrolls as a page, so its bar sits in the flow above it
+   instead of floating over a map. */
+.top.top-flow {
+  position: relative;
+  top: 0;
+  left: auto;
+  right: auto;
+  padding: 16px;
+  background: var(--space);
+  border-bottom: 1px solid var(--line);
+}
+
+.view-tabs .chip {
+  text-decoration: none;
+  padding-inline: 16px;
 }
 
 .popover {
@@ -601,5 +619,35 @@ ol {
 @media (prefers-reduced-motion: reduce) {
   .report {
     transition: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Two rows on a phone: name, menus and language first, then the
+     History / Forecast switch beside the page links. */
+  .top .lang {
+    order: 1;
+  }
+
+  .top .view-tabs {
+    order: 2;
+    flex: 1 1 auto;
+  }
+
+  .top .view-tabs .chip {
+    flex: 1;
+    text-align: center;
+    padding-inline: 8px;
+  }
+
+  .top .top-links {
+    order: 3;
+  }
+
+  .top.top-flow {
+    top: 0;
+    left: auto;
+    right: auto;
+    padding: 10px;
   }
 }
