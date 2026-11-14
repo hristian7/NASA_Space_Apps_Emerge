@@ -49,7 +49,7 @@ def main():
                    WHEN l.land_class IN (12,14) THEN 'farmland'
                    ELSE NULL END AS fuel_class
             FROM matched m LEFT JOIN read_csv_auto(?) l ON m.spot_id=l.cell_id
-            ORDER BY m.spot_id) TO ? (FORMAT parquet, COMPRESSION zstd)
+            ORDER BY m.spot_id) TO ? (FORMAT parquet, COMPRESSION zstd, KV_METADATA {grid_g: '0.25'})
     """, [land, str(temp)])
     temp.replace(OUT / 'grid_0.25.parquet')
     print('grid spots, regions:', con.execute('SELECT count(*), count(DISTINCT region_id) FROM matched').fetchone())

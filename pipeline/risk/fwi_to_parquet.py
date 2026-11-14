@@ -74,7 +74,7 @@ def main():
                     cols[field] = pa.array(values, mask=~np.isfinite(values), type=pa.float32())
             if source.stat().st_size != stat.st_size or source.stat().st_mtime_ns != stat.st_mtime_ns:
                 raise ValueError('source changed while reading')
-            table = pa.table(cols).replace_schema_metadata({b'input_fingerprint': fingerprint.encode()})
+            table = pa.table(cols).replace_schema_metadata({b'input_fingerprint': fingerprint.encode(), b'grid_g': b'0.25'})
             pq.write_table(table, temp, compression='zstd')
             temp.replace(dest)
             processed += 1

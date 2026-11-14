@@ -46,7 +46,7 @@ def main():
                    CASE WHEN c.day IS NULL THEN 'new' ELSE 'continuing' END AS label
             FROM fire f LEFT JOIN continuing c USING (row,col,day)
             ORDER BY spot_id, day)
-      TO ? (FORMAT parquet, COMPRESSION zstd)
+      TO ? (FORMAT parquet, COMPRESSION zstd, KV_METADATA {grid_g: '0.25'})
     """, [str(temp)])
     temp.replace(OUT / 'labels_0.25.parquet')
     print('labels:', con.execute("SELECT label,count(*) FROM read_parquet(?) GROUP BY 1 ORDER BY 1", [str(OUT / 'labels_0.25.parquet')]).fetchall(), flush=True)

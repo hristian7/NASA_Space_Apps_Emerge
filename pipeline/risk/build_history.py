@@ -88,7 +88,7 @@ def main():
                    n.spot_id IS NOT NULL AS fire_near_3d
             FROM recent_base b LEFT JOIN nearby n ON b.spot_id=n.spot_id AND b.day=n.day
             ORDER BY b.day,b.spot_id
-          ) TO ? (FORMAT parquet, COMPRESSION zstd)
+          ) TO ? (FORMAT parquet, COMPRESSION zstd, KV_METADATA {grid_g: '0.25'})
         """, [eligible_years, max(eligible_years, 1), str(temp)])
         temp.replace(folder / 'history.parquet')
         print('finished history', month, flush=True)

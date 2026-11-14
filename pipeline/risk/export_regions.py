@@ -27,7 +27,7 @@ def main():
         key = p['iso_3166_2']
         if key not in counts:
             continue
-        region = regions.setdefault(key, {'region_id': key, 'name_en': p.get('name_en') or p['name'],
+        region = regions.setdefault(key, {'region_id': key, 'grid_g': 0.25, 'name_en': p.get('name_en') or p['name'],
                                           'name_local': p.get('name_local'), 'country': p['adm0_a3'],
                                           'bbox': [180., 90., -180., -90.], 'spots': counts[key]})
         if region['country'] != p['adm0_a3']:
