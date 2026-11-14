@@ -5,6 +5,7 @@ import type { CountryResult, RiskIndex } from '@/types/risk';
 import { loadRiskCountry, loadRiskIndex, regionSpots, scorecardHref, showForecast } from '@/lib/risk/loaders';
 import RiskMap from './RiskMap';
 import RiskSpotDetails from './RiskSpotDetails';
+import RiskPlaceholder from './RiskPlaceholder';
 import { RiskLinks } from './RiskLinks';
 import './risk.css';
 
@@ -30,7 +31,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  return <main className="risk-page">
   <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href="/">{t('back')}</a><a href={proof}>{t('proof')}</a></nav></header>
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
-  {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<section className="risk-placeholder"><h2>{t('placeholder')}</h2></section>:<>
+  {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">
     <div className="risk-days" role="group" aria-label={t('day')}>{(['today','tomorrow'] as const).map(value=><button key={value} aria-pressed={day===value} onClick={()=>setDay(value)}>{t(value)}</button>)}<button disabled>{t('week')}</button></div>
     <label>{t('country')}<select aria-label={t('country')} value={country} onChange={e=>setRegionId(index.regions.find(r=>r.country===e.target.value)?.region_id??'')}>{countries.map(code=><option key={code} value={code}>{t.has(`countries.${code}`)?t(`countries.${code}`):code}</option>)}</select></label>
