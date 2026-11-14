@@ -31,7 +31,8 @@
     "forward": "Learn early, test later",
     "reverse": "Learn late, test earlier",
     "country": "Country",
-    "test": "Hold-out"
+    "test": "Hold-out",
+    "chosenBy": "How the method was chosen: two countries, scored in detail, with the conversion fitted on those two alone."
   },
   "slices": {
     "heading": "Results by group",
@@ -113,5 +114,27 @@
   "scopeCellMonthFine": "one finer 0.1 degree square, one month",
   "scopeCircleMonthWeighted": "one 50 km circle, one month, cells weighted by overlap",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "world": {
+    "heading": "The model the app uses, on every country",
+    "test": "Hold-out",
+    "unit": "Unit",
+    "group": "Countries",
+    "countries": "Countries scored",
+    "tooLittle": "Too little fire to score",
+    "median": "Typical error (median)",
+    "p10": "Best tenth",
+    "p90": "Worst tenth",
+    "biasMedian": "Typical bias (median)",
+    "coverage": "Share whose range held",
+    "pooledNrmse": "Error of the world total",
+    "pooledBias": "Bias of the world total",
+    "pooledR": "r of the world total",
+    "spreadCaption": "How the error is spread across countries, overall and by how much each country burns.",
+    "groupAll": "all",
+    "groupSmall": "small fire countries",
+    "groupMedium": "middle",
+    "groupLarge": "large fire countries",
+    "groupPooled": "every country added together"
+  }
 }

@@ -24,7 +24,7 @@ import {
   monthYearLong,
   type ReportLocale,
 } from "./lib/format";
-import { isEstimated, sourceLabel } from "./lib/sentences";
+import { isEstimated, sourceDetail } from "./lib/sentences";
 import styles from "./styles";
 
 const LABEL_W = 34;
@@ -116,6 +116,16 @@ export default function FireCalendar({
     [totals],
   );
 
+  // Which source labels the shown months actually carry, so the legend
+  // explains the unusual ones and stays quiet about the rest.
+  const shownSources = useMemo(() => {
+    const seen = new Set<string>();
+    for (const month of series.months) {
+      if (month.src !== null) seen.add(month.src);
+    }
+    return seen;
+  }, [series.months]);
+
   const height = HEADER_H + years.length * STEP_Y;
   const unitName = t(`unit.${mode === "anomaly" ? series.unit : mode}.short`);
 
@@ -144,7 +154,10 @@ export default function FireCalendar({
       mode === "anomaly" && ratio !== null && ratio !== undefined
         ? `, ${t("calendar.timesMedian", { ratio: formatRatio(ratio, locale) })}`
         : "";
-    return `${when}: ${formatCount(month.value, locale)} ${unitName}${anomalyPart}, ${sourceLabel(month.src, t)}`;
+    const part = month.flags.includes("partial_month")
+      ? `, ${t("calendar.partMonth")}`
+      : "";
+    return `${when}: ${formatCount(month.value, locale)} ${unitName}${anomalyPart}, ${sourceDetail(month.src, t)}${part}`;
   }
 
   function move(fromY: number, fromM: number, dy: number, dm: number) {
@@ -411,7 +424,7 @@ export default function FireCalendar({
                 </span>
               ) : null}
               <span className={styles.tipRow}>
-                {sourceLabel(hovered.src, t)}
+                {sourceDetail(hovered.src, t)}
               </span>
             </>
           )}
@@ -425,6 +438,7 @@ export default function FireCalendar({
         anyFire={series.months.some(
           (month) => month.value !== null && month.value > 0,
         )}
+        sources={shownSources}
       />
     </div>
   );
@@ -435,12 +449,15 @@ function CalendarLegend({
   thresholds,
   locale,
   anyFire,
+  sources,
 }: {
   mode: UnitMode;
   thresholds: number[];
   locale: ReportLocale;
   /** False when no month has a value above 0, so there are no steps to explain. */
   anyFire: boolean;
+  /** The source labels the shown months carry. */
+  sources: Set<string>;
 }) {
   const t = useTranslations("report");
 
@@ -495,6 +512,12 @@ function CalendarLegend({
         </span>
       </div>
       {anyFire ? <p className={styles.sub}>{stepText}</p> : null}
+      {sources.has("provisional") ? (
+        <p className={styles.sub}>{t("legend.provisional")}</p>
+      ) : null}
+      {sources.has("measured_calibrated") ? (
+        <p className={styles.sub}>{t("legend.calibrated")}</p>
+      ) : null}
     </>
   );
 }

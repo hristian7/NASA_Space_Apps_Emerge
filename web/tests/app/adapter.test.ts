@@ -15,7 +15,7 @@ import {
   selectionForCsv,
   typicalFireDays,
 } from "../../src/components/app/adapter";
-import { unusual } from "../../src/lib/stats";
+import { historyFor, median, unusual } from "../../src/lib/stats";
 
 function month(y: number, m: number, value: number | null): MonthPoint {
   return { y, m, value, lo: value, hi: value, src: "measured", flags: [] };
@@ -98,8 +98,17 @@ describe("the anomaly ramp", () => {
 });
 
 describe("the typical month a large area shows instead of a chance", () => {
+  it("is there even while the month itself is still being measured", () => {
+    const unfinished = seriesOf([...augusts.months, month(2025, 8, null)]);
+    expect(typicalFireDays(unfinished, { y: 2025, m: 8 })).toBe(
+      median(historyFor(unfinished, 2025, 8)),
+    );
+    expect(typicalFireDays(unfinished, { y: 2025, m: 8 })).not.toBeNull();
+  });
+
   it("is the stats module's own median of the same month in past years", () => {
     const value = typicalFireDays(augusts, { y: 2024, m: 8 });
+    expect(value).toBe(median(historyFor(augusts, 2024, 8)));
     expect(value).toBe(unusual(augusts, 2024, 8).median);
     expect(value).toBe(30);
   });

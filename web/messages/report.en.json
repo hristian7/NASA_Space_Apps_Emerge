@@ -2,10 +2,22 @@
   "report": {
     "unitToggle": "Values shown",
     "unit": {
-      "cd": { "label": "Fire days", "short": "fire days" },
-      "hot": { "label": "Hotspots", "short": "hotspots" },
-      "sat": { "label": "Per satellite", "short": "detections" },
-      "anomaly": { "label": "Anomaly", "short": "fire days" }
+      "cd": {
+        "label": "Fire days",
+        "short": "fire days"
+      },
+      "hot": {
+        "label": "Hotspots",
+        "short": "hotspots"
+      },
+      "sat": {
+        "label": "Per satellite",
+        "short": "detections"
+      },
+      "anomaly": {
+        "label": "Anomaly",
+        "short": "fire days"
+      }
     },
     "calendar": {
       "label": "Fire calendar: years down, months across",
@@ -14,7 +26,8 @@
       "noRange": "No range for this month",
       "range": "Range {lo} to {hi}",
       "timesMedian": "{ratio} times the usual month",
-      "noComparison": "No usual level to compare with"
+      "noComparison": "No usual level to compare with",
+      "partMonth": "part of the month only"
     },
     "legend": {
       "less": "Less",
@@ -25,7 +38,9 @@
       "noData": "No measurement at all",
       "estimated": "Estimated from MODIS",
       "rampSteps": "Colour steps: {first}, {second}, {third}, {fourth} and more.",
-      "anomalySteps": "Colour steps: under half the usual month, up to 0.8, up to the usual level, up to 1.25, up to twice, and twice or more."
+      "anomalySteps": "Colour steps: under half the usual month, up to 0.8, up to the usual level, up to 1.25, up to twice, and twice or more.",
+      "provisional": "Provisional months are early data that NASA revises later, so their figures can still change.",
+      "calibrated": "Calibrated months are measured by the newer satellites and scaled to the reference satellite, which stopped on 2 November 2026."
     },
     "unusual": {
       "heading": "Is this unusual?",
@@ -63,7 +78,8 @@
       "noPast": "No past year has a measurement for these {days} days.",
       "yearValue": "{year}: {value} {unit}",
       "yearNoData": "{year}: no measurement",
-      "estimatedNote": "Years before 2012 are estimated from MODIS and marked with a bar and stripes."
+      "estimatedNote": "Years before 2012 are estimated from MODIS and marked with a bar and stripes.",
+      "noCurrent": "The last {days} days have no measurement yet, so there is nothing to rank."
     },
     "reported": {
       "heading": "Detected against reported",
@@ -118,7 +134,8 @@
       "measured": "measured",
       "estimated": "estimated",
       "provisional": "provisional",
-      "none": "no measurement"
+      "none": "no measurement",
+      "calibrated": "calibrated"
     },
     "downloads": {
       "heading": "Downloads",
