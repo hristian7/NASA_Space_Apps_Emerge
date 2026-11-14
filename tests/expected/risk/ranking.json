@@ -1,0 +1,97 @@
+{
+  "all_ranked_spot_ids": [
+    1,
+    4,
+    3,
+    2,
+    6,
+    5,
+    7,
+    8,
+    10
+  ],
+  "expected_spot_ids": [
+    1,
+    4,
+    3,
+    2,
+    6
+  ],
+  "region": "A",
+  "rows": [
+    {
+      "history": 0.2,
+      "p": 0.9,
+      "region": "A",
+      "spot_id": 1
+    },
+    {
+      "history": 0.5,
+      "p": 0.8,
+      "region": "A",
+      "spot_id": 2
+    },
+    {
+      "history": 0.7,
+      "p": 0.8,
+      "region": "A",
+      "spot_id": 3
+    },
+    {
+      "history": 0.7,
+      "p": 0.8,
+      "region": "A",
+      "spot_id": 4
+    },
+    {
+      "history": 0.1,
+      "p": 0.7,
+      "region": "A",
+      "spot_id": 5
+    },
+    {
+      "history": 0.2,
+      "p": 0.7,
+      "region": "A",
+      "spot_id": 6
+    },
+    {
+      "history": 0.9,
+      "p": 0.6,
+      "region": "A",
+      "spot_id": 7
+    },
+    {
+      "history": 0.1,
+      "p": 0.5,
+      "region": "A",
+      "spot_id": 8
+    },
+    {
+      "history": 0.99,
+      "p": null,
+      "region": "A",
+      "spot_id": 9
+    },
+    {
+      "history": 0.3,
+      "p": 0,
+      "region": "A",
+      "spot_id": 10
+    },
+    {
+      "history": 0.9,
+      "p": 0.99,
+      "region": "B",
+      "spot_id": 11
+    },
+    {
+      "history": 0.9,
+      "p": 0.98,
+      "region": "B",
+      "spot_id": 12
+    }
+  ],
+  "seed_rule": "Ascending SHA-256 hex digest of UTF-8 risk-oracle-seed-17:<spot_id>.",
+  "top_n": 5
+}

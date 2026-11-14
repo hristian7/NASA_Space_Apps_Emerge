@@ -30,3 +30,19 @@ Written on 14 Nov 2026 from `docs/number-logic.md`, `web/src/types/ui.ts` and `d
 | `csv_cases.json` | 8 | Body rows of the monthly CSV, rounding, quoting, line ends |
 
 Numbers are rounded to 6 decimals; compare with a tolerance of 1e-6. Every case has exactly one expected answer; the points the rules left open were ruled in section 9 of `docs/number-logic.md` and are pinned to those rulings.
+
+## risk/
+
+Independent plan 2 answers, written from the specification and build plan before the risk implementation. `risk/make_risk_expected.py` uses only the Python standard library. Run it from the repository root to regenerate all seven JSON files; output has sorted keys, two-space indentation and a final newline. Numeric outputs are exact fractions where practical; great-circle distances use a spherical Earth and are rounded to six decimal places. Fixture values and toy assumptions are [U].
+
+| File | What it pins |
+|---|---|
+| `spot_id.json` | Exact-fraction grid IDs, centres and great-circle precision radii, including boundary alternatives. The Rila example matches section 8 [V]. |
+| `regions.json` | Known point regions, calculated by ray casting through Natural Earth polygons, holes and multipolygons [V]. |
+| `labels.json` | New and continuing fire examples, filtering and each neighbour on both preceding days. |
+| `ranking.json` | Top spots within a region, history and a reproducible hash-based tie rule, with null excluded. |
+| `scores.json` | Pooled capture, hit rate, lift, Brier skill against history, small-region reporting and separate continuing-fire capture. |
+| `leakage.json` | Training split and per-row input cutoff examples. |
+| `model_file.json` | Plug-in columns and valid and invalid examples. |
+
+Region regeneration requires the untracked Natural Earth admin-1 snapshot at `data/raw/ne_10m_admin_1_states_provinces.geojson`. Downloaded 2026-11-14 [V] from <https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson>. The generator checks its SHA-256, so a later upstream revision will fail rather than silently alter the oracle. The score sample's unlisted land spots count for lift only; Brier is measured over the explicitly listed spot-days. The fixed seed rule and the treatment of global grid boundaries are fixture assumptions [U], not additional spec requirements.
