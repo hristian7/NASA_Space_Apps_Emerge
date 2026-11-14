@@ -17,8 +17,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M14 | Worldwide coverage | — |
 | M2 | Data pipeline: whole world | Download and process NASA fire data for the whole world before the demo, so the app shows data at once |
 | M15 | Installable app (PWA) | — |
-| M21 | Fetch simple data | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
-| M22 | Fetch complex data | In raw or table format, or visualised (same as simple data, combined) |
+| M21 | Fetch data | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
 | C3 | Second source of truth | — |
 | C4 | Older or more satellites | Data before 2000 or from more satellites |
 | C7 | Support for different base maps | Actually offer more base maps than NASA/OpenStreetMap, not just leave room for them |
