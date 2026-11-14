@@ -589,3 +589,39 @@
     gap: 6px;
   }
 }
+
+.rp-outsideList {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.rp-outsideList li {
+  display: grid;
+  gap: 2px;
+}
+
+.rp-outsideLink {
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.rp-outsideLink:hover {
+  text-decoration-color: var(--accent);
+}
+
+.rp-outsideNote {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.rp-outsideList li > .rp-outsideNote {
+  margin-left: 0;
+}

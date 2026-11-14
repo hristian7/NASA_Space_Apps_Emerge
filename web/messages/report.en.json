@@ -165,6 +165,16 @@
         "term": "Search distance",
         "text": "How far from the chosen point the app keeps readings, from 0 to 500 km."
       }
+    },
+    "outside": {
+      "heading": "See this place in official services",
+      "intro": "Emerge builds on these services. They are the official sources; Emerge is a research tool.",
+      "firms": "NASA FIRMS: live fire map, last 7 days",
+      "gwisStats": "GWIS: fire statistics, {year}",
+      "effisStats": "EFFIS: burned area against the {from} to {to} average",
+      "gwisDanger": "GWIS: today's fire danger map (opens on the world)",
+      "newTab": "(new tab)",
+      "wholeCountry": "For the whole country, not only the selection."
     }
   }
 }
