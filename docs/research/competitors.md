@@ -51,6 +51,28 @@ Sources for each row are in the list at the end.
 - **It is our data source,** not a rival. FIRMS is the best live map; it does not answer "is this season worse than usual?" Saying "we turn FIRMS into answers" is respectful and true.
 - **Notice on the FIRMS map (seen 14 Nov 2026):** "Delivery of Suomi NPP satellite observations will cease on November 2, 2026", users should move to NOAA-20 and NOAA-21 `[V]`. Our harmonization uses S-NPP as the reference, so the record from November 2026 on must continue on NOAA-20/21 (they agree with S-NPP within about 1% `[V]`, per the overview). Good answer to "what happens next?" in the Q&A.
 
+## Full feature map of 16 sites (14 Nov, evening)
+
+The detailed map is in [`feature-map.md`](feature-map.md): 16 sites (EFFIS and its viewers, JRC, DW, fire.ai, Google's boundary tracking, EFFIS annual reports, FIRMS, Watch Duty, NIFC, Ready.gov, NOAA NCEI, CAL FIRE, OroraTech), 47 feature rows with effort, a table of their data sources, and a ranked shortlist.
+
+**Most important finding:** our "Detected vs reported" panel (M28) shows EFFIS **satellite-mapped** estimates for Bulgaria (2024: 133 fires, 44,745 ha) under the word "reported". Bulgaria's own national figures, from the Executive Forest Agency in the EFFIS 2024 annual report, are **595 forest fires and 17,116 ha** `[V]`. They count different things. Both files in `web/public/data/reported/` are still marked as examples with one year each `[V]`. Filling them from the national report (Bulgaria) and the NIFC table (USA, 1983 to 2025 `[V]`) is the top recommendation.
+
+**Shortlist before the freeze** (ranked; S = 1 to 2 h, M = 3 to 5 h):
+
+| # | What | Effort | Raises |
+|---|---|---|---|
+| 1 | Real national reported numbers in M28, labelled apart from EFFIS satellite estimates | M | Relevance, Validity |
+| 2 | Data date and source next to the result (history date vs live map date) | S | Validity, Presentation |
+| 3 | Name the comparison years in "Is this unusual?" | S | Validity |
+| 4 | A short verdict above the proof tables, including what failed | S | Validity, Presentation |
+| 5 | Show the fire heat (FRP) the "this fire vs past fires" card already receives, with units | S | Relevance, Validity |
+| 6 | Say plainly that "chance of fire" is a historical frequency, not yet scored (its Brier score is still empty) | S | Validity |
+| 7 | A cumulative season chart, this year against the median | M | Presentation, Impact |
+
+**Not worth taking:** dispatch and evacuation features, alerts (cut already), accounts, spread simulation, buying private satellite data, AI-written safety advice.
+
+**Geostationary satellites (Meteosat):** the LSA SAF fire products are open (CC BY 4.0). MSG SEVIRI (3 km, every 15 min, operational) and MTG FCI (1 km, every 10 min, demonstration) both serve a live map layer with no login and browser access allowed `[V]`. A "fires in the last hour" layer would be S effort; using them to check our trend is later work (L). GOES covers the Americas only.
+
 ## EFFIS, the JRC and the EU response: what we learn (checked 14 Nov)
 
 The European Forest Fire Information System (EFFIS) is run by the EU's Joint Research Centre (JRC) and has been part of Copernicus Emergency Management since 2015 `[V]`. Its expert group has members from 43 countries in Europe, the Middle East and North Africa `[V]`.
