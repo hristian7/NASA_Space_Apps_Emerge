@@ -366,6 +366,19 @@ class T1Model:
         self.n_terms = n_terms
         self.boot = _boot_sums_fast if fast else _boot_sums
 
+    @staticmethod
+    def _expo(frame: pd.DataFrame) -> np.ndarray:
+        """The background's exposure per candidate cell-month.
+
+        A2 uses 1.0 for every candidate, so the background is a fixed level per
+        empty cell-month. A3 passes a `zero_exposure` column that follows the
+        period's own MODIS activity, and the same ratio-of-sums machinery then
+        fits a background that scales with it.
+        """
+        if "zero_exposure" in frame.columns:
+            return frame["zero_exposure"].to_numpy(dtype=np.float64)
+        return np.ones(len(frame), dtype=np.float64)
+
     def fit(self, pairs: pd.DataFrame) -> "T1Model":
         pos = pairs[pairs["x"] > 0].copy()
         zero = pairs[pairs["x"] == 0].copy()
@@ -381,14 +394,15 @@ class T1Model:
         self.r = _cascade(sy, sx, ix["g_of_s"], ix["c_of_g"], n_g, n_c, self.k_ratio)
 
         sid_zero = _sid(zero, ix)
+        expo = self._expo(zero)
         zy = np.bincount(sid_zero, weights=zero["y"].to_numpy(), minlength=n_s)
-        zn = np.bincount(sid_zero, minlength=n_s).astype(float)
+        zn = np.bincount(sid_zero, weights=expo, minlength=n_s)
         self.z = _cascade(zy, zn, ix["g_of_s"], ix["c_of_g"], n_g, n_c, K_ZERO)
 
         # Parameter draws.
         by, bx = self.boot(pos, ix, ("y", "x"), self.rng)
         self.r_draws = _cascade(by, bx, ix["g_of_s"], ix["c_of_g"], n_g, n_c, self.k_ratio)
-        zero["one"] = 1.0
+        zero["one"] = expo
         bzy, bzn = self.boot(zero, ix, ("y", "one"), self.rng)
         self.z_draws = _cascade(bzy, bzn, ix["g_of_s"], ix["c_of_g"], n_g, n_c, K_ZERO)
 
@@ -397,7 +411,7 @@ class T1Model:
         pos["res"] = pos["y"].to_numpy() / np.maximum(self.r[sid_pos] * pos["x"].to_numpy(), 1e-12)
         self.pools_pos = build_pools(pos, "res")
         zero["expbin"] = 0
-        zero["res"] = zero["y"].to_numpy() / np.maximum(self.z[sid_zero], 1e-12)
+        zero["res"] = zero["y"].to_numpy() / np.maximum(self.z[sid_zero] * expo, 1e-12)
         self.pools_zero = build_pools(zero, "res")
 
         self.n_pos, self.n_zero = len(pos), len(zero)
@@ -410,13 +424,14 @@ class T1Model:
         out = out[known].copy()
         sid = _sid(out, ix)
         x = out["x"].to_numpy(dtype=float)
+        expo = self._expo(out)
         is_pos = x > 0
-        out["pred"] = np.where(is_pos, self.r[sid] * x, self.z[sid])
+        out["pred"] = np.where(is_pos, self.r[sid] * x, self.z[sid] * expo)
         out["expbin"] = np.where(is_pos, expbin(x), 0)
 
         for mask, pools, draws, scale in (
             (is_pos, self.pools_pos, self.r_draws, x),
-            (~is_pos, self.pools_zero, self.z_draws, np.ones_like(x)),
+            (~is_pos, self.pools_zero, self.z_draws, expo),
         ):
             if not mask.any():
                 continue
@@ -593,6 +608,142 @@ def run_conversion(
     return pd.concat(out, ignore_index=True), inner, insample
 
 
+# ------------------------------------- variant A3: a background that scales
+
+BACKGROUND_FORMS = ("fixed", "prop_month", "prop_trailing", "blend")
+EXPO_CLIP = (0.05, 20.0)
+BLEND_WEIGHT = 0.5
+MIN_CM_POOL = 12  # country-months needed before a country's own pool is used
+
+
+def activity_index(
+    cm: pd.DataFrame,
+    unit: str,
+    modis_sat: str,
+    fit_window: tuple[int, int, int, int],
+) -> pd.DataFrame:
+    """How active a group's MODIS record is in a month, against its own
+    fit-years average for that calendar month.
+
+    Two indexes: the month itself, and a trailing 12 months. Both are built
+    from MODIS only, so they may be read in a prediction year; the averages
+    they are divided by come from the fit years alone.
+    """
+    act = (
+        cm[cm["sat"] == modis_sat]
+        .groupby(["group", "ym"], as_index=False)[unit]
+        .sum()
+        .rename(columns={unit: "act"})
+    )
+    groups = sorted(act["group"].unique())
+    lo, hi = int(act["ym"].min()), int(act["ym"].max())
+    full = pd.DataFrame(
+        {
+            "group": np.repeat(groups, hi - lo + 1),
+            "ym": np.tile(np.arange(lo, hi + 1), len(groups)),
+        }
+    ).merge(act, on=["group", "ym"], how="left")
+    full["act"] = full["act"].fillna(0.0)
+    full = full.sort_values(["group", "ym"]).reset_index(drop=True)
+    full["act12"] = (
+        full.groupby("group")["act"].rolling(12, min_periods=1).sum().to_numpy()
+    )
+    full["moy"] = (full["ym"] % 12) + 1
+    base = (
+        full[window_mask(full["ym"], fit_window)]
+        .groupby(["group", "moy"], as_index=False)[["act", "act12"]]
+        .mean()
+        .rename(columns={"act": "base", "act12": "base12"})
+    )
+    full = full.merge(base, on=["group", "moy"], how="left")
+    for col, ref, name in (("act", "base", "s_month"), ("act12", "base12", "s_trail")):
+        s = np.where(
+            full[ref].to_numpy() > 0,
+            full[col].to_numpy() / np.maximum(full[ref].to_numpy(), 1e-12),
+            1.0,
+        )
+        full[name] = np.clip(s, EXPO_CLIP[0], EXPO_CLIP[1])
+    full["s_blend"] = np.clip(
+        (1 - BLEND_WEIGHT) + BLEND_WEIGHT * full["s_month"], EXPO_CLIP[0], EXPO_CLIP[1]
+    )
+    return full[["group", "ym", "s_month", "s_trail", "s_blend"]]
+
+
+def with_background(frame: pd.DataFrame, index: pd.DataFrame, form: str) -> pd.DataFrame:
+    """Attach the background exposure a form asks for. Table in, table out."""
+    if form == "fixed":
+        out = frame.copy()
+        out["zero_exposure"] = 1.0
+        return out
+    col = {"prop_month": "s_month", "prop_trailing": "s_trail", "blend": "s_blend"}[form]
+    out = frame.merge(index[["group", "ym", col]], on=["group", "ym"], how="left")
+    out["zero_exposure"] = out[col].fillna(1.0)
+    return out.drop(columns=[col])
+
+
+def country_month_ranges(
+    model: T1Model,
+    frame: pd.DataFrame,
+    pools: dict,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    """A country-month range computed jointly, not by adding cell ranges.
+
+    Inside one bootstrap draw every cell of a group shares that group's ratio
+    and background, so the cells are added up first and the 5% and 95% points
+    are taken of the country-month total. A country-month level residual, drawn
+    from the fit years, carries the spread that the parameters do not.
+    """
+    work = frame[["country", "ym", "group", "term", "x"]].copy()
+    work["expo"] = model._expo(frame)
+    work["sid"] = _sid(work, model.ix)
+    work["xpos"] = np.where(work["x"] > 0, work["x"], 0.0)
+    work["szero"] = np.where(work["x"] > 0, 0.0, work["expo"])
+    cell = work.groupby(["country", "ym", "sid"], as_index=False)[["xpos", "szero"]].sum()
+    keys = cell[["country", "ym"]].drop_duplicates().reset_index(drop=True)
+    keys["k"] = np.arange(len(keys))
+    cell = cell.merge(keys, on=["country", "ym"], how="left")
+    total = np.zeros((len(keys), N_BOOT))
+    sid = cell["sid"].to_numpy()
+    contrib = (
+        model.r_draws[sid] * cell["xpos"].to_numpy()[:, None]
+        + model.z_draws[sid] * cell["szero"].to_numpy()[:, None]
+    )
+    np.add.at(total, cell["k"].to_numpy(), contrib)
+    point = (
+        model.r[sid] * cell["xpos"].to_numpy() + model.z[sid] * cell["szero"].to_numpy()
+    )
+    pt = np.zeros(len(keys))
+    np.add.at(pt, cell["k"].to_numpy(), point)
+    res = np.empty((len(keys), N_BOOT))
+    for i, country in enumerate(keys["country"].to_numpy()):
+        pool = pools.get(country)
+        if pool is None or len(pool) < MIN_CM_POOL:
+            pool = pools["*"]
+        res[i] = rng.choice(pool, size=N_BOOT, replace=True)
+    draws = total * res
+    out = keys[["country", "ym"]].copy()
+    out["pred"] = pt
+    out["lo"] = np.minimum(np.quantile(draws, 0.05, axis=1), pt).clip(min=0.0)
+    out["hi"] = np.maximum(np.quantile(draws, 0.95, axis=1), pt)
+    return out
+
+
+def country_residual_pools(model: T1Model, pairs: pd.DataFrame) -> dict:
+    """Country-month residuals in the fit years: measured over predicted."""
+    got = model.predict(pairs)
+    got["y"] = pairs.loc[got.index, "y"]
+    agg = got.groupby(["country", "ym"], as_index=False)[["pred", "y"]].sum()
+    agg = agg[agg["pred"] > 0]
+    agg["res"] = agg["y"] / agg["pred"]
+    pools = {"*": agg["res"].to_numpy()}
+    for country, part in agg.groupby("country"):
+        pools[country] = part["res"].to_numpy()
+    if len(pools["*"]) == 0:
+        pools["*"] = np.ones(1)
+    return pools
+
+
 # ----------------------------------------------------------------- run
 
 
@@ -723,6 +874,135 @@ def main() -> int:
             )
     a2_seconds = time.time() - t_a2
 
+    # Variant A3: the background follows the period's own MODIS activity.
+    # Both A2 and A3 also get country-month rows whose range is computed
+    # jointly rather than by adding cell ranges.
+    rng3 = np.random.default_rng(SEED + 2)
+    a3_inner, a3_insample, a3_counts = {}, {}, {}
+    terms = {n: (t, k) for n, t, k in A2_OPTIONS}
+    t_a3 = time.time()
+    for test, win in TESTS.items():
+        univ = universe(cm, win["fit"])
+        fit_m, pred_m = months_in(win["fit"]), months_in(win["pred"])
+        inner_fit = (win["fit"][0], win["fit"][1], win["fit"][2] - 2, 12)
+        inner_hold = (win["fit"][2] - 1, 1, win["fit"][2], win["fit"][3])
+        for unit in UNITS:
+            key = f"{test}_{unit}"
+            picks_term = a2_inner[key]["picks"]
+            k_r = K_RATIO_CD * k_scale[unit]
+            index = activity_index(cm, unit, "Aqua", win["fit"])
+            i_fit = pair_frame(univ, cm, months_in(inner_fit), unit, "Aqua", True)
+            i_hold = pair_frame(univ, cm, months_in(inner_hold), unit, "Aqua", True)
+            assert not set(i_fit["ym"]) & set(months_in(inner_hold).tolist())
+            assert not set(i_hold["ym"]) & set(pred_m.tolist()), "inner holdout leak"
+            opts = sorted(set(picks_term.values()))
+
+            scores, cover = {}, {}
+            for form in BACKGROUND_FORMS:
+                pf = with_background(i_fit, index, form)
+                hf = with_background(i_hold, index, form)
+                scores[form], cover[form] = {}, {}
+                for opt in opts:
+                    n_t, k_m = terms[opt]
+                    m_i = fit_convert(pf, k_r, n_t, rng3, k_mult=k_m)
+                    got = predict_convert(m_i, hf)
+                    got["y"] = hf.loc[got.index, "y"]
+                    scores[form][opt] = country_month_scores(got)
+                    pools = country_residual_pools(m_i, pf)
+                    cr = country_month_ranges(
+                        m_i, with_term(hf, n_t), pools, rng3
+                    )
+                    truth = hf.groupby(["country", "ym"], as_index=False)["y"].sum()
+                    cr = cr.merge(truth, on=["country", "ym"], how="left")
+                    cover[form][opt] = {
+                        c: float(
+                            np.mean((p["lo"] <= p["y"]) & (p["y"] <= p["hi"]))
+                        )
+                        for c, p in cr.groupby("country")
+                    }
+                    del m_i, got, cr
+
+            picks_form = {}
+            for country, opt in picks_term.items():
+                rows = [
+                    (f, scores[f][opt][country])
+                    for f in BACKGROUND_FORMS
+                    if country in scores[f][opt]
+                    and scores[f][opt][country]["country_month_nrmse"] is not None
+                ]
+                ok = [r for r in rows if abs(r[1]["bias"]) <= BIAS_GATE]
+                pool = ok if ok else rows
+                picks_form[country] = min(
+                    pool, key=lambda r: r[1]["country_month_nrmse"]
+                )[0]
+            a3_inner[key] = {
+                "inner_fit": f"{inner_fit[0]}-{inner_fit[1]:02d} to {inner_fit[2]}-12",
+                "inner_holdout": f"{inner_hold[0]}-01 to {inner_hold[2]}-{inner_hold[3]:02d}",
+                "time_term_from_a2": picks_term,
+                "forms": list(BACKGROUND_FORMS),
+                "scores": scores,
+                "country_range_coverage_on_the_inner_split": cover,
+                "picks": picks_form,
+            }
+
+            full = pair_frame(univ, cm, fit_m, unit, "Aqua", with_truth=True)
+            future = pair_frame(univ, cm, pred_m, unit, "Aqua", with_truth=False)
+            for label, chosen in (
+                ("A2", {c: "fixed" for c in picks_term}),
+                ("A3", picks_form),
+            ):
+                q25_rows, ctry_rows, ins = [], [], {}
+                for form in sorted(set(chosen.values())):
+                    for opt in sorted({picks_term[c] for c, f in chosen.items() if f == form}):
+                        want = {c for c, f in chosen.items() if f == form and picks_term[c] == opt}
+                        n_t, k_m = terms[opt]
+                        pf = with_background(full, index, form)
+                        model = fit_convert(pf, k_r, n_t, rng3, k_mult=k_m)
+                        pools = country_residual_pools(model, pf)
+                        own = pf[pf["country"].isin(want)]
+                        ins_got = predict_convert(model, own)
+                        ins_got["y"] = own.loc[ins_got.index, "y"]
+                        for c, d in diagnostics(ins_got).items():
+                            ins[c] = d | {"time_term": opt, "background": form}
+                        ff = with_background(future, index, form)
+                        ff = ff[ff["country"].isin(want)]
+                        got = predict_convert(model, ff)
+                        if label == "A3":
+                            q25_rows.append(got[got["pred"] > 0])
+                        ctry_rows.append(
+                            country_month_ranges(
+                                model, with_term(ff, n_t), pools, rng3
+                            )
+                        )
+                        del model, ins_got, got
+                if label == "A3":
+                    a3_insample[key] = ins
+                for frame_, grid, cell_id in (
+                    (q25_rows, "q25", None),
+                    (ctry_rows, "country", 0),
+                ):
+                    if not frame_:
+                        continue
+                    got = pd.concat(frame_, ignore_index=True)
+                    got["pipeline"], got["test"], got["unit"], got["grid"] = (
+                        label, test, unit, grid,
+                    )
+                    if cell_id is not None:
+                        got["cell"] = cell_id
+                    got["year"] = got["ym"] // 12
+                    got["month"] = (got["ym"] % 12) + 1
+                    a3_counts[f"{label}_{key}_{grid}"] = int(len(got))
+                    pieces.append(
+                        got[
+                            [
+                                "pipeline", "test", "unit", "country", "grid",
+                                "cell", "year", "month", "pred", "lo", "hi",
+                            ]
+                        ]
+                    )
+            print(f"A3 {test} {unit}: background {picks_form}")
+    a3_seconds = time.time() - t_a3
+
     pred = pd.concat(pieces, ignore_index=True)
     pred["cell"] = pred["cell"].astype("int64")
     pred["year"] = pred["year"].astype("int32")
@@ -735,10 +1015,11 @@ def main() -> int:
         "pipeline", "test", "unit", "country", "grid", "cell",
         "year", "month", "pred", "lo", "hi",
     ]
-    assert set(pred["pipeline"]) == {"A", "A2"}
+    assert set(pred["pipeline"]) == {"A", "A2", "A3"}
     assert set(pred["test"]) <= set(TESTS)
     assert set(pred["unit"]) <= set(UNITS)
-    assert set(pred["grid"]) == {"q25"}
+    assert set(pred["grid"]) <= {"q25", "country"}
+    assert set(pred.loc[pred["grid"] == "country", "cell"]) == {0}
     assert set(pred["country"]) <= {"Bulgaria", "United_States"}
     assert not pred.isna().any().any(), "NaN in output"
     assert (pred["pred"] >= 0).all(), "negative pred"
@@ -864,6 +1145,52 @@ def main() -> int:
                     "threshold, instead of one row per cell-month."
                 ),
             },
+        },
+        "A3": {
+            "what_changed": (
+                "A2 with a background that follows the period's own MODIS activity. "
+                "The background is still a ratio of sums per group and calendar "
+                "month, but its exposure per candidate cell-month is an activity "
+                "index instead of 1, so the background falls in a quiet period. "
+                "Four forms are compared on the same inner split and one is picked "
+                "per country. The diagnostic that prompted it: a fixed background "
+                "was 23% of Bulgaria's fit-years prediction and 48% of its 2023 to "
+                "2025 prediction, because it cannot shrink when activity falls."
+            ),
+            "forms": {
+                "fixed": "exposure 1, which is A2",
+                "prop_month": "the group's MODIS total that month over its fit-years "
+                              "average for that calendar month",
+                "prop_trailing": "the same over a trailing 12 months",
+                "blend": f"{1 - BLEND_WEIGHT} fixed plus {BLEND_WEIGHT} prop_month",
+            },
+            "exposure_clip": list(EXPO_CLIP),
+            "selection_rule": (
+                "Same inner split as A2 and the same rule: among forms with inner "
+                "country-month bias within plus or minus 0.10, the lowest inner "
+                "country-month nRMSE wins. The time term stays each country's A2 "
+                "pick. Only fit-year rows are read; the activity index itself is "
+                "MODIS only, which a prediction year may supply."
+            ),
+            "inner_split": a3_inner,
+            "in_sample_fit_years_only": a3_insample,
+            "rows": a3_counts,
+            "seconds": round(a3_seconds, 1),
+            "country_rows": (
+                "Rows with grid 'country' and cell 0 carry a country-month range "
+                "computed jointly: the cells are added up inside each bootstrap "
+                "draw and a country-month residual drawn from the fit years is "
+                "applied, then the 5% and 95% points are taken. Adding cell ranges "
+                "instead made the country range far too wide. Written for A2 and A3; "
+                "the q25 rows are unchanged."
+            ),
+            "adoption_rule": (
+                "The independent scorer decides. A3 replaces A2 for the world run "
+                "only if, on unit cd, its level (a) nRMSE is no worse than A2's in "
+                "at least 3 of the 4 cases (t1 and t2 x two countries) and its level "
+                "(b) coverage stays inside 0.80 to 0.97. Otherwise A2 stays. The "
+                "world script runs either with --model A2 or --model A3, default A2."
+            ),
         },
         "resolved_deviations": [
             "Protocol section 5 builds the scored cell set from S-NPP rows across "

@@ -49,6 +49,7 @@ NOAA20_RATIO_YEARS = (2018, 1, 2022, 12)
 WORLD_OPTIONS = ("moy", "moy_pooled")
 MIN_INNER_PAIRS = 100  # positive-MODIS pairs a country needs for an inner split
 INNER_HOLD_YEARS = 2
+MODEL_VARIANT: list = []
 FLAG_PARTIAL = 2
 FLAG_GAP_FILLED = 4
 SRC_TERRA, SRC_MODIS, SRC_MEASURED = "estimated_terra", "estimated_modis", "measured"
@@ -121,6 +122,79 @@ def model_frame(agg: pd.DataFrame) -> pd.DataFrame:
 # ----------------------------------------------------------------- fitting
 
 
+# A3's background exposure, keyed by (unit, satellite). Empty under A2, so the
+# wrapper below hands every frame the fixed exposure the scored model uses.
+A3_STATE: dict = {}
+
+
+def pair_frame(univ, cm, months, unit, sat, with_truth):
+    """M.pair_frame, plus A3's background exposure when A3 is the variant."""
+    frame = M.pair_frame(univ, cm, months, unit, sat, with_truth=with_truth)
+    return attach_background(frame, unit, sat)
+
+
+def attach_background(frame: pd.DataFrame, unit: str, sat: str) -> pd.DataFrame:
+    state = A3_STATE.get((unit, sat))
+    if state is None:
+        return frame
+    index, picks_form = state
+    parts = []
+    for form in sorted(set(picks_form.values())):
+        want = {c for c, f in picks_form.items() if f == form}
+        part = frame[frame["country"].isin(want)]
+        if len(part):
+            parts.append(M.with_background(part, index, form))
+    return pd.concat(parts, ignore_index=True) if parts else frame
+
+
+def pick_background_form(
+    cm: pd.DataFrame,
+    univ: pd.DataFrame,
+    unit: str,
+    sat: str,
+    k_ratio: float,
+    picks_term: dict,
+    rng: np.random.Generator,
+) -> tuple:
+    """Choose a background form per country on the same inner split as A2."""
+    inner_fit = (FIT[0], FIT[1], FIT[2] - INNER_HOLD_YEARS, 12)
+    inner_hold = (FIT[2] - INNER_HOLD_YEARS + 1, 1, FIT[2], FIT[3])
+    fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
+    assert not set(fit_m) & set(hold_m), "inner split overlaps"
+    index = M.activity_index(cm, unit, sat, FIT)
+    base_fit = M.pair_frame(univ, cm, fit_m, unit, sat, with_truth=True)
+    base_hold = M.pair_frame(univ, cm, hold_m, unit, sat, with_truth=True)
+    terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
+    scores: dict = {}
+    for form in M.BACKGROUND_FORMS:
+        pf = M.with_background(base_fit, index, form)
+        hf = M.with_background(base_hold, index, form)
+        scores[form] = {}
+        for opt in sorted(set(picks_term.values())):
+            n_t, k_m = terms[opt]
+            model = M.fit_convert(pf, k_ratio, n_t, rng, k_mult=k_m)
+            got = M.predict_convert(model, hf)
+            got["y"] = hf.loc[got.index, "y"]
+            scores[form][opt] = M.country_month_scores(got)
+            del model, got
+        del pf, hf
+    picks_form = {}
+    for country, opt in picks_term.items():
+        rows = [
+            (f, scores[f][opt][country])
+            for f in M.BACKGROUND_FORMS
+            if country in scores[f][opt]
+            and scores[f][opt][country]["country_month_nrmse"] is not None
+        ]
+        if not rows:
+            picks_form[country] = "fixed"
+            continue
+        ok = [r for r in rows if abs(r[1]["bias"]) <= M.BIAS_GATE]
+        pool = ok if ok else rows
+        picks_form[country] = min(pool, key=lambda r: r[1]["country_month_nrmse"])[0]
+    return index, picks_form, scores
+
+
 def fit_options(
     cm: pd.DataFrame,
     univ: pd.DataFrame,
@@ -131,7 +205,7 @@ def fit_options(
     rng: np.random.Generator,
 ) -> tuple[dict, pd.DataFrame]:
     """Fit every world option on one window. Returns models and the pair table."""
-    pairs = M.pair_frame(univ, cm, months, unit, modis_sat, with_truth=True)
+    pairs = pair_frame(univ, cm, months, unit, modis_sat, with_truth=True)
     terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
     models = {}
     for name in WORLD_OPTIONS:
@@ -159,7 +233,7 @@ def pick_per_country(
     assert not set(fit_m) & set(hold_m), "inner split overlaps"
 
     models, pairs = fit_options(cm, univ, fit_m, unit, modis_sat, k_ratio, rng)
-    held = M.pair_frame(univ, cm, hold_m, unit, modis_sat, with_truth=True)
+    held = pair_frame(univ, cm, hold_m, unit, modis_sat, with_truth=True)
     n_pairs = (
         pairs.loc[pairs["x"] > 0].groupby("country").size().to_dict()
     )
@@ -221,8 +295,9 @@ def fit_production(
     assert record["snpp_first_ym"] >= record["window_first_ym"], "S-NPP before the fit window"
     assert record["snpp_last_ym"] <= record["window_last_ym"], "S-NPP after the fit window"
     assert record["snpp_first_ym"] >= ym(2012, 2), "S-NPP used before Feb 2012"
+    pools = {n: M.country_residual_pools(m, pairs) for n, m in models.items()}
     del pairs
-    return models, record
+    return models, record, pools
 
 
 def predict_rows(
@@ -240,7 +315,7 @@ def predict_rows(
     return pd.concat(out, ignore_index=True)
 
 
-def background_table(models: dict, picks: dict, period: str) -> pd.DataFrame:
+def background_table(models: dict, picks: dict, period: str, unit: str, sat: str) -> pd.DataFrame:
     """The zero term as a table: one value per group and calendar month.
 
     This is `background.parquet` and ruling 10 of docs/number-logic.md. It is a
@@ -259,6 +334,7 @@ def background_table(models: dict, picks: dict, period: str) -> pd.DataFrame:
     rows["cell"] = 0
     rows["x"] = 0.0
     rows["ym"] = 2005 * 12 + rows["moy"] - 1
+    rows = attach_background(rows, unit, sat)
     got = predict_rows(models, picks, rows)
     got["period"] = period
     return got[["group", "country", "lat_band", "period", "moy", "pred", "hi"]]
@@ -302,10 +378,24 @@ def harmonize(
     report["picks"] = picks
 
     est_parts, backgrounds = [], []
+    joint_ranges: dict = {}
+    if MODEL_VARIANT and MODEL_VARIANT[0] == "A3":
+        report["a3_background"] = {}
+        for sat in ("Terra", "Aqua"):
+            for unit in M.UNITS:
+                index, picks_form, scores = pick_background_form(
+                    cm, univ, unit, sat, M.K_RATIO_CD * k_scale[unit], picks, rng
+                )
+                A3_STATE[(unit, sat)] = (index, picks_form)
+                report["a3_background"][f"{sat}_{unit}"] = {
+                    "picks": picks_form,
+                    "counts": pd.Series(picks_form).value_counts().to_dict(),
+                    "inner_scores": scores,
+                }
     for src, (frame, sat) in est.items():
         per_unit = {}
         for unit in M.UNITS:
-            models, record = fit_production(
+            models, record, pools = fit_production(
                 cm, univ, unit, sat, M.K_RATIO_CD * k_scale[unit], rng
             )
             report.setdefault("leakage_record", {})[f"{src}_{unit}"] = record
@@ -316,6 +406,7 @@ def harmonize(
             )
             base["x"] = base["x"].fillna(0).astype(float)
             base["moy"] = (base["ym"] % 12) + 1
+            base = attach_background(base, unit, sat)
             got = predict_rows(models, picks, base)
             per_unit[unit] = got[
                 ["country", "cell", "ym", "pred", "lo", "hi"]
@@ -323,9 +414,16 @@ def harmonize(
                 columns={"pred": unit, "lo": f"{unit}_lo", "hi": f"{unit}_hi"}
             )
             if unit == "cd":
-                bg_cd = background_table(models, picks, src)
+                bg_cd = background_table(models, picks, src, unit, sat)
             else:
-                bg_hot = background_table(models, picks, src)
+                bg_hot = background_table(models, picks, src, unit, sat)
+            joint = joint_country_ranges(
+                models, picks, univ, cm, months_in(
+                    TERRA_PERIOD if src == SRC_TERRA else MODIS_PERIOD
+                ), unit, sat, pools, rng
+            )
+            joint["src"] = src
+            joint_ranges.setdefault(unit, []).append(joint)
             del got, base, models
         joined = per_unit["cd"].merge(
             per_unit["hot"], on=["country", "cell", "ym"], how="outer"
@@ -342,6 +440,15 @@ def harmonize(
         backgrounds.append(bg)
 
     estimated = pd.concat(est_parts, ignore_index=True)
+    report["joint_country_range"] = (
+        "For an estimated month the country range is computed jointly: the cells "
+        "are added inside each bootstrap draw and a country-month residual drawn "
+        "from the fit years is applied, then the 5% and 95% points are taken. The "
+        "band is then centred on the country value by the ratio of the joint range "
+        "to the joint point estimate, so the value itself still equals the cells "
+        "plus the background. Adding cell ranges instead made the range far too "
+        "wide, which the scorer saw as 100% coverage for a 90% band."
+    )
 
     # Measured period: S-NPP as it is, with the gap days filled from NOAA-20.
     ratio = noaa20_ratio(agg, report)
@@ -377,7 +484,59 @@ def harmonize(
     per_country = pd.concat(
         [estimated[measured.columns], measured], ignore_index=True
     )
-    return per_country, pd.concat(backgrounds, ignore_index=True), picks
+    joint = {u: pd.concat(v, ignore_index=True) for u, v in joint_ranges.items()}
+    return per_country, pd.concat(backgrounds, ignore_index=True), picks, joint
+
+
+def joint_country_ranges(
+    models: dict,
+    picks: dict,
+    univ: pd.DataFrame,
+    cm: pd.DataFrame,
+    months: np.ndarray,
+    unit: str,
+    sat: str,
+    pools: dict,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    """Country-month ranges for one estimated period, added up inside each draw.
+
+    Reuses the bake-off's `country_month_ranges`, so the construction the scorer
+    will read on the bake-off country rows is the same one used here.
+    """
+    out = []
+    for name in WORLD_OPTIONS:
+        want = {c for c, p in picks.items() if p == name}
+        part = univ[univ["country"].isin(want)]
+        if part.empty:
+            continue
+        frame = pair_frame(part, cm, months, unit, sat, with_truth=False)
+        frame = M.with_term(frame, models[name].n_terms)
+        out.append(
+            M.country_month_ranges(models[name], frame, pools[name], rng)
+        )
+        del frame
+    joined = pd.concat(out, ignore_index=True)
+    return joined.rename(
+        columns={"pred": f"{unit}_joint", "lo": f"{unit}_joint_lo", "hi": f"{unit}_joint_hi"}
+    )
+
+
+def centre_band(out: pd.DataFrame, joint: pd.DataFrame, unit: str) -> pd.DataFrame:
+    """Scale a joint range onto the country value, keeping the value itself."""
+    merged = out.merge(joint, on=["country", "ym", "src"], how="left")
+    p = merged[f"{unit}_joint"].to_numpy(dtype=float)
+    ok = np.isfinite(p) & (p > 0)
+    for end in ("lo", "hi"):
+        f = np.where(ok, merged[f"{unit}_joint_{end}"].to_numpy(dtype=float) / np.where(ok, p, 1.0), 1.0)
+        merged[f"{unit}_{end}"] = np.where(
+            merged["src"] == SRC_MEASURED, merged[unit], merged[unit] * f
+        )
+    merged[f"{unit}_lo"] = np.minimum(merged[f"{unit}_lo"], merged[unit]).clip(lower=0.0)
+    merged[f"{unit}_hi"] = np.maximum(merged[f"{unit}_hi"], merged[unit])
+    return merged.drop(
+        columns=[f"{unit}_joint", f"{unit}_joint_lo", f"{unit}_joint_hi"]
+    )
 
 
 def noaa20_ratio(agg: pd.DataFrame, report: dict) -> dict:
@@ -418,6 +577,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="World run of the scored A2 conversion")
     ap.add_argument("--data", default=str(ROOT / "data"))
     ap.add_argument("--threads", type=int, default=16)
+    ap.add_argument("--model", choices=("A2", "A3"), default="A2",
+                    help="A2 is the scored model and the default. A3 uses the "
+                         "background that follows MODIS activity; the scorer "
+                         "decides whether it replaces A2.")
     ap.add_argument("--check-bakeoff", action="store_true")
     args = ap.parse_args()
     data = Path(args.data).resolve()
@@ -425,6 +588,8 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     report: dict = {}
+    report["model_variant"] = args.model
+    MODEL_VARIANT.append(args.model)
 
     src = data / "derived" / "world" / "cell_days.parquet"
     agg = aggregate(src, args.threads)
@@ -438,7 +603,7 @@ def main() -> int:
 
     rng = np.random.default_rng(M.SEED)
     t_fit = time.time()
-    cells, background, picks = harmonize(agg, cm, univ, rng, report)
+    cells, background, picks, joint = harmonize(agg, cm, univ, rng, report)
     report["seconds_model"] = round(time.time() - t_fit, 1)
 
     # One row per cell-month: a border cell's countries are added together.
@@ -455,7 +620,7 @@ def main() -> int:
     )
 
     frp = reference_frp(agg)
-    countries = country_rollup(cells, agg, univ, background, picks, report)
+    countries = country_rollup(cells, agg, univ, background, picks, report, joint, rng)
 
     per_cell = cells.groupby(["cell", "ym"], as_index=False).agg(
         {**{c: "sum" for c in HARM_COLS}, "flags": "max", "src": "min"}
@@ -572,6 +737,8 @@ def country_rollup(
     background: pd.DataFrame,
     picks: dict,
     report: dict,
+    joint: dict,
+    rng: np.random.Generator,
 ) -> pd.DataFrame:
     """Per country and month, with the background added for every cell of the
     country's cell universe that has no row that month."""
@@ -648,6 +815,9 @@ def country_rollup(
     )["frp"].sum()
     out = out.merge(fr, on=["country", "ym"], how="left")
     out["frp"] = out["frp"].fillna(0.0)
+    for unit in M.UNITS:
+        if unit in joint:
+            out = centre_band(out, joint[unit], unit)
     out["flags"] = np.where(out["gap_filled"].fillna(False), FLAG_GAP_FILLED, 0)
     out["year"] = out["ym"] // 12
     out["month"] = (out["ym"] % 12) + 1
