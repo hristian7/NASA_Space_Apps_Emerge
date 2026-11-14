@@ -1,5 +1,7 @@
 "use client";
 
+import reportEn from "../../../messages/report.en.json";
+
 import { useTranslations } from "next-intl";
 import type { ReportedFile } from "@/types/data";
 import type { Scope, YearTotal } from "./types";
@@ -106,7 +108,7 @@ function Series({
       <h3 className={styles.heading}>
         {national ? t("reported.kindNational") : t("reported.kindEstimate")}
       </h3>
-      <p className={styles.sub}>{view.name}</p>
+      <p className={styles.sub}>{reportedText(view.name, t)}</p>
 
       {latest === null ? null : (
         <p className={styles.cardLine}>
@@ -167,7 +169,7 @@ function Series({
         </div>
       )}
 
-      {view.note === null ? null : <p className={styles.sub}>{view.note}</p>}
+      {view.note === null ? null : <p className={styles.sub}>{reportedText(view.note, t)}</p>}
       <p className={styles.sub}>
         {view.url === null ? null : (
           <a href={view.url} target="_blank" rel="noreferrer">
@@ -237,4 +239,9 @@ function OurDetections({
       )}
     </div>
   );
+}
+
+function reportedText(value: string, t: Translate): string {
+  const match = Object.entries(reportEn.report.reported.dataText).find(([, source]) => source === value);
+  return match ? t(`reported.dataText.${match[0]}`) : value;
 }
