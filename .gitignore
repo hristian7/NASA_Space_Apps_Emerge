@@ -46,7 +46,7 @@ engine/daily/*.pkl
 engine/daily/*.csv
 engine/daily/*.json
 engine/daily/*.geojson
-engine/daily/viirs/
+engine/daily/viirs
 engine/daily/wx/
 engine/daily/*.txt
 !engine/daily/model_L*_fc_live.json
@@ -70,8 +70,8 @@ engine/daily/v2/*.json
 engine/daily/v2/*.geojson
 engine/daily/v2/*.pt
 engine/daily/v2/*.txt
-engine/daily/v2/static/
-engine/daily/v2/live_viirs/
-engine/daily/v2/cat2026/
+engine/daily/v2/static
+engine/daily/v2/live_viirs
+engine/daily/v2/cat2026
 engine/daily/v2/keep/
 !engine/daily/v2/models/

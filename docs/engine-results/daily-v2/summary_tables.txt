@@ -1,0 +1,137 @@
+== test2025: top 5 per province, capture (hit) ==
+run                         model 5km          fwi      history       lastwk       random |   model 11km      history          fwi | CI vs history (5km)
+L1_all_ens                0.275(0.34)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.412(0.48)  0.269(0.32)  0.127(0.16) | [+0.091,+0.156]
+L1_all_mlp                0.284(0.35)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.411(0.47)  0.269(0.32)  0.127(0.16) | [+0.101,+0.168]
+L1_all_mlp_ep30           0.287(0.35)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.397(0.46)  0.269(0.32)  0.127(0.16) | [+0.103,+0.172]
+L1_all_xgb                0.268(0.33)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.400(0.46)  0.269(0.32)  0.127(0.16) | [+0.084,+0.151]
+L1_all_xgb_no_fuel        0.254(0.31)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.379(0.43)  0.269(0.32)  0.127(0.16) | [+0.074,+0.136]
+L1_all_xgb_no_fuel+terrain  0.244(0.30)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.382(0.44)  0.269(0.32)  0.127(0.16) | [+0.064,+0.127]
+L1_all_xgb_no_fuel+terrain_power  0.252(0.31)  0.035(0.05)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.390(0.45)  0.269(0.32)  0.089(0.11) | [+0.070,+0.136]
+L1_all_xgb_no_history_calendar  0.256(0.32)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.373(0.43)  0.269(0.32)  0.127(0.16) | [+0.069,+0.140]
+L1_all_xgb_no_history_recent  0.180(0.24)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.313(0.37)  0.269(0.32)  0.127(0.16) | [+0.013,+0.048]
+L1_all_xgb_no_history_recent_noloyo  0.166(0.21)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.298(0.35)  0.269(0.32)  0.127(0.16) | [-0.001,+0.033]
+L1_all_xgb_no_season      0.265(0.32)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.393(0.46)  0.269(0.32)  0.127(0.16) | [+0.083,+0.147]
+L1_all_xgb_no_terrain     0.263(0.33)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.401(0.46)  0.269(0.32)  0.127(0.16) | [+0.082,+0.144]
+L1_all_xgb_no_weather_fc  0.258(0.32)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.396(0.46)  0.269(0.32)  0.127(0.16) | [+0.077,+0.138]
+L1_all_xgb_no_weather_fc+weather_now  0.267(0.33)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.397(0.46)  0.269(0.32)  0.127(0.16) | [+0.083,+0.151]
+L1_all_xgb_no_weather_now  0.280(0.34)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.399(0.46)  0.269(0.32)  0.127(0.16) | [+0.097,+0.161]
+L1_all_xgb_noloyo         0.223(0.28)  0.034(0.04)  0.150(0.19)  0.178(0.22)  0.028(0.04) |  0.370(0.43)  0.269(0.32)  0.127(0.16) | [+0.048,+0.097]
+L1_new_ens                0.216(0.27)  0.033(0.04)  0.155(0.19)  0.125(0.16)  0.028(0.04) |  0.344(0.40)  0.274(0.32)  0.128(0.15) | [+0.039,+0.084]
+L1_new_mlp                0.213(0.26)  0.033(0.04)  0.155(0.19)  0.125(0.16)  0.028(0.04) |  0.338(0.39)  0.274(0.32)  0.128(0.15) | [+0.034,+0.083]
+L1_new_xgb                0.193(0.24)  0.033(0.04)  0.155(0.19)  0.125(0.16)  0.028(0.04) |  0.331(0.39)  0.274(0.32)  0.128(0.15) | [+0.017,+0.059]
+L1_new_xgb_no_weather_fc+weather_now  0.204(0.26)  0.033(0.04)  0.155(0.19)  0.125(0.16)  0.028(0.04) |  0.337(0.40)  0.274(0.32)  0.128(0.15) | [+0.026,+0.072]
+L2_all_ens                0.227(0.28)  0.024(0.03)  0.150(0.19)  0.148(0.19)  0.028(0.04) |  0.362(0.42)  0.269(0.32)  0.132(0.17) | [+0.052,+0.104]
+L2_all_mlp                0.223(0.28)  0.024(0.03)  0.150(0.19)  0.148(0.19)  0.028(0.04) |  0.364(0.42)  0.269(0.32)  0.132(0.17) | [+0.048,+0.100]
+L2_all_xgb                0.206(0.26)  0.024(0.03)  0.150(0.19)  0.148(0.19)  0.028(0.04) |  0.360(0.42)  0.269(0.32)  0.132(0.17) | [+0.031,+0.082]
+L2_new_ens                0.196(0.24)  0.024(0.03)  0.155(0.19)  0.123(0.16)  0.028(0.04) |  0.337(0.39)  0.274(0.32)  0.126(0.15) | [+0.019,+0.065]
+L2_new_mlp                0.209(0.26)  0.024(0.03)  0.155(0.19)  0.123(0.16)  0.028(0.04) |  0.346(0.40)  0.274(0.32)  0.126(0.15) | [+0.030,+0.079]
+L2_new_xgb                0.193(0.24)  0.024(0.03)  0.155(0.19)  0.123(0.16)  0.028(0.04) |  0.328(0.38)  0.274(0.32)  0.126(0.15) | [+0.014,+0.061]
+L3_all_ens                0.208(0.27)  0.035(0.05)  0.150(0.19)  0.143(0.18)  0.028(0.04) |  0.354(0.42)  0.269(0.32)  0.121(0.15) | [+0.037,+0.082]
+L3_all_mlp                0.209(0.27)  0.035(0.05)  0.150(0.19)  0.143(0.18)  0.028(0.04) |  0.348(0.41)  0.269(0.32)  0.121(0.15) | [+0.037,+0.085]
+L3_all_xgb                0.193(0.25)  0.035(0.05)  0.150(0.19)  0.143(0.18)  0.028(0.04) |  0.340(0.41)  0.269(0.32)  0.121(0.15) | [+0.022,+0.067]
+L3_new_ens                0.196(0.25)  0.035(0.05)  0.155(0.19)  0.129(0.17)  0.028(0.04) |  0.342(0.40)  0.274(0.32)  0.115(0.14) | [+0.019,+0.064]
+L3_new_mlp                0.194(0.24)  0.035(0.05)  0.155(0.19)  0.129(0.17)  0.028(0.04) |  0.338(0.40)  0.274(0.32)  0.115(0.14) | [+0.016,+0.063]
+L3_new_xgb                0.187(0.24)  0.035(0.05)  0.155(0.19)  0.129(0.17)  0.028(0.04) |  0.330(0.39)  0.274(0.32)  0.115(0.14) | [+0.009,+0.054]
+
+== test2025: firefighter (1 spot/municipality, 15 km), municipality AUC, 28 teams ==
+L1_all_ens               1spot model 0.595 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.851 fwi 0.730 hist 0.750 | 28t model 0.406 hist 0.296 | BSS 0.016 | epochs None
+L1_all_mlp               1spot model 0.590 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.851 fwi 0.730 hist 0.750 | 28t model 0.410 hist 0.296 | BSS 0.015 | epochs 10
+L1_all_mlp_ep30          1spot model 0.589 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.854 fwi 0.730 hist 0.750 | 28t model 0.419 hist 0.296 | BSS 0.020 | epochs 30
+L1_all_xgb               1spot model 0.577 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.846 fwi 0.730 hist 0.750 | 28t model 0.394 hist 0.296 | BSS 0.014 | trees 290
+L1_all_xgb_no_fuel       1spot model 0.545 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.841 fwi 0.730 hist 0.750 | 28t model 0.386 hist 0.296 | BSS 0.015 | trees 175
+L1_all_xgb_no_fuel+terrain 1spot model 0.551 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.840 fwi 0.730 hist 0.750 | 28t model 0.384 hist 0.296 | BSS 0.015 | trees 182
+L1_all_xgb_no_fuel+terrain_power 1spot model 0.566 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.867 fwi 0.763 hist 0.750 | 28t model 0.399 hist 0.296 | BSS 0.016 | trees 165
+L1_all_xgb_no_history_calendar 1spot model 0.573 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.837 fwi 0.730 hist 0.750 | 28t model 0.385 hist 0.296 | BSS 0.014 | trees 222
+L1_all_xgb_no_history_recent 1spot model 0.499 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.826 fwi 0.730 hist 0.750 | 28t model 0.350 hist 0.296 | BSS 0.001 | trees 283
+L1_all_xgb_no_history_recent_noloyo 1spot model 0.467 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.823 fwi 0.730 hist 0.750 | 28t model 0.341 hist 0.296 | BSS -0.003 | trees 304
+L1_all_xgb_no_season     1spot model 0.578 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.847 fwi 0.730 hist 0.750 | 28t model 0.391 hist 0.296 | BSS 0.015 | trees 312
+L1_all_xgb_no_terrain    1spot model 0.560 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.847 fwi 0.730 hist 0.750 | 28t model 0.395 hist 0.296 | BSS 0.015 | trees 280
+L1_all_xgb_no_weather_fc 1spot model 0.571 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.843 fwi 0.730 hist 0.750 | 28t model 0.412 hist 0.296 | BSS 0.013 | trees 305
+L1_all_xgb_no_weather_fc+weather_now 1spot model 0.585 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.840 fwi 0.730 hist 0.750 | 28t model 0.407 hist 0.296 | BSS 0.014 | trees 174
+L1_all_xgb_no_weather_now 1spot model 0.578 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.848 fwi 0.730 hist 0.750 | 28t model 0.404 hist 0.296 | BSS 0.015 | trees 259
+L1_all_xgb_noloyo        1spot model 0.539 hist 0.462 lastwk 0.499 rand 0.335 | AUC model 0.839 fwi 0.730 hist 0.750 | 28t model 0.375 hist 0.296 | BSS 0.007 | trees 252
+L1_new_ens               1spot model 0.548 hist 0.458 lastwk 0.445 rand 0.337 | AUC model 0.836 fwi 0.716 hist 0.754 | 28t model 0.363 hist 0.293 | BSS 0.005 | epochs None
+L1_new_mlp               1spot model 0.535 hist 0.458 lastwk 0.445 rand 0.337 | AUC model 0.836 fwi 0.716 hist 0.754 | 28t model 0.353 hist 0.293 | BSS 0.004 | epochs 10
+L1_new_xgb               1spot model 0.529 hist 0.458 lastwk 0.445 rand 0.337 | AUC model 0.830 fwi 0.716 hist 0.754 | 28t model 0.345 hist 0.293 | BSS 0.004 | trees 334
+L1_new_xgb_no_weather_fc+weather_now 1spot model 0.528 hist 0.458 lastwk 0.445 rand 0.337 | AUC model 0.827 fwi 0.716 hist 0.754 | 28t model 0.357 hist 0.293 | BSS 0.003 | trees 460
+L2_all_ens               1spot model 0.548 hist 0.462 lastwk 0.470 rand 0.335 | AUC model 0.840 fwi 0.730 hist 0.750 | 28t model 0.358 hist 0.296 | BSS 0.005 | epochs None
+L2_all_mlp               1spot model 0.550 hist 0.462 lastwk 0.470 rand 0.335 | AUC model 0.840 fwi 0.730 hist 0.750 | 28t model 0.365 hist 0.296 | BSS 0.004 | epochs 10
+L2_all_xgb               1spot model 0.528 hist 0.462 lastwk 0.470 rand 0.335 | AUC model 0.834 fwi 0.730 hist 0.750 | 28t model 0.355 hist 0.296 | BSS 0.004 | trees 201
+L2_new_ens               1spot model 0.507 hist 0.458 lastwk 0.446 rand 0.337 | AUC model 0.832 fwi 0.716 hist 0.754 | 28t model 0.359 hist 0.293 | BSS 0.004 | epochs None
+L2_new_mlp               1spot model 0.531 hist 0.458 lastwk 0.446 rand 0.337 | AUC model 0.832 fwi 0.716 hist 0.754 | 28t model 0.355 hist 0.293 | BSS 0.004 | epochs 10
+L2_new_xgb               1spot model 0.504 hist 0.458 lastwk 0.446 rand 0.337 | AUC model 0.827 fwi 0.716 hist 0.754 | 28t model 0.345 hist 0.293 | BSS 0.003 | trees 187
+L3_all_ens               1spot model 0.532 hist 0.462 lastwk 0.464 rand 0.335 | AUC model 0.824 fwi 0.712 hist 0.750 | 28t model 0.354 hist 0.296 | BSS 0.004 | epochs None
+L3_all_mlp               1spot model 0.525 hist 0.462 lastwk 0.464 rand 0.335 | AUC model 0.824 fwi 0.712 hist 0.750 | 28t model 0.352 hist 0.296 | BSS 0.003 | epochs 10
+L3_all_xgb               1spot model 0.527 hist 0.462 lastwk 0.464 rand 0.335 | AUC model 0.817 fwi 0.712 hist 0.750 | 28t model 0.348 hist 0.296 | BSS 0.003 | trees 176
+L3_new_ens               1spot model 0.524 hist 0.458 lastwk 0.453 rand 0.337 | AUC model 0.821 fwi 0.699 hist 0.754 | 28t model 0.356 hist 0.293 | BSS 0.004 | epochs None
+L3_new_mlp               1spot model 0.534 hist 0.458 lastwk 0.453 rand 0.337 | AUC model 0.822 fwi 0.699 hist 0.754 | 28t model 0.351 hist 0.293 | BSS 0.004 | epochs 10
+L3_new_xgb               1spot model 0.523 hist 0.458 lastwk 0.453 rand 0.337 | AUC model 0.814 fwi 0.699 hist 0.754 | 28t model 0.338 hist 0.293 | BSS 0.002 | trees 340
+
+== val2024: top 5 per province, capture (hit) ==
+run                         model 5km          fwi      history       lastwk       random |   model 11km      history          fwi | CI vs history (5km)
+L1_all_ens                0.228(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.358(0.44)  0.257(0.33)  0.135(0.17) | [+0.069,+0.129]
+L1_all_mlp                0.231(0.30)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.356(0.44)  0.257(0.33)  0.135(0.17) | [+0.071,+0.136]
+L1_all_mlp_ep30           0.223(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.367(0.45)  0.257(0.33)  0.135(0.17) | [+0.067,+0.124]
+L1_all_xgb                0.220(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.359(0.44)  0.257(0.33)  0.135(0.17) | [+0.062,+0.121]
+L1_all_xgb_no_fuel        0.218(0.28)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.348(0.43)  0.257(0.33)  0.135(0.17) | [+0.061,+0.120]
+L1_all_xgb_no_fuel+terrain  0.225(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.337(0.41)  0.257(0.33)  0.135(0.17) | [+0.066,+0.128]
+L1_all_xgb_no_fuel+terrain_power  0.214(0.28)  0.042(0.06)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.353(0.43)  0.257(0.33)  0.109(0.15) | [+0.058,+0.114]
+L1_all_xgb_no_history_calendar  0.216(0.28)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.349(0.43)  0.257(0.33)  0.135(0.17) | [+0.058,+0.118]
+L1_all_xgb_no_history_recent  0.148(0.21)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.296(0.38)  0.257(0.33)  0.135(0.17) | [+0.005,+0.033]
+L1_all_xgb_no_history_recent_noloyo  0.141(0.20)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.289(0.37)  0.257(0.33)  0.135(0.17) | [-0.003,+0.028]
+L1_all_xgb_no_season      0.229(0.30)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.369(0.44)  0.257(0.33)  0.135(0.17) | [+0.071,+0.132]
+L1_all_xgb_no_terrain     0.227(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.362(0.44)  0.257(0.33)  0.135(0.17) | [+0.068,+0.128]
+L1_all_xgb_no_weather_fc  0.230(0.30)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.362(0.44)  0.257(0.33)  0.135(0.17) | [+0.071,+0.129]
+L1_all_xgb_no_weather_fc+weather_now  0.223(0.29)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.366(0.45)  0.257(0.33)  0.135(0.17) | [+0.066,+0.125]
+L1_all_xgb_no_weather_now  0.232(0.30)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.366(0.45)  0.257(0.33)  0.135(0.17) | [+0.075,+0.133]
+L1_all_xgb_noloyo         0.206(0.28)  0.039(0.05)  0.129(0.18)  0.138(0.18)  0.027(0.04) |  0.341(0.42)  0.257(0.33)  0.135(0.17) | [+0.055,+0.102]
+L1_new_ens                0.174(0.23)  0.038(0.05)  0.126(0.17)  0.095(0.13)  0.027(0.04) |  0.292(0.36)  0.249(0.31)  0.135(0.17) | [+0.027,+0.069]
+L1_new_mlp                0.165(0.22)  0.038(0.05)  0.126(0.17)  0.095(0.13)  0.027(0.04) |  0.289(0.36)  0.249(0.31)  0.135(0.17) | [+0.016,+0.063]
+L1_new_xgb                0.159(0.21)  0.038(0.05)  0.126(0.17)  0.095(0.13)  0.027(0.04) |  0.289(0.36)  0.249(0.31)  0.135(0.17) | [+0.015,+0.052]
+L1_new_xgb_no_weather_fc+weather_now  0.165(0.22)  0.038(0.05)  0.126(0.17)  0.095(0.13)  0.027(0.04) |  0.293(0.36)  0.249(0.31)  0.135(0.17) | [+0.019,+0.058]
+L2_all_ens                0.173(0.24)  0.035(0.05)  0.129(0.18)  0.100(0.14)  0.027(0.04) |  0.317(0.40)  0.257(0.33)  0.134(0.17) | [+0.025,+0.065]
+L2_all_mlp                0.169(0.23)  0.035(0.05)  0.129(0.18)  0.100(0.14)  0.027(0.04) |  0.317(0.40)  0.257(0.33)  0.134(0.17) | [+0.019,+0.062]
+L2_all_xgb                0.167(0.24)  0.035(0.05)  0.129(0.18)  0.100(0.14)  0.027(0.04) |  0.319(0.40)  0.257(0.33)  0.134(0.17) | [+0.019,+0.059]
+L2_new_ens                0.162(0.22)  0.034(0.05)  0.126(0.17)  0.087(0.12)  0.027(0.04) |  0.293(0.36)  0.249(0.31)  0.139(0.17) | [+0.015,+0.055]
+L2_new_mlp                0.161(0.22)  0.034(0.05)  0.126(0.17)  0.087(0.12)  0.027(0.04) |  0.289(0.36)  0.249(0.31)  0.139(0.17) | [+0.015,+0.055]
+L2_new_xgb                0.153(0.21)  0.034(0.05)  0.126(0.17)  0.087(0.12)  0.027(0.04) |  0.292(0.36)  0.249(0.31)  0.139(0.17) | [+0.009,+0.047]
+L3_all_ens                0.164(0.24)  0.040(0.06)  0.129(0.18)  0.092(0.13)  0.027(0.04) |  0.315(0.40)  0.257(0.33)  0.128(0.17) | [+0.018,+0.053]
+L3_all_mlp                0.165(0.24)  0.040(0.06)  0.129(0.18)  0.092(0.13)  0.027(0.04) |  0.317(0.40)  0.257(0.33)  0.128(0.17) | [+0.015,+0.057]
+L3_all_xgb                0.161(0.23)  0.040(0.06)  0.129(0.18)  0.092(0.13)  0.027(0.04) |  0.314(0.40)  0.257(0.33)  0.128(0.17) | [+0.018,+0.050]
+L3_new_ens                0.168(0.23)  0.038(0.05)  0.126(0.17)  0.091(0.13)  0.027(0.04) |  0.305(0.38)  0.249(0.31)  0.124(0.15) | [+0.022,+0.063]
+L3_new_mlp                0.163(0.22)  0.038(0.05)  0.126(0.17)  0.091(0.13)  0.027(0.04) |  0.297(0.37)  0.249(0.31)  0.124(0.15) | [+0.017,+0.057]
+L3_new_xgb                0.156(0.21)  0.038(0.05)  0.126(0.17)  0.091(0.13)  0.027(0.04) |  0.298(0.37)  0.249(0.31)  0.124(0.15) | [+0.012,+0.049]
+
+== val2024: firefighter (1 spot/municipality, 15 km), municipality AUC, 28 teams ==
+L1_all_ens               1spot model 0.540 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.846 fwi 0.725 hist 0.771 | 28t model 0.414 hist 0.342 | BSS 0.018 | epochs None
+L1_all_mlp               1spot model 0.540 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.842 fwi 0.725 hist 0.771 | 28t model 0.420 hist 0.342 | BSS 0.017 | epochs 10
+L1_all_mlp_ep30          1spot model 0.530 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.847 fwi 0.725 hist 0.771 | 28t model 0.420 hist 0.342 | BSS 0.016 | epochs 30
+L1_all_xgb               1spot model 0.539 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.845 fwi 0.725 hist 0.771 | 28t model 0.407 hist 0.342 | BSS 0.018 | trees 290
+L1_all_xgb_no_fuel       1spot model 0.524 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.839 fwi 0.725 hist 0.771 | 28t model 0.410 hist 0.342 | BSS 0.017 | trees 175
+L1_all_xgb_no_fuel+terrain 1spot model 0.509 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.838 fwi 0.725 hist 0.771 | 28t model 0.397 hist 0.342 | BSS 0.015 | trees 182
+L1_all_xgb_no_fuel+terrain_power 1spot model 0.515 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.858 fwi 0.731 hist 0.771 | 28t model 0.410 hist 0.342 | BSS 0.016 | trees 165
+L1_all_xgb_no_history_calendar 1spot model 0.530 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.839 fwi 0.725 hist 0.771 | 28t model 0.399 hist 0.342 | BSS 0.016 | trees 222
+L1_all_xgb_no_history_recent 1spot model 0.483 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.832 fwi 0.725 hist 0.771 | 28t model 0.358 hist 0.342 | BSS 0.004 | trees 283
+L1_all_xgb_no_history_recent_noloyo 1spot model 0.466 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.831 fwi 0.725 hist 0.771 | 28t model 0.353 hist 0.342 | BSS 0.001 | trees 304
+L1_all_xgb_no_season     1spot model 0.540 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.839 fwi 0.725 hist 0.771 | 28t model 0.407 hist 0.342 | BSS 0.016 | trees 312
+L1_all_xgb_no_terrain    1spot model 0.531 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.844 fwi 0.725 hist 0.771 | 28t model 0.408 hist 0.342 | BSS 0.018 | trees 280
+L1_all_xgb_no_weather_fc 1spot model 0.545 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.842 fwi 0.725 hist 0.771 | 28t model 0.408 hist 0.342 | BSS 0.016 | trees 305
+L1_all_xgb_no_weather_fc+weather_now 1spot model 0.534 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.839 fwi 0.725 hist 0.771 | 28t model 0.412 hist 0.342 | BSS 0.017 | trees 174
+L1_all_xgb_no_weather_now 1spot model 0.524 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.845 fwi 0.725 hist 0.771 | 28t model 0.403 hist 0.342 | BSS 0.018 | trees 259
+L1_all_xgb_noloyo        1spot model 0.513 hist 0.427 lastwk 0.465 rand 0.338 | AUC model 0.841 fwi 0.725 hist 0.771 | 28t model 0.398 hist 0.342 | BSS 0.012 | trees 252
+L1_new_ens               1spot model 0.505 hist 0.427 lastwk 0.419 rand 0.336 | AUC model 0.835 fwi 0.713 hist 0.771 | 28t model 0.381 hist 0.339 | BSS 0.007 | epochs None
+L1_new_mlp               1spot model 0.501 hist 0.427 lastwk 0.419 rand 0.336 | AUC model 0.831 fwi 0.713 hist 0.771 | 28t model 0.379 hist 0.339 | BSS 0.007 | epochs 10
+L1_new_xgb               1spot model 0.515 hist 0.427 lastwk 0.419 rand 0.336 | AUC model 0.834 fwi 0.713 hist 0.771 | 28t model 0.379 hist 0.339 | BSS 0.007 | trees 334
+L1_new_xgb_no_weather_fc+weather_now 1spot model 0.497 hist 0.427 lastwk 0.419 rand 0.336 | AUC model 0.829 fwi 0.713 hist 0.771 | 28t model 0.381 hist 0.339 | BSS 0.006 | trees 460
+L2_all_ens               1spot model 0.500 hist 0.427 lastwk 0.430 rand 0.338 | AUC model 0.842 fwi 0.725 hist 0.771 | 28t model 0.387 hist 0.342 | BSS 0.008 | epochs None
+L2_all_mlp               1spot model 0.505 hist 0.427 lastwk 0.430 rand 0.338 | AUC model 0.837 fwi 0.725 hist 0.771 | 28t model 0.387 hist 0.342 | BSS 0.007 | epochs 10
+L2_all_xgb               1spot model 0.489 hist 0.427 lastwk 0.430 rand 0.338 | AUC model 0.841 fwi 0.725 hist 0.771 | 28t model 0.381 hist 0.342 | BSS 0.007 | trees 201
+L2_new_ens               1spot model 0.493 hist 0.427 lastwk 0.410 rand 0.336 | AUC model 0.835 fwi 0.714 hist 0.771 | 28t model 0.371 hist 0.339 | BSS 0.006 | epochs None
+L2_new_mlp               1spot model 0.495 hist 0.427 lastwk 0.410 rand 0.336 | AUC model 0.831 fwi 0.714 hist 0.771 | 28t model 0.381 hist 0.339 | BSS 0.007 | epochs 10
+L2_new_xgb               1spot model 0.490 hist 0.427 lastwk 0.410 rand 0.336 | AUC model 0.834 fwi 0.714 hist 0.771 | 28t model 0.375 hist 0.339 | BSS 0.006 | trees 187
+L3_all_ens               1spot model 0.492 hist 0.427 lastwk 0.414 rand 0.338 | AUC model 0.836 fwi 0.717 hist 0.771 | 28t model 0.377 hist 0.342 | BSS 0.007 | epochs None
+L3_all_mlp               1spot model 0.492 hist 0.427 lastwk 0.414 rand 0.338 | AUC model 0.830 fwi 0.717 hist 0.771 | 28t model 0.379 hist 0.342 | BSS 0.007 | epochs 10
+L3_all_xgb               1spot model 0.489 hist 0.427 lastwk 0.414 rand 0.338 | AUC model 0.835 fwi 0.717 hist 0.771 | 28t model 0.375 hist 0.342 | BSS 0.006 | trees 176
+L3_new_ens               1spot model 0.497 hist 0.427 lastwk 0.405 rand 0.336 | AUC model 0.830 fwi 0.706 hist 0.771 | 28t model 0.370 hist 0.339 | BSS 0.006 | epochs None
+L3_new_mlp               1spot model 0.494 hist 0.427 lastwk 0.405 rand 0.336 | AUC model 0.825 fwi 0.706 hist 0.771 | 28t model 0.376 hist 0.339 | BSS 0.006 | epochs 10
+L3_new_xgb               1spot model 0.497 hist 0.427 lastwk 0.405 rand 0.336 | AUC model 0.828 fwi 0.706 hist 0.771 | 28t model 0.367 hist 0.339 | BSS 0.005 | trees 340

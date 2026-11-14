@@ -39,6 +39,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`docs/research/forecast-options.md`](docs/research/forecast-options.md) | First pass on fire-risk forecasting options |
 | [`docs/prediction-engine.md`](docs/prediction-engine.md) | **Prediction engine:** which factors (dryness, ocean/El Niño, fuel growth, trend) drive fire where and how far ahead; validation; live outlook for Dec 2026 – Feb 2027 |
 | [`docs/daily-outlook.md`](docs/daily-outlook.md) | **Daily outlook, Bulgaria:** where to pre-position a station team 1–3 days ahead, which municipalities need reinforcements; honest scores against simple rules; GPU runbook |
+| [`docs/daily-outlook-v2.md`](docs/daily-outlook-v2.md) | **Daily outlook v2:** NASA GEOS-5 weather model (GFWED), land cover, terrain, 10-epoch neural network; team plan-2 protocol (top 5 per province, new fires, test 2025); measured weight of each data group; live outlook 15–17 Nov |
 | [`docs/research/storage-options.md`](docs/research/storage-options.md) | 15 storage options ranked, and the pick for Vercel |
 | [`docs/research/stack-options.md`](docs/research/stack-options.md) | 20 stack options ranked, and the recommended stack |
 | [`docs/research/data-sources-satellites.md`](docs/research/data-sources-satellites.md) | Data before 2000, 2026 data, other satellites, country statistics |

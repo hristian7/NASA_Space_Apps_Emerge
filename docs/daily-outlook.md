@@ -2,6 +2,8 @@
 
 Code: `engine/daily/`. Results: `docs/engine-results/daily/`.
 
+**Superseded by [version 2](daily-outlook-v2.md)** (14 Nov, late): NASA GEOS-5 weather, land cover, terrain, a climatology leak fixed, and the team's plan-2 protocol. One spot per municipality now hits 59.5% (version 1: 48%), three spots 82%.
+
 ## The question, as a firefighter put it
 
 > Which regions have the highest chance of fire, so a team can be sent there in advance?

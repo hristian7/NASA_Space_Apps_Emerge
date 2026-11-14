@@ -1,0 +1,470 @@
+{
+ "tag": "L1_all_ens",
+ "members": [
+  "L1_all_xgb",
+  "L1_all_mlp"
+ ],
+ "lead_days": 1,
+ "label": "all",
+ "model": "ensemble",
+ "val2024": {
+  "days": 358,
+  "target_fires_cells": 1494,
+  "top5_per_province_cell": {
+   "model": {
+    "capture": 0.2282,
+    "hit": 0.2939,
+    "province_days": 1007
+   },
+   "fwi": {
+    "capture": 0.0388,
+    "hit": 0.0546,
+    "province_days": 1007
+   },
+   "history": {
+    "capture": 0.1285,
+    "hit": 0.1837,
+    "province_days": 1007
+   },
+   "last_week": {
+    "capture": 0.1379,
+    "hit": 0.1797,
+    "province_days": 1007
+   },
+   "random": {
+    "capture": 0.0269,
+    "hit": 0.0393,
+    "province_days": 1007
+   },
+   "model_minus_baseline_capture_95ci": {
+    "fwi": [
+     0.1595,
+     0.2185
+    ],
+    "history": [
+     0.0693,
+     0.1294
+    ],
+    "last_week": [
+     0.0698,
+     0.1128
+    ],
+    "random": [
+     0.1755,
+     0.2277
+    ]
+   }
+  },
+  "top5_per_province_spot10": {
+   "model": {
+    "capture": 0.3579,
+    "hit": 0.4391,
+    "province_days": 1018
+   },
+   "fwi": {
+    "capture": 0.135,
+    "hit": 0.1749,
+    "province_days": 1018
+   },
+   "history": {
+    "capture": 0.2571,
+    "hit": 0.332,
+    "province_days": 1018
+   },
+   "last_week": {
+    "capture": 0.3007,
+    "hit": 0.3684,
+    "province_days": 1018
+   },
+   "random": {
+    "capture": 0.1049,
+    "hit": 0.1392,
+    "province_days": 1018
+   },
+   "model_minus_baseline_capture_95ci": {
+    "fwi": [
+     0.1912,
+     0.2552
+    ],
+    "history": [
+     0.0671,
+     0.1362
+    ],
+    "last_week": [
+     0.0348,
+     0.0797
+    ],
+    "random": [
+     0.2268,
+     0.2818
+    ]
+   }
+  },
+  "one_spot_per_municipality_15km": {
+   "model": {
+    "hit": 0.5398,
+    "hit_large": 0.5817
+   },
+   "fwi": {
+    "hit": 0.2825,
+    "hit_large": 0.268
+   },
+   "history": {
+    "hit": 0.4273,
+    "hit_large": 0.3203
+   },
+   "last_week": {
+    "hit": 0.4648,
+    "hit_large": 0.5163
+   },
+   "random": {
+    "hit": 0.3384,
+    "hit_large": 0.306
+   },
+   "municipality_days": 1306
+  },
+  "k_spots_per_municipality_15km": {
+   "model": {
+    "top1": 0.5398,
+    "top2": 0.7006,
+    "top3": 0.7833,
+    "top5": 0.876
+   },
+   "fwi": {
+    "top1": 0.2825,
+    "top2": 0.4096,
+    "top3": 0.487,
+    "top5": 0.6187
+   },
+   "history": {
+    "top1": 0.4273,
+    "top2": 0.6149,
+    "top3": 0.7243,
+    "top5": 0.8354
+   },
+   "last_week": {
+    "top1": 0.4648,
+    "top2": 0.6041,
+    "top3": 0.7083,
+    "top5": 0.8139
+   },
+   "random": {
+    "top1": 0.3384,
+    "top2": 0.5416,
+    "top3": 0.6732,
+    "top5": 0.8257
+   }
+  },
+  "municipality_ranking_auc": {
+   "model": {
+    "any": 0.8459,
+    "large": 0.8983
+   },
+   "fwi": {
+    "any": 0.7247,
+    "large": 0.8546
+   },
+   "history": {
+    "any": 0.7713,
+    "large": 0.7879
+   },
+   "last_week": {
+    "any": 0.7848,
+    "large": 0.8366
+   }
+  },
+  "national_28_teams_catch": {
+   "model": {
+    "any": 0.4142,
+    "large": 0.5359
+   },
+   "fwi": {
+    "any": 0.1784,
+    "large": 0.268
+   },
+   "history": {
+    "any": 0.3423,
+    "large": 0.3595
+   },
+   "last_week": {
+    "any": 0.3201,
+    "large": 0.4052
+   }
+  },
+  "brier_skill_vs_history": 0.01810000091791153,
+  "reliability": [
+   {
+    "bin": "0-0.001",
+    "n": 1384825,
+    "mean_predicted": 0.00025,
+    "observed": 0.00022
+   },
+   {
+    "bin": "0.001-0.003",
+    "n": 248598,
+    "mean_predicted": 0.0017,
+    "observed": 0.00157
+   },
+   {
+    "bin": "0.003-0.01",
+    "n": 97114,
+    "mean_predicted": 0.00501,
+    "observed": 0.00427
+   },
+   {
+    "bin": "0.01-0.03",
+    "n": 15526,
+    "mean_predicted": 0.01522,
+    "observed": 0.01237
+   },
+   {
+    "bin": "0.03-0.1",
+    "n": 2331,
+    "mean_predicted": 0.04969,
+    "observed": 0.04976
+   },
+   {
+    "bin": "0.1-0.3",
+    "n": 434,
+    "mean_predicted": 0.1391,
+    "observed": 0.18664
+   },
+   {
+    "bin": "0.3-1.0001",
+    "n": 2,
+    "mean_predicted": 0.34405,
+    "observed": 0.0
+   }
+  ]
+ },
+ "test2025": {
+  "days": 361,
+  "target_fires_cells": 1071,
+  "top5_per_province_cell": {
+   "model": {
+    "capture": 0.2745,
+    "hit": 0.3368,
+    "province_days": 772
+   },
+   "fwi": {
+    "capture": 0.0336,
+    "hit": 0.0427,
+    "province_days": 772
+   },
+   "history": {
+    "capture": 0.1503,
+    "hit": 0.1917,
+    "province_days": 772
+   },
+   "last_week": {
+    "capture": 0.1783,
+    "hit": 0.2202,
+    "province_days": 772
+   },
+   "random": {
+    "capture": 0.0277,
+    "hit": 0.038,
+    "province_days": 772
+   },
+   "model_minus_baseline_capture_95ci": {
+    "fwi": [
+     0.2047,
+     0.2807
+    ],
+    "history": [
+     0.0912,
+     0.1556
+    ],
+    "last_week": [
+     0.0727,
+     0.1207
+    ],
+    "random": [
+     0.2144,
+     0.2819
+    ]
+   }
+  },
+  "top5_per_province_spot10": {
+   "model": {
+    "capture": 0.4118,
+    "hit": 0.4759,
+    "province_days": 769
+   },
+   "fwi": {
+    "capture": 0.1266,
+    "hit": 0.1586,
+    "province_days": 769
+   },
+   "history": {
+    "capture": 0.2692,
+    "hit": 0.3173,
+    "province_days": 769
+   },
+   "last_week": {
+    "capture": 0.338,
+    "hit": 0.3862,
+    "province_days": 769
+   },
+   "random": {
+    "capture": 0.1055,
+    "hit": 0.1341,
+    "province_days": 769
+   },
+   "model_minus_baseline_capture_95ci": {
+    "fwi": [
+     0.2413,
+     0.3263
+    ],
+    "history": [
+     0.1034,
+     0.1812
+    ],
+    "last_week": [
+     0.0465,
+     0.1015
+    ],
+    "random": [
+     0.2744,
+     0.3399
+    ]
+   }
+  },
+  "one_spot_per_municipality_15km": {
+   "model": {
+    "hit": 0.595,
+    "hit_large": 0.6696
+   },
+   "fwi": {
+    "hit": 0.2724,
+    "hit_large": 0.2609
+   },
+   "history": {
+    "hit": 0.4624,
+    "hit_large": 0.4174
+   },
+   "last_week": {
+    "hit": 0.499,
+    "hit_large": 0.5826
+   },
+   "random": {
+    "hit": 0.3349,
+    "hit_large": 0.2937
+   },
+   "municipality_days": 958
+  },
+  "k_spots_per_municipality_15km": {
+   "model": {
+    "top1": 0.595,
+    "top2": 0.7411,
+    "top3": 0.8215,
+    "top5": 0.9113
+   },
+   "fwi": {
+    "top1": 0.2724,
+    "top2": 0.3946,
+    "top3": 0.4739,
+    "top5": 0.5898
+   },
+   "history": {
+    "top1": 0.4624,
+    "top2": 0.6388,
+    "top3": 0.7704,
+    "top5": 0.8894
+   },
+   "last_week": {
+    "top1": 0.499,
+    "top2": 0.6441,
+    "top3": 0.7411,
+    "top5": 0.8424
+   },
+   "random": {
+    "top1": 0.3349,
+    "top2": 0.5426,
+    "top3": 0.6779,
+    "top5": 0.833
+   }
+  },
+  "municipality_ranking_auc": {
+   "model": {
+    "any": 0.8512,
+    "large": 0.903
+   },
+   "fwi": {
+    "any": 0.7304,
+    "large": 0.8549
+   },
+   "history": {
+    "any": 0.7499,
+    "large": 0.7341
+   },
+   "last_week": {
+    "any": 0.7831,
+    "large": 0.8523
+   }
+  },
+  "national_28_teams_catch": {
+   "model": {
+    "any": 0.4061,
+    "large": 0.5043
+   },
+   "fwi": {
+    "any": 0.1806,
+    "large": 0.1652
+   },
+   "history": {
+    "any": 0.2965,
+    "large": 0.2174
+   },
+   "last_week": {
+    "any": 0.3278,
+    "large": 0.4261
+   }
+  },
+  "brier_skill_vs_history": 0.015799999237060547,
+  "reliability": [
+   {
+    "bin": "0-0.001",
+    "n": 1423774,
+    "mean_predicted": 0.00023,
+    "observed": 0.00017
+   },
+   {
+    "bin": "0.001-0.003",
+    "n": 240267,
+    "mean_predicted": 0.0017,
+    "observed": 0.00118
+   },
+   {
+    "bin": "0.003-0.01",
+    "n": 84523,
+    "mean_predicted": 0.00493,
+    "observed": 0.00329
+   },
+   {
+    "bin": "0.01-0.03",
+    "n": 12591,
+    "mean_predicted": 0.01526,
+    "observed": 0.00921
+   },
+   {
+    "bin": "0.03-0.1",
+    "n": 2077,
+    "mean_predicted": 0.04981,
+    "observed": 0.05248
+   },
+   {
+    "bin": "0.1-0.3",
+    "n": 249,
+    "mean_predicted": 0.13395,
+    "observed": 0.18474
+   },
+   {
+    "bin": "0.3-1.0001",
+    "n": 4,
+    "mean_predicted": 0.31771,
+    "observed": 0.0
+   }
+  ]
+ }
+}
