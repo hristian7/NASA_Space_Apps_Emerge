@@ -57,6 +57,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | Playwright | End to end tests | https://playwright.dev | Apache-2.0 |
 | hyparquet with hyparquet-compressors | Reading the public hotspot files by area in the download route | https://github.com/hyparam/hyparquet | MIT |
 | NASA GIBS imagery services | Base maps: Blue Marble and Black Marble | https://nasa-gibs.github.io/gibs-api-docs/ | NASA open data |
+| Syne Bold (Google Fonts) | The "emerge" wordmark in the logo, converted to outlines, so the app loads no font file for it | https://fonts.google.com/specimen/Syne | SIL Open Font License 1.1 |
 
 ## Licence text
 
