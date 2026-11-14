@@ -86,3 +86,6 @@ The agent writing the expected answers found these gaps before any logic code wa
 | 12 | Flags of a month filled from the background | Only the flags of the cells that list the month, plus `low_confidence` when it applies. The background adds no flag of its own |
 | 13 | A selected cell that is in no tile file | It has no group and no fire on record: it counts as 0 in every month |
 | 14 | `cellCount` | The number of cells with a weight above 0 |
+| 15 | Which month is selected by default | The last **complete** month of the record, for every kind of selection. The unfinished last month can still be picked and is marked as part of a month |
+| 16 | The unfinished last month for a country | The daily files hold no per-country data. For a country the screen shows the value so far with its day count and says that a to-date comparison is available for a point or a drawn area. A part month is never compared with full months |
+| 17 | Days after the reference satellite stopped (2 Nov 2026) | In the daily files and in the monthly record they are the successor satellite's counts scaled to the reference level with the ratio measured on their 2026 overlap. Such a month is labelled `measured_calibrated` |
