@@ -65,3 +65,19 @@ Input: the daily files for the selected cells (weights as in section 1) and a wi
 - **Summary CSV** columns: `key,value`, one row per figure (worst month, worst year, trend per decade, this month's status and ratios, chance of fire and its range).
 - Both start with comment lines beginning with `#`: the title, the selection in words, the date range, the data date, the sources, and the line "empty = no measurement, 0 = no fire seen".
 - Line ends are `\n`; fields with a comma are quoted.
+
+## 9. Rulings on points the rules left open (Sat 14 Nov, evening)
+
+The agent writing the expected answers found these gaps before any logic code was checked against them. Each ruling below is part of the frozen rules.
+
+| # | Open point | Ruling |
+|---|---|---|
+| 1 | Is the cell under the chosen point always kept? | Section 1 stands: cells are kept by weight, and the small-selection rule covers the case where no weight reaches 1 in total. In practice the point's own cell is always in the result |
+| 2 | Months before Nov 2000 | They are **not in the series**. The series starts at Nov 2000. `null` appears only inside a no-data period listed in `meta.json` |
+| 3 | Median of an even number of years | The average of the two middle values |
+| 4 | Fields when the status is `no_history` or `too_early`, or when the current value is null | A null current value gives status `no_history`. For `no_history` and `too_early`: `median`, `mean`, `ratioMedian` and `ratioMean` are null, `higherThan` is 0, `years` is the size of the history, `value` is the current value |
+| 5 | The past-year window (section 6), including 29 Feb | The window of a past year is the `days` consecutive days ending on the same month and day as the current window's end. An end date of 29 Feb maps to 28 Feb in a year without one. So every window has exactly `days` days |
+| 6 | Which year labels a window that crosses 1 Jan | The year of the window's last day |
+| 7 | Chance of fire with no past years | `p`, `lo` and `hi` are all null |
+| 8 | CSV details | Flags in one field are joined with `|`. Values are rounded half up to whole numbers |
+| 9 | Worst month and worst year | The worst month is taken over every month with a value, in complete and incomplete years. The worst year only over complete years |
