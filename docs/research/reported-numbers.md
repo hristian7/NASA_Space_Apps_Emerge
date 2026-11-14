@@ -14,12 +14,11 @@ Fetched Fri 14 Nov 2026 by `pipeline/fetch_reported.py`. Addresses and terms: [`
 | EFFIS estimates by country | satellite estimate | 65 countries, 2006 to 2026 `[V]` |
 | GWIS estimates by country | satellite estimate | 256 countries, 2012 to 2026 `[V]` |
 | NIFC "Total Wildland Fires and Acres" | national report | USA, 43 years, 1983 to 2025 `[V]` |
-| EFFIS annual report 2024, Table 1 | national report | 29 countries, 2024 only `[V]` |
-| EFFIS annual report 2024, Table 2 | national report | Bulgaria, 10 years, 2015 to 2024 `[V]` |
+| EFFIS annual report 2024, annex Tables 101 to 104, with Table 1 for 2024 and Table 2 for Bulgaria | national report | 31 countries, 1980 to 2024 `[V]` |
 
 ## Coverage
 
-256 countries have a file `[V]`. 30 of them lead with a national report `[V]`; the other 226 have a satellite estimate only `[V]`. Every file keeps every series it has, so a country with a report also keeps its estimates beside it.
+256 countries have a file `[V]`. 32 of them lead with a national report `[V]`, every one of them over several years, and the other 224 have a satellite estimate only `[V]`. Every file keeps every series it has, so a country with a report also keeps its estimates beside it.
 
 ## The two rows that were wrong or thin
 
@@ -29,7 +28,10 @@ Fetched Fri 14 Nov 2026 by `pipeline/fetch_reported.py`. Addresses and terms: [`
 ## Limits
 
 - Burned area is in hectares. Acres are converted at 1 acre = 0.40468564224 ha `[V]`, and the series note says so.
-- 2024 is the only year of national report for 28 of the 30 countries, because the annual report prints one year per country `[V]`. Earlier annual reports were not fetched.
+- The national series come from the annual report's annex, whose titles read "Number of forest fires" and "Burnt area (hectares)" and whose source line reads "JRC's elaboration of the country reports" `[V]`. Their fire counts agree with the report's own Table 1 for all 29 countries it covers in 2024 `[V]`; their burned areas agree for 18 and differ for 6 only because the annex rounds to whole hectares (140 against 140.4, 49 against 49.47) `[V]`.
+- Two annex rows were left out rather than guessed, because the report's typesetting merged two columns in them: the 2024 burned-area row of the five southern countries (it prints Italy as "5 2623") and the 2023 fire-count row `[V]`. Table 1 and Table 2 supply those 2024 and 2023 values, so nothing is missing for those years.
+- EFFIS also publishes a spreadsheet of 1980 to 2024 totals at data.effis.emergency.copernicus.eu, which is not used: that host's certificate expired on 11 November 2026 `[V]`, so the file cannot be authenticated, and nothing can be established from a file that cannot be fetched safely.
+- Bulgaria's own 2025 report revises 2024 to 565 fires on the same area, 171,164 decares, which is 17,116.4 hectares `[V]`. The series keeps the 595 the 2024 report printed and says so in its note.
 - The 2026 year in both estimate series is a season still running, not a full year `[D]`.
 - NIFC states no reuse licence; its site links only a disclaimer of liability, so the file says "terms not stated" rather than guessing `[V]`.
 - NIFC marks 2004 with an asterisk: its figures leave out state lands for North Carolina `[V]`. The note carries that sentence.
