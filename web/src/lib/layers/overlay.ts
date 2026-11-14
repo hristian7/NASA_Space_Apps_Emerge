@@ -11,6 +11,7 @@
  */
 
 import type { GlobeFile } from '../../types/data';
+import { globeCells } from '../data/api';
 import { cellPolygon, historyClass } from './history';
 import { recentRadiusPx, type RecentPayload } from './recent';
 
@@ -44,24 +45,22 @@ export function rgbaFrom(color: string, alpha: number): [number, number, number,
  *
  * This is the only place that reads the globe file's own shape. Everything
  * downstream takes `HistoryCell[]`, which is a centre, a fire-days value and a
- * class, so a different file layout is one edit here and nowhere else.
+ * class, so a different file layout is one edit here and nowhere else. The
+ * file itself carries no point: the data layer works the centre out from the
+ * cell id, and this layer asks it rather than repeating the grid rule.
  */
 export function historyCells(file: GlobeFile | null): HistoryCell[] {
   if (file === null) return [];
-  const { cols, cell_deg: cellDeg } = file;
   const cells: HistoryCell[] = [];
-  for (let index = 0; index < file.n; index += 1) {
-    const fireDays = cols.cd[index] ?? 0;
-    const klass = historyClass(fireDays);
+  for (const cell of globeCells(file)) {
+    const klass = historyClass(cell.cd);
     if (klass < 0) continue;
-    const lat = cols.lat[index];
-    const lon = cols.lon[index];
     cells.push({
-      polygon: cellPolygon(lat, lon, cellDeg),
-      fireDays,
-      hotspots: cols.hot[index] ?? 0,
-      lat,
-      lon,
+      polygon: cellPolygon(cell.lat, cell.lon, file.cell_deg),
+      fireDays: cell.cd,
+      hotspots: cell.hot,
+      lat: cell.lat,
+      lon: cell.lon,
       klass,
     });
   }

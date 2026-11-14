@@ -264,7 +264,9 @@ export default function MapView({
                 id: dangerLayer,
                 type: "raster",
                 source: dangerSource,
-                paint: { "raster-opacity": 0.62 },
+                // Light enough that the coastline under it stays readable:
+                // the index's lowest class covers most of the world.
+                paint: { "raster-opacity": 0.42 },
               },
               below,
             );

@@ -64,6 +64,16 @@ export default function LayerPanel({
     setOpen(window.innerWidth >= 768);
   }, []);
 
+  // On a phone the list and the report sheet share the lower half of the
+  // screen, so opening the list lowers the sheet, the same move the top bar's
+  // own menus make.
+  const show = (next: boolean) => {
+    setOpen(next);
+    if (next && window.innerWidth < 768) {
+      document.documentElement.setAttribute("data-sheet", "peek");
+    }
+  };
+
   const layers = panelLayers();
   const onCount = layers.filter((entry) => state.on.includes(entry.id)).length;
   const years = historyYears(lastMonth);
@@ -247,7 +257,7 @@ export default function LayerPanel({
           className="layers-head"
           aria-expanded={open}
           aria-controls="layer-list"
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => show(!open)}
         >
           <span>{t("title")}</span>
           <span className="layers-count num">{t("onCount", { count: onCount })}</span>
