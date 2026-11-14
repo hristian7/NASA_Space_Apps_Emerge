@@ -142,6 +142,11 @@ export function windowRankText(
   comparison: WindowComparison,
   { t, locale }: SentenceContext,
 ): string {
+  if (comparison.rank === null && comparison.current.hot === null) {
+    // No rank because the window itself has no measurement yet, which is a
+    // different thing from having no past years to rank it against.
+    return t("window.noCurrent", { days: formatCount(comparison.days, locale) });
+  }
   if (comparison.rank === null || comparison.of <= 1) {
     return t("window.noPast", { days: formatCount(comparison.days, locale) });
   }
@@ -174,4 +179,17 @@ export function sourceLabel(src: string | null, t: Translate): string {
     return t("source.provisional");
   }
   return t("source.measured");
+}
+
+/**
+ * The same label, but with the two kinds of measurement told apart: data the
+ * provider still revises, and data measured by the newer satellites and scaled
+ * to the reference one. The calendar and the table say which, because a reader
+ * comparing this month with last year needs to know.
+ */
+export function sourceDetail(src: string | null, t: Translate): string {
+  if (src === "measured_calibrated") {
+    return t("source.calibrated");
+  }
+  return sourceLabel(src, t);
 }

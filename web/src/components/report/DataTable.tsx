@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Series } from "@/types/ui";
-import { sourceLabel } from "./lib/sentences";
+import { sourceDetail } from "./lib/sentences";
 import {
   formatCount,
   monthYearShort,
@@ -71,7 +71,7 @@ export default function DataTable({
                     : formatCount(row.hi, locale)}
                 </td>
                 <td className={styles.flagEstimated}>
-                  {sourceLabel(row.src, t)}
+                  {sourceDetail(row.src, t)}
                 </td>
               </tr>
             ))}

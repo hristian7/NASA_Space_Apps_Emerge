@@ -12,7 +12,7 @@
 
 import type { MonthPoint, Selection, Series } from "../../types/ui";
 import type { AnomalyPoint, MonthKey, Scope } from "../report/types";
-import { unusual } from "../../lib/stats";
+import { historyFor, median, unusual } from "../../lib/stats";
 import { haversineKm } from "../../lib/data/api";
 import { MAX_DAYS, MAX_RADIUS_KM, FIRST_DAY } from "../../lib/hotspots/query";
 import type { Bbox } from "../../lib/hotspots/geo";
@@ -97,7 +97,10 @@ export function typicalFireDays(
   fireDays: Series,
   month: MonthKey,
 ): number | null {
-  return unusual(fireDays, month.y, month.m).median;
+  // The median of the same month in the years before it, which is what the
+  // comparison rule uses. It is taken from the history directly so that a
+  // month still being measured still has a typical figure beside it.
+  return median(historyFor(fireDays, month.y, month.m));
 }
 
 export function scopeOf(selection: Selection): Scope {
@@ -303,4 +306,37 @@ export function pointAt(series: Series, month: MonthKey): MonthPoint | undefined
   return series.months.find(
     (point) => point.y === month.y && point.m === month.m,
   );
+}
+
+/** Days in a calendar month. */
+export function daysInMonth(y: number, m: number): number {
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+/**
+ * The month the record stops inside, when it stops before that month is over.
+ * Null when the last day of data is also the last day of its month, so every
+ * month of the record is complete.
+ */
+export function unfinishedMonthOf(lastDataDay: string): MonthKey | null {
+  const [y, m, d] = lastDataDay.split("-").map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  return d < daysInMonth(y, m) ? { y, m } : null;
+}
+
+/** How many days of the unfinished month the record holds. */
+export function daysSoFar(lastDataDay: string): number {
+  return Number(lastDataDay.slice(8, 10));
+}
+
+/**
+ * The last month of the record that is complete. A part month is never the
+ * default, because comparing it with whole months reads as a collapse in fire
+ * rather than as a month that has not finished.
+ */
+export function lastCompleteMonth(lastDataDay: string): MonthKey | null {
+  const [y, m, d] = lastDataDay.split("-").map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  if (d >= daysInMonth(y, m)) return { y, m };
+  return m === 1 ? { y: y - 1, m: 12 } : { y, m: m - 1 };
 }
