@@ -145,6 +145,39 @@ The data-sources master list ranks every source 1–5 by judgement, and says the
 - **Land cover:** 3–4.
 - **Terrain:** 2.
 
+## Check on 2026 so far (run 15 Nov 2026, 00:40)
+
+This is an out-of-sample check on **4 Jan to 11 Nov 2026** (296 days, 747 fire cell-days, 688 of them new fires `[V]`). None of these days were used for training, settings or the 2025 test. The inputs are the ones the live outlook uses: the committed models, the GEOS-5 run and analysis of t−2, and NOAA-20 fires from the firms-catalog mirror. Seven NOAA-20 outage days are skipped. Script: `engine/daily/v2/test2026.py`; results: `docs/engine-results/daily-v2/res2026_*.json`.
+
+| All fires | Lead 1 | Lead 2 | Lead 3 | 2025 test, lead 1 |
+|---|---|---|---|---|
+| 1 spot per municipality, within 15 km | **54.0%** | 50.9% | 52.4% | 59.5% |
+| Last week's fires, 1 spot | 45.4% | 43.5% | 43.1% | 49.9% |
+| Random, 1 spot | 32.9% | 32.9% | 32.9% | 33.5% |
+| 3 spots per municipality | **80.0%** | 78.8% | 78.2% | 82.2% |
+| Top 5 per province, 11 km | **38.8%** | 36.0% | 34.3% | 41.2% |
+| History, same ranking | 27.0% | 27.0% | 27.0% | 26.9% |
+| Model minus history, 95% interval | +8.3 to +15.5 points | +5.5 to +12.8 | +3.8 to +10.6 | +10.3 to +18.1 |
+| Municipality ranking AUC (official FWI) | 0.844 (0.760) | 0.837 (0.756) | 0.836 (0.751) | 0.851 (0.730) |
+
+All numbers in this table are `[V]`: measured by the script.
+
+| New fires only (team protocol) `[V]` | Lead 1 | Lead 2 | Lead 3 | 2025 test, lead 1 |
+|---|---|---|---|---|
+| Top 5 per province, 11 km | **31.9%** | 31.4% | 32.0% | 34.4% |
+| History, same ranking | 25.0% | 25.0% | 25.0% | 27.4% |
+| Official FWI, same ranking | 14.4% | 13.5% | 12.0% | 12.8% |
+| Model minus history, 95% interval | +3.5 to +10.0 points | +3.2 to +9.6 | +3.6 to +10.5 | +4.3 to +10.2 |
+| 1 spot per municipality, within 15 km | 50.8% | 50.3% | 50.5% | 54.8% |
+| 3 spots per municipality | 77.7% | 78.7% | 77.4% | 80.4% |
+
+**Lead 1 detail** `[V]`:
+
+- **Large fires, 1 spot:** 51.4% (last week 44.3%, random 29.9%).
+- **28 national teams catch:** 42.2% of fire municipality-days and 57.1% of large-fire ones.
+
+**Reading.** 2026 scores a few points below 2025, but the ordering holds on a year the models never saw: the model beats every baseline by a margin that clears the bootstrap rule. Three spots per municipality still reach about 80% for tomorrow.
+
 ## Live outlook issued 14 Nov 2026 for 15–17 Nov
 
 Files: `outlook2_bg_2026-11-14.csv` and `.geojson`, plus `_provinces.csv` with the team protocol's top 5 per province.
@@ -172,6 +205,7 @@ Risk is low, as is usual in late autumn. The expected number of municipalities w
 cd engine/daily/v2
 bash run_all.sh               # downloads, builds, trains all leads, group weights, live outlook, tests
 python3 summarize.py test2025 # the tables above
+python3 test2026.py           # the 2026 check (about 10 minutes per lead and label on 2 CPU cores)
 ```
 
 Each run of `train2.py` is deterministic (fixed seeds). The lead-1 runs reproduced byte-identical scores when trained a second time.

@@ -17,7 +17,13 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
 | OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
-| NASA GFWED GEOS-5 fire-weather forecasts | Planned fire-weather input for next-day risk | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
+| NASA GFWED GEOS-5 fire-weather analyses and forecasts | Fire-weather input of the daily outlook v2 (`engine/daily/v2/gfwed.py`, Bulgaria subset by byte ranges), 2014 to 12 Nov 2026 | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
+| ESA WorldCover 10 m 2021 v200 | Land-cover shares per 5 km cell, daily outlook v2 (`engine/daily/v2/static.py`) | https://esa-worldcover.org; [tiles](https://esa-worldcover.s3.eu-central-1.amazonaws.com/) | CC BY 4.0, credit "© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium"; accessed 14 Nov 2026 |
+| Copernicus DEM GLO-90 | Elevation, slope and south-facing share per cell, daily outlook v2 | https://registry.opendata.aws/copernicus-dem/ | Free licence with attribution: "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA"; accessed 14 Nov 2026 |
+| geoBoundaries gbOpen, Bulgaria ADM1 and ADM2 | Provinces (28) and municipalities (265) of the daily outlook | https://www.geoboundaries.org | CC BY 4.0; accessed 14 Nov 2026 |
+| NASA POWER daily and monthly point data | Weather of the monthly prediction engine and daily outlook v1 | https://power.larc.nasa.gov | NASA open data; accessed 14 Nov 2026 |
+| MET Norway Locationforecast 2.0 | Weather forecast of the daily outlook v1 live run | https://api.met.no/weatherapi/locationforecast/2.0/documentation | CC BY 4.0 and NLOD 2.0, credit MET Norway; accessed 14 Nov 2026 |
+| NOAA CPC, PSL and NCEI climate indices (ONI, NAO, AO, PDO, AMO, IOD, SAM and others) | Ocean and climate inputs of the monthly prediction engine | https://www.cpc.ncep.noaa.gov; https://psl.noaa.gov/data/timeseries/month/; https://www.ncei.noaa.gov | US government work, public domain; accessed 14 Nov 2026 |
 | Natural Earth admin-1 regions | Planned regional boundaries for next-day risk | https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/ | Public domain; accessed 14 Nov 2026 |
 | NASA MODIS MCD12C1 v061 | Planned land-cover shares for next-day risk | https://doi.org/10.5067/MODIS/MCD12C1.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
 | NASA MODIS MOD13C2 v061 | Planned monthly vegetation index for next-day risk | https://doi.org/10.5067/MODIS/MOD13C2.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
@@ -41,6 +47,10 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 |---|---|---|---|
 | DuckDB | Pipeline: cleaning and counting | https://duckdb.org | MIT |
 | Python with pandas, NumPy, PyArrow, scikit-learn, LightGBM, SciPy, pytest | Pipeline: models, scoring, tests | https://www.python.org | BSD / MIT / Apache-2.0 / PSF |
+| xclim (Canadian fire-weather index chain) | Daily outlook v1: FWI from NASA POWER weather | https://xclim.readthedocs.io | Apache-2.0 |
+| XGBoost | Gradient-boosted trees, daily outlook v1 and v2 | https://xgboost.ai | Apache-2.0 |
+| PyTorch | Neural network (10 epochs), daily outlook v2 | https://pytorch.org | BSD-3-Clause |
+| rasterio, Shapely | Reading land-cover and terrain tiles; municipality and province lookup | https://rasterio.readthedocs.io; https://shapely.readthedocs.io | BSD-3-Clause |
 | Poppler `pdftotext` | Reading the two national tables out of the EFFIS annual report | https://poppler.freedesktop.org | GPL-2.0 |
 | MapLibre GL JS | Map and globe in the preview and the app | https://maplibre.org | BSD-3-Clause |
 | Next.js | The app in `web/`: App Router, TypeScript, build and hosting | https://nextjs.org | MIT |

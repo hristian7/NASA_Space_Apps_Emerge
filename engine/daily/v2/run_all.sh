@@ -21,4 +21,5 @@ NOLOYO=1 python3 -W ignore train2.py 1 all xgb                  # without the cl
 EPOCHS=30 python3 -W ignore train2.py 1 all mlp                 # 30 epochs vs 10
 python3 summarize.py test2025
 python3 fetch_viirs_2026.py && python3 -W ignore live2.py "$(date +%F)"
+python3 -W ignore test2026.py            # out-of-sample check on the current year
 python3 -m pytest tests -q

@@ -1,0 +1,53 @@
+{
+ "L1_new": {
+  "days": 296,
+  "fires": 688,
+  "1spot": 0.508,
+  "3spots": 0.7771,
+  "1spot_lastweek": 0.414,
+  "1spot_random": 0.3283,
+  "top5prov_11km": 0.3185,
+  "top5prov_11km_history": 0.2504,
+  "top5prov_11km_fwi": 0.1442,
+  "ci_vs_history": [
+   0.0354,
+   0.1004
+  ],
+  "muni_auc": 0.8328,
+  "muni_auc_fwi": 0.7534
+ },
+ "L2_new": {
+  "days": 295,
+  "fires": 688,
+  "1spot": 0.5032,
+  "3spots": 0.7866,
+  "1spot_lastweek": 0.4204,
+  "1spot_random": 0.3283,
+  "top5prov_11km": 0.3138,
+  "top5prov_11km_history": 0.2504,
+  "top5prov_11km_fwi": 0.1347,
+  "ci_vs_history": [
+   0.0319,
+   0.0963
+  ],
+  "muni_auc": 0.8274,
+  "muni_auc_fwi": 0.7475
+ },
+ "L3_new": {
+  "days": 294,
+  "fires": 688,
+  "1spot": 0.5048,
+  "3spots": 0.7739,
+  "1spot_lastweek": 0.4236,
+  "1spot_random": 0.3283,
+  "top5prov_11km": 0.3201,
+  "top5prov_11km_history": 0.2504,
+  "top5prov_11km_fwi": 0.1204,
+  "ci_vs_history": [
+   0.0357,
+   0.1046
+  ],
+  "muni_auc": 0.8268,
+  "muni_auc_fwi": 0.7423
+ }
+}

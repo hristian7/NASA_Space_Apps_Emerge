@@ -22,7 +22,7 @@ V1 = os.path.dirname(HERE)                             # engine/daily (version 1
 os.chdir(HERE)
 sys.path.insert(0, V1)
 import features as v1
-ISSUE = pd.Timestamp(sys.argv[1] if len(sys.argv) > 1 else "2026-11-14")
+ISSUE = pd.Timestamp(os.environ.get("ISSUE") or (sys.argv[1] if len(sys.argv) > 1 else "2026-11-14"))
 END = ISSUE + pd.Timedelta(days=3)
 # extend the calendar so the target days exist; the archive arrays simply have no data there
 v1.END, v1.DAYS = END, pd.date_range(v1.START, END, freq="D")
@@ -119,57 +119,58 @@ def predict(tag, X):
     return ps * r / (ps * r + 1 - ps), contrib, prep["feats"]
 
 
-WORDS = {"weather_fc": "fire weather forecast (GEOS-5)", "weather_now": "dry fuels now",
-         "fuel": "land cover (fuel)", "terrain": "terrain", "history_recent": "recent fires nearby",
-         "history_calendar": "burns at this time of year", "season": "season"}
-rows, prov_rows = [], []
-cl = b.cells
-for L in (1, 2, 3):
-    d = iss + L
-    c = np.arange(C)
-    X = b.X(np.full(C, d), c, L)
-    if L == 1:
-        print("cells with a fire nearby in the last 3 days:", int((X.hist_nbr3 > 0).sum()),
-              "| GEOS-5 FWI range", float(np.nanmin(X.fc_FWI)), float(np.nanmax(X.fc_FWI)), flush=True)
-    out = {}
-    for lab in ("all", "new"):
-        p_x, contrib, feats = predict(f"L{L}_{lab}_xgb", X)
-        p_m, _, _ = predict(f"L{L}_{lab}_mlp", X)
-        out[lab] = (p_x + p_m) / 2
-        if lab == "all":
-            g = {k: contrib[:, [feats.index(f) for f in v if f in feats]].sum(1) for k, v in f2.GROUPS.items()}
-    p = out["all"]
-    day = f2.DAYS[d].strftime("%Y-%m-%d")
-    for m, cs in cl.groupby("muni_k").groups.items():
-        cs = np.array(list(cs))
-        top = cs[np.argmax(p[cs])]
-        reasons = sorted(((g[k][top], k) for k in g), reverse=True)
-        rows.append({"issued": ISSUE.strftime("%Y-%m-%d"), "date": day, "lead_days": L,
-                     "municipality": cl.muni[top], "province": cl.province[top],
-                     "spot_lat": round(cl.lat[top], 3), "spot_lon": round(cl.lon[top], 3),
-                     "spot_fire_chance": float(p[top]), "spot_new_fire_chance": float(out["new"][top]),
-                     "municipality_fire_chance": float(1 - np.prod(1 - p[cs])),
-                     "fwi_geos5": float(X.fc_FWI[top]) if np.isfinite(X.fc_FWI[top]) else None,
-                     "land_cover": max(["tree", "shrub", "grass", "crop", "built"], key=lambda k: cl["lc_" + k][top]),
-                     "main_reasons": ", ".join(WORDS[k] for v, k in reasons[:2] if v > 0),
-                     "precision_radius_km": 7.5})
-    for pr, cs in cl.groupby("province").groups.items():
-        cs = np.array(list(cs))
-        for rank, j in enumerate(cs[np.argsort(-out["new"][cs])[:5]], 1):
-            prov_rows.append({"issued": ISSUE.strftime("%Y-%m-%d"), "date": day, "lead_days": L, "province": pr,
-                              "rank": rank, "lat": round(cl.lat[j], 3), "lon": round(cl.lon[j], 3),
-                              "municipality": cl.muni[j], "new_fire_chance": float(out["new"][j]),
-                              "precision_radius_km": 3.5})
-R = pd.DataFrame(rows)
-R["national_rank"] = R.groupby("date").municipality_fire_chance.rank(ascending=False, method="first").astype(int)
-R = R.sort_values(["date", "national_rank"])
-tag = ISSUE.strftime("%Y-%m-%d")
-R.to_csv(f"outlook2_bg_{tag}.csv", index=False)
-pd.DataFrame(prov_rows).to_csv(f"outlook2_bg_{tag}_provinces.csv", index=False)
-gj = {"type": "FeatureCollection", "features": [
-    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [r.spot_lon, r.spot_lat]},
-     "properties": {k: (None if (isinstance(v, float) and not np.isfinite(v)) else v)
-                    for k, v in r.items() if k not in ("spot_lat", "spot_lon")}} for _, r in R.iterrows()]}
-json.dump(gj, open(f"outlook2_bg_{tag}.geojson", "w"))
-print(R.groupby("date").municipality_fire_chance.agg(["mean", "max", "sum"]))
-print(R[R.national_rank <= 5][["date", "municipality", "municipality_fire_chance", "land_cover", "main_reasons"]].to_string())
+if __name__ == "__main__":
+    WORDS = {"weather_fc": "fire weather forecast (GEOS-5)", "weather_now": "dry fuels now",
+             "fuel": "land cover (fuel)", "terrain": "terrain", "history_recent": "recent fires nearby",
+             "history_calendar": "burns at this time of year", "season": "season"}
+    rows, prov_rows = [], []
+    cl = b.cells
+    for L in (1, 2, 3):
+        d = iss + L
+        c = np.arange(C)
+        X = b.X(np.full(C, d), c, L)
+        if L == 1:
+            print("cells with a fire nearby in the last 3 days:", int((X.hist_nbr3 > 0).sum()),
+                  "| GEOS-5 FWI range", float(np.nanmin(X.fc_FWI)), float(np.nanmax(X.fc_FWI)), flush=True)
+        out = {}
+        for lab in ("all", "new"):
+            p_x, contrib, feats = predict(f"L{L}_{lab}_xgb", X)
+            p_m, _, _ = predict(f"L{L}_{lab}_mlp", X)
+            out[lab] = (p_x + p_m) / 2
+            if lab == "all":
+                g = {k: contrib[:, [feats.index(f) for f in v if f in feats]].sum(1) for k, v in f2.GROUPS.items()}
+        p = out["all"]
+        day = f2.DAYS[d].strftime("%Y-%m-%d")
+        for m, cs in cl.groupby("muni_k").groups.items():
+            cs = np.array(list(cs))
+            top = cs[np.argmax(p[cs])]
+            reasons = sorted(((g[k][top], k) for k in g), reverse=True)
+            rows.append({"issued": ISSUE.strftime("%Y-%m-%d"), "date": day, "lead_days": L,
+                         "municipality": cl.muni[top], "province": cl.province[top],
+                         "spot_lat": round(cl.lat[top], 3), "spot_lon": round(cl.lon[top], 3),
+                         "spot_fire_chance": float(p[top]), "spot_new_fire_chance": float(out["new"][top]),
+                         "municipality_fire_chance": float(1 - np.prod(1 - p[cs])),
+                         "fwi_geos5": float(X.fc_FWI[top]) if np.isfinite(X.fc_FWI[top]) else None,
+                         "land_cover": max(["tree", "shrub", "grass", "crop", "built"], key=lambda k: cl["lc_" + k][top]),
+                         "main_reasons": ", ".join(WORDS[k] for v, k in reasons[:2] if v > 0),
+                         "precision_radius_km": 7.5})
+        for pr, cs in cl.groupby("province").groups.items():
+            cs = np.array(list(cs))
+            for rank, j in enumerate(cs[np.argsort(-out["new"][cs])[:5]], 1):
+                prov_rows.append({"issued": ISSUE.strftime("%Y-%m-%d"), "date": day, "lead_days": L, "province": pr,
+                                  "rank": rank, "lat": round(cl.lat[j], 3), "lon": round(cl.lon[j], 3),
+                                  "municipality": cl.muni[j], "new_fire_chance": float(out["new"][j]),
+                                  "precision_radius_km": 3.5})
+    R = pd.DataFrame(rows)
+    R["national_rank"] = R.groupby("date").municipality_fire_chance.rank(ascending=False, method="first").astype(int)
+    R = R.sort_values(["date", "national_rank"])
+    tag = ISSUE.strftime("%Y-%m-%d")
+    R.to_csv(f"outlook2_bg_{tag}.csv", index=False)
+    pd.DataFrame(prov_rows).to_csv(f"outlook2_bg_{tag}_provinces.csv", index=False)
+    gj = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "geometry": {"type": "Point", "coordinates": [r.spot_lon, r.spot_lat]},
+         "properties": {k: (None if (isinstance(v, float) and not np.isfinite(v)) else v)
+                        for k, v in r.items() if k not in ("spot_lat", "spot_lon")}} for _, r in R.iterrows()]}
+    json.dump(gj, open(f"outlook2_bg_{tag}.geojson", "w"))
+    print(R.groupby("date").municipality_fire_chance.agg(["mean", "max", "sum"]))
+    print(R[R.national_rank <= 5][["date", "municipality", "municipality_fire_chance", "land_cover", "main_reasons"]].to_string())
