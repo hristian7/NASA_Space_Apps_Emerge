@@ -11,7 +11,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M18 | Points-only data model | MODIS, VIIRS, and every other data type are stored and fetched only as points — never as polygons. Each point's `precision-radius` field is the accuracy/precision of that measurement (e.g. the sensor's pixel footprint: ~1 km for MODIS, ~375 m for VIIRS), not a search parameter. Polygons are only built after the source points have been fetched — for visualisation (e.g. a heatmap/choropleth grid) or other specific derived purposes (e.g. regional rollups, clustering) — never as the stored source-of-truth format itself. Clarification: this building step can happen on the server (e.g. a pre-computed aggregation job), not only client-side right before display — it just always starts from points, never from a stored polygon |
 | M19 | No-data vs. zero | Difference between "nothing measured" and "no measurement made" |
 | M20 | Multiple data types per point | Every data type (fire, temperature, wind, humidity, etc.) is stored as a point measurement. A single point can carry more than one data type at once (e.g. fire and temperature on the same point) |
-| M27 | Minimum point schema | Each data point has a `type` field and multiple fields. Minimum fields: `type`, `location`, `precision-radius`, `measurement_1` (more measurements can be added per M20). `precision-radius` is only the minimum required precision attribute — a point can carry other precision attributes too (e.g. scan angle, a confidence score), not just `precision-radius` |
+| M29 | Minimum point schema | Each data point has a `type` field and multiple fields. Minimum fields: `type`, `location`, `precision-radius`, `measurement_1` (more measurements can be added per M20). `precision-radius` is only the minimum required precision attribute — a point can carry other precision attributes too (e.g. scan angle, a confidence score), not just `precision-radius` |
 | M8 | English and Bulgarian interface | — |
 | M9 | Works on phones | — |
 | M10 | Public web address | — |
@@ -19,6 +19,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M2 | Data pipeline: whole world | Download and process NASA fire data for the whole world before the demo, so the app shows data at once |
 | M15 | Installable app (PWA) | — |
 | M21 | Fetch data for a point or area | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
+| M22 | Get combined data | Same as M21 for several data types together, for one place and time range — for example harmonized fire counts plus fire intensity plus official fire danger |
 | C3 | Second source of truth | — |
 | C4 | Older or more satellites | Data before 2000 or from more satellites |
 | C7 | Support for different base maps | Actually offer more base maps than NASA/OpenStreetMap, not just leave room for them |
@@ -39,6 +40,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M4 | ↳ Fire calendar | For a point or area — raw or visualised; how much burned, statistics, graphics, etc. |
 | M5 | ↳ "Is this unusual?" indicator | — |
 | M13 | ↳ "Chance of fire this month" | From history |
+| M27 | ↳ "This fire vs past fires" | The last 8 days of hotspots and fire intensity vs the same 8 days in every past year, with a rank. 8 days, not 7: NASA warns shorter periods are biased |
 | M24 | Verification | Group heading |
 | M6 | ↳ "How we know it's right" page | — |
 | S1 | 3D globe view | A spinning Earth with fires and risk zones on it; the 2D map stays as the fast fallback |
