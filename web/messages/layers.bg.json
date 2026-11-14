@@ -60,5 +60,10 @@
   "windExplain": "Стрелките показват посоката на вятъра; скорост в км/ч. Няма данни при недостъпна услуга.",
   "windTime": "Наблюдение на вятъра: {date} UTC.",
   "windNoData": "Няма данни за вятъра.",
-  "providerLegend": "Легенда на доставчика"
+  "providerLegend": "Легенда на доставчика",
+  "historyRange": "{low} до {high}",
+  "historyCredit": "NASA FIRMS (данни за активни пожари от MODIS и VIIRS), хармонизирани от проекта",
+  "recentCredit": "NASA FIRMS, данни за активни пожари в почти реално време (MODIS и VIIRS)",
+  "dangerCredit": "Copernicus GWIS (EFFIS), лицензът се проверява",
+  "windCredit": "Метеорологични данни от Open-Meteo.com"
 }

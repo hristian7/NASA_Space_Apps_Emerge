@@ -37,11 +37,11 @@ function short(key: string): string {
 }
 
 /** "1 to 2", "21 or more": the numbers a ramp colour stands for. */
-function breakLabel(index: number, more: string): string {
+function breakLabel(index: number, more: string, range: (low: number, high: number) => string): string {
   const low = historyBreaks[index];
   const next = historyBreaks[index + 1];
   if (next === undefined) return `${low}${more}`;
-  return next - low === 1 ? `${low}` : `${low} to ${next - 1}`;
+  return next - low === 1 ? `${low}` : range(low, next - 1);
 }
 
 export default function LayerPanel({
@@ -210,7 +210,7 @@ export default function LayerPanel({
                     style={{ background: `var(${token})` }}
                     aria-hidden="true"
                   />
-                  <span className="num">{breakLabel(index, t("orMore"))}</span>
+                  <span className="num">{breakLabel(index, t("orMore"), (low, high) => t("historyRange", { low, high }))}</span>
                   <span className="legend-word">{t("fireDays")}</span>
                 </li>
               ))}
@@ -344,7 +344,7 @@ export default function LayerPanel({
                   <p className="hint" aria-live="polite">
                     {timeLine(definition)}
                   </p>
-                  <p className="hint credit">{definition.credit}</p>
+                  <p className="hint credit">{definition.id === "harmonized-history" ? t("historyCredit") : definition.id === "recent-fires" ? t("recentCredit") : definition.id === "fire-danger" ? t("dangerCredit") : definition.id === "wind" ? t("windCredit") : definition.credit}</p>
                 </div>
               ) : null}
             </div>

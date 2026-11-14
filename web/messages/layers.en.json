@@ -60,5 +60,10 @@
   "windExplain": "Arrows show wind direction; speed in km/h. No data if the service cannot be reached.",
   "windTime": "Wind observation: {date} UTC.",
   "windNoData": "No wind data available.",
-  "providerLegend": "Provider colour legend"
+  "providerLegend": "Provider colour legend",
+  "historyRange": "{low} to {high}",
+  "historyCredit": "NASA FIRMS (MODIS and VIIRS active fire data), harmonized by this project",
+  "recentCredit": "NASA FIRMS near-real-time active fire data (MODIS and VIIRS)",
+  "dangerCredit": "Copernicus GWIS (EFFIS), licence under review",
+  "windCredit": "Weather data by Open-Meteo.com"
 }
