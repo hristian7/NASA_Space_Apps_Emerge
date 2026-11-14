@@ -102,6 +102,9 @@ def test_plugin_csv_and_region_outside_europe(tmp_path):
     pred.write_text('grid_g,spot_id,day,p\n0.25,1,2024-01-01,0.4\n0.25,1,2024-01-01,0.5\n')
     with pytest.raises(ValueError, match='duplicate'):
         risk.prepare_candidates(con, tmp_path, 2024, ['X'], pred)
+    pq.write_table(pa.table({'spot_id': [1], 'day': [day], 'hist_p': [0.4]}), history / 'history.parquet')
+    with pytest.raises(ValueError, match='coverage is incomplete or duplicated'):
+        risk.prepare_candidates(con, tmp_path, 2024, ['X'], None)
 
 
 def test_small_region_classification_uses_all_land_spots(candidates):

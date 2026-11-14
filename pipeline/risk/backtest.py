@@ -211,6 +211,10 @@ def prepare_candidates(con, data, year, regions, predictions):
       LEFT JOIN read_parquet(?) l ON l.spot_id=f.spot_id AND l.day=f.day
       {join}
     """, [str(data / 'labels_0.25.parquet')])
+    expected = con.execute('SELECT count(*) FROM grid').fetchone()[0] * len(days)
+    actual, distinct = con.execute('SELECT count(*), count(DISTINCT (spot_id,day)) FROM candidates').fetchone()
+    if actual != expected or distinct != expected:
+        raise ValueError(f'Weather/history coverage is incomplete or duplicated: expected {expected}, rows {actual}, unique {distinct}')
     return days
 
 
