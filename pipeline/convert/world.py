@@ -147,6 +147,20 @@ def attach_background(frame: pd.DataFrame, unit: str, sat: str) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True) if parts else frame
 
 
+def fast_country_pools(model, pairs: pd.DataFrame) -> dict:
+    """Country-month residual pools using point predictions only, so the
+    calibration pass costs no range machinery over a world-sized frame."""
+    got = M.point_predict(model, pairs)
+    got["y"] = pairs.loc[got.index, "y"]
+    agg = got.groupby(["country", "ym"], as_index=False)[["pred", "y"]].sum()
+    agg = agg[agg["pred"] > 0].copy()
+    agg["res"] = agg["y"] / agg["pred"]
+    pools = {"*": agg["res"].to_numpy() if len(agg) else np.ones(1)}
+    for country, part in agg.groupby("country"):
+        pools[country] = part["res"].to_numpy()
+    return pools
+
+
 def pick_background_form(
     cm: pd.DataFrame,
     univ: pd.DataFrame,
@@ -174,10 +188,10 @@ def pick_background_form(
         for opt in sorted(set(picks_term.values())):
             n_t, k_m = terms[opt]
             model = M.fit_convert(pf, k_ratio, n_t, rng, k_mult=k_m)
-            got = M.predict_convert(model, hf)
+            got = M.point_predict(model, hf)
             got["y"] = hf.loc[got.index, "y"]
             scores[form][opt] = M.country_month_scores(got)
-            pools = M.country_residual_pools(model, pf)
+            pools = fast_country_pools(model, pf)
             cr = M.country_month_ranges(model, M.with_term(hf, n_t), pools, rng)
             truth = hf.groupby(["country", "ym"], as_index=False)["y"].sum()
             inner_cr[(form, opt)] = cr.merge(truth, on=["country", "ym"], how="left")
@@ -329,7 +343,7 @@ def fit_production(
     assert record["snpp_first_ym"] >= record["window_first_ym"], "S-NPP before the fit window"
     assert record["snpp_last_ym"] <= record["window_last_ym"], "S-NPP after the fit window"
     assert record["snpp_first_ym"] >= ym(2012, 2), "S-NPP used before Feb 2012"
-    pools = {n: M.country_residual_pools(m, pairs) for n, m in models.items()}
+    pools = {n: fast_country_pools(m, pairs) for n, m in models.items()}
     del pairs
     return models, record, pools
 
@@ -417,15 +431,20 @@ def harmonize(
     if MODEL_VARIANT and MODEL_VARIANT[0] == "A3":
         report["a3_background"] = {}
         for sat in ("Terra", "Aqua"):
+            # The form and the band factor are chosen on cd and reused for hot,
+            # as the time term already is. The activity index is per unit.
+            _, picks_form, scores, calib, rep = pick_background_form(
+                cm, univ, "cd", sat, M.K_RATIO_CD * k_scale["cd"], picks, rng
+            )
             for unit in M.UNITS:
-                index, picks_form, scores, calib, rep = pick_background_form(
-                    cm, univ, unit, sat, M.K_RATIO_CD * k_scale[unit], picks, rng
+                A3_STATE[(unit, sat)] = (
+                    M.activity_index(cm, unit, sat, FIT), picks_form, calib,
                 )
-                A3_STATE[(unit, sat)] = (index, picks_form, calib)
-                report["a3_background"][f"{sat}_{unit}"] = {
-                    "picks": pd.Series(picks_form).value_counts().to_dict(),
-                    "country_band_calibration": rep,
-                }
+            report["a3_background"][sat] = {
+                "picks": pd.Series(picks_form).value_counts().to_dict(),
+                "chosen_on": "cd, reused for hot",
+                "country_band_calibration": rep,
+            }
     for src, (frame, sat) in est.items():
         per_unit = {}
         for unit in M.UNITS:

@@ -729,6 +729,23 @@ def country_month_ranges(
     return out
 
 
+def point_predict(model: "T1Model", frame: pd.DataFrame) -> pd.DataFrame:
+    """Point predictions only, with no range and so no random draw.
+
+    Used where only the value is needed, such as building country-month
+    residual pools over a large frame. It draws nothing, so it cannot move the
+    bake-off rows, which is why the bake-off path keeps the full predict.
+    """
+    out = with_term(frame, model.n_terms)
+    ix = model.ix
+    out = out[out["group"].isin(ix["g_idx"])].copy()
+    sid = _sid(out, ix)
+    x = out["x"].to_numpy(dtype=float)
+    expo = model._expo(out)
+    out["pred"] = np.where(x > 0, model.r[sid] * x, model.z[sid] * expo).clip(min=0.0)
+    return out
+
+
 def country_residual_pools(model: T1Model, pairs: pd.DataFrame) -> dict:
     """Country-month residuals in the fit years: measured over predicted."""
     got = model.predict(pairs)
