@@ -19,11 +19,11 @@ import type { FlagLabel, MetaFile, SrcLabel, TileCell, TileFile } from '../../ty
 import type { MonthPoint, SatelliteMonth, Selection, Series, Unit } from '../../types/ui';
 
 import { backgroundValue, loadBackground, setBackgroundStatus } from './background';
-import { monthFromIndex, monthIndex } from './cell';
+import { monthFromIndex, monthIndex, wrapLon } from './cell';
 import { DataError, DataSource } from './source';
-import { loadCountry, loadMeta, loadReported, loadTiles } from './loaders';
+import { loadCountry, loadCountryIndex, loadMeta, loadReported, loadTiles } from './loaders';
 import { haversineKm, ringCenter, selectionCells, tilesForSelection } from './selection';
-import type { ReportedFile } from '../../types/data';
+import type { CountryIndexFile, ReportedFile } from '../../types/data';
 
 /** The first month any harmonized number exists for. */
 export const FIRST_MONTH_INDEX = monthIndex(2000, 11);
@@ -270,16 +270,52 @@ export async function getPerSatellite(
 }
 
 /**
+ * True when a longitude is inside a box's west-to-east span. A box whose
+ * `west` is greater than its `east` crosses the 180 degree line, so it is
+ * made of the two pieces either side of it.
+ */
+export function lonInBox(lon: number, west: number, east: number): boolean {
+  const x = wrapLon(lon);
+  if (west <= east) return x >= west && x <= east;
+  return x >= west || x <= east;
+}
+
+/**
+ * Which country's figures to show beside a point or a drawn area.
+ *
+ * The decision is made from countries/index.json alone, one small file, and
+ * then at most one reported file is fetched. Walking the country files
+ * instead would fetch one file per country in the world.
+ *
+ * The rule: the countries whose box contains the point; of those, the one
+ * whose summary point is nearest; none, and the answer is null rather than a
+ * guess. A box is drawn around a country's fire cells and is only an
+ * approximation of its border, which is why the screen labels the figure
+ * "country total, for context" rather than "the fires in this country".
+ */
+export function countryAt(
+  index: CountryIndexFile,
+  point: { lat: number; lon: number },
+): string | null {
+  let best: { iso3: string; distance: number } | null = null;
+  for (const entry of index.countries) {
+    const [west, south, east, north] = entry.bbox;
+    if (point.lat < south || point.lat > north) continue;
+    if (!lonInBox(point.lon, west, east)) continue;
+    const distance = haversineKm(point.lat, point.lon, entry.lat, entry.lon);
+    if (!best || distance < best.distance) best = { iso3: entry.iso3, distance };
+  }
+  return best ? best.iso3 : null;
+}
+
+/**
  * The officially reported figures to show beside the detected ones.
  *
  * A country selection gets its own file. For a point or a drawn area the
  * figures are national totals shown "for context", so one country has to be
- * chosen without any border data in the set. The only honest signal the files
- * carry is the country record itself: its lat and lon are the mean of its
- * fire cells and its precision_radius_km reaches the furthest of them, so the
- * circle covers all of that country's data. A point is attributed to a
- * country whose circle contains it, nearest centre first; when no circle
- * contains it the answer is null rather than a guess.
+ * chosen: countryAt above does it from the country index, and a drawn area is
+ * taken at its vertex average. Nothing per country is fetched beyond the
+ * index and the one reported file.
  */
 export async function getReported(
   selection: Selection,
@@ -287,21 +323,17 @@ export async function getReported(
 ): Promise<ReportedFile | null> {
   if (selection.kind === 'country') return loadReported(selection.iso3, src);
 
-  const meta = await loadMeta(src);
   const point =
     selection.kind === 'point'
       ? { lat: selection.lat, lon: selection.lon }
       : ringCenter(selection.ring);
 
-  const candidates = await Promise.all(meta.countries.map((iso3) => loadCountry(iso3, src)));
-  let best: { iso3: string; distance: number } | null = null;
-  for (const country of candidates) {
-    if (!country) continue;
-    const distance = haversineKm(point.lat, point.lon, country.lat, country.lon);
-    if (distance > country.precision_radius_km) continue;
-    if (!best || distance < best.distance) best = { iso3: country.iso3, distance };
-  }
-  if (!best) return null;
-  if (!meta.reported.includes(best.iso3)) return null;
-  return loadReported(best.iso3, src);
+  const index = await loadCountryIndex(src);
+  if (!index) return null;
+  const iso3 = countryAt(index, point);
+  if (!iso3) return null;
+
+  const meta = await loadMeta(src);
+  if (!meta.reported.includes(iso3)) return null;
+  return loadReported(iso3, src);
 }

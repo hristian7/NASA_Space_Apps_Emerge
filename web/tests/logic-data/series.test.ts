@@ -16,10 +16,17 @@ import type { Selection } from '../../src/types/ui';
 import type { BackgroundFile, MetaFile, TileFile } from '../../src/types/data';
 import { cellId, monthIndex } from '../../src/lib/data/cell';
 import { globeCells, loadCountryIndex, loadGlobeYear, loadMeta } from '../../src/lib/data/loaders';
-import { getPerSatellite, getReported, getSeries, isNoDataMonth } from '../../src/lib/data/series';
+import {
+  countryAt,
+  getPerSatellite,
+  getReported,
+  getSeries,
+  isNoDataMonth,
+  lonInBox,
+} from '../../src/lib/data/series';
 import { backgroundStatus } from '../../src/lib/data/background';
-import { selectionCells } from '../../src/lib/data/selection';
-import { REPO_ROOT, patchedSource, testSource } from './helpers';
+import { selectionCells, tilesForSelection } from '../../src/lib/data/selection';
+import { REPO_ROOT, countingSource, patchedSource, testSource } from './helpers';
 
 const source = testSource();
 
@@ -360,5 +367,78 @@ describe('the country index and the globe year', () => {
 
   it('answers null for a globe year with no file', async () => {
     expect(await loadGlobeYear(1999, source)).toBeNull();
+  });
+});
+
+describe('what a point selection actually fetches', () => {
+  const POINT: Selection = { kind: 'point', lat: 44.125, lon: 22.375, radiusKm: 50 };
+
+  it('asks for no country file at all when building a series', async () => {
+    const { source: counted, requests } = countingSource();
+    await getSeries(POINT, 'cd', counted);
+    expect(requests.filter((path) => path.startsWith('countries/'))).toEqual([]);
+    expect(requests.filter((path) => path.startsWith('reported/'))).toEqual([]);
+    expect(requests).toContain('meta.json');
+    expect(requests).toContain('background.json');
+    const tiles = requests.filter((path) => path.startsWith('tiles/'));
+    expect(tiles.length).toBeGreaterThan(0);
+    expect(tiles.length).toBeLessThanOrEqual(tilesForSelection(POINT).length);
+  });
+
+  it('decides the reported country from the index alone, and fetches one reported file', async () => {
+    const { source: counted, requests } = countingSource();
+    const reported = await getReported(POINT, counted);
+    expect(reported?.iso3).toBe('BGR');
+    const countryFiles = requests.filter((path) => path.startsWith('countries/'));
+    expect(countryFiles).toEqual(['countries/index.json']);
+    expect(requests.filter((path) => path.startsWith('reported/'))).toEqual(['reported/BGR.json']);
+  });
+
+  it('fetches no reported file when no country box holds the point', async () => {
+    const { source: counted, requests } = countingSource();
+    const pacific: Selection = { kind: 'point', lat: -20, lon: -150, radiusKm: 30 };
+    expect(await getReported(pacific, counted)).toBeNull();
+    expect(requests.filter((path) => path.startsWith('countries/'))).toEqual([
+      'countries/index.json',
+    ]);
+    expect(requests.filter((path) => path.startsWith('reported/'))).toEqual([]);
+  });
+
+  it('takes a drawn area at its vertex average', async () => {
+    const { source: counted, requests } = countingSource();
+    const ring: [number, number][] = [
+      [22.0, 43.9],
+      [22.8, 43.9],
+      [22.8, 44.4],
+      [22.0, 44.4],
+    ];
+    const reported = await getReported({ kind: 'polygon', ring }, counted);
+    expect(reported?.iso3).toBe('BGR');
+    expect(requests.filter((path) => path.startsWith('reported/'))).toEqual(['reported/BGR.json']);
+  });
+});
+
+describe('the country box rule', () => {
+  it('reads a box that crosses the 180 degree line as its two pieces', () => {
+    expect(lonInBox(-170, 179.5, -66.75)).toBe(true);
+    expect(lonInBox(179.9, 179.5, -66.75)).toBe(true);
+    expect(lonInBox(100, 179.5, -66.75)).toBe(false);
+    expect(lonInBox(23, 22.25, 28.75)).toBe(true);
+    expect(lonInBox(30, 22.25, 28.75)).toBe(false);
+  });
+
+  it('picks the nearest centre when two boxes hold the point', () => {
+    const index = {
+      schema: 'emerge-country-index-1' as const,
+      example: true,
+      built: '2026-11-14',
+      countries: [
+        { iso3: 'AAA', name: 'Far', lat: 10, lon: 10, bbox: [0, 0, 20, 20] as [number, number, number, number] },
+        { iso3: 'BBB', name: 'Near', lat: 5, lon: 5, bbox: [0, 0, 20, 20] as [number, number, number, number] },
+      ],
+    };
+    expect(countryAt(index, { lat: 4, lon: 4 })).toBe('BBB');
+    expect(countryAt(index, { lat: 12, lon: 12 })).toBe('AAA');
+    expect(countryAt(index, { lat: 40, lon: 4 })).toBeNull();
   });
 });
