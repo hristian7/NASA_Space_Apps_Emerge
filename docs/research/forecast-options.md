@@ -73,8 +73,8 @@ Researched 2026-11-14 under an 8-minute time box. Tags: `[V]` verified at a prim
 
 ## Not verified (open before the demo)
 
-- The exact WMS endpoint URLs and layer names for the EFFIS/GWIS forecast, and their licence terms.
-- The FWI class bounds 38 and 50.
+- ~~WMS layer names~~ **Verified 14 Nov `[V]`:** `https://maps.effis.emergency.copernicus.eu/gwis` (WMS GetCapabilities) lists 406 layers, including `ecmwf.fwi`, `ecmwf.ffmc`, `nasa_geos5.fwi`, `nasa_geos5.ffmc`, `mf025.fwi` and `mf025.ffmc`. Licence terms are still to check.
+- ~~FWI class bounds~~ **Checked `[V]`/`[D]`:** the EFFIS classes are <5.2, 5.2–11.2, 11.2–21.3, 21.3–38, 38–50 and ≥50. 50 counts as "extreme" by convention (Copernicus CEMS). A study finds these limits too low for Greece, so they vary by region.
 - The SEAS5 seasonal grid resolution.
 - Whether NIMH offers machine-readable data.
 - The ECMWF PoF verification numbers against FWI (the paper is in Nature Communications, 2025).
@@ -91,3 +91,7 @@ Researched 2026-11-14 under an 8-minute time box. Tags: `[V]` verified at a prim
 - NIFC outlooks: https://www.nifc.gov/nicc/predictive-services/outlooks · https://www.nifc.gov/sites/default/files/document-media/7-Day_Product_Description.pdf · https://fsapps.nwcg.gov/psp/arcgis/rest/services/npsg/Outlooks_Monthly_Extended/MapServer
 - FWI classes: https://confluence.ecmwf.int/spaces/CEMS/pages/340779714/User+Guide+for+Fire+danger+indices+historical+data+from+the+Copernicus+Emergency+Management+Service · https://data.effis.emergency.copernicus.eu/effis/reports-and-publications/effis-related-publications/Camia_and_Amatulli_2010__ICFFR-2010_B04.pdf
 - Bulgaria (news): https://bnr.bg/en/post/100848492/extreme-fire-danger-across-bulgaria-announced
+
+> **Priority note (14 Nov):** feature priorities are decided in [`../../specs/features-moscow.md`](../../specs/features-moscow.md), which overrides the MoSCoW table above.
+> - "Chance of fire this month" is a **Must** there (M13).
+> - Push alerts are a **Could** there (C1), because the team wants notifications. This note's "Won't" reflects the extra risk and time.

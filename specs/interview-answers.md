@@ -49,7 +49,7 @@ The team's answers to [`interview-questions.md`](interview-questions.md), summar
 
 | # | Option | Fair? | Note |
 |---|---|---|---|
-| 1 | Raw counts per sensor | ❌ | VIIRS always looks 3–5× worse `[D]`. Misleading |
+| 1 | Raw counts per sensor | ❌ | VIIRS always looks about 3–6× worse (Bulgaria about 2.7–3.9×, Punjab 4.8–6.5×) `[D]`. Misleading |
 | 2 | **Fire cell-days:** count each small grid cell (about 1 km) once per day if it had any detection | ✅ | Removes most of the pixel-size difference; simple and robust |
 | 3 | Coarse cell-days (about 10 km cells) | ✅ | Even fairer, but loses local detail |
 | 4 | Fire energy (sum of FRP) instead of counts | ◑ | More physical, but small fires add little energy and VIIRS sees more small fires |
@@ -91,7 +91,7 @@ These are rough estimates with AI coding agents `[U]`, not yet researched.
 | Version | Extra time vs a plain mobile-friendly web app |
 |---|---|
 | **Installable PWA** (add to home screen, fast start, offline shell) | **about +5–10%** of front-end time (about 1–2 hours) |
-| **PWA with push notifications** (alerts for danger areas) | **about +25–35%** more. It needs a notification server, subscriptions stored per location, and testing on iPhone, which only allows push for apps added to the home screen |
+| **PWA with push notifications** (alerts for danger areas) | **about +25–35%** more. It needs a notification server, subscriptions stored per location, and testing on iPhone. **iPhone limits** `[V]` ([WebKit](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/)): push works only on iOS/iPadOS 16.4+, only after the user adds the app to the home screen, only with a web app manifest, and the permission request must follow a tap |
 
 **Recommendation:** build an installable PWA (cheap). Push alerts stay a Could-have (feature C1 in [`features-moscow.md`](features-moscow.md)).
 
@@ -114,3 +114,13 @@ The team chose to do these later; no research has been started:
 - **Add our own "historical chance of fire this month"**, checked on held-out years.
 - **Label it** "Risk outlook (unofficial)".
 - **Caveat:** most of its numbers are `[D]`, from search summaries.
+
+## Corrections after the double-check (14 Nov, afternoon)
+
+1. **D3 ratio:** VIIRS is about 3–6× MODIS (Bulgaria about 2.7–3.9×, Punjab 4.8–6.5×) `[D]`. It earlier said 3–5×.
+2. **FIRMS area API:** 1–5 days per call `[V]`. `firms-data.md` earlier said 1–10.
+3. **B4 iPhone push limits** are now verified at WebKit `[V]`.
+4. **Forecast products verified `[V]`:**
+   - The Copernicus GWIS map service has the fire weather index layers `ecmwf.fwi` and `nasa_geos5.fwi`, among 406 layers, checked by GetCapabilities on 14 Nov.
+   - The EFFIS danger classes are confirmed (from <5.2 very low to ≥50 extreme). 50 is a convention, and a Greek study finds the classes too low for Greece.
+5. **Priority conflict fixed:** the forecasting note put "chance of fire from history" as Must and push alerts as Won't, while the feature list had them as Should and Could. The feature list (`features-moscow.md`) is now the single authority; see its note.

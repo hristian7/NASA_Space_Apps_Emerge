@@ -44,7 +44,7 @@ https://firms.modaps.eosdis.nasa.gov/data/country/<folder>/<year>/<folder>_<year
 ### 2. Recent and 2026 data (free MAP_KEY)
 
 - **Key:** register by email at https://firms.modaps.eosdis.nasa.gov/api/map_key/ `[V]`.
-- **Area API:** `…/api/area/csv/<MAP_KEY>/<SOURCE>/<west,south,east,north>/<days 1-10>/<YYYY-MM-DD>` `[D]` (from the FIRMS documentation; not tested with a real key).
+- **Area API:** `…/api/area/csv/<MAP_KEY>/<SOURCE>/<west,south,east,north>/<DAY_RANGE 1-5>/<YYYY-MM-DD>` returns data for that date plus `DAY_RANGE − 1` days `[V]` ([FIRMS API page](https://firms.modaps.eosdis.nasa.gov/api/area/), checked 14 Nov). Not yet tested with a real key. Long histories need many calls, so use the yearly files for 2000–2025.
 - **Sources:** `MODIS_NRT`, `VIIRS_NOAA20_NRT`, `VIIRS_NOAA21_NRT`.
   - Don't use `VIIRS_SNPP_NRT`: it ended on 2 Nov 2026 `[V]`.
 - **Limit:** about 5,000 calls per 10 minutes `[D]`.

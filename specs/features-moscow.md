@@ -8,6 +8,8 @@
 
 **Effort** (with AI coding agents) `[U]`: **S** = 1–2 hours · **M** = 3–5 hours · **L** = 6+ hours.
 
+**This file is the single authority on feature priority.** Research notes may suggest different priorities; changes are made here.
+
 **Team: tick the features you want.** The recommended cut for about 24 hours is all the Musts plus the Shoulds marked ⭐.
 
 Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](interview-answers.md)). The research files are linked where a feature depends on them.
@@ -28,6 +30,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M10 | **Public web address** | The app runs online (a virtual machine or Vercel) at a link judges can open. It's required for submission | S |
 | M11 | **Data download** | Download the data behind what you see (CSV). The columns depend on the dataset and are explained in the file | S |
 | M12 | **Tests on the main paths** | Automatic tests for the things users do most: select an area, load the calendar, convert numbers, download. They check against expected answers written before the code | M |
+| M13 | **"Chance of fire this month" from history** | For any area, how often fires happened in this month over 25 years, as a probability with a certainty range. It's the honest core of the team's "forecast" wish: checkable on past years (Brier score and a calibration chart) and built on our harmonized data. **Moved up from Should** after the double-check | S–M |
 
 ## Should have
 
@@ -35,8 +38,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 |---|---|---|---|
 | S1 ⭐ | **3D globe view** | A spinning Earth like Google Earth, with fires and risk zones on it. It's the "wow" for judges and the world overview the team wants. The 2D map stays as the fast fallback | M–L |
 | S2 ⭐ | **Worldwide coverage** | Any country on Earth, not just Bulgaria and the USA. Needs either big downloads processed on a server or small ready-made global grids. Time cost about +3–5 hours `[U]`; see interview answer C1 | M–L |
-| S3 ⭐ | **Fire-risk outlook (official forecasts)** | Shows the next days' fire danger from official forecast services as coloured risk zones with levels, like a weather map. We display trusted forecasts rather than inventing our own. Details: [`../docs/research/forecast-options.md`](../docs/research/forecast-options.md) | M |
-| S4 ⭐ | **"Chance of fire this month" from history** | For any area, how often fires happened in this month over 25 years, as a probability with a certainty range. It's honest, checkable and built on our harmonized data | S–M |
+| S3 ⭐ | **Fire-risk outlook (official forecasts)** | Shows the next days' fire danger from official forecasts as coloured risk zones with levels, like a weather map. Sources: worldwide from Copernicus GWIS (fire weather index map layers `ecmwf.fwi` and `nasa_geos5.fwi` `[V]`), and USA from the NIFC 4-month outlook. We display and credit trusted forecasts rather than inventing our own. Details: [`../docs/research/forecast-options.md`](../docs/research/forecast-options.md) | M |
 | S5 ⭐ | **Recent fires (last 24 h / 7 days)** | The latest NASA detections on the map, so the app shows today, not only history | S |
 | S6 ⭐ | **Hazard-style navigation** | A layer menu like everydayweather.com/lab/hazards: switch between History, Recent fires, Risk outlook and Calendar. Clean and familiar | M |
 | S7 | **Installable app (PWA)** | People can add Emerge to their phone's home screen like an app, and it opens quickly. Extra time about +5–10% `[U]`; see interview answer B4 | S–M |
@@ -48,7 +50,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 
 | # | Feature | What it is (plain language) | Effort |
 |---|---|---|---|
-| C1 | **Push alerts for people in danger areas** | Phone notifications when the risk near your saved location becomes high. Needs the PWA plus a server that sends messages; iPhones only allow this for apps added to the home screen | M–L |
+| C1 | **Push alerts for people in danger areas** | Phone notifications when the risk near your saved location becomes high. It needs the PWA plus a server that sends messages. On iPhones it works only for apps added to the home screen, iOS 16.4+ `[V]`. Wording must never copy official warnings | M–L |
 | C2 | **Our own forecast model** | A model that predicts fire chance from weather and history, checked on past years with standard scores. Only credible if it beats the simple historical chance (S4) | L |
 | C3 | **Second source of truth** | Compare our record with Europe's EFFIS (for Bulgaria) or US fire records (for the USA) to show they agree | M |
 | C4 | **Data before 2000 or from more satellites** | Older sensors (AVHRR, ATSR) or other satellites (Sentinel-3, geostationary) to extend or densify the record. Depends on the data research | L |
@@ -67,6 +69,6 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 
 ## Recommended cut for about 24 hours `[U]`
 
-- **Core:** all 12 Musts, plus S1 (globe), S3 (official risk outlook), S4 (chance from history), S5 (recent fires) and S6 (navigation).
+- **Core:** all 13 Musts, plus S1 (globe), S3 (official risk outlook), S5 (recent fires) and S6 (navigation).
 - **If on track by Sunday 09:00:** add S7 (PWA) and S8 (advice).
 - **First to cut if late:** S2 (worldwide, falling back to Bulgaria and USA plus a few countries), then S1 (falling back to a 2D map).

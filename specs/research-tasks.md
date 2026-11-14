@@ -52,17 +52,18 @@ Rank **20** stack options from best to worst. Score each 1–5 on: polish and wo
 
 **Also:**
 - **Check the navigation:** describe the pattern of https://everydayweather.com/lab/hazards.
-- **Confirm the PWA estimate:** the guess is +5–10% for installable and +25–35% with push (interview B4).
+- **Confirm the PWA estimate:** the guess is +5–10% for installable and +25–35% with push (interview B4). The iPhone push limits are already verified (interview B4).
 - **Starter repos:** list open-source repos we could start from.
 
 ## 4. Forecasting: done, needs verification
 
 A first pass exists: [`../docs/research/forecast-options.md`](../docs/research/forecast-options.md).
 - **Recommendation:** show official forecasts (Copernicus GWIS/EFFIS for 1–9 days; the NIFC 4-month outlook for the USA). Add our own "historical chance of fire this month", checked on held-out years. Label it "Risk outlook (unofficial)".
-- **Still to verify** (most numbers there are `[D]`):
-  - the GWIS/EFFIS WMS layer names;
-  - the Fire Weather Index class limits;
-  - whether Bulgaria's weather service (NIMH) offers machine-readable fire-danger data.
+- **Verified 14 Nov:** the GWIS map layer names and the Fire Weather Index class limits.
+- **Still to verify:**
+  - GWIS licence terms;
+  - the exact NIFC outlook query (`Outlooks_Monthly_Extended` service, Month1–Month4 layers, GeoJSON output `[D]`);
+  - whether Bulgaria's NIMH offers machine-readable fire-danger data.
 
 ## Still waiting on the team
 
