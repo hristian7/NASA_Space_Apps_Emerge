@@ -171,6 +171,25 @@ def selection_scores(con, selection, year, has_model=False):
                             'reliability': [{'bin': b, 'n': count, 'predicted': p, 'observed': obs}
                                             for b,count,p,obs in bins]})
     result['probability'] = probability
+    # Keep the registered fire-positive-day metric above and separately show
+    # calibration across every scored day, including days without new fires.
+    # This also makes the independent oracle's alternate population visible.
+    n_all, brier_all, history_all = con.execute("""
+      SELECT count(*), avg(pow(p-(label='new')::INTEGER,2)),
+             avg(pow(hist_p-(label='new')::INTEGER,2)) FROM ranked
+    """).fetchone()
+    all_days = {'n': n_all, 'history_brier': history_all,
+                'history_brier_skill': 0.0 if history_all else None}
+    if has_model:
+        bins_all = con.execute("""
+          SELECT least(9,floor(p*10)::INTEGER), count(*), avg(p), avg((label='new')::INTEGER)
+          FROM ranked GROUP BY 1 ORDER BY 1
+        """).fetchall()
+        all_days.update({'brier': brier_all,
+                         'brier_skill': 1-brier_all/history_all if history_all else None,
+                         'reliability': [{'bin': b, 'n': count, 'predicted': p, 'observed': obs}
+                                         for b,count,p,obs in bins_all]})
+    result['probability_all_scored_days'] = all_days
     return result
 
 

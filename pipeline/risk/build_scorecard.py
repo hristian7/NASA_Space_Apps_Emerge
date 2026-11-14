@@ -31,7 +31,7 @@ def main():
                      'The test ranks the top five land spots per region and day [U].',
                      'Weather gaps and null scores remain visible in the coverage counts [V].',
                      'Majority land classes are not fuel shares; no NDVI input was available [V].',
-                     'Reliability and Brier skill use scored spots on fire-positive region-days [U].',
+                     'Registered reliability and Brier skill use scored spots on fire-positive region-days [U]. Additional all-scored-day results include no-fire days [U].',
                      'The world and Europe tests use the same single held-out prediction run [V].']}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     tmp = args.out.with_suffix('.tmp')
