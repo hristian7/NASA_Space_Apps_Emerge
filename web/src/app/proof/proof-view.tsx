@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ValidationFile } from "@/types/data";
 import { getValidation } from "@/lib/data/api";
 import ProofTables from "./tables";
+import RiskScorecardSection from "./risk-scorecard";
 
 /**
  * Reads the committed validation file and hands it to the tables. The file is
@@ -54,6 +55,7 @@ export default function ProofView() {
         </p>
       ) : null}
       <p>{t("builtOn", { date: validation.built })}</p>
+      <RiskScorecardSection />
       <ProofTables validation={validation} t={t} />
     </>
   );
