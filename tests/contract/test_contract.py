@@ -303,41 +303,128 @@ def test_null_means_no_measurement_not_zero():
 # reported/<ISO3>.json
 # ---------------------------------------------------------------------------
 
-VERIFIED_REPORTED = {
-    ("BGR", 2024): {"fires": 133, "burned_ha": 44745},
-    ("USA", 2024): {"fires": 64897, "burned_ha": None},
+REPORTED_KINDS = {"national_report", "satellite_estimate"}
+
+# The addresses that say which source a series came from, and the only kind of
+# series each of those sources can carry. An agency's estimate from mapping
+# burned areas in satellite images is never a national report, however the
+# figures are presented.
+REPORTED_FAMILIES = {
+    "effis.statistics/estimates": ("effis_estimate", "satellite_estimate"),
+    "gwis.statistics/estimates": ("gwis_estimate", "satellite_estimate"),
+    "api2.effis.emergency.copernicus.eu": ("agency_estimate", "satellite_estimate"),
+    "nifc.gov/fire-information/statistics": ("nifc", "national_report"),
+    "doi.org/10.2760/0649290": ("annual_report", "national_report"),
 }
+
+# Figures verified at the publishing authority, each under the label that says
+# what it really is. The label is part of the check: EFFIS's 133 fires for
+# Bulgaria in 2024 is its own satellite estimate, not what Bulgaria reported.
+VERIFIED_REPORTED = {
+    ("BGR", "effis_estimate", 2024): {"fires": 133, "burned_ha": 44745},
+    ("BGR", "annual_report", 2024): {"fires": 595, "burned_ha": 17116.4},
+    ("USA", "nifc", 2024): {"fires": 64897, "burned_ha": 3611772.4},
+}
+
+
+def reported_source_of(url: str) -> tuple[str, str | None]:
+    """The source a series came from, and the only kind that source can carry."""
+    for mark, (family, kind) in REPORTED_FAMILIES.items():
+        if mark in url:
+            return family, kind
+    return "other", None
+
+
+def reported_family(url: str) -> str:
+    return reported_source_of(url)[0]
+
+
+def check_reported(doc, iso3: str) -> set[str]:
+    """Every rule section 6 of the contract states. Returns the kinds found."""
+    assert doc["schema"] == "emerge-reported-2"
+    assert doc["iso3"] == iso3
+    assert doc["scope"] == "national"
+    assert doc["units"] == {"fires": "count", "burned_ha": "hectares"}
+    assert doc["kind"] in REPORTED_KINDS, f"{iso3}: unknown kind {doc['kind']}"
+
+    series = doc["series"]
+    assert series, f"{iso3}: no series at all"
+    first = series[0]
+    assert first["kind"] == doc["kind"], f"{iso3}: the file's kind is not its first series'"
+    assert first["source"] == doc["source"], f"{iso3}: source is not the first series'"
+    assert first["years"] == doc["years"], f"{iso3}: years are not the first series'"
+
+    kinds = {s["kind"] for s in series}
+    assert kinds <= REPORTED_KINDS, f"{iso3}: unknown kind in series"
+    if "national_report" in kinds:
+        assert doc["kind"] == "national_report", (
+            f"{iso3}: a national report exists, so it must be the primary series"
+        )
+
+    for s in series:
+        src = s["source"]
+        assert src["name"], f"{iso3}: a series must name its source"
+        assert isinstance(src["url"], str) and src["url"].startswith("https://"), (
+            f"{iso3}: a series must carry the address it was fetched from"
+        )
+        assert isinstance(src["fetched"], str) and len(src["fetched"]) == 10, (
+            f"{iso3}: a series must carry the date it was fetched"
+        )
+        assert src["licence"], (
+            f"{iso3}: a series must carry the licence or terms the source states"
+        )
+        assert src["note"], f"{iso3}: a series must carry its caveat"
+
+        family, want_kind = reported_source_of(src["url"])
+        if want_kind is not None:
+            assert s["kind"] == want_kind, (
+                f"{iso3}: {family} figures are {want_kind}, not {s['kind']}"
+            )
+
+        lo, hi = src["covers"]
+        assert lo <= hi
+        assert [r["y"] for r in s["years"]] == list(range(lo, hi + 1)), (
+            f"{iso3}: the years must run from {lo} to {hi} with no gaps"
+        )
+        for rec in s["years"]:
+            assert rec["fires"] is None or is_whole(rec["fires"]), (
+                f"{iso3} {rec['y']}: a fire count must be whole or null"
+            )
+            for field in ("fires", "burned_ha"):
+                value = rec[field]
+                assert value is None or (
+                    isinstance(value, (int, float)) and not isinstance(value, bool)
+                    and value >= 0
+                ), f"{iso3} {rec['y']}: {field} must be a figure of zero or more, or null"
+            want = VERIFIED_REPORTED.get((iso3, family, rec["y"]))
+            if want is not None:
+                assert rec["fires"] == want["fires"], (
+                    f"{iso3} {rec['y']} {family}: fires changed from the verified figure"
+                )
+                assert rec["burned_ha"] == want["burned_ha"], (
+                    f"{iso3} {rec['y']} {family}: burned area changed from the "
+                    "verified figure"
+                )
+    return kinds
 
 
 @pytest.mark.parametrize("path", sorted((DATA / "reported").glob("*.json")), ids=lambda p: p.stem)
 def test_reported_file(path: Path):
     doc = read_json(path)
-    assert doc["schema"] == "emerge-reported-1"
-    assert doc["example"] is True, (
-        "the reported figures are the two verified ones and stay flagged as an "
-        "example until the rest are fetched"
-    )
-    assert doc["scope"] == "national"
-    assert doc["units"] == {"fires": "count", "burned_ha": "hectares"}
-    src = doc["source"]
-    assert src["name"], "a reported file must name its source"
-    lo, hi = src["covers"]
-    assert lo < hi
-    assert src["note"], "a reported file must carry its caveat"
-
-    years = doc["years"]
-    assert [r["y"] for r in years] == list(range(lo, hi + 1))
-    for rec in years:
-        want = VERIFIED_REPORTED.get((path.stem, rec["y"]))
-        if want is None:
-            assert rec["fires"] is None, f"{path.stem} {rec['y']}: invented a fire count"
-            assert rec["burned_ha"] is None, f"{path.stem} {rec['y']}: invented a burned area"
-        else:
-            assert rec["fires"] == want["fires"]
-            assert rec["burned_ha"] == want["burned_ha"]
-        for field in ("fires", "burned_ha"):
-            if rec[field] is not None:
-                assert is_whole(rec[field]) and rec[field] >= 0
+    check_reported(doc, path.stem)
+    if doc["example"]:
+        # An example file carries only the figures verified at the authority.
+        for s in doc["series"]:
+            family = reported_family(s["source"]["url"])
+            for rec in s["years"]:
+                if (path.stem, family, rec["y"]) in VERIFIED_REPORTED:
+                    continue
+                assert rec["fires"] is None, (
+                    f"{path.stem} {rec['y']}: invented a fire count"
+                )
+                assert rec["burned_ha"] is None, (
+                    f"{path.stem} {rec['y']}: invented a burned area"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -1094,12 +1181,29 @@ def test_world_validation_and_reported():
     assert doc["method"]["tested_countries"], "the proof page must say which countries were tested"
     for entry in doc["holdout"]:
         assert entry["scope"] in VALIDATION_SCOPES
-    # The reported figures are the two verified ones whatever the export.
-    for iso3, year in VERIFIED_REPORTED:
-        rows = {r["y"]: r for r in read_json(WORLD / "reported" / f"{iso3}.json")["years"]}
-        want = VERIFIED_REPORTED[(iso3, year)]
-        assert rows[year]["fires"] == want["fires"]
-        assert rows[year]["burned_ha"] == want["burned_ha"]
+    # Every reported file in the export obeys section 6, and the figures
+    # verified at the publishing authority are unchanged.
+    files = sorted((WORLD / "reported").glob("*.json"))
+    assert files, "the export wrote no reported files"
+    national = 0
+    for path in files:
+        doc = read_json(path)
+        assert doc["example"] is False, f"{path.stem}: fetched figures are not an example"
+        kinds = check_reported(doc, path.stem)
+        if "national_report" in kinds:
+            national += 1
+    assert national >= 2, "at least the USA and Bulgaria have a national report"
+    checked = set()
+    for path in files:
+        for s in read_json(path)["series"]:
+            family = reported_family(s["source"]["url"])
+            for rec in s["years"]:
+                if (path.stem, family, rec["y"]) in VERIFIED_REPORTED:
+                    checked.add((path.stem, family, rec["y"]))
+    assert checked == set(VERIFIED_REPORTED), (
+        "the export is missing a series that holds a verified figure: "
+        f"{sorted(set(VERIFIED_REPORTED) - checked)}"
+    )
 
 
 @world_only

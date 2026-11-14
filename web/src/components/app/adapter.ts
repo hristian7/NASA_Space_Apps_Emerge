@@ -340,3 +340,37 @@ export function lastCompleteMonth(lastDataDay: string): MonthKey | null {
   if (d >= daysInMonth(y, m)) return { y, m };
   return m === 1 ? { y: y - 1, m: 12 } : { y, m: m - 1 };
 }
+
+/**
+ * The record's own provenance line, built from meta: when the data stops, the
+ * sensor families behind it, and the conversion that harmonized them. Nothing
+ * is typed into the sentence.
+ */
+export function provenance(meta: {
+  last_data_day: string;
+  sources: { id: string; name: string }[];
+  conversion?: { model?: string | null };
+}): { date: string; sensors: string; model: string } {
+  const families: string[] = [];
+  for (const source of meta.sources) {
+    if (source.id.startsWith("reported-")) continue;
+    const family = source.name.split(/[\s,]/)[0];
+    if (family !== "" && !families.includes(family)) families.push(family);
+  }
+  return {
+    date: meta.last_data_day,
+    sensors: families.join(", "),
+    model: meta.conversion?.model ?? "",
+  };
+}
+
+/**
+ * Which past years the comparison for one month actually used: the same months
+ * before `y` that carry a measurement, which is the history the rule takes.
+ */
+export function historyYears(series: Series, y: number, m: number): number[] {
+  return series.months
+    .filter((point) => point.m === m && point.y < y && point.value !== null)
+    .map((point) => point.y)
+    .sort((a, b) => a - b);
+}

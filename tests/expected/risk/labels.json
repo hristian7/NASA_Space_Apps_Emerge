@@ -1,0 +1,740 @@
+{
+  "cases": [
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "new",
+      "name": "new",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -1,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "continuing",
+      "name": "continuing same",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            0,
+            0
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "continuing",
+      "name": "continuing diagonal D-2",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -3,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "new",
+      "name": "three days earlier",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "S-NPP",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-21",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": null,
+      "name": "other satellites ignored",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "l",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": null,
+      "name": "low confidence ignored",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": true
+        }
+      ],
+      "expected": null,
+      "name": "static source ignored",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -1,
+          "satellite": "NOAA-21",
+          "spot": [
+            0,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "l",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            0
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -1,
+          "satellite": "NOAA-20",
+          "spot": [
+            2,
+            1
+          ],
+          "static_source": true
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "new",
+      "name": "ignored earlier detections",
+      "target_spot": [
+        1,
+        1
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -1,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            3
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            0
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "continuing",
+      "name": "wrap neighbour",
+      "target_spot": [
+        1,
+        0
+      ]
+    },
+    {
+      "detections": [
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            0,
+            0
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            0,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            0,
+            2
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            0
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            2
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            2,
+            0
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            2,
+            1
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": -2,
+          "satellite": "NOAA-20",
+          "spot": [
+            2,
+            2
+          ],
+          "static_source": false
+        },
+        {
+          "confidence": "n",
+          "day": 0,
+          "satellite": "NOAA-20",
+          "spot": [
+            1,
+            1
+          ],
+          "static_source": false
+        }
+      ],
+      "expected": "continuing",
+      "name": "all eight neighbours",
+      "target_spot": [
+        1,
+        1
+      ]
+    }
+  ],
+  "day_offsets": "D = 0; offsets are UTC days",
+  "grid": {
+    "columns": 4,
+    "longitude_wrap": true,
+    "rows": 3
+  },
+  "neighbour_probes": [
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          1
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          2
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          2
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          1
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -1,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          2
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          1
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          0,
+          2
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          2
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          0
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          1
+        ],
+        "static_source": false
+      }
+    },
+    {
+      "current_detection": {
+        "confidence": "n",
+        "day": 0,
+        "satellite": "NOAA-20",
+        "spot": [
+          1,
+          1
+        ],
+        "static_source": false
+      },
+      "expected": "continuing",
+      "prior_detection": {
+        "confidence": "n",
+        "day": -2,
+        "satellite": "NOAA-20",
+        "spot": [
+          2,
+          2
+        ],
+        "static_source": false
+      }
+    }
+  ]
+}

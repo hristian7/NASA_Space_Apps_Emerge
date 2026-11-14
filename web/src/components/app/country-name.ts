@@ -1,24 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { loadCountryIndex } from "@/lib/data/api";
+import { localizedCountryName } from "./country-codes";
 
 /**
  * The name of a country in the reader's language.
  *
- * The message files carry a translated name only for the countries the team
- * has written out. The data set holds 235, so everything else falls back to
- * the English name in the country index, which is a real name rather than a
- * three letter code. Asking next-intl for a key it does not hold logs an
- * error and prints the key, so the message file is only read when it has one.
+ * The browser already knows every country's name in both languages, so it is
+ * asked first and nothing is translated by hand. A code it has no name for
+ * falls back to the English name in the data set's country index, which is a
+ * real name rather than a three letter code.
  */
 export function useCountryName(iso3: string | null): string {
-  const names = useTranslations("country");
+  const locale = useLocale();
+  const fromBrowser =
+    iso3 === null ? null : localizedCountryName(iso3, locale);
   const [fallback, setFallback] = useState<string | null>(null);
 
   useEffect(() => {
-    if (iso3 === null || names.has(iso3)) {
+    if (iso3 === null || fromBrowser !== null) {
       setFallback(null);
       return;
     }
@@ -36,9 +38,8 @@ export function useCountryName(iso3: string | null): string {
     return () => {
       live = false;
     };
-  }, [iso3, names]);
+  }, [iso3, fromBrowser]);
 
   if (iso3 === null) return "";
-  if (names.has(iso3)) return names(iso3);
-  return fallback ?? iso3;
+  return fromBrowser ?? fallback ?? iso3;
 }

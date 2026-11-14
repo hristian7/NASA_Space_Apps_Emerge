@@ -1,0 +1,19 @@
+{
+  "engine_ready": false,
+  "example": true,
+  "model_version": "hand-made-example",
+  "made_at": "2026-11-14T21:00:00Z",
+  "grid_g": 0.1,
+  "days": {
+    "today": "2026-11-14",
+    "tomorrow": "2026-11-15"
+  },
+  "fire_weather_run": "2026-11-12",
+  "sources": [
+    {
+      "name": "Hand-made examples [U], not measured data",
+      "url": "/risk?risk=example",
+      "date": "2026-11-14"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 Written Sat 14 Nov 2026, 17:30 EET, after reading the whole repo. This is the **execution plan** for the build computer. It does not replace [`../../specs/specification.md`](../../specs/specification.md) (the master plan) or [`../../specs/features-moscow.md`](../../specs/features-moscow.md) (feature priority). Where this file and the spec disagree, section 1 below says which one to change.
 
+**Plan 2 (next-day fire risk, approved 14 Nov night)** has its own build spec and lanes: [`../../specs/plan-2-fire-risk/specification.md`](../../specs/plan-2-fire-risk/specification.md), section 11. It shares this computer and these checkpoints.
+
 **Tags:** `[V]` verified at a primary source or measured by us · `[D]` directional · `[U]` our inference.
 
 ---
@@ -200,3 +202,99 @@ Each checkpoint gets a short, plain report: what is done, what is late, what was
 | No land-type map without a login | Spike (e); fallback is region x latitude band x month for the whole world |
 | 2026 data needs firms-catalog over the network | Start it early in the pipeline lane; the app says "data to Dec 2025" until then |
 | The query function does not run on Vercel | Fallback in the spec: a small static points file for Bulgaria and the USA |
+
+---
+
+## 8. Night 2: plan 2 and the next build (written Sat 14 Nov, 23:00)
+
+Plan 1 is live (handoff of 22:30). This section turns plan 2's build spec ([`../../specs/plan-2-fire-risk/specification.md`](../../specs/plan-2-fire-risk/specification.md)) into the order of work for the rest of the night. The spec stays the authority for scope, data, engine, proof and the file contract (its sections 2 to 10). This section only re-times its section 11, records where we build differently, and adds the map layers and the design track.
+
+### 8.1 Where we stand
+
+| Item | Status |
+|---|---|
+| M36 real official fire numbers | **Landed** (national reports and satellite estimates under their own labels, 32 countries). Second-agent row check still owed (spec 9) |
+| M37 date and source by the first result | **Landed** (data date line). Check each live layer shows its own date |
+| M38 comparison years | **Landed**. Check the three cases in spec 9 have tests |
+| M39 plain verdict on the proof page | **Landed** |
+| S16 fire heat, S17 season-so-far chart | Not started; S17 is first on the cut list |
+| Plan 1 gap M4 (calendar month click shows that month on the map) | Not started; design track |
+| Plan 1 gap M13 (score "chance of fire") | **Cut for the event**: keep the "not scored yet" wording |
+| Fire-weather forecasts 2024 to 2025 at lead +3 | **Downloading since 22:50** (731 daily files, about 12 GB `[U]`) into the git-ignored `data/raw/gfwed/`. The archive has one file per run and valid day, `FWI.GEOS-5.Daily.Default.<run>00.<valid>.nc` `[V]`, so lead +3 means run = valid day minus 3. This answers most of spike (b) |
+| Plan 2 engine, screens, contract | Not started |
+
+### 8.2 Decisions D-10 to D-17
+
+Taken as proposed in spec section 13, unless the team says otherwise by 00:30: develop at 0.25°, ship at 0.1° (D-10); NASA GFWED for past and live (D-11); train 2021 to 2023, validate 2024, test 2025 (D-12); forest and wildland by default (D-13); top 5 scored, top 10 shown (D-14); "new fire" = none in the spot or its neighbours on the 2 days before (D-15); Bulgaria shows both counts, named (D-16); land cover from MCD12C1 (D-17), **if the Earthdata login exists by 00:30**; otherwise the no-login 500 m mosaic is used for the build and kept out of the repo, and the licence question goes to the team.
+
+### 8.3 Where this night builds differently from spec section 11
+
+| Spec | Tonight | Why |
+|---|---|---|
+| Daily job on a schedule uploads to the Blob store | **For the demo, tomorrow's predictions are written once as static files** in `web/public/data/risk/`, the way plan 1's data ships. The scheduled job and Blob come after the freeze, when the token and secrets exist | Removes two account steps from the critical path; plan 1 already proved static files deploy (section 2, D-9). The app reads the same section 8 file shapes either way |
+| One engine, built by this build | **The engine slot is open to any model.** Our pipeline builds labels, inputs, baselines, the test rules and the scorer; version 1 (logistic regression) is our fallback. A teammate's model plugs in through 8.5 and replaces version 1 only if it wins on the validation year under the same rules | A teammate is training a model tonight; two models scored by one referee is better than two referees |
+| Raw weather only for "why this spot" and wind arrows | **Also shown as map layers** (8.6) | Asked by the team: wind, soil moisture, temperature and plant type must be visible |
+| Checkpoints R0 23:30 to R3 08:00 | Re-timed below | R0 has passed |
+
+### 8.4 Order of work and checkpoints (Sofia time)
+
+| When | Evidence that must exist |
+|---|---|
+| **Sun 00:30 · R0** | Spikes (a), (c), (d), (e) answered in [`spike-results.md`](spike-results.md), 5 lines each; contract frozen: `web/src/types/risk.ts` plus example files for Bulgaria and one US state, made from spec section 8; placeholder screen renders on them; `pipeline/risk/PROTOCOL.md` committed; expected answers for spec section 9 written and failing |
+| **Sun 02:30 · R0.5** | Labels built; baselines (fire-weather index, history, random) scored end to end at 0.25° for Europe; risk screen and "Tomorrow's risk here" card working on the example files; new map layers listed in 8.6 showing. **If the baselines are not scored by now, plan 2 ships the placeholder and the baseline scorecard only** (spec 11.3) |
+| **Sun 05:00 · R1** | Version 1 trained; Europe hold-out in `scorecard.json`; any teammate model scored under the same protocol; risk texts frozen in English and Bulgarian |
+| **Sun 07:00 · R2** | Tomorrow's predictions as static files (Europe at least, world if the run fits); `engine_ready` true only if the test passed; everything merged and checked on the public address |
+| **Sun 08:00 · R3** | Freeze with plan 1's CP4 |
+
+Cut order if late: the spec's list (S17, S12, S13, version 2, the 0.1° run, world hold-out), then S16.
+
+### 8.5 How an outside model plugs in
+
+Any model, from this build or a teammate, is scored and shipped the same way:
+
+1. **Rules it must follow** (they are what make the score fair): the label in spec section 3 (NOAA-20 only, the neighbour rule); data cutoff at the end of D−2; training days before 1 Jan 2024; settings chosen on 2024; 2025 used once, for the test; history inputs from earlier years only.
+2. **What it hands over:** one Parquet or CSV file per run with the columns `grid_g`, `spot_id` (spec section 3 formula), `day` (UTC date), `p` (0 to 1, or empty for no data). Optional: one column per input with that input's contribution to the score, for "why this spot".
+3. **Two runs:** every land spot for every day of 2025 (the test), and every land spot for tomorrow (the demo).
+4. **What we do with it:** `pipeline/risk/backtest.py` scores it beside the baselines under `PROTOCOL.md`; `pipeline/risk/export_risk.py` turns the tomorrow file into the section 8 files. The app needs no change.
+
+The expected inputs (fire-weather parts, plant greenness, land cover, history features per spot and day) are written to `data/derived/risk/` by our pipeline, so a teammate's model can use them instead of building its own.
+
+### 8.6 Map layers for the drivers of fire
+
+Each one is an entry in the layer registry (M26) with its own date, units, source, licence and "no data" state. Display only: none of these change a number in the app.
+
+| Layer | Source (checked in spike (f), which this section adds) | Shows |
+|---|---|---|
+| NASA fire-weather index, the baseline | GWIS `nasa_geos5.fwi`, as the existing fire-danger layer | What the engine is compared with |
+| Wind speed and direction | A free forecast for the region in view, cached an hour (spec 5.4), as arrows | Today and tomorrow |
+| Air temperature | Same forecast, or a NASA GIBS tile layer if one is current | Today and tomorrow |
+| Soil moisture | A NASA GIBS SMAP tile layer, no key `[D]` | Latest available day, with its date |
+| Plant greenness against normal | A NASA GIBS vegetation-index tile layer `[D]`, or our own MOD13C2 difference | Latest month, with its date |
+| Forest, farmland or grass | Land-cover shares from the risk pipeline's grid, or a GIBS land-cover layer `[D]` | The fuel type behind S15 |
+
+Spike (f), 30 minutes: confirm which GIBS layers exist and are current for soil moisture, vegetation index, land cover and temperature, with their exact names, and that they show on the globe like the layers in spike (c).
+
+### 8.7 Lanes for tonight
+
+Same rules as section 4: one owner per folder, separate working copies, only the director merges, pull before every merge, every push asked first.
+
+| Lane | Builds | Owns |
+|---|---|---|
+| **Design** | Restores the parts of the original preview the team preferred; fixes from the team's review; M4; places the risk card in the report; S16 if time. Works on the example files, so it never waits for the pipeline | `web/src/components/shell/`, `map/`, `report/`, `selection/`, `ui/`, `web/src/styles/`, `globals.css`, `web/src/app/page.tsx`, `about/`, `web/messages/` except `risk.*` |
+| **Pipeline-risk** | Spikes (a), (c), (d), (e); fire weather to land-only Parquet; grid and regions; labels; `PROTOCOL.md`; baselines; version 1; hold-out; the plug-in interface (8.5); tomorrow's files | `pipeline/risk/`, `data/derived/risk/` (git-ignored) |
+| **Risk app and layers** | Contract types and example files; placeholder; fire-risk screen; `/api/risk` reading static files; "Tomorrow's risk here" card as a component; spike (f) and the layers in 8.6; risk texts | `web/src/app/risk/`, `web/src/components/risk/`, `web/src/lib/risk/`, `web/src/types/risk.ts`, `web/src/config/layers*`, `web/src/lib/layers/` (new files), `web/messages/risk.*.json`, `web/public/data/risk/` |
+| **Oracle** | Expected answers from spec section 9, before the code; never sees pipeline code | `tests/expected/risk/` |
+| **Docs** | README status, AI-usage rows, references for every new source, the fire-danger licence credit (D-4) | `README.md`, `docs/si-usage.md`, `docs/references.md` |
+| **Director** | Briefs, reviews, merges, the full gate, checkpoint reports | No feature code |
+
+**Where lanes touch the same files, and the rule for each:**
+
+| Shared file | Rule |
+|---|---|
+| `web/src/components/shell/layer-panel.tsx` (legends for new layers) | The risk lane adds legend blocks; the design lane restyles after. Merge risk first, design rebases |
+| `web/src/components/app/report-view.tsx` (where the risk card sits) | The risk lane ships the card as a component; the design lane adds the one line that places it |
+| `web/src/app/layout.tsx` | Design lane only |
+| `web/package.json` and the lockfile | No new packages without the owner's go |
+| `web/messages/*` | Risk texts live in their own `risk.en.json` and `risk.bg.json` |
+
+**Full gate before every push** (handoff of 22:30): in `web/` `npm test`, `npx tsc --noEmit`, `npm run build`, `npx playwright test`; at the root `pytest tests/contract -q` and the scorer self-test; plus the new `tests/expected/risk/` checks; then the privacy scan of the diff.

@@ -6,7 +6,7 @@ import type { TerraDraw } from "terra-draw";
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
-import { layer as layerById, layerUrl } from "@/config/layers";
+import { LAYERS, layerUrl } from "@/config/layers";
 import { CELL_DEG } from "@/lib/data/cell";
 import {
   countryBounds,
@@ -29,6 +29,7 @@ import {
   type HistoryCell,
   type RecentPoint,
 } from "@/lib/layers/overlay";
+import { useWindLayer } from "./wind-layer";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -42,8 +43,7 @@ type Props = {
   historyCells: HistoryCell[];
   /** Recent detections. Empty when the layer is off. */
   recentPoints: RecentPoint[];
-  /** The day the fire danger tiles show, or null when that layer is off. */
-  dangerDate: string | null;
+  rasterDates: Record<string, string>;
   onPickPoint: (lat: number, lon: number) => void;
   onPickRecent: (lat: number, lon: number) => void;
   onDrawArea: (ring: [lon: number, lat: number][]) => void;
@@ -55,8 +55,7 @@ const selectionSource = "emerge-selection";
 const fillLayer = "emerge-selection-fill";
 const lineLayer = "emerge-selection-line";
 const pointLayer = "emerge-selection-point";
-const dangerSource = "emerge-danger";
-const dangerLayer = "emerge-danger-tiles";
+
 
 function rasterStyle(id: string): StyleSpecification | string {
   const basemap = getBasemap(id) ?? getBasemap(defaultBasemapId) ?? basemaps[0];
@@ -128,14 +127,6 @@ function frameSelection(
   });
 }
 
-/** The tile source for one day of fire danger, or nothing when it is off. */
-function dangerTiles(date: string | null): string | null {
-  if (date === null) return null;
-  const definition = layerById("fire-danger");
-  if (definition === undefined) return null;
-  return layerUrl(definition.source, date);
-}
-
 export default function MapView({
   selection,
   basemapId,
@@ -143,7 +134,7 @@ export default function MapView({
   drawing,
   historyCells,
   recentPoints,
-  dangerDate,
+  rasterDates,
   onPickPoint,
   onPickRecent,
   onDrawArea,
@@ -167,11 +158,11 @@ export default function MapView({
   const overlay = useRef<{ setProps: (props: { layers: unknown[] }) => void } | null>(null);
   const pickRecent = useRef(onPickRecent);
   pickRecent.current = onPickRecent;
-  // The danger date is read inside the map's own style listener, which is not
-  // rebuilt when a prop changes.
-  const danger = useRef(dangerDate);
-  danger.current = dangerDate;
+  const rasters = useRef(rasterDates);
+  rasters.current = rasterDates;
   const paintDangerRef = useRef<(() => void) | null>(null);
+  const rasterKey = JSON.stringify(rasterDates);
+  useWindLayer(map, ready, Boolean(rasterDates.wind));
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
@@ -272,36 +263,16 @@ export default function MapView({
         // A new style wipes every source, so the tiles are put back the same
         // way the selection is.
         const paintDanger = () => {
-          const tiles = dangerTiles(danger.current);
-          if (tiles === null) {
-            if (instance.getLayer(dangerLayer) !== undefined) instance.removeLayer(dangerLayer);
-            if (instance.getSource(dangerSource) !== undefined) instance.removeSource(dangerSource);
-            return;
-          }
-          const definition = layerById("fire-danger");
-          if (instance.getSource(dangerSource) === undefined) {
-            instance.addSource(dangerSource, {
-              type: "raster",
-              tiles: [tiles],
-              tileSize:
-                definition?.source.kind === "tile_template" ? definition.source.tileSize : 256,
-              attribution: definition?.credit ?? "",
-            });
-          }
-          if (instance.getLayer(dangerLayer) === undefined) {
-            // Under the selection outline, so the chosen place stays readable.
-            const below = instance.getLayer(fillLayer) === undefined ? undefined : fillLayer;
-            instance.addLayer(
-              {
-                id: dangerLayer,
-                type: "raster",
-                source: dangerSource,
-                // Light enough that the coastline under it stays readable:
-                // the index's lowest class covers most of the world.
-                paint: { "raster-opacity": 0.42 },
-              },
-              below,
-            );
+          for (const definition of LAYERS.filter((entry) => entry.kind === "raster_tiles")) {
+            const source = `emerge-raster-${definition.id}`;
+            const layer = `${source}-tiles`;
+            if (instance.getLayer(layer)) instance.removeLayer(layer);
+            if (instance.getSource(source)) instance.removeSource(source);
+            const date = rasters.current[definition.id];
+            const tiles = date && layerUrl(definition.source, date);
+            if (!tiles || definition.source.kind !== "tile_template") continue;
+            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit });
+            instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, instance.getLayer(fillLayer) ? fillLayer : undefined);
           }
         };
         paintDangerRef.current = paintDanger;
@@ -375,6 +346,10 @@ export default function MapView({
           node.dataset.zoom = instance.getZoom().toFixed(2);
         };
         instance.on("moveend", publishCamera);
+        instance.on("error", (event) => {
+          const sourceId = (event as unknown as { sourceId?: string }).sourceId;
+          if (sourceId?.startsWith("emerge-raster-")) window.dispatchEvent(new CustomEvent("emerge-raster-error", { detail: sourceId.slice("emerge-raster-".length) }));
+        });
 
         instance.on("load", () => {
           publishCamera();
@@ -451,10 +426,8 @@ export default function MapView({
   useEffect(() => {
     const instance = map.current;
     if (instance === null || !ready) return;
-    if (instance.getLayer(dangerLayer) !== undefined) instance.removeLayer(dangerLayer);
-    if (instance.getSource(dangerSource) !== undefined) instance.removeSource(dangerSource);
     paintDangerRef.current?.();
-  }, [dangerDate, ready]);
+  }, [rasterKey, ready]);
 
   // What the history layer actually draws at this zoom. Merging is done here
   // rather than in the loader, because only the map knows how close the

@@ -472,28 +472,56 @@ def build_country_files(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     )
 
 
-# Only figures verified at the publishing authority go in. Everything else is
-# null: an example file must never invent a reported number.
+# Only figures verified at the publishing authority go in, each under the label
+# that says what it really is. Everything else is null: an example file must
+# never invent a figure. The real files come from pipeline/fetch_reported.py.
+#
+# kind "national_report"    what a national authority reported, by its own
+#                           definition of a fire and of burned area
+# kind "satellite_estimate" an agency's estimate from mapping burned areas in
+#                           satellite images. It misses small fires, so it is
+#                           not a report.
 REPORTED = {
     "BGR": {
+        "kind": "satellite_estimate",
         "source": {
-            "name": "EFFIS (European Forest Fire Information System)",
-            "url": None,
-            "fetched": None,
+            "name": "EFFIS (European Forest Fire Information System), estimates "
+                    "of burned areas and number of fires",
+            "url": "https://forest-fire.emergency.copernicus.eu/apps/"
+                   "effis.statistics/estimates",
+            "fetched": "2026-11-14",
+            "licence": "Creative Commons Attribution 4.0 International "
+                       "(CC BY 4.0), as stated on the EFFIS Data License page. "
+                       "Copyright European Union, 1995-2025.",
             "covers": [2006, 2026],
-            "note": "National totals. EFFIS maps mainly fires of about 30 ha or more.",
+            "note": "Not a report. EFFIS, the European Forest Fire "
+                    "Information System, makes this estimate by mapping the "
+                    "burned area it can see in satellite images, and it maps "
+                    "mainly fires of about 30 hectares or more, so smaller "
+                    "fires are missing.",
         },
         "known": {2024: {"fires": 133, "burned_ha": 44745}},
     },
     "USA": {
+        "kind": "national_report",
         "source": {
-            "name": "NIFC (National Interagency Fire Center)",
-            "url": None,
-            "fetched": None,
+            "name": "NIFC (National Interagency Fire Center), Total Wildland "
+                    "Fires and Acres, source the National Interagency "
+                    "Coordination Center",
+            "url": "https://www.nifc.gov/fire-information/statistics/wildfires",
+            "fetched": "2026-11-14",
+            "licence": "Terms not stated. The publisher is a United States "
+                       "federal interagency centre and the site links only a "
+                       "disclaimer of liability, https://www.doi.gov/disclaimer.",
             "covers": [1983, 2025],
-            "note": "National totals. Acres in the source are converted to hectares.",
+            "note": "What the National Interagency Coordination Center "
+                    "reported: all wildland fires and the area they burned, "
+                    "counted from the records of the federal and state "
+                    "wildland fire agencies, so a fire none of them recorded "
+                    "is missing. Acres in the source are converted to "
+                    "hectares, 1 acre = 0.40468564224 hectares.",
         },
-        "known": {2024: {"fires": 64897, "burned_ha": None}},
+        "known": {2024: {"fires": 64897, "burned_ha": 3611772.4}},
     },
 }
 
@@ -513,14 +541,20 @@ def build_reported_files(out: Path) -> None:
         write_json(
             out / "reported" / f"{iso3}.json",
             {
-                "schema": f"emerge-reported-{SCHEMA_VERSION}",
+                "schema": "emerge-reported-2",
                 "example": True,
                 "built": BUILT,
                 "iso3": iso3,
                 "scope": "national",
+                "kind": spec["kind"],
                 "source": spec["source"],
                 "units": {"fires": "count", "burned_ha": "hectares"},
                 "years": years,
+                "series": [{
+                    "kind": spec["kind"],
+                    "source": spec["source"],
+                    "years": years,
+                }],
             },
         )
 

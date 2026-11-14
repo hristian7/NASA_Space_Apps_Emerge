@@ -394,10 +394,10 @@ Paths above are under `web/src/` unless they begin with `web/messages/`, `web/pu
 | Emergency dispatch, evacuation orders or aircraft coordination | Not our job: Emerge is a research tool, not an emergency service. |
 | Rebuilding FIRMS alerts | The team explicitly cut W6; FIRMS already supplies a mature service to link. |
 | Accounts, subscription billing, app-store apps and installable-app work | W1/W3/W8 are out. They do not improve the scientific answer before the freeze. |
-| Fire-spread simulation or a new weather-based prediction model | Missing fuel/weather/terrain calibration and independent validation; C2 is not a weekend shortcut. |
+| Fire-spread simulation or a new weather-based prediction model (**note:** plan 2, approved later on 14 Nov, does build a weather-based next-day model, with a pre-registered test and a daily scorecard; spread simulation stays out) | Missing fuel/weather/terrain calibration and independent validation; C2 is not a weekend shortcut. |
 | Generating burned-area outlines from hotspot dots | Violates the measurement meaning and the W5 scope. A detection footprint is not a burned perimeter. |
 | Purchasing private satellite data this weekend | Procurement, licence and inter-sensor calibration are larger than the likely demo benefit. |
-| AI-written safety briefs or automatic crew pre-positioning orders | An explanatory history tool should not invent operational advice from incomplete observations. |
+| AI-written safety briefs or automatic crew pre-positioning orders (**note:** plan 2's S14 is a rule-based "consider" suggestion, never an order) | An explanatory history tool should not invent operational advice from incomplete observations. |
 | Copying every EFFIS index and overlay | More controls would hide Emerge's distinctive harmonized history and uncertainty. |
 | Extending the pre-MODIS record by splicing unrelated sensors | No validated conversion or comparable coverage; this research supplies no such method. |
 | Calling every external fire map an independent validator | Many reuse FIRMS, and some train on the same MODIS/VIIRS labels. |

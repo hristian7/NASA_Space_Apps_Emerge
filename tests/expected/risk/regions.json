@@ -1,0 +1,116 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "iso_3166_2": "BG-10",
+        "name": "Kyustendil"
+      },
+      "lat": 42.15,
+      "lon": 23.45,
+      "name": "Rila"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "BG-02",
+        "name": "Burgas"
+      },
+      "lat": 42.05,
+      "lon": 27.65,
+      "name": "Strandzha"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "BG-22",
+        "name": "Grad Sofiya"
+      },
+      "lat": 42.6977,
+      "lon": 23.3219,
+      "name": "Sofia city"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "US-CA",
+        "name": "California"
+      },
+      "lat": 34.0522,
+      "lon": -118.2437,
+      "name": "California"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "US-NY",
+        "name": "New York"
+      },
+      "lat": 40.7128,
+      "lon": -74.006,
+      "name": "New York"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "BR-SP",
+        "name": "São Paulo"
+      },
+      "lat": -23.5505,
+      "lon": -46.6333,
+      "name": "Sao Paulo"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "AU-NSW",
+        "name": "New South Wales"
+      },
+      "lat": -33.8688,
+      "lon": 151.2093,
+      "name": "New South Wales"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "JP-13",
+        "name": "Tokyo"
+      },
+      "lat": 35.6762,
+      "lon": 139.6503,
+      "name": "Tokyo"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "ZA-GT",
+        "name": "Gauteng"
+      },
+      "lat": -26.2041,
+      "lon": 28.0473,
+      "name": "Gauteng"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "KE-110",
+        "name": "Nairobi"
+      },
+      "lat": -1.2921,
+      "lon": 36.8219,
+      "name": "Kenya"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "FR-75",
+        "name": "Paris"
+      },
+      "lat": 48.8566,
+      "lon": 2.3522,
+      "name": "France"
+    },
+    {
+      "expected": {
+        "iso_3166_2": "CA-BC",
+        "name": "British Columbia"
+      },
+      "lat": 49.01,
+      "lon": -122.75,
+      "name": "near US Canada border"
+    }
+  ],
+  "download_date": "2026-11-14",
+  "method": "Ray casting, with holes and multipolygons. Points are away from polygon boundaries.",
+  "sha256": "22d0e3ad85eb3e27f17cabf8ba2d50e554fbc27a87796ff891d958185da62fb5",
+  "source_url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson"
+}

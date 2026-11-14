@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobeFile } from '../../types/data';
 import { getMeta, loadGlobeYear } from '../data/api';
+import { LAYERS } from '../../config/layers';
 import { clampDangerDay, dangerDate } from './danger';
 import { clampHistoryYear } from './history';
 import type { RecentWindow } from './firms';
@@ -35,7 +36,7 @@ export interface LayersValue {
   recentStatus: LoadStatus;
   recent: RecentPayload | null;
   recentPoints: RecentPoint[];
-  dangerDate: string | null;
+  rasterDates: Record<string, string>;
   toggle: (id: string) => void;
   setYear: (year: number) => void;
   setWindow: (window: RecentWindow) => void;
@@ -58,7 +59,6 @@ export function useLayers(): LayersValue {
   const [historyStatus, setHistoryStatus] = useState<LoadStatus>('off');
   const [recent, setRecent] = useState<RecentPayload | null>(null);
   const [recentStatus, setRecentStatus] = useState<LoadStatus>('off');
-  const started = useRef(false);
   // Nothing is fetched before the address bar and the last data year are both
   // known, or the first paint would ask for a year nobody chose.
   const [hydrated, setHydrated] = useState(false);
@@ -66,8 +66,6 @@ export function useLayers(): LayersValue {
   // The last data year decides where the year control stops, so the state is
   // read from the address bar only once that is known.
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
     let cancelled = false;
     (async () => {
       let month: string | null = null;
@@ -87,6 +85,16 @@ export function useLayers(): LayersValue {
     };
   }, []);
 
+  // The address bar is written after the change is rendered, never inside a
+  // state update: the router listens to address-bar writes, and a write during
+  // render makes React update the router while another component renders.
+  const userChanged = useRef(false);
+  useEffect(() => {
+    if (!userChanged.current) return;
+    userChanged.current = false;
+    writeSearch(state, lastMonth);
+  }, [state, lastMonth]);
+
   const toggle = useCallback(
     (id: string) => {
       const known = panelLayers().some((entry) => entry.id === id);
@@ -96,7 +104,7 @@ export function useLayers(): LayersValue {
           ? current.on.filter((entry) => entry !== id)
           : [...current.on, id];
         const next = { ...current, on };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -107,7 +115,7 @@ export function useLayers(): LayersValue {
     (year: number) => {
       setState((current) => {
         const next = { ...current, historyYear: clampHistoryYear(year, lastMonth) };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -118,7 +126,7 @@ export function useLayers(): LayersValue {
     (value: RecentWindow) => {
       setState((current) => {
         const next = { ...current, recentWindow: value };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -129,7 +137,7 @@ export function useLayers(): LayersValue {
     (day: number) => {
       setState((current) => {
         const next = { ...current, dangerDay: clampDangerDay(day) };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -138,7 +146,7 @@ export function useLayers(): LayersValue {
 
   const historyOn = state.on.includes('harmonized-history');
   const recentOn = state.on.includes('recent-fires');
-  const dangerOn = state.on.includes('fire-danger');
+
 
   useEffect(() => {
     if (!historyOn) {
@@ -211,7 +219,7 @@ export function useLayers(): LayersValue {
     recentStatus,
     recent,
     recentPoints: points,
-    dangerDate: dangerOn ? dangerDate(state.dangerDay) : null,
+    rasterDates: { ...(state.on.includes('wind') ? { wind: 'on' } : {}), ...Object.fromEntries(LAYERS.filter((entry) => entry.kind === 'raster_tiles' && state.on.includes(entry.id) && entry.source.kind === 'tile_template').map((entry) => [entry.id, entry.source.kind === 'tile_template' ? entry.source.date ?? dangerDate(state.dangerDay) : ''])) },
     toggle,
     setYear,
     setWindow,

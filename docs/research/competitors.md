@@ -161,6 +161,9 @@ What our prototype has (updated late on 14 Nov): the map, place selection, layer
 
 ## Is our prediction better? No, and it is a different kind of prediction
 
+> **Plan 2 note (14 Nov night):** the team has since approved plan 2, a next-day fire-risk engine built on the weather, scored daily against NASA detections and two baselines ([`../../specs/plan-2-fire-risk/specification.md`](../../specs/plan-2-fire-risk/specification.md)). For next-day risk, plan 2 decides; this file is the earlier research.
+
+
 | | Their forecasts (EFFIS, GWIS, ECMWF) | Our "chance of fire this month" (M13) |
 |---|---|---|
 | Question | "How dangerous is the weather in the next days?" | "In how many past years did this place have fire in this month?" |

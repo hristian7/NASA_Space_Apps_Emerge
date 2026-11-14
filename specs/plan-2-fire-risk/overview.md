@@ -17,7 +17,7 @@ For **every region in the world**, the spots most likely to catch fire today and
 | **Top risk spots per region** | Any fire service opens its area and sees the places most likely to catch fire, ranked |
 | **Next-day risk engine** | Scores every small square of land for tomorrow, learned from each place's seasons and past fires |
 | **All the data that drives fire** | Temperature, wind, humidity, rain, plant dryness, forest or grass, 25 years of fires |
-| **Scorecard** | Each day, yesterday's predictions are checked against NASA's detections and the official index |
+| **Scorecard** | Each day, yesterday's predictions are checked against NASA's detections and the fire-weather index |
 | **"Why this spot"** | A plain reason: "very hot, strong wind, dry forest, burned in 6 of 25 Julys" |
 | **One screen instead of 10 websites** | Tomorrow's danger, fires now, history and official links on one page |
 | **Real official fire numbers** | Each country's own reported fires, kept apart from satellite estimates |
@@ -29,7 +29,7 @@ For **every region in the world**, the spots most likely to catch fire today and
 
 | Feature | What it means |
 |---|---|
-| **Week outlook** | The next 7 days, marked less certain |
+| **Week outlook** | The following days, marked less certain |
 | **Wind on the map** | Arrows for wind strength and direction |
 | **Crew suggestion** | "Consider a standby team near spot 1" |
 | **Fire type label** | Forest, farmland or grass |
@@ -38,7 +38,7 @@ For **every region in the world**, the spots most likely to catch fire today and
 
 ## How we prove it
 
-Tested on fire seasons the engine never saw. We say "more accurate" only where we beat both the official fire-danger index and fire history alone. NASA's detections are the judge, never the AI.
+Tested on fire seasons the engine never saw. We say "more accurate" only where we beat the fire-weather index or fire history alone, each said separately. NASA's detections are the judge, never the AI.
 
 ## How we build it fast
 

@@ -1,0 +1,504 @@
+{
+  "days": [
+    {
+      "continuing": [
+        6
+      ],
+      "day": "2025-07-01",
+      "new": [
+        1,
+        6
+      ],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        1
+      ],
+      "day": "2025-07-02",
+      "new": [
+        2
+      ],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [],
+      "day": "2025-07-03",
+      "new": [],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        2
+      ],
+      "day": "2025-07-04",
+      "new": [
+        6
+      ],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        1
+      ],
+      "day": "2025-07-05",
+      "new": [
+        4,
+        5,
+        6
+      ],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        6
+      ],
+      "day": "2025-07-06",
+      "new": [
+        3
+      ],
+      "region": "A",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        1
+      ],
+      "day": "2025-07-01",
+      "new": [
+        6
+      ],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [],
+      "day": "2025-07-02",
+      "new": [
+        1
+      ],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        2
+      ],
+      "day": "2025-07-03",
+      "new": [],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        6
+      ],
+      "day": "2025-07-04",
+      "new": [
+        2,
+        6
+      ],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [],
+      "day": "2025-07-05",
+      "new": [
+        4
+      ],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        3
+      ],
+      "day": "2025-07-06",
+      "new": [
+        5,
+        6
+      ],
+      "region": "B",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [],
+      "day": "2025-07-01",
+      "new": [
+        1
+      ],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        1
+      ],
+      "day": "2025-07-02",
+      "new": [
+        6
+      ],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        6
+      ],
+      "day": "2025-07-03",
+      "new": [],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [],
+      "day": "2025-07-04",
+      "new": [
+        2,
+        3
+      ],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        2
+      ],
+      "day": "2025-07-05",
+      "new": [
+        6
+      ],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "continuing": [
+        6
+      ],
+      "day": "2025-07-06",
+      "new": [
+        4
+      ],
+      "region": "small",
+      "top5": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  ],
+  "history_probabilities": [
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
+  "notes": [
+    "Hit rate denominator is region-days with at least one new fire, as section 6.1 states.",
+    "Brier uses all six listed spot-days, including no-fire days; region sizes affect lift only.",
+    "Unlisted land spots are outside this toy probability sample; continuing labels are scored separately."
+  ],
+  "pooled": {
+    "brier_mean": {
+      "denominator": 675,
+      "numerator": 133,
+      "value": 0.19703704
+    },
+    "brier_skill": {
+      "denominator": 423,
+      "numerator": -109,
+      "value": -0.25768322
+    },
+    "capture": {
+      "denominator": 21,
+      "numerator": 13,
+      "value": 0.61904762
+    },
+    "captured_continuing": 8,
+    "captured_new": 13,
+    "continuing_capture": {
+      "denominator": 13,
+      "numerator": 8,
+      "value": 0.61538462
+    },
+    "continuing_fires": 13,
+    "eligible_days": 15,
+    "history_brier_mean": {
+      "denominator": 300,
+      "numerator": 47,
+      "value": 0.15666667
+    },
+    "hit_days": 11,
+    "hit_rate": {
+      "denominator": 15,
+      "numerator": 11,
+      "value": 0.73333333
+    },
+    "new_fires": 21
+  },
+  "probabilities": [
+    0.5,
+    0.4,
+    0.3,
+    0.2,
+    0.1,
+    0.1
+  ],
+  "regions": {
+    "A": {
+      "brier_mean": {
+        "denominator": 450,
+        "numerator": 97,
+        "value": 0.21555556
+      },
+      "brier_skill": {
+        "denominator": 78,
+        "numerator": -19,
+        "value": -0.24358974
+      },
+      "capture": {
+        "denominator": 8,
+        "numerator": 5,
+        "value": 0.625
+      },
+      "captured_continuing": 3,
+      "captured_new": 5,
+      "continuing_capture": {
+        "denominator": 5,
+        "numerator": 3,
+        "value": 0.6
+      },
+      "continuing_fires": 5,
+      "eligible_days": 5,
+      "history_brier_mean": {
+        "denominator": 75,
+        "numerator": 13,
+        "value": 0.17333333
+      },
+      "hit_days": 4,
+      "hit_rate": {
+        "denominator": 5,
+        "numerator": 4,
+        "value": 0.8
+      },
+      "land_spots": 24,
+      "lift_over_random": {
+        "denominator": 1,
+        "numerator": 3,
+        "value": 3.0
+      },
+      "new_fires": 8,
+      "report_separately": false
+    },
+    "B": {
+      "brier_mean": {
+        "denominator": 225,
+        "numerator": 46,
+        "value": 0.20444444
+      },
+      "brier_skill": {
+        "denominator": 141,
+        "numerator": -43,
+        "value": -0.30496454
+      },
+      "capture": {
+        "denominator": 7,
+        "numerator": 4,
+        "value": 0.57142857
+      },
+      "captured_continuing": 3,
+      "captured_new": 4,
+      "continuing_capture": {
+        "denominator": 4,
+        "numerator": 3,
+        "value": 0.75
+      },
+      "continuing_fires": 4,
+      "eligible_days": 5,
+      "history_brier_mean": {
+        "denominator": 300,
+        "numerator": 47,
+        "value": 0.15666667
+      },
+      "hit_days": 4,
+      "hit_rate": {
+        "denominator": 5,
+        "numerator": 4,
+        "value": 0.8
+      },
+      "land_spots": 30,
+      "lift_over_random": {
+        "denominator": 7,
+        "numerator": 24,
+        "value": 3.42857143
+      },
+      "new_fires": 7,
+      "report_separately": false
+    },
+    "small": {
+      "brier_mean": {
+        "denominator": 450,
+        "numerator": 77,
+        "value": 0.17111111
+      },
+      "brier_skill": {
+        "denominator": 9,
+        "numerator": -2,
+        "value": -0.22222222
+      },
+      "capture": {
+        "denominator": 3,
+        "numerator": 2,
+        "value": 0.66666667
+      },
+      "captured_continuing": 2,
+      "captured_new": 4,
+      "continuing_capture": {
+        "denominator": 2,
+        "numerator": 1,
+        "value": 0.5
+      },
+      "continuing_fires": 4,
+      "eligible_days": 5,
+      "history_brier_mean": {
+        "denominator": 50,
+        "numerator": 7,
+        "value": 0.14
+      },
+      "hit_days": 3,
+      "hit_rate": {
+        "denominator": 5,
+        "numerator": 3,
+        "value": 0.6
+      },
+      "land_spots": 12,
+      "lift_over_random": {
+        "denominator": 5,
+        "numerator": 8,
+        "value": 1.6
+      },
+      "new_fires": 6,
+      "report_separately": true
+    }
+  },
+  "spot_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ]
+}

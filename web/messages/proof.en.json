@@ -136,5 +136,14 @@
     "groupMedium": "middle",
     "groupLarge": "large fire countries",
     "groupPooled": "every country added together"
+  },
+  "verdict": {
+    "heading": "The short answer",
+    "world": "Added across the world, our total lands within about {errors} per cent of the reference on the {tests} hold-out tests.",
+    "large": "For the countries that burn most, a typical country is out by about {error} per cent.",
+    "small": "For the countries that burn least, a typical country is out by about {error} per cent, which is too much to rely on.",
+    "coverage": "The stated ranges held for about {share} per cent of countries.",
+    "counted": "{scored} countries were scored; {thin} had too little fire to judge.",
+    "readAs": "Read a world or regional total as sound, a large country as usable, and a small country as a rough guide. The tables below show where each figure comes from."
   }
 }

@@ -1,0 +1,123 @@
+{
+  "cases": [
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day",
+        "p"
+      ],
+      "name": "valid",
+      "reason": "Required columns and valid values.",
+      "rows": [
+        [
+          0.25,
+          1,
+          "2025-01-01",
+          0.2
+        ]
+      ],
+      "valid": true
+    },
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day",
+        "p"
+      ],
+      "name": "wrong grid",
+      "reason": "Grid differs from the run grid.",
+      "rows": [
+        [
+          0.1,
+          1,
+          "2025-01-01",
+          0.2
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day",
+        "p"
+      ],
+      "name": "probability outside range",
+      "reason": "p exceeds 1.",
+      "rows": [
+        [
+          0.25,
+          1,
+          "2025-01-01",
+          1.01
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day",
+        "p"
+      ],
+      "name": "duplicate spot day",
+      "reason": "Duplicate spot and day.",
+      "rows": [
+        [
+          0.25,
+          1,
+          "2025-01-01",
+          0.2
+        ],
+        [
+          0.25,
+          1,
+          "2025-01-01",
+          0.2
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day"
+      ],
+      "name": "missing column",
+      "reason": "p column is missing.",
+      "rows": [
+        [
+          0.25,
+          1,
+          "2025-01-01"
+        ]
+      ],
+      "valid": false
+    },
+    {
+      "columns": [
+        "grid_g",
+        "spot_id",
+        "day",
+        "p"
+      ],
+      "name": "null probability",
+      "reason": "Null p means no data.",
+      "rows": [
+        [
+          0.25,
+          1,
+          "2025-01-01",
+          null
+        ]
+      ],
+      "valid": true
+    }
+  ],
+  "expected_grid_g": 0.25
+}
