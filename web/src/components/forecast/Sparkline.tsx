@@ -28,7 +28,7 @@ export function Sparkline({ label, values, unit }: SparklineProps) {
       {paths.map((path, index) => <path key={index} d={path} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />)}
       {valid.map(point => <circle key={point.index} cx={x(point.index)} cy={y(point.value)} r="1.3" fill="var(--accent)" />)}
     </svg>
-    <div>{last ? <><strong>{Number(last.value.toFixed(2))} {unit}</strong> <span style={{ color: 'var(--ink-2)' }}>{last.date}</span></> : 'No data'}</div>
+    <div>{last ? <><strong>{Number(last.value.toFixed(2))} {unit} [V]</strong> <span style={{ color: 'var(--ink-2)' }}>{last.date} [V]</span></> : 'No data'}</div>
   </div>;
 }
 export default Sparkline;
