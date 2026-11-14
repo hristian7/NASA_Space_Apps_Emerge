@@ -263,38 +263,148 @@ def flags_of(bits):
     return [FLAG_LABELS[i] for i in range(4) if bits & (1 << i)]
 
 
+BG = load_json("background.json")
+FEB_2012_MI = 145
+
+
+def cell_in_tile(cid):
+    lat, lon = cell_centre(cid)
+    return tile_cells(tile_key(lat, lon)).get(cid)
+
+
+def cell_month(c, mi, unit):
+    """(value, lo, hi, flag bits, how) of one month of one tile cell, by ruling 10. Exact fractions."""
+    try:
+        i = c["mi"].index(mi)
+        return (Fraction(c[unit][i]), Fraction(c[unit + "_lo"][i]), Fraction(c[unit + "_hi"][i]), c["flags"][i], "listed")
+    except ValueError:
+        pass
+    if mi < FEB_2012_MI:
+        y, m = mi_ym(mi)
+        bg = BG["groups"][c["g"]][src_of(y, m)]
+        return (Fraction(bg[unit][m - 1], 100), Fraction(0), Fraction(bg[unit + "_hi"][m - 1], 100), 0, "background")
+    return (Fraction(0), Fraction(0), Fraction(0), 0, "zero")
+
+
 def build_series(counts, low):
-    """Series for both units: dict unit -> list of month dicts, with exact x625 integers."""
-    cells = {}
-    for cid in counts:
-        lat, lon = cell_centre(cid)
-        cells[cid] = tile_cells(tile_key(lat, lon)).get(cid)
+    """Series for both units. The x62500 fields are exact integers: weighted sum x 625 x 100."""
+    cells = {cid: cell_in_tile(cid) for cid in counts}
     out = {}
     for unit in ("hot", "cd"):
         months = []
         for mi in range(FIRST_MI, LAST_MI + 1):
             y, m = mi_ym(mi)
-            v = lo = hi = 0
+            v = lo = hi = Fraction(0)
             bits = 0
             for cid, k in counts.items():
                 c = cells[cid]
                 if c is None:
                     continue
-                try:
-                    i = c["mi"].index(mi)
-                except ValueError:
-                    continue
-                v += k * c[unit][i]
-                lo += k * c[unit + "_lo"][i]
-                hi += k * c[unit + "_hi"][i]
-                bits |= c["flags"][i]
+                cv, cl, ch, cb, _ = cell_month(c, mi, unit)
+                v += k * cv
+                lo += k * cl
+                hi += k * ch
+                bits |= cb
             fl = flags_of(bits)
             if low:
                 fl = fl + ["low_confidence"]
-            months.append({"y": y, "m": m, "value": r6(v / 625.0), "lo": r6(lo / 625.0), "hi": r6(hi / 625.0),
-                           "src": src_of(y, m), "flags": fl, "value_x625": v, "lo_x625": lo, "hi_x625": hi})
+            months.append({"y": y, "m": m, "value": r6(float(v / 625)), "lo": r6(float(lo / 625)), "hi": r6(float(hi / 625)),
+                           "src": src_of(y, m), "flags": fl,
+                           "value_x62500": int(v * 100), "lo_x62500": int(lo * 100), "hi_x62500": int(hi * 100)})
         out[unit] = months
     return out
+
+
+def month_rows(ser, picks):
+    idx = {(m["y"], m["m"]): i for i, m in enumerate(ser["hot"])}
+    named = {}
+    for ym in picks:
+        named["%04d-%02d" % ym] = {u: dict(ser[u][idx[ym]]) for u in ("hot", "cd")}
+    return named
+
+
+def rule_isolation_cases():
+    """Cases that isolate ruling 10 (month a cell does not list) on single cells and small groups of cells."""
+    cases = []
+    terra = range(10, 30)
+    modis = range(30, FEB_2012_MI)
+    meas = range(FEB_2012_MI, LAST_MI + 1)
+    # one cell with listed and unlisted months in every period
+    found = None
+    for cid, c in sorted(tile_cells("40_20").items()):
+        L = set(c["mi"])
+        if all(any(mi in L for mi in rg) and any(mi not in L for mi in rg) for rg in (terra, modis, meas)):
+            found = cid
+            break
+    cid = found
+    c = tile_cells("40_20")[cid]
+    L = set(c["mi"])
+    lat, lon = cell_centre(cid)
+    sel = {"kind": "point", "lat": lat, "lon": lon, "radiusKm": 0}
+    counts, raw, low = selection_weights(sel)
+    assert counts == {cid: 625}
+    ser = build_series(counts, low)
+    def first(rg, listed):
+        return next(mi for mi in rg if (mi in L) == listed)
+    picks = [("listed_estimated_terra", first(terra, True)), ("unlisted_estimated_terra", first(terra, False)),
+             ("listed_estimated_modis", first(modis, True)), ("unlisted_estimated_modis", first(modis, False)),
+             ("listed_measured", first(meas, True)), ("unlisted_measured", first(meas, False)),
+             ("unlisted_last_estimated_modis_month_jan_2012", FEB_2012_MI - 1 if FEB_2012_MI - 1 not in L else first(modis, False)),
+             ("unlisted_first_measured_month_feb_2012", FEB_2012_MI if FEB_2012_MI not in L else first(meas, False))]
+    named = {}
+    for label, mi in picks:
+        y, m = mi_ym(mi)
+        row = month_rows(ser, [(y, m)])["%04d-%02d" % (y, m)]
+        row["rule"] = cell_month(c, mi, "hot")[4]
+        row["group"] = c["g"]
+        row["label"] = label
+        named["%04d-%02d" % (y, m)] = row
+    cases.append({"name": "Rule isolation, one cell (%d, group %s): listed, unlisted before Feb 2012, unlisted from Feb 2012" % (cid, c["g"]),
+                  "input": {"selection": sel},
+                  "expected": {"cellCount": 1, "lowConfidence": low, "weights": [{"id": cid, "subcells": 625}], "months": named}})
+    # two adjacent cells, one lists a pre-2012 month, the other does not
+    tc = tile_cells("40_20")
+    mixed = None
+    for cid_a in sorted(tc):
+        cid_b = cid_a + 1
+        if cid_b not in tc or cid_b // 1440 != cid_a // 1440:
+            continue
+        La, Lb = set(tc[cid_a]["mi"]), set(tc[cid_b]["mi"])
+        cand = [mi for mi in modis if mi in La and mi not in Lb]
+        cand_t = [mi for mi in terra if mi in Lb and mi not in La]
+        if cand and cand_t:
+            mixed = (cid_a, cid_b, cand[0], cand_t[0])
+            break
+    cid_a, cid_b, mi_x, mi_t = mixed
+    la, lo_a = cell_centre(cid_a)
+    lb, lo_b = cell_centre(cid_b)
+    ring = [[lo_a - 0.125, la - 0.125], [lo_b + 0.125, la - 0.125], [lo_b + 0.125, la + 0.125], [lo_a - 0.125, la + 0.125]]
+    sel = {"kind": "polygon", "ring": ring}
+    counts, raw, low = selection_weights(sel)
+    assert counts == {cid_a: 625, cid_b: 625}, counts
+    ser = build_series(counts, low)
+    picks2 = [mi_ym(mi_x), mi_ym(mi_t)]
+    cases.append({"name": "Rule isolation, two adjacent cells: one lists the month, the other takes its background",
+                  "input": {"selection": sel},
+                  "expected": {"cellCount": 2, "lowConfidence": low, "weights": [{"id": k, "subcells": counts[k]} for k in sorted(counts)],
+                               "months": month_rows(ser, picks2),
+                               "detail": {"%04d-%02d" % mi_ym(mi_x): {str(cid_a): "listed", str(cid_b): "background"},
+                                          "%04d-%02d" % mi_ym(mi_t): {str(cid_a): "background", str(cid_b): "listed"}}}})
+    # two groups
+    sel = {"kind": "polygon", "ring": [[-117.0, 36.0], [-112.0, 36.0], [-112.0, 47.0], [-117.0, 47.0]]}
+    counts, raw, low = selection_weights(sel)
+    present = {cid2: cell_in_tile(cid2) for cid2 in counts}
+    groups = sorted(set(cc["g"] for cc in present.values() if cc is not None))
+    ser = build_series(counts, low)
+    picks3 = [(2000, 11), (2005, 8), (2011, 12), (2012, 1), (2012, 2), (2020, 8), (2025, 12)]
+    cases.append({"name": "Rule isolation, cells of two groups (%s)" % " and ".join(groups),
+                  "input": {"selection": sel},
+                  "expected": {"cellCount": len(counts), "cellsWithTileData": sum(1 for cc in present.values() if cc is not None),
+                               "groups": groups, "lowConfidence": low, "seriesLength": len(ser["hot"]),
+                               "months": month_rows(ser, picks3),
+                               "sumOfAllMonths_x62500": {u: sum(m["value_x62500"] for m in ser[u]) for u in ("hot", "cd")}},
+                  "note": "Cells that are in no tile file (no fire ever) have no group and contribute 0 in every month."})
+    return cases
 
 
 def make_series():
@@ -312,8 +422,8 @@ def make_series():
         ser = build_series(counts, low)
         n = len(ser["hot"])
         pick = [(2000, 11), (2002, 6), (2002, 7), (2005, 8), (2012, 1), (2012, 2), (2020, 8), (2022, 7), (2025, 12)]
-        zero = [(m["y"], m["m"]) for m in ser["cd"] if m["value_x625"] == 0]
-        zero_hot = set((m["y"], m["m"]) for m in ser["hot"] if m["value_x625"] == 0)
+        zero = [(m["y"], m["m"]) for m in ser["cd"] if m["value_x62500"] == 0]
+        zero_hot = set((m["y"], m["m"]) for m in ser["hot"] if m["value_x62500"] == 0)
         both_zero = [ym for ym in zero if ym in zero_hot]
         if both_zero:
             pick.append(both_zero[0])
@@ -336,12 +446,13 @@ def make_series():
             "weights": [{"id": c, "subcells": counts[c]} for c in sorted(counts)],
             "months": named,
             "october_2000": {"inSeries": False},
-            "sumOfAllMonths_x625": {u: sum(m["value_x625"] for m in ser[u]) for u in ("hot", "cd")},
-            "monthsWithZeroValue": {u: sum(1 for m in ser[u] if m["value_x625"] == 0) for u in ("hot", "cd")},
+            "sumOfAllMonths_x62500": {u: sum(m["value_x62500"] for m in ser[u]) for u in ("hot", "cd")},
+            "monthsWithZeroValue": {u: sum(1 for m in ser[u] if m["value_x62500"] == 0) for u in ("hot", "cd")},
             "noNullMonths": True,
         }
         cases.append({"name": name, "input": {"selection": sel},
                       "expected": exp})
+    cases += rule_isolation_cases()
     # country
     bgr = load_json("countries/BGR.json")
     cm = {}
@@ -371,9 +482,18 @@ def daily_cells(key):
     return {c["id"]: c for c in load_json(rel)["cells"]}
 
 
+def sensor_of_year(y):
+    return "terra" if y <= 2001 else ("aqua" if y <= 2011 else "snpp")
+
+
 def daily_sums(counts, year, off0, off1):
-    """Exact x625 sums of hot and frp over day offsets off0..off1 inclusive for one year."""
-    hot = frp = 0
+    """Weighted x625 sums over day offsets off0..off1 for one year (ruling 11).
+
+    Returns (hot, frp, raw): hot with the conversion factor applied to days before Feb 2012 (exact Fraction),
+    frp raw, raw = unconverted weighted hotspot count.
+    """
+    hot = Fraction(0)
+    frp = raw_hot = 0
     for cid, k in counts.items():
         lat, lon = cell_centre(cid)
         c = daily_cells(tile_key(lat, lon)).get(cid)
@@ -384,22 +504,28 @@ def daily_sums(counts, year, off0, off1):
                 continue
             for d, h, f in zip(yb["d"], yb["hot"], yb["frp"]):
                 if off0 <= d <= off1:
-                    hot += k * h
+                    day = date(year, 11, 17) + timedelta(days=d)
+                    kf = Fraction(1)
+                    if day < date(2012, 2, 1):
+                        kf = Fraction(BG["groups"][c["g"]][src_of(day.year, day.month)]["k_hot"][day.month - 1], 1000)
+                    hot += k * h * kf
                     frp += k * f
-    return hot, frp
+                    raw_hot += k * h
+    return hot, frp, raw_hot
 
 
 def unusual_ref(value, hist):
     """Section 3 with exact arithmetic. Returns pinned and unpinned parts."""
     n = len(hist)
     res = {"years": n}
+    FR = lambda x: x if isinstance(x, Fraction) else Fraction(str(x))
     stats = None
     if n:
-        hs = sorted(Fraction(str(h)) for h in hist)
+        hs = sorted(FR(h) for h in hist)
         mean = sum(hs) / n
         mid = n // 2
         med = hs[mid] if n % 2 else (hs[mid - 1] + hs[mid]) / 2
-        v = Fraction(str(value))
+        v = FR(value)
         stats = {
             "median": r6(float(med)), "mean": r6(float(mean)),
             "ratioMedian": None if med == 0 else r6(float(v / med)),
@@ -437,28 +563,38 @@ def rich_daily_cell():
     return best[1]
 
 
-def daily_block(sel, label):
+def row_of(counts, y, start, end):
+    o0, o1 = md_offset(y, start.month, start.day), md_offset(y, end.month, end.day)
+    h, f, rw = daily_sums(counts, y, o0, o1)
+    return {"year": y, "hot": r6(float(h / 625)), "frp": r6(f / 625.0), "hot_x625000": int(h * 1000), "frp_x625": f,
+            "rawHot_x625": rw, "sensor": sensor_of_year(y), "estimated": y < 2012,
+            "windowStart": "%04d-%02d-%02d" % (y, start.month, start.day),
+            "windowEnd": "%04d-%02d-%02d" % (y, end.month, end.day), "_h": h}
+
+
+def daily_block(sel, label, end=None, month_to_date=True):
     counts, raw, low = selection_weights(sel)
-    end = date.fromisoformat(META["daily_window"]["latest_day"])
+    last = date.fromisoformat(META["daily_window"]["latest_day"])
+    end = end or last
     days = 8
     start = end - timedelta(days=days - 1)
     years = META["daily_window"]["years"]
-    past_rows = []
-    for y in years:
-        o0, o1 = md_offset(y, start.month, start.day), md_offset(y, end.month, end.day)
-        h, f = daily_sums(counts, y, o0, o1)
-        past_rows.append({"year": y, "hot": r6(h / 625.0), "frp": r6(f / 625.0), "hot_x625": h, "frp_x625": f,
-                          "estimated": y < 2012, "windowStart": "%04d-%02d-%02d" % (y, start.month, start.day),
-                          "windowEnd": "%04d-%02d-%02d" % (y, end.month, end.day)})
+    past_rows = [row_of(counts, y, start, end) for y in years]
+    for r in past_rows:
+        r["_h"] = r["_h"]
     cur = next(r for r in past_rows if r["year"] == end.year)
     pasts = [r for r in past_rows if r["year"] != end.year]
-    rank = 1 + sum(1 for r in pasts if r["hot_x625"] > cur["hot_x625"])
+    rank = 1 + sum(1 for r in pasts if r["_h"] > cur["_h"])
+    for r in past_rows:
+        r.pop("_h")
     cases = [{
-        "name": label + ": 8 day window ending on the last data day",
-        "input": {"selection": sel, "days": days, "lastDataDay": META["daily_window"]["latest_day"]},
+        "name": label + ": 8 day window ending on " + ("the last data day" if end == last else end.isoformat()),
+        "input": {"selection": sel, "days": days, "lastDataDay": end.isoformat()},
         "expected": {"weights": [{"id": c, "subcells": counts[c]} for c in sorted(counts)], "end": end.isoformat(),
                      "start": start.isoformat(), "current": cur, "past": pasts, "rank": rank, "of": len(pasts) + 1},
     }]
+    if not month_to_date:
+        return cases
     for D, lab in [(31, "last data day 31 Dec 2025 (D = 31, month complete)"),
                    (20, "pretend the last data day is 20 Dec 2025 (D = 20)"),
                    (8, "pretend the last data day is 8 Dec 2025 (D = 8, shortest allowed)"),
@@ -466,16 +602,16 @@ def daily_block(sel, label):
         cy = 2025
         vals = {}
         for y in years:
-            h, f = daily_sums(counts, y, md_offset(y, 12, 1), md_offset(y, 12, D))
+            h, f, rw = daily_sums(counts, y, md_offset(y, 12, 1), md_offset(y, 12, D))
             vals[y] = h
-        hist = [r6(vals[y] / 625.0) for y in years if y != cy]
-        cur_v = r6(vals[cy] / 625.0)
+        hist = [vals[y] / 625 for y in years if y != cy]
+        cur_v = vals[cy] / 625
         res, stats = unusual_ref(cur_v, hist)
-        exp = {"month": 12, "year": cy, "dayOfMonth": D, "current": cur_v,
-               "pastYears": {str(y): r6(vals[y] / 625.0) for y in years if y != cy},
-               "pastYears_x625": {str(y): vals[y] for y in years if y != cy}, "current_x625": vals[cy]}
+        exp = {"month": 12, "year": cy, "dayOfMonth": D, "current": r6(float(cur_v)),
+               "pastYears": {str(y): r6(float(vals[y] / 625)) for y in years if y != cy},
+               "pastYears_x625000": {str(y): int(vals[y] * 1000) for y in years if y != cy}, "current_x625000": int(vals[cy] * 1000)}
         if D < 8:
-            exp.update(no_history_fields(cur_v, res["years"], "too_early"))
+            exp.update(no_history_fields(r6(float(cur_v)), res["years"], "too_early"))
         else:
             exp.update(stats)
             exp["years"] = res["years"]
@@ -485,11 +621,34 @@ def daily_block(sel, label):
     return cases
 
 
+def focus_window(year):
+    """A cell and a window end where the given past year has raw fire inside an 8 day window; most raw hotspots wins."""
+    best = None
+    for key in ("40_20", "40_25"):
+        for cid, c in sorted(daily_cells(key).items()):
+            for yb in c["years"]:
+                if yb["y"] != year:
+                    continue
+                for e in range(7, 45):
+                    tot = sum(h for d, h in zip(yb["d"], yb["hot"]) if e - 7 <= d <= e)
+                    if best is None or tot > best[0]:
+                        best = (tot, cid, e)
+    tot, cid, e = best
+    return cid, date(2025, 11, 17) + timedelta(days=e)
+
+
 def make_daily():
     cases = daily_block({"kind": "point", "lat": 42.70, "lon": 23.32, "radiusKm": 50}, "Sofia 50 km")
     rid = rich_daily_cell()
     lat, lon = cell_centre(rid)
     cases += daily_block({"kind": "point", "lat": lat, "lon": lon, "radiusKm": 10}, "Single busy cell %d (radius 10 km, small selection)" % rid)
+    for yr, nm in ((2001, "Terra-period year 2001"), (2005, "Aqua-period year 2005"), (2020, "Measured year 2020")):
+        cid, e = focus_window(yr)
+        la, lo = cell_centre(cid)
+        blk = daily_block({"kind": "point", "lat": la, "lon": lo, "radiusKm": 10}, "%s, cell %d" % (nm, cid), end=e, month_to_date=False)
+        blk[0]["expected"]["focusYear"] = yr
+        blk[0]["expected"]["focus"] = next(r for r in blk[0]["expected"]["past"] if r["year"] == yr)
+        cases += blk
     # past-year window: the `days` consecutive days ending on the current end's month and day (ruling 5);
     # the row is labelled by the year of its last day (ruling 6)
     def past_window(end_d, n, Y):
@@ -846,11 +1005,11 @@ def main():
           "totalWeight and lowConfidence are after the small-selection rule. Haversine, Earth radius 6371.0088 km, inside means distance <= radius.",
           make_weights())
     write("series_cases.json",
-          "Section 2. Monthly series of selections built from the example tiles. value, lo, hi are weighted sums to 6 decimals; "
-          "the *_x625 fields are exact integers (value x 625). Flags are listed in the closed-set order example, partial_month, snpp_gap_filled, low_confidence.",
+          "Sections 2 and ruling 10. Monthly series of selections built from the example tiles and background.json. value, lo, hi are weighted sums to 6 decimals; "
+          "the *_x62500 fields are exact integers (weighted sum x 625 x 100). Flags are listed in the closed-set order example, partial_month, snpp_gap_filled, low_confidence.",
           make_series())
     write("daily_cases.json",
-          "Sections 4 and 6 inputs from the example daily files: 8 day window totals per year, month to date with each past year, and window date mapping.",
+          "Sections 4 and 6 inputs from the example daily files with ruling 11: hot of a day before Feb 2012 is the raw count times k_hot / 1000 of the cell's group, month and period; frp is raw. Fields: hot_x625000 and current_x625000 are exact integers (weighted sum x 625 x 1000); rawHot_x625 is the unconverted weighted count. 8 day window totals per year, month to date with each past year, and window date mapping.",
           make_daily())
     write("unusual_cases.json",
           "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. For no_history and too_early the median, mean and ratios are null and higherThan is 0 (section 9, ruling 4).",
