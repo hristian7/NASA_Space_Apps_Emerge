@@ -101,7 +101,7 @@ export default function AppShell() {
         drawing={drawing}
         historyCells={layers.historyCells}
         recentPoints={layers.recentPoints}
-        dangerDate={layers.dangerDate}
+        rasterDates={layers.rasterDates}
         onPickPoint={pickPoint}
         onPickRecent={pickRecent}
         onDrawArea={(ring) => apply({ kind: "polygon", ring: closeRing(ring) })}

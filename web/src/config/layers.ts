@@ -42,6 +42,8 @@ export type LayerSource =
       tileSize: number;
       /** Earliest date the service answers for, or null when it has no history. */
       firstDate: string | null;
+      /** Fixed observation date, when the tiles are not a forecast. */
+      date?: string;
     };
 
 /** Which reader turns the source into numbers the screens can use. */

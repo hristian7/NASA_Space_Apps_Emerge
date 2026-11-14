@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobeFile } from '../../types/data';
 import { getMeta, loadGlobeYear } from '../data/api';
+import { LAYERS } from '../../config/layers';
 import { clampDangerDay, dangerDate } from './danger';
 import { clampHistoryYear } from './history';
 import type { RecentWindow } from './firms';
@@ -35,7 +36,7 @@ export interface LayersValue {
   recentStatus: LoadStatus;
   recent: RecentPayload | null;
   recentPoints: RecentPoint[];
-  dangerDate: string | null;
+  rasterDates: Record<string, string>;
   toggle: (id: string) => void;
   setYear: (year: number) => void;
   setWindow: (window: RecentWindow) => void;
@@ -138,7 +139,7 @@ export function useLayers(): LayersValue {
 
   const historyOn = state.on.includes('harmonized-history');
   const recentOn = state.on.includes('recent-fires');
-  const dangerOn = state.on.includes('fire-danger');
+
 
   useEffect(() => {
     if (!historyOn) {
@@ -211,7 +212,7 @@ export function useLayers(): LayersValue {
     recentStatus,
     recent,
     recentPoints: points,
-    dangerDate: dangerOn ? dangerDate(state.dangerDay) : null,
+    rasterDates: Object.fromEntries(LAYERS.filter((entry) => entry.kind === 'raster_tiles' && state.on.includes(entry.id) && entry.source.kind === 'tile_template').map((entry) => [entry.id, entry.source.kind === 'tile_template' ? entry.source.date ?? dangerDate(state.dangerDay) : ''])),
     toggle,
     setYear,
     setWindow,

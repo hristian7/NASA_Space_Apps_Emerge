@@ -253,7 +253,7 @@ export default function LayerPanel({
         to: recent.dataTime ?? "",
       });
     }
-    return t(key, { date: dangerDate(state.dangerDay) });
+    return t(key, { date: definition.source.kind === "tile_template" ? definition.source.date ?? dangerDate(state.dangerDay) : "" });
   };
 
   return (
