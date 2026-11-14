@@ -19,7 +19,7 @@ Worldwide, VIIRS records about **2.7 times** as much fire activity as MODIS in t
 A free website and phone app that turns 25 years of NASA fire data into **one fair record**, for any place on Earth.
 
 **Making the record fair:**
-1. We count **fire days per small square** of the map, not raw dots. This removes part of the instrument difference.
+1. We count hotspots, and also **fire days per small square**, which removes part of the instrument difference.
 2. Both instruments flew together from 2012 to 2025. From those years we learn how MODIS numbers relate to VIIRS numbers, per region, land type and month.
 3. We convert the MODIS-only years (2000–2011) into **"what VIIRS would have seen"**, with an honest error range on every number.
 4. We test it on years it never learned from, and publish the results.
@@ -28,18 +28,19 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 
 | Feature | What it does |
 |---|---|
-| **3D globe** | See where fires happen worldwide |
-| **Pick a country or tap a point** | Everything below follows your choice; "no fires recorded" if none |
-| **Fire calendar** | A grid of years × months, coloured by fire activity: the worst months and years at a glance |
-| **"Is this unusual?"** | Compares this month with the normal level for the same month in past years |
-| **Chance of fire this month** | How often this place had fires in this month over 25 years, with a certainty range |
-| **Recent fires** | NASA detections from the last 24 hours |
-| **Fire-danger forecast** | Official forecasts for the next days (Europe and the world), plus a 4-month outlook for the USA |
-| **Push alerts** | Phone notification when fire danger near a saved place turns high |
-| **CSV download** | Save the numbers you see |
-| **"How we know it's right"** | Our test results, including where the method is weak |
-| **Advice panel** | Plain hints for crews and volunteers |
-| **Share links, English and Bulgarian** | Works on phones and installs like an app |
+| **3D globe or 2D map** | NASA satellite or street background; switch data layers on and off |
+| **Choose a place** | Tap a point and set a radius, type latitude/longitude, draw an area, or pick a country. "No data" is shown differently from "zero fires" |
+| **Choose dates** | Any range from Nov 2000 to today |
+| **Fire calendar** | Years × months showing the number of hotspots, coloured so the worst months and years stand out |
+| **"Is this unusual?"** | This month vs the median and the average for the same month in past years |
+| **This fire vs past fires** | The last 8 days vs the same days in every past year |
+| **Detected vs reported** | Our satellite numbers next to official reported fires (Europe, USA) |
+| **Chance of fire this month** | How often this place had fires in this month, with a certainty range |
+| **Recent fires and fire danger** | NASA's last 24 hours, plus official forecasts |
+| **Push alerts** | A phone notification when danger near a saved place turns high |
+| **Downloads** | Hotspots found (CSV), monthly numbers, a summary, and the charts as images |
+| **"How we know it's right"** | Our test results, including weak spots |
+| **Advice, share links, English and Bulgarian** | Works on phones; installs like an app |
 
 ### Exact data sources
 
@@ -58,13 +59,11 @@ All free; every source is credited.
 
 ### How we prove it works
 
-- **Unseen years:** the conversion must predict years it never learned from.
-- **Two VIIRS satellites agree** within about 1% in normal years `[V]`.
-- **Published studies and official fire statistics** (Europe, USA) agree with our numbers.
+The conversion must predict years it never learned from. The two VIIRS satellites agree within about 1% `[V]`, and we compare with published studies and official statistics.
 
 ### How it's built
 
-A website on **Vercel**, built with Next.js, MapLibre (globe and maps) and deck.gl (drawing fires). All data is processed in advance (461 million detections kept after cleaning `[V]`), so the app answers instantly.
+A Vercel website (Next.js, MapLibre, deck.gl). All data is processed in advance (461 million detections kept `[V]`), so answers are instant.
 
 **Emerge is a research tool, not an official warning service.** It always points to official services and to 112.
 
@@ -77,8 +76,7 @@ A website on **Vercel**, built with Next.js, MapLibre (globe and maps) and deck.
 | **Life after MODIS** | MODIS ends in 2027 `[V]`; the record continues on the VIIRS satellites |
 | **Time-lapse** | Play 25 years of fires on the globe |
 | **Bulgarian provinces** | Statistics for each province (oblast) for local crews |
-| **More map layers** | Temperature, wind, humidity and drought, with more base maps |
-| **Draw your own area** | A circle or any shape, not just a country or a point |
+| **More layers and maps** | Temperature, wind, humidity and drought layers, plus more background maps (the app is built to take them) |
 | **Fire intensity series** | A second record based on how much heat fires give off, not just how many there are |
 | **Partners** | Work with Bulgarian fire services and volunteer groups to test and improve it |
 | **Open data** | Publish the harmonized record as files scientists can download and reuse |
