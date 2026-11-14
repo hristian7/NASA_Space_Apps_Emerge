@@ -9,7 +9,7 @@
  * parameter is never touched here.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GlobeFile } from '../../types/data';
 import { getMeta, loadGlobeYear } from '../data/api';
 import { LAYERS } from '../../config/layers';
@@ -85,6 +85,16 @@ export function useLayers(): LayersValue {
     };
   }, []);
 
+  // The address bar is written after the change is rendered, never inside a
+  // state update: the router listens to address-bar writes, and a write during
+  // render makes React update the router while another component renders.
+  const userChanged = useRef(false);
+  useEffect(() => {
+    if (!userChanged.current) return;
+    userChanged.current = false;
+    writeSearch(state, lastMonth);
+  }, [state, lastMonth]);
+
   const toggle = useCallback(
     (id: string) => {
       const known = panelLayers().some((entry) => entry.id === id);
@@ -94,7 +104,7 @@ export function useLayers(): LayersValue {
           ? current.on.filter((entry) => entry !== id)
           : [...current.on, id];
         const next = { ...current, on };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -105,7 +115,7 @@ export function useLayers(): LayersValue {
     (year: number) => {
       setState((current) => {
         const next = { ...current, historyYear: clampHistoryYear(year, lastMonth) };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -116,7 +126,7 @@ export function useLayers(): LayersValue {
     (value: RecentWindow) => {
       setState((current) => {
         const next = { ...current, recentWindow: value };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
@@ -127,7 +137,7 @@ export function useLayers(): LayersValue {
     (day: number) => {
       setState((current) => {
         const next = { ...current, dangerDay: clampDangerDay(day) };
-        writeSearch(next, lastMonth);
+        userChanged.current = true;
         return next;
       });
     },
