@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { brierSkill, claimAllowed, loadScorecard, parseScorecard, weakSlices, type RiskScorecard } from "../../src/app/proof/risk-data";
+import { brierSkill, claimAllowed, SHIPPED_GRID_G, loadScorecard, parseScorecard, weakSlices, type RiskScorecard } from "../../src/app/proof/risk-data";
 const fixture = (): RiskScorecard => JSON.parse(readFileSync("public/data/risk/example/scorecard.json", "utf8"));
 const request = (body: unknown, status = 200): typeof fetch => async () => new Response(JSON.stringify(body), { status });
 describe("risk scorecard contract", () => {
@@ -29,13 +29,15 @@ describe("risk scorecard contract", () => {
     expect(parseScorecard({})).toBeNull();
     expect(parseScorecard({...fixture(),scopes:{europe:{years:{}}}})).toBeNull();
   });
-  it("never claims accuracy for example or development-grid results", () => {
+  it("never claims accuracy for example results or a grid the app does not ship", () => {
     const card = fixture(), scope=card.scopes.europe, s=scope.years["2025"].selections.forest_wildland;
     s.bootstrap.fwi!.claim_permitted=true;
+    card.grid_g=scope.grid_g=SHIPPED_GRID_G;
     expect(claimAllowed(card,scope,s,"fwi")).toBe(false);
     card.example=false;
-    expect(claimAllowed(card,scope,s,"fwi")).toBe(false);
     card.grid_g=scope.grid_g=0.1;
+    expect(claimAllowed(card,scope,s,"fwi")).toBe(false);
+    card.grid_g=scope.grid_g=SHIPPED_GRID_G;
     expect(claimAllowed(card,scope,s,"fwi")).toBe(true);
     s.bootstrap.fwi!.interval_95[0]=0;
     expect(claimAllowed(card,scope,s,"fwi")).toBe(false);

@@ -82,12 +82,19 @@ export function brierSkill(selection: Selection, method: Method): Metric {
   return (method === "model" ? selection.probability.brier_skill : selection.probability.history_brier_skill) ?? null;
 }
 
+/**
+ * Claims count only at the grid the app ships. The 0.1 degree run is on the
+ * specification's cut list; the build ships at 0.25 degree and says so
+ * (build plan section 8.4).
+ */
+export const SHIPPED_GRID_G = 0.25;
+
 /** The specification requires the shipped grid, not just a producer's pass flag. */
 export function claimAllowed(card: RiskScorecard, scope: Scope, selection: Selection, baseline: Method): boolean {
   const model = selection.pooled.methods.model?.capture_rate;
   const other = selection.pooled.methods[baseline]?.capture_rate;
   const boot = selection.bootstrap[baseline];
-  return !card.example && card.test_year === 2025 && card.grid_g === 0.1 && scope.grid_g === card.grid_g &&
+  return !card.example && card.test_year === 2025 && card.grid_g === SHIPPED_GRID_G && scope.grid_g === card.grid_g &&
     typeof model === "number" && typeof other === "number" && model > other &&
     boot?.claim_permitted === true && boot.bootstrap_passed && boot.valid_draws > 0 &&
     typeof boot.difference === "number" && boot.difference > 0 &&

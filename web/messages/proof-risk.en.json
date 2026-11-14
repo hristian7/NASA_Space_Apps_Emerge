@@ -29,7 +29,7 @@
   "noClaim": "No accuracy claim against {baseline}.",
   "difference": "Model minus {baseline}: {difference} percentage points; 95% interval {low} to {high}; {draws} valid weekly bootstrap draws [V].",
   "noBootstrap": "{baseline}: bootstrap not tested yet.",
-  "claimRule": "An accuracy claim needs higher test capture and a weekly bootstrap interval entirely above zero on the shipped grid. The specification requires 0.1° [U]; a development-grid result does not establish that claim.",
+  "claimRule": "An accuracy claim needs a higher test capture rate and a weekly bootstrap interval entirely above zero, on the grid the app ships: 0.25° (about 28 km). The finer 0.1° run planned in the specification was not made in time.",
   "coverage": "Coverage: {scored} of {eligible} eligible spot-days scored; {fires} of {allFires} eligible new fires had scores; {excluded} spot-days and {missingFires} fires lacked scores; {days} region-days had no scores [V].",
   "probabilityCoverage": "Probability measures cover {count} scored spot-days on fire-positive region-days [V].",
   "small": "Regions with fewer than 20 spots [U]",
