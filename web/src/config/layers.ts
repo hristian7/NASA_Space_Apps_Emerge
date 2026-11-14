@@ -16,7 +16,8 @@ export type LayerKind =
   | 'harmonized_cells'
   | 'detections'
   | 'raster_tiles'
-  | 'wind';
+  | 'wind'
+  | 'temperature_field';
 
 /** How the layer steps through time. */
 export type LayerTimeStep = 'month' | 'year' | 'day' | 'none';
@@ -226,16 +227,23 @@ export const LAYERS: readonly LayerDefinition[] = [
     panel: { order: 7, explainKey: 'layers.landTypeExplain', timeKey: 'layers.landTypeTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'l' },
   },
   {
-    id: 'air-temperature', nameKey: 'layers.airTemperature', kind: 'raster_tiles', units: [], timeStep: 'day',
-    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/AIRS_L2_Surface_Air_Temperature_Day/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: null, date: '2026-11-14', maxzoom: 6 },
-    credit: 'NASA AIRS / NASA GIBS', loader: { status: 'none' }, verified: true,
-    panel: { order: 8, explainKey: 'layers.airTemperatureExplain', timeKey: 'layers.airTemperatureTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 't' },
+    id: 'air-temperature', nameKey: 'layers.airTemperature', kind: 'temperature_field', units: [], timeStep: 'day',
+    source: { kind: 'api_route', path: 'https://api.open-meteo.com/v1/forecast' },
+    credit: 'Weather data by Open-Meteo.com', loader: { status: 'built', module: 'lib/layers/temperature', fn: 'fetchTemperature' }, verified: true,
+    panel: { order: 8, explainKey: 'layers.airTemperatureExplain', timeKey: 'layers.airTemperatureTime', control: 'danger_day', legend: { kind: 'classes' }, defaultOn: false, urlKey: 't' },
   },
   {
     id: 'wind', nameKey: 'layers.wind', kind: 'wind', units: [], timeStep: 'day',
     source: { kind: 'api_route', path: 'https://api.open-meteo.com/v1/forecast' },
     credit: 'Weather data by Open-Meteo.com', loader: { status: 'built', module: 'lib/layers/wind', fn: 'fetchWind' }, verified: true,
     panel: { order: 9, explainKey: 'layers.windExplain', timeKey: 'layers.windTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'w' },
+  },
+  {
+    id: 'rain', nameKey: 'layers.rain', kind: 'raster_tiles', units: [], timeStep: 'day',
+    // Latest capabilities date [V]. Refresh: node tests/layers/refresh-rain.mjs (from web).
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: '2000-06-01', date: '2026-11-13', maxzoom: 6 },
+    credit: 'NASA GPM IMERG / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 10, explainKey: 'layers.rainExplain', timeKey: 'layers.rainTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'p' },
   },
 ];
 

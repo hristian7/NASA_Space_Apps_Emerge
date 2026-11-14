@@ -33,7 +33,27 @@ describe("the registry drives the panel list", () => {
       .sort((a, b) => (a.panel?.order ?? 0) - (b.panel?.order ?? 0))
       .map((entry) => entry.id);
     expect(listed).toEqual(expected);
-    expect(listed).toEqual(["harmonized-history", "recent-fires", "fire-danger", "nasa-fwi", "soil-moisture", "greenness", "land-type", "air-temperature", "wind"]);
+    expect(listed).toEqual(["harmonized-history", "recent-fires", "fire-danger", "nasa-fwi", "soil-moisture", "greenness", "land-type", "air-temperature", "wind", "rain"]);
+  });
+
+  it("replaces AIRS with forecast temperature while keeping its stable key", () => {
+    const temperature = LAYERS.find(entry => entry.id === "air-temperature");
+    expect(temperature?.kind).toBe("temperature_field");
+    expect(temperature?.source).toEqual({ kind: "api_route", path: "https://api.open-meteo.com/v1/forecast" });
+    expect(temperature?.panel?.urlKey).toBe("t");
+    expect(temperature?.panel?.control).toBe("danger_day");
+    expect(temperature?.loader).toEqual({ status: "built", module: "lib/layers/temperature", fn: "fetchTemperature" });
+  });
+
+  it("pins IMERG to its available observation and supported tile zoom", () => {
+    const rain = LAYERS.find(entry => entry.id === "rain");
+    expect(rain?.source.kind).toBe("tile_template");
+    if (rain?.source.kind !== "tile_template") throw new Error("Expected IMERG tiles");
+    expect(rain.source.urlTemplate).toBe("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/IMERG_Precipitation_Rate/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png");
+    expect(rain.source.maxzoom).toBe(6);
+    expect(rain.source.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(rain.panel?.control).toBe("none");
+    expect(rain.credit).toBe("NASA GPM IMERG / NASA GIBS");
   });
 
   it("leaves out a layer with no panel block", () => {

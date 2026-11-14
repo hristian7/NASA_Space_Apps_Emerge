@@ -124,7 +124,7 @@ export default function AppShell() {
   useEffect(() => {
     // Waits for the address bar to be read, or this would overwrite its layers.
     if (view !== "forecast" || !layersReady) return;
-    const forecastIds = ["fire-danger", "nasa-fwi", "wind", "air-temperature", "soil-moisture", "greenness", "land-type"];
+    const forecastIds = ["fire-danger", "nasa-fwi", "wind", "air-temperature", "rain", "soil-moisture", "greenness", "land-type"];
     if (!layerState.on.some((id) => forecastIds.includes(id))) toggle("fire-danger");
     // Only on entering the view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
