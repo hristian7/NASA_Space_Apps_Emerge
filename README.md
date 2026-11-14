@@ -21,6 +21,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`docs/challenges-full.md`](docs/challenges-full.md) | Full NASA text and resources for all 14 challenges (added by a teammate) |
 | [`docs/data-sources.md`](docs/data-sources.md) | Plain-language guide to every data source named in the 14 challenges (added by a teammate) |
 | [`docs/rules-and-judging.md`](docs/rules-and-judging.md) | Deadlines, submission rules, open-source rules, judging criteria, awards |
+| [`docs/harmonization-plan.md`](docs/harmonization-plan.md) | The plan to convert MODIS (low resolution) into VIIRS-level (high resolution) numbers, step by step |
 | [`docs/verification-plan.md`](docs/verification-plan.md) | How we prove the conversion and the app are right |
 | [`specs/interview-questions.md`](specs/interview-questions.md) | Questions the 6 of us answered to shape the spec |
 | [`specs/interview-answers.md`](specs/interview-answers.md) | The team's decisions, plus answers to the team's questions |

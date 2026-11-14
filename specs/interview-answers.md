@@ -14,9 +14,9 @@ The team's answers to [`interview-questions.md`](interview-questions.md), summar
 | B1 | Top tasks | Pick an area and dates; a world overview map; a **fire-risk outlook** for the coming days or months with a certainty level ("like a weather forecast for fires"); a heat map of risk zones with levels; a globe like Google Earth; navigation like [everydayweather.com/lab/hazards](https://everydayweather.com/lab/hazards) |
 | B2 | Decisions supported | Warn people in danger areas in advance; advise crews and volunteers on where and when to pre-position |
 | B3 | Language | **English and Bulgarian** |
-| B4 | Device | Desktop and mobile; a **PWA** (installable web app) if the extra time is small |
+| B4 | Device | Desktop and mobile. **Decided 14 Nov: an installable PWA** (no push alerts in the MVP) |
 | B5 | Expertise | Professionals and the general public: every term explained in plain language |
-| C1 | Geography | **Bulgaria and USA are must-haves**; the rest of the world depends on the time cost |
+| C1 | Geography | **Decided 14 Nov: the whole world.** Bulgaria and the USA are checked first and shown in the demo |
 | C2 | Time range | 2000–2025 for sure; research data after 2025 and before 2000 |
 | C3 | Resolution | Daily where the data allows |
 | C4 | MVP | Asked for a MoSCoW feature list → [`features-moscow.md`](features-moscow.md). **⏳ The team picks the features** |
