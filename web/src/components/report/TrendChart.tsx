@@ -88,10 +88,15 @@ export default function TrendChart({
     });
   }
 
+  // The highest yearly TOTAL, not the top of the chart: with real data the
+  // top is the upper end of an estimated year's range, which can be several
+  // times any total, and calling that "the highest" would misread the record.
+  const highest = Math.max(...drawn.map((year) => year.value ?? 0));
+
   const summary = t("trend.summary", {
     first: firstYear,
     last: lastYear,
-    max: formatCount(top, locale),
+    max: formatCount(highest, locale),
     unit,
     years: formatCount(trend.years, locale),
   });

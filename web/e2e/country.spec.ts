@@ -1,13 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { calendar, monthCell, openReport, unitButton } from "./helpers";
+import { asShown, monthOf } from "./data";
 
 /**
  * Bulgaria, the whole record: the calendar is there, the unit toggle changes
- * the numbers, and clicking a month moves the two monthly cards onto it.
+ * the numbers, and clicking a month moves the two monthly cards onto it. The
+ * two figures are read from the country file as the spec runs, so a refreshed
+ * export keeps this honest instead of breaking it.
  */
 test("a country shows a calendar that answers the unit toggle and the month", async ({
   page,
 }) => {
+  const august = monthOf("BGR", 2024, 8);
+
   await openReport(page, "/?sel=c:BGR");
 
   await expect(calendar(page)).toBeVisible();
@@ -17,24 +22,26 @@ test("a country shows a calendar that answers the unit toggle and the month", as
   // shows a typical number of fire days instead of a share (M13).
   await expect(page.getByText("Expected fire days this month")).toBeVisible();
 
-  // August 2024 in fire days, from the country file.
-  const august = monthCell(page, "August 2024");
-  await expect(august).toHaveAttribute("aria-label", /395 fire days/);
+  await expect(monthCell(page, "August 2024")).toHaveAttribute(
+    "aria-label",
+    new RegExp(`${asShown(august.cd)} fire days`),
+  );
 
   await unitButton(page, "Hotspots").click();
   await expect(monthCell(page, "August 2024")).toHaveAttribute(
     "aria-label",
-    /638 hotspots/,
+    new RegExp(`${asShown(august.hot)} hotspots`),
   );
 
   await unitButton(page, "Fire days").click();
   await expect(monthCell(page, "August 2024")).toHaveAttribute(
     "aria-label",
-    /395 fire days/,
+    new RegExp(`${asShown(august.cd)} fire days`),
   );
 
-  // The last month of the record is the one the cards follow to begin with.
-  await expect(page.getByText("Selected month: December 2025")).toBeVisible();
+  // The month the cards follow to begin with is the last one in the record.
+  const lastMonth = monthOf("BGR", 2025, 12);
+  await expect(page.getByText(`Selected month: December ${lastMonth.y}`)).toBeVisible();
 
   await monthCell(page, "August 2024").click();
   await expect(page.getByText("Selected month: August 2024")).toBeVisible();

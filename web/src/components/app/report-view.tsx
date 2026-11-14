@@ -40,7 +40,9 @@ import {
   loadCountryIndex,
 } from "@/lib/data/api";
 import { chance, extremes, rankWindow, trend, unusual, unusualToDate } from "@/lib/stats";
+import { MAX_ROWS } from "@/lib/hotspots/query";
 import { encodeSelection } from "@/lib/ui/selection-url";
+import { useCountryName } from "./country-name";
 import { decodeView, defaultView, viewSearch, type ViewState } from "@/lib/ui/view-url";
 import {
   anomalyPoints,
@@ -68,8 +70,9 @@ interface Loaded {
   hotspots: Series;
   satellites: SatelliteMonth[] | null;
   reported: ReportedFile | null;
-  /** The selected country's own box, for the hotspots link. */
+  /** The selected country's own box and middle, for the hotspots link. */
   countryBox: Bbox | null;
+  countryLon: number | null;
   window: Awaited<ReturnType<typeof getWindowTotals>> | null;
   monthToDate: Awaited<ReturnType<typeof getMonthToDate>> | null;
   /** True when the pre-2012 background or its factors could not be read. */
@@ -78,7 +81,9 @@ interface Loaded {
 
 export default function ReportView({ selection }: { selection: Selection }) {
   const t = useTranslations("app");
-  const names = useTranslations("country");
+  const countryName = useCountryName(
+    selection.kind === "country" ? selection.iso3 : null,
+  );
   const locale = useLocale() as ReportLocale;
 
   const key = useMemo(() => encodeSelection(selection), [selection]);
@@ -118,9 +123,14 @@ export default function ReportView({ selection }: { selection: Selection }) {
       ]);
       // Read straight after the series runs, which is what sets it.
       const background = backgroundStatus();
+      // meta lists the countries an authority publishes figures for. Asking
+      // for a file that is not there answers null, but the browser still
+      // prints a 404, so the list is read first.
+      const hasReported =
+        selection.kind !== "country" || meta.reported.includes(selection.iso3);
       const [satellites, reported, index] = await Promise.all([
         getPerSatellite(selection),
-        getReported(selection).catch(() => null),
+        hasReported ? getReported(selection).catch(() => null) : Promise.resolve(null),
         selection.kind === "country"
           ? loadCountryIndex().catch(() => null)
           : Promise.resolve(null),
@@ -140,6 +150,7 @@ export default function ReportView({ selection }: { selection: Selection }) {
         hotspots,
         satellites,
         reported,
+        countryLon: entry?.lon ?? null,
         countryBox:
           entry === null
             ? null
@@ -207,7 +218,7 @@ export default function ReportView({ selection }: { selection: Selection }) {
       onView={apply}
       locale={locale}
       t={t}
-      names={names}
+      countryName={countryName}
       calendarRef={calendarRef}
       chartRef={chartRef}
     />
@@ -223,7 +234,7 @@ function Report({
   onView,
   locale,
   t,
-  names,
+  countryName,
   calendarRef,
   chartRef,
 }: {
@@ -233,7 +244,7 @@ function Report({
   onView: (next: ViewState) => void;
   locale: ReportLocale;
   t: Translate;
-  names: Translate;
+  countryName: string;
   calendarRef: React.RefObject<SVGSVGElement | null>;
   chartRef: React.RefObject<SVGSVGElement | null>;
 }) {
@@ -315,7 +326,7 @@ function Report({
 
   const place =
     selection.kind === "country"
-      ? safeName(names, selection.iso3)
+      ? countryName
       : selection.kind === "point"
         ? `${selection.lat.toFixed(3)}, ${selection.lon.toFixed(3)}`
         : t("drawnArea");
@@ -333,9 +344,17 @@ function Report({
         year,
         lastDay: data.meta.last_data_day,
         countryBox: data.countryBox,
+        countryLon: data.countryLon,
       }),
     };
-  }, [selection, selectedMonth, last, data.meta.last_data_day, data.countryBox]);
+  }, [
+    selection,
+    selectedMonth,
+    last,
+    data.meta.last_data_day,
+    data.countryBox,
+    data.countryLon,
+  ]);
 
   function downloadMonthly() {
     const header = csvHeader({
@@ -534,7 +553,8 @@ function Report({
 
       <div className={styles.hotspots}>
         <p className={styles.notice} data-testid="hotspots-note">
-          {t("hotspotsNote", { year: hotspots.year })}
+          {t("hotspotsNote", { year: hotspots.year, rows: MAX_ROWS })}
+          {hotspots.link?.partial === true ? ` ${t("hotspotsPartial")}` : ""}
         </p>
         <p className="rp-sub">{t("hotspotsSlow")}</p>
         <p className="rp-sub">
@@ -561,13 +581,5 @@ function isPartialMonth(meta: MetaFile): boolean {
   if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return false;
   const length = new Date(Date.UTC(y, m, 0)).getUTCDate();
   return d < length;
-}
-
-function safeName(names: Translate, key: string): string {
-  try {
-    return names(key);
-  } catch {
-    return key;
-  }
 }
 
