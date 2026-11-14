@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { getMeta } from "@/lib/data/api";
+import { formatIsoDate, type ReportLocale } from "@/components/report/lib/format";
 import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
 import { dangerClasses, dangerDate, dangerDays } from "@/lib/layers/danger";
@@ -56,6 +58,17 @@ export default function LayerPanel({
   covered,
 }: Props) {
   const t = useTranslations("layers");
+  const locale = useLocale() as ReportLocale;
+  const [lastDay, setLastDay] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    getMeta().then((meta) => {
+      if (!cancelled) setLastDay(meta.last_data_day);
+    }).catch(() => {
+      if (!cancelled) setLastDay(null);
+    });
+    return () => { cancelled = true; };
+  }, []);
   const [open, setOpen] = useState(true);
   const [rasterErrors, setRasterErrors] = useState<string[]>([]);
   const [wind, setWind] = useState({ state: "loading", time: "" });
@@ -256,6 +269,13 @@ export default function LayerPanel({
       if (historyStatus === "loading") return t("loading");
       if (historyStatus === "empty") return t("noYearData", { year: state.historyYear });
       if (historyStatus === "failed") return t("failed");
+      if (lastDay === undefined) return t("loading");
+      if (lastDay === null) return t("failed");
+      if (lastDay.slice(0, 4) === String(state.historyYear) && !lastDay.endsWith("-12-31")) {
+        return t("harmonizedHistoryPartialTime", {
+          year: state.historyYear, date: formatIsoDate(lastDay, locale), cells: historyCellCount,
+        });
+      }
       return t(key, { year: state.historyYear, cells: historyCellCount });
     }
     if (definition.id === "recent-fires") {

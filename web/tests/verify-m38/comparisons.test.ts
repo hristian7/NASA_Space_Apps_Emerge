@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { createTranslator } from "next-intl";
 import { clipSeries, historyYears } from "../../src/components/app/adapter";
 import { unusual, unusualFromHistory } from "../../src/lib/stats/unusual";
-import { unusualText } from "../../src/components/report/lib/sentences";
+import { formatComparisonYears, unusualText } from "../../src/components/report/lib/sentences";
 import type { Series } from "../../src/types/ui";
 import { translateFor } from "../report/translate";
 import app from "../../messages/app.en.json";
+import appBg from "../../messages/app.bg.json";
 
 function series(years: Array<[number, number | null]>): Series {
   return {
@@ -37,14 +38,25 @@ describe("comparison years follow the numbers used", () => {
     expect(unusual(clipped, 2005, 8).median).toBe(30);
   });
 
-  // Strict expected failure: the shipped notice prints endpoints, not the years between them.
-  it.fails("lists each actual year when there is a gap", () => {
-    const years = historyYears(full, 2005, 8);
+  it.each([
+    [full, 2003, "2000 to 2001", 2],
+    [full, 2005, "2000 to 2001, 2003 to 2004", 4],
+    [clipSeries(full, { y: 2001, m: 8 }, { y: 2005, m: 8 }), 2005, "2001, 2003 to 2004", 3],
+  ])("lists the actual years for %s in %i", (input, year, list, count) => {
+    const years = historyYears(input, year, 8);
     const t = createTranslator({ locale: "en", messages: app });
-    const shown = t("comparedWith", { month: "August", first: years[0], last: years.at(-1)!, years: years.length });
-    expect(shown).toContain("2001");
-    expect(shown).toContain("2003");
+    const shown = t("comparedWith", { month: "August", list: formatComparisonYears(years, "en"), years: years.length });
+    expect(shown).toBe(`Compared with August in ${list}: ${count} years.`);
+    expect(years.length).toBe(unusual(input, year, 8).years);
     expect(shown).not.toContain("2002");
+  });
+
+  it("lists gaps in Bulgarian and uses the singular for one year", () => {
+    const t = createTranslator({ locale: "bg", messages: appBg });
+    expect(t("comparedWith", { month: "август", list: formatComparisonYears([2000, 2001, 2003], "bg"), years: 3 }))
+      .toBe("Сравнено с август през 2000 до 2001, 2003: 3 години.");
+    expect(t("comparedWith", { month: "август", list: formatComparisonYears([2003], "bg"), years: 1 }))
+      .toBe("Сравнено с август през 2003: 1 година.");
   });
 });
 

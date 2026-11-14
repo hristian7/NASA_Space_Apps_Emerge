@@ -31,6 +31,7 @@ import {
   formatIsoDate,
   type ReportLocale,
 } from "@/components/report/lib/format";
+import { formatComparisonYears } from "@/components/report/lib/sentences";
 import { yearTotalsFromSeries } from "@/components/report/lib/aggregate";
 import {
   backgroundStatus,
@@ -329,8 +330,10 @@ function Report({
     () =>
       selectedMonth === null
         ? []
-        : historyYears(series, selectedMonth.y, selectedMonth.m),
-    [series, selectedMonth],
+        : partMonth
+          ? (data.monthToDate?.past ?? []).filter((year) => year.hot !== null).map((year) => year.year)
+          : historyYears(series, selectedMonth.y, selectedMonth.m),
+    [series, selectedMonth, partMonth, data.monthToDate],
   );
 
   const theChance = useMemo(
@@ -539,8 +542,7 @@ function Report({
           <p className={styles.notice} data-testid="compared-years">
             {t("comparedWith", {
               month: monthLong(selectedMonth.m, locale),
-              first: comparedYears[0],
-              last: comparedYears[comparedYears.length - 1],
+              list: formatComparisonYears(comparedYears, locale),
               years: theUnusual.years,
             })}
           </p>

@@ -12,6 +12,19 @@ import {
   type ReportLocale,
 } from "./format";
 
+/** Compress consecutive comparison years while keeping gaps visible. */
+export function formatComparisonYears(years: readonly number[], locale: ReportLocale): string {
+  const sorted = [...new Set(years)].sort((a, b) => a - b);
+  const ranges: string[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const start = sorted[i];
+    let end = start;
+    while (i + 1 < sorted.length && sorted[i + 1] === end + 1) end = sorted[++i];
+    ranges.push(start === end ? String(start) : `${start} ${locale === "bg" ? "до" : "to"} ${end}`);
+  }
+  return ranges.join(", ");
+}
+
 export interface SentenceContext {
   t: Translate;
   locale: ReportLocale;
