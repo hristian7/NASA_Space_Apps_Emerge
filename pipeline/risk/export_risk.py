@@ -82,6 +82,10 @@ def main():
     # Represent regions without eligible vegetation explicitly as empty lists.
     for country, region in con.execute('SELECT DISTINCT country,region_id FROM grid WHERE country IS NOT NULL').fetchall():
         country_regions[country][region] = {day: [] for day in DAYS}
+    all_regions = defaultdict(lambda: defaultdict(dict))
+    for country, regions in country_regions.items():
+        for region in regions:
+            all_regions[country][region] = {day: [] for day in DAYS}
     total_null_country = 0
     for day in DAYS:
         weather = args.data / 'fwi_0.25' / f'month={day[:7]}' / f'{day}.parquet'
@@ -111,36 +115,41 @@ def main():
             means = rows.groupby('region_id', sort=False)[contribution_names].mean()
         else:
             means = rows.groupby('region_id', sort=False)[list(FEATURES)].mean()
-        chosen = rows[rows.fuel_class.isin(['forest', 'shrub_grass'])].copy()
-        total_null_country += int(chosen.country.isna().sum())
-        chosen = chosen[chosen.country.notna()]
-        chosen = chosen.sort_values(['region_id', 'p', 'hist_p', 'tie_order', 'spot_id'],
-                                    ascending=[True, False, False, True, True], na_position='last')
-        chosen = chosen.groupby('region_id', sort=False).head(10)
-        for (country, region), group in chosen.groupby(['country', 'region_id'], sort=False):
-            spots = []
-            mean = means.loc[region].to_numpy(dtype=float)
-            for rank, (_, row) in enumerate(group.iterrows(), 1):
-                p = scalar(row.p)
-                level = 1 if p is None else int(np.searchsorted(model['level_probability_limits'], p, side='right') + 1)
-                record = {'type': 'fire_risk', 'spot_id': int(row.spot_id), 'lat': float(row.lat), 'lon': float(row.lon),
-                          'precision_radius_km': float(row.precision_radius_km), 'region_id': region, 'day': day,
-                          'rank': rank, 'p': p, 'level': level,
-                          'fire_type': 'forest' if row.fuel_class == 'forest' else 'grass_shrub',
-                          'inputs': {'fwi': scalar(row.fwi), 'ffmc': scalar(row.ffmc), 'dmc': scalar(row.dmc), 'dc': scalar(row.dc),
-                                     't_max_c': None, 'rh_min': None, 'wind_max_kmh': None, 'wind_dir_deg': None,
-                                     'rain_3d_mm': None, 'ndvi_diff': None, 'forest': None, 'farm': None, 'grass_shrub': None,
-                                     'hist_p': scalar(row.hist_p), 'fire_near_3d': bool(row.fire_near_3d)},
-                          'why': explanations(row, mean, model)}
-                spots.append(record)
-            country_regions[country][region][day] = spots
-        print(day, 'selected regions', chosen.region_id.nunique(), 'spots', len(chosen), flush=True)
+        for selection, classes, target in (
+            ('forest_wildland', ['forest', 'shrub_grass'], country_regions),
+            ('all_vegetation', ['forest', 'shrub_grass', 'farmland'], all_regions),
+        ):
+            chosen = rows[rows.fuel_class.isin(classes)].copy()
+            if selection == 'forest_wildland':
+                total_null_country += int(chosen.country.isna().sum())
+            chosen = chosen[chosen.country.notna()]
+            chosen = chosen.sort_values(['region_id', 'p', 'hist_p', 'tie_order', 'spot_id'],
+                                        ascending=[True, False, False, True, True], na_position='last')
+            chosen = chosen.groupby('region_id', sort=False).head(10)
+            for (country, region), group in chosen.groupby(['country', 'region_id'], sort=False):
+                spots = []
+                mean = means.loc[region].to_numpy(dtype=float)
+                for rank, (_, row) in enumerate(group.iterrows(), 1):
+                    p = scalar(row.p)
+                    level = 1 if p is None else int(np.searchsorted(model['level_probability_limits'], p, side='right') + 1)
+                    record = {'type': 'fire_risk', 'spot_id': int(row.spot_id), 'lat': float(row.lat), 'lon': float(row.lon),
+                              'precision_radius_km': float(row.precision_radius_km), 'region_id': region, 'day': day,
+                              'rank': rank, 'p': p, 'level': level,
+                              'fire_type': {'forest': 'forest', 'shrub_grass': 'grass_shrub', 'farmland': 'farmland'}[row.fuel_class],
+                              'inputs': {'fwi': scalar(row.fwi), 'ffmc': scalar(row.ffmc), 'dmc': scalar(row.dmc), 'dc': scalar(row.dc),
+                                         't_max_c': None, 'rh_min': None, 'wind_max_kmh': None, 'wind_dir_deg': None,
+                                         'rain_3d_mm': None, 'ndvi_diff': None, 'forest': None, 'farm': None, 'grass_shrub': None,
+                                         'hist_p': scalar(row.hist_p), 'fire_near_3d': bool(row.fire_near_3d)},
+                              'why': explanations(row, mean, model)}
+                    spots.append(record)
+                target[country][region][day] = spots
+            print(day, selection, 'selected regions', chosen.region_id.nunique(), 'spots', len(chosen), flush=True)
     folder = args.dest / 'latest'
     folder.mkdir(parents=True, exist_ok=True)
     for country, regions in country_regions.items():
         if len(country) != 3 or not country.isalpha() or not country.isupper():
             raise ValueError(f'invalid country code {country}')
-        obj = {'country': country, 'days': list(DAYS), 'regions': regions}
+        obj = {'country': country, 'days': list(DAYS), 'regions': regions, 'all_vegetation': all_regions[country]}
         (folder / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), ensure_ascii=False, allow_nan=False) + '\n')
     meta = {'engine_ready': ready, 'example': False, 'model_version': model['model_version'],
             'made_at': dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00', 'Z'), 'grid_g': 0.25,
