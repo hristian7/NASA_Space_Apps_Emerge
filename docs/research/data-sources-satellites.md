@@ -35,14 +35,29 @@ Tags: `[V]` opened the official page on 14 Nov · `[D]` directional (search summ
 | **Coverage per sensor** | MODIS C6.1 from 1 Nov 2000; S-NPP 20 Jan 2012 to 2 Nov 2026; NOAA-20 from 1 Apr 2018; NOAA-21 from 1 Mar 2023 `[V]` | NOAA-21 has no yearly country files (first pass) |
 | **End of MODIS** | NASA projects end of science: **Terra Feb 2027, Aqua Sep 2027** `[V]`. Earthdata: both platforms "will begin shutting down operations" in late 2026/early 2027 and are drifting from their designed orbits `[V]` | Flag 2026 MODIS as "drifting orbit" |
 
+## Gap 2a: the VIIRS fleet itself, for reference
+
+Not a new source — Suomi NPP, NOAA-20 and NOAA-21 are already Emerge's core reference sensors (detail on coverage dates and cleaning rules: [`../firms-data.md`](../firms-data.md)). Added here because the orbit geometry explains *why* three satellites together densify the record, which the other files don't spell out.
+
+| Satellite | Equator crossing (local mean solar time) `[V]` | Role in the stagger `[V]` |
+|---|---|---|
+| Suomi NPP (S-NPP) | ~01:30 and ~13:30 | sits between NOAA-20 and NOAA-21 in the orbit train |
+| NOAA-20 (JPSS-1) | ~01:30 and ~13:30, same orbit plane | — |
+| NOAA-21 (JPSS-2) | ~01:30 and ~13:30, same orbit plane | flies about 50 minutes ahead of NOAA-20 `[V]` |
+
+**Shared facts, all VIIRS satellites:** 375 m pixels at nadir on the I-band active-fire product (`VIIRS_*_NRT`/`_SP` in FIRMS) `[V]`; 3,040 km swath, giving about 15% overlap between consecutive orbits at the equator and full global coverage from **one** satellite every **12 hours** `[V]`. With three satellites staggered through the same orbit plane, Emerge's combined VIIRS revisit is denser than any single one of them — this is the orbital reason NOAA-20/21 are worth filling gaps with (as `first-run-bulgaria-usa.md` already found for the 2022/2024 S-NPP gap days), not just a fallback.
+
 ## Gap 3: other satellites for densifying or cross-checking
+
+Resolved 14 Nov 2026 (second pass): the open questions this file left on Sentinel-3, GOES and Meteosat, plus a new look at Sentinel-4. "comsat geo" in the request that prompted this pass is read as **GOES**, the US geostationary weather satellite already listed here — flag if that's the wrong satellite.
 
 | Source | Coverage, years | Time step, pixel | Access | Licence | Verdict |
 |---|---|---|---|---|---|
-| **Sentinel-3 SLSTR FRP** (`SL_2_FRP` NTC) | Global; product since 19 Aug 2020; daytime detection completed 28 Feb 2022 `[D]` | About 10:00 and 22:00 overpasses `[U]`; 1 km grid `[D]` | Copernicus Data Space (free account), NetCDF `[D]`; also a C3S monthly 0.25° gridded FRP, 2020 to now `[D]` | Copernicus: free and open (CC BY 4.0 since Jul 2025, first pass) | **Check only**: independent sensor for 2020+; the C3S 0.25° grid could be a quick cross-check |
-| **GOES ABI fire product** (FDC) | Americas; GOES-East is GOES-19 since 4 Apr 2025, GOES-West is GOES-18 since 10 Jan 2023 `[V]`; GOES-16 from about 2017 `[D]` | 5 to 15 minutes, about 2 km `[D]` | AWS open data, no login `[V]` (FDC product name not verified) | NOAA open data `[U]` | **Check only**: good for a USA case study, heavy to process |
+| **Sentinel-3 SLSTR FRP** (`SL_2_FRP` NTC) | Global; product since 19 Aug 2020; daytime detection completed 28 Feb 2022 `[D]` | About 10:00 and 22:00 overpasses `[U]`; 1 km grid `[D]` | Copernicus Data Space (free account), NetCDF4 `[V]`. **File size:** the SLSTR Level-1+FRP bundle (L1B imagery, FRP mini-files in CSV and NetCDF, and the full image grid) runs **about 24 GB for one full day of global coverage** `[V]` — that's the whole bundle, not the FRP-only output alone, which the product docs don't size separately `[U]` | Copernicus: free and open (CC BY 4.0 since Jul 2025, first pass) | **Check only**: independent sensor for 2020+; the C3S 0.25° grid stays the cheaper cross-check, the full SLSTR bundle is too heavy to pull routinely |
+| **GOES ABI fire product** (FDC) | Americas; GOES-East is GOES-19 since 4 Apr 2025, GOES-West is GOES-18 since 10 Jan 2023 `[V]`; GOES-16 from about 2017 `[D]` | 5 to 15 minutes. **Confirmed: 2 km**, on the ABI fixed grid, for both Full Disk and CONUS `[V]`. Product name confirmed: **`ABI-L2-FDCF`** (Full Disk) `[V]`, four bands per file: fire mask, fire temperature, fire area, fire radiative power | AWS open data (`noaa-goes16`/`17`/`18`/`19` S3 buckets, `us-east-1`), **no login**, NetCDF4 `[V]` | NOAA open data `[U]` | **Check only**: good for a USA case study; the mask+FRP bands make it a candidate for an S9-style intensity cross-check, still heavy to process routinely |
 | **Himawari-8/9 AHI wildfire (WLF)** | Asia-Pacific; from Jul 2015 `[D]` | 10-minute, hourly, daily and monthly products in P-Tree `[V]`; about 2 km `[D]` | JAXA P-Tree, **registration required** (name, email, organisation, purpose) `[V]` | Free; credit JAXA; **commercial use allowed but must notify JAXA in advance** `[V]` | **Skip**: login plus notification terms; outside our two focus countries |
-| **Meteosat SEVIRI/FCI FRP** (LSA SAF) | Europe, Africa (incl. Bulgaria); FRP-Pixel and FRP-Grid from MSG SEVIRI or MTG FCI `[V]`; from about 2004 `[D]` | 15 minutes, about 3 km at nadir `[D]` | LSA SAF data service (account, not verified) | Acknowledgement requested `[V]`; licence not verified | **Check only**: best geostationary option for Bulgaria; FRP-Grid already corrects for cloud and missed small fires `[V]` |
+| **Meteosat SEVIRI/FCI FRP** (LSA SAF) | Europe, Africa (incl. Bulgaria); FRP-Pixel and FRP-Grid from MSG SEVIRI or MTG FCI `[V]`. **Confirmed: operational since 2008, reprocessed back to 2004** via the FRPPixel-R/FRPGrid-R data records `[V]` | **Confirmed: FRP-PIXEL is 3 km / 15 minutes; FRP-GRID is a 5 km hourly summary** that corrects for cloud cover and missed low-FRP pixels `[V]` | LSA SAF data service (`lsa-saf.eumetsat.int`), **free account required** (Account → Register, name/email/organisation) `[V]` | **Confirmed: CC BY 4.0, EUMETSAT** `[V]` | **Check only**: best geostationary option for Bulgaria; FRP-Grid's cloud/low-FRP correction makes it a genuinely different signal from a hot spot count, worth a V-M41-style cross-check rather than a data source for the core record |
+| **Sentinel-4 UVN** (on MTG-S1, launched 1 Jul 2025) | Europe and North Africa only; geostationary, scans the full disk every 60 minutes `[V]` | Not a fire/hot-spot sensor: a UV-visible-near-IR spectrometer measuring **NO2, O3, SO2, formaldehyde, glyoxal and aerosols** — smoke and fire emissions, not fire location `[V]` | Via Copernicus Atmosphere Monitoring Service (CAMS) forecasts; raw instrument access not checked this pass `[U]` | Copernicus, presumed CC BY 4.0 like its sibling missions `[U]`, not independently confirmed for this instrument | **Skip for the hot spot calendar** — it cannot detect or count fires. Only relevant if Emerge ever adds a smoke/air-quality layer (matches EFFIS's own "Fire Emissions" Technical Background page, found in [`reported-fires-bg-effis.md`](reported-fires-bg-effis.md)); not worth it for this weekend |
 
 Note: LSA SAF's older FD&M fire product was **discontinued in 2024** `[V]`.
 
@@ -73,11 +88,20 @@ Note: LSA SAF's older FD&M fire product was **discontinued in 2024** `[V]`.
 - ATSR World Fire Atlas: https://due.esrin.esa.int/page_wfa.php (not reachable 14 Nov); ESA news: https://www.esa.int/About_Us/ESRIN/World_fire_maps_now_available_online_in_near-real_time
 - TRMM VIRS fire (Giglio et al. 2003, *IJRS* 24(22)): https://modis.gsfc.nasa.gov/sci_team/pubs/abstract_new.php?id=03270
 - Sentinel-3 FRP release: https://sentinel.esa.int/web/sentinel/-/new-copernicus-sentinel-3-fire-radiative-power-products-released
+- Sentinel-3 SLSTR L2 FRP product data format spec: https://sentinels.copernicus.eu/documents/247904/4760806/S3MPC.ACR.FRP.003+-+i1r4+-+SLSTR+L2+Product+Data+Format+Specification_version_online.pdf
 - C3S satellite FRP: https://cds.climate.copernicus.eu/datasets/satellite-fire-radiative-power
 - GOES on AWS: https://registry.opendata.aws/noaa-goes/
+- GOES-R ABI Fire/Hot Spot Characterization (FDC) product page: https://www.goes-r.gov/products/baseline-fire-hot-spot.html
+- GOES-R FDC land product (STAR): https://www.star.nesdis.noaa.gov/goesr/product_land_fire.php
 - JAXA P-Tree terms: https://www.eorc.jaxa.jp/ptree/terms.html
 - JAXA research data terms: https://earth.jaxa.jp/en/data/policy/index.html
 - LSA SAF fire products: https://lsa-saf.eumetsat.int/en/data/products/fire-products/
+- LSA SAF data access and registration: https://training.eumetsat.int/mod/book/view.php?id=13365&forceview=1
+- LSA SAF FRP products, algorithms and reprocessing to 2004 (Wooster et al. 2015, *ACP*): https://acp.copernicus.org/articles/15/13241/2015/acp-15-13241-2015.pdf
+- Sentinel-4 mission overview (EUMETSAT): https://www.eumetsat.int/sentinel-4
+- Sentinel-4 mission introduction (ESA): https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-4/Introducing_the_Sentinel-4_mission
+- VIIRS Collection 2 375m active fire user guide (orbit, swath, overlap): https://www.earthdata.nasa.gov/s3fs-public/2025-06/VIIRS_C2_AF-375m_User_Guide_1.2.pdf
+- FIRMS FAQ (VIIRS acquisition frequency): https://www.earthdata.nasa.gov/data/tools/firms/faq
 - EFFIS statistics portal: https://forest-fire.emergency.copernicus.eu/apps/effis.statistics/estimates
 - EFFIS API (Bulgaria): https://api2.effis.emergency.copernicus.eu/statistics/v2/effis/estimatesbycountry?country=BGR
 - NIFC wildfires and acres: https://www.nifc.gov/fire-information/statistics/wildfires
@@ -87,8 +111,11 @@ Note: LSA SAF's older FD&M fire product was **discontinued in 2024** `[V]`.
 - **AVHRR active-fire records** (for example the 1990s IGBP-DIS global fire product, NOAA AVHRR fire detections): not researched in time.
 - **ATSR World Fire Atlas** access, format, size and licence: the ESA DUE site refused connections.
 - **TRMM VIRS** end year and current download location.
-- **Sentinel-3 SLSTR FRP** overpass times, current processing baseline and file sizes.
-- **GOES ABI FDC** exact product name on AWS (`ABI-L2-FDCF` expected) and pixel size; **Himawari** start year and pixel size; **LSA SAF** start year, account rules and licence text.
+- ~~**Sentinel-3 SLSTR FRP** overpass times, current processing baseline and file sizes.~~ Resolved above (second pass): NetCDF4, CC BY 4.0 confirmed; the ~24 GB/day figure is for the whole L1B+FRP bundle, not the FRP output alone, which is still unsized.
+- ~~**GOES ABI FDC** exact product name on AWS and pixel size.~~ Resolved above: `ABI-L2-FDCF`, 2 km, on the ABI fixed grid.
+- **Himawari** start year and pixel size: still not independently re-verified (not in scope of the second pass).
+- ~~**LSA SAF** start year, account rules and licence text.~~ Resolved above: operational since 2008 (reprocessed to 2004), free registered account, CC BY 4.0.
+- **Sentinel-4 UVN** (added second pass): confirmed it is not a fire/hot-spot instrument at all — it measures trace gases and aerosols, not fire location — so it answers "is it useful" (no, for the core calendar) rather than leaving an open question.
 - **NRT latency** of about 3 hours for MODIS/VIIRS NRT.
 - **What "larger transactions count as multiple" means** for a 5-day `world` call: test with a real key and the MAP_KEY status page.
 - **EFFIS country-reported statistics** as a downloadable table (only PDF reports found); the 30 ha mapping threshold.

@@ -41,7 +41,8 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`docs/research/stack-options.md`](docs/research/stack-options.md) | 20 stack options ranked, and the recommended stack |
 | [`docs/research/data-sources-satellites.md`](docs/research/data-sources-satellites.md) | Data before 2000, 2026 data, other satellites, country statistics |
 | [`docs/research/push-alerts.md`](docs/research/push-alerts.md) | Push-alert design on Vercel (S11) |
-| Short versions for review (≤ 500 words each) | [storage](docs/research/storage-options-summary.md) · [stack](docs/research/stack-options-summary.md) · [data sources](docs/research/data-sources-summary.md) · [push alerts](docs/research/push-alerts-summary.md) |
+| [`docs/research/reported-fires-bg-effis.md`](docs/research/reported-fires-bg-effis.md) | Bulgaria's Executive Forest Agency (ИАГ) annual reports 2021–2025, and a full crawl of the Copernicus/EFFIS site, for M28 "detected vs reported" |
+| Short versions for review (≤ 500 words each) | [storage](docs/research/storage-options-summary.md) · [stack](docs/research/stack-options-summary.md) · [data sources](docs/research/data-sources-summary.md) · [push alerts](docs/research/push-alerts-summary.md) · [reported fires](docs/research/reported-fires-bg-effis-summary.md) |
 
 ## Key deadlines (Sofia time)
 
