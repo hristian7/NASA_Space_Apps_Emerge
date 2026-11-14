@@ -15,3 +15,6 @@ __pycache__/
 
 # Data downloads (re-downloadable, can be large)
 data/raw/
+
+# Computed totals (rebuild with pipeline/build_cells.py)
+data/derived/
