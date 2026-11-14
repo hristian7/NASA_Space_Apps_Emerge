@@ -1,10 +1,11 @@
 # Emerge plan 2: next-day fire risk, build specification (long version)
 
-Written Sat 14 Nov 2026, 21:00 EET. The one-page version is [`overview.md`](overview.md). This file is what the build follows for plan 2: scope, data, engine, proof, screens, file contract, tests, order of work and open decisions.
+Written Sat 14 Nov 2026, 21:00 EET; revised 21:45: added four fixes and two charts from the competitor research (M36–M39, S16–S17), the prediction placeholder, and section 12 (shortcuts). The one-page version is [`overview.md`](overview.md). This file is what the build follows for plan 2: scope, data, engine, proof, screens, file contract, tests, order of work, shortcuts and open decisions.
 
 **Authorities:**
-- **Feature priority:** [`../features-moscow.md`](../features-moscow.md), section "Plan 2". Only Musts M30–M35 and Shoulds S12–S15 are built here.
-- **Why these features:** [`../../docs/research/firefighter-interview.md`](../../docs/research/firefighter-interview.md).
+- **Feature priority:** [`../features-moscow.md`](../features-moscow.md), section "Plan 2". Built here: Musts M30–M39 and Shoulds S12–S17.
+- **Why these features:** the firefighter interview ([`../../docs/research/firefighter-interview.md`](../../docs/research/firefighter-interview.md)) for M30–M35 and S12–S15; the competitor research ([`../../docs/research/feature-map.md`](../../docs/research/feature-map.md), [`../../docs/research/competitors.md`](../../docs/research/competitors.md)) for M36–M39 and S16–S17.
+- **Every data source and its status:** [`../../docs/data-sources-master.md`](../../docs/data-sources-master.md).
 - **Shared parts** (stack, hosting, languages, points-only data, wording rules, tracking): plan 1's [`../specification.md`](../specification.md). This file says only where plan 2 differs or adds.
 - **Earlier forecasting research:** [`../../docs/research/forecast-options.md`](../../docs/research/forecast-options.md).
 
@@ -38,7 +39,18 @@ Written Sat 14 Nov 2026, 21:00 EET. The one-page version is [`overview.md`](over
 | M32 | **All the data that drives fire** | Every input in section 4.1 is downloaded for the training years and for each new day, on one grid, with "no data" kept apart from zero |
 | M33 | **Scorecard** | The proof page shows the hold-out test results against the baselines (section 6), and a daily log: yesterday's top spots vs NASA detections, for us and for the official index |
 | M34 | **"Why this spot"** | Each listed spot shows its 2–4 strongest reasons in plain words, from the actual input values (section 5.4) |
-| M35 | **One screen instead of 10 websites** | One page holds tomorrow's spots, the official fire-danger layer (plan 1 S3), fires in the last 24 h (plan 1 S5), a link to the spot's fire history (plan 1 area report), and links to EFFIS, NASA FIRMS, Google's wildfire information and the national fire service |
+| M35 | **One screen instead of 10 websites** | One page holds tomorrow's spots, the official fire-danger layer (plan 1 S3), fires in the last 24 h (plan 1 S5), a link to the spot's fire history (plan 1 area report), and links to EFFIS, NASA FIRMS, Google's wildfire information and the national fire service. The area report also gets a **"Tomorrow's risk here"** card |
+
+**Prediction placeholder (part of M30 and M35):** until the engine passes its hold-out test (section 6), the fire-risk screen and the "Tomorrow's risk here" card show a clear placeholder: "Tomorrow's fire risk: being built and tested. Here is what it will show." Both are built and tested on the example files (section 8). Switching to real answers is a data change only, with no new app code.
+
+**Musts from the competitor research** (fixes to the history report and proof page). Exact files and scope: [`feature-map.md`](../../docs/research/feature-map.md), "Shortlist before the Sunday 08:00 freeze", ranks 1–4.
+
+| # | Feature | Done when |
+|---|---|---|
+| M36 | **Real official fire numbers** (fixes M28) | The "detected vs reported" card shows **national reported** numbers, labelled apart from **satellite-mapped** estimates: Bulgaria from the Executive Forest Agency (2021–2025 `[V]`), EU countries from the EFFIS spreadsheet (1980–2024 `[V]`), the USA from NIFC (1983–2025 `[V]`). Each shows its source, date fetched and scope (for example "forest fires only"). A second agent checks every transcribed row against the source |
+| M37 | **Date and source on every number** | The first result in a report says which period it covers ("data to 14 Nov 2026"), and history, reported numbers and live layers each show their own date, so they never look like the same moment |
+| M38 | **Name the comparison years** | "Is this unusual?" lists the exact past years it used and how many, taken from the same data as the calculation. Its "above/below normal" sentence is generated from the numbers and covered by a test, never typed by hand |
+| M39 | **Plain verdict on the proof page** | Above the test tables, 2–3 plain lines say what was tested, at what scale, what passed, what failed (for example the Bulgaria world-gate check) and what is not measured yet. Read from the existing validation file; no new scores |
 
 ### Shoulds (build order)
 
@@ -48,17 +60,22 @@ Written Sat 14 Nov 2026, 21:00 EET. The one-page version is [`overview.md`](over
 | S14 | **Crew suggestion** (builds on plan 1 S8) | Spot 1 of each region carries a rule-based line, such as "Consider a standby team near here tomorrow", with the disclaimer |
 | S13 | **Wind on the map** | Arrows show wind speed and direction for today and tomorrow over the selected region |
 | S12 | **Week outlook** | Days 2–7 are scored with the same engine where forecast inputs exist, shown with a "less certain" label, and scored separately in the scorecard by lead day |
+| S16 | **Fire heat in "this fire vs past fires"** (feature map rank 5) | The card shows the fire heat (FRP) it already receives, with units, next to the same days in past years; missing heat shows as "no data" |
+| S17 | **Season-so-far chart** (feature map rank 7) | A line adds up this year's fires month by month against the median of past years, for completed months only; gaps stay gaps |
 
 ### Later (recorded, not built here)
 
 - **Could:** C11 model that improves each season · C12 sharper 1–2 km spots · C13 printable daily brief · C15 method sheet for fire chiefs.
-- **Won't for now:** W9 fire-station locations · W10 firebreak planning · W11 web cameras · W12 live response coordination. Dropped: a fire-spread hint.
+- **Won't for now:** W9 fire-station locations · W10 firebreak planning · W11 web cameras · W12 live response coordination. Dropped: a fire-spread hint, and a label explaining "history chance vs weather forecast" (the placeholder above replaces it).
+- **Later from the competitor research** (C16 in the feature list): the "later" items in [`feature-map.md`](../../docs/research/feature-map.md), such as satellite switches, saved places, monthly reported charts, causes and costs, land-cover and population overlays, smoke and air quality, time-lapse and fire-season length.
 
 ### How plan 2 uses plan 1
 
 | Plan 1 part | Use in plan 2 |
 |---|---|
-| FIRMS pipeline and its 461 million cleaned detections `[V]` | Fire history and the training labels |
+| FIRMS pipeline and its 461 million cleaned detections `[V]` | Fire history |
+| Plan 1's cell-day table `cell_days.parquet` (324,312,197 cell-days `[V]`, same cleaning rules) | The training labels, with one DuckDB query (shortcut 2) |
+| Area report, proof page, layer registry, `/api/recent` route | Patterns and parts reused for the risk card, scorecard, GFWED layer and `/api/risk` |
 | M13 chance of fire this month | One input to the engine |
 | M18, M29 points-only data | Every risk spot is a point with a `precision_radius_km` |
 | S3 official fire danger (GWIS layer), S5 recent fires | Parts of the one screen (M35) |
@@ -201,7 +218,9 @@ Every day, a few hours after UTC midnight (FIRMS posts near-real-time data withi
 | Screen | Contents |
 |---|---|
 | **Fire risk (one screen, M35)** | Day switch: Today / **Tomorrow** (default) / Week (S12). Region picker (country → region), or tap the map. Ranked list of spots 1–10: level, chance in words ("about 1 in 8"), "why" (M34), fire type (S15), crew suggestion on spot 1 (S14). Map: spots as points sized by level; layers for official fire danger (S3), fires in the last 24 h (S5) and wind arrows (S13). Links: EFFIS, NASA FIRMS, Google's wildfire information, the national fire service, 112. "History" button → plan 1 area report for the spot |
-| **Scorecard** (part of "How we know it's right") | Hold-out results vs baselines with charts; weak slices; daily log for the last 7 and 30 days |
+| **Placeholder (until the engine passes its test)** | The same screen and the "Tomorrow's risk here" card, with "Tomorrow's fire risk: being built and tested", a short list of what it will show, and the links to official services. Driven by `meta.json` (`"engine_ready": false`), so going live needs no new code |
+| **Area report additions** (plan 1 screen) | "Tomorrow's risk here" card (M35); data date and source by the first result (M37); comparison years in "Is this unusual?" (M38); official reported numbers labelled apart from satellite estimates (M36); fire heat in "this fire vs past fires" (S16); season-so-far chart (S17) |
+| **Scorecard** (part of "How we know it's right") | The plain verdict on top (M39); hold-out results vs baselines with charts; weak slices; daily log for the last 7 and 30 days |
 | **About** | Data sources with licences, method in plain words, limits, disclaimer |
 
 Phone first: the list is a bottom sheet over the map.
@@ -214,7 +233,7 @@ The app reads only these files. The pipeline writes them; the oracle agent check
 
 | File | Where | Contents | Size `[U]` |
 |---|---|---|---|
-| `risk/meta.json` | Blob | Model version, when made, the dates each file is valid for, input dates and sources | < 5 KB |
+| `risk/meta.json` | Blob | `engine_ready` (false until the hold-out test passes), model version, when made, the dates each file is valid for, input dates and sources | < 5 KB |
 | `risk/latest.json.gz` | Blob | For every region: the top 10 spots for today and tomorrow, with their inputs | about 35 MB raw, 6 MB gzipped |
 | `risk/week.json.gz` | Blob | Days 2–7, top 10 per region (S12) | about 3 times `latest` |
 | `risk/archive/<date>.json.gz` | Blob | Each day's top 10 per region, with only `spot_id`, `rank` and `p`, for the scorecard | about 1 MB each |
@@ -254,7 +273,10 @@ A separate, cheaper agent writes the expected answers in `tests/expected/risk/` 
 - the top-N ranking inside a region on a toy table;
 - capture rate, hit rate and Brier skill on toy predictions, computed by hand;
 - the time split: no training row on or after the first validation day (a leakage check);
-- `null` inputs giving `null` scores, never 0.
+- `null` inputs giving `null` scores, never 0;
+- for M36: every transcribed reported row matches its source table, checked by an agent that did not transcribe it;
+- for M38: the listed comparison years for an early year, a year with a gap, and a changed date range;
+- for M38: "above" and "below" sentences on numbers just above, equal to and just below normal (the JRC page got this wrong once `[V]`).
 
 | Method | What it checks | Priority |
 |---|---|---|
@@ -288,11 +310,12 @@ Plan 1's rules apply (section 9 there). Also:
    - (c) forest share from MCD12C1 for Bulgaria (needs the Earthdata login);
    - (d) one MOD13C1 composite for Bulgaria, compared with its normal;
    - (e) the Natural Earth admin-1 regions and the 0.1° spot grid with region ids.
-2. **Freeze the contract** (section 8) with example files; the app builds against them.
-3. **Labels and training table → version 1 model → hold-out test,** Europe first, then the world.
-4. **Daily job** (predict and score) uploading to Blob.
-5. **App screens** on the example files, in parallel with 3–4.
-6. **Scorecard page** with the real test results.
+2. **Freeze the contract** (section 8) with example files and the placeholder; commit `PROTOCOL.md` (the test rules). The app builds against the example files.
+3. **Labels → baselines scored end to end at 0.25°** (shortcut 3), Europe first.
+4. **Training table → version 1 model → hold-out test,** Europe first, then the world, then the final 0.1° run.
+5. **Daily job** (predict and score) uploading to Blob.
+6. **App screens** on the example files, in parallel with 3–5. **Report fixes M36–M39, S16, S17** run in parallel from the start, in plan 1's lanes; they need no plan 2 data.
+7. **Scorecard page** with the real test results; set `engine_ready` only if the test passed.
 
 ### 11.2 Lanes (same computer and rules as plan 1, section 7.2)
 
@@ -302,35 +325,66 @@ Plan 1's rules apply (section 9 there). Also:
 | **B. Data and logic** | Contract types, file loading, ranking display logic, phrases | `web/src/lib/risk/`, `web/src/types/risk.ts` |
 | **Pipeline-risk** | Spikes, steps 1–7, daily job | `pipeline/risk/`, `.github/workflows/risk-daily.yml` |
 | **Oracle** | Expected answers | `tests/expected/risk/` |
+| **Report fixes (plan 1 lanes A and B)** | M36–M39, S16, S17: they change plan 1's report and proof files, so plan 1's owners of those files build them (files listed in the feature map's shortlist) | `web/src/components/report/`, `web/src/app/proof/`, `pipeline/export_reported.py` |
 
 ### 11.3 Time and checkpoints `[U]`
 
-**Honest size:** plan 2's Musts are about 20–30 hours of agent work, and its Shoulds about 5–8, on top of plan 1, which is already tight. **Plan 1 stays the NASA challenge core.** Plan 2 runs in its own lanes.
+**Honest size:** plan 2's engine Musts (M30–M35) are about 20–30 hours of agent work, the report fixes (M36–M39) about 5–8, and the Shoulds about 7–11, on top of plan 1, which is already tight. The shortcuts in section 12 cut this by roughly a third `[U]`. **Plan 1 stays the NASA challenge core.** Plan 2 runs in its own lanes.
 
 | When (Sofia time) | Evidence that must exist |
 |---|---|
-| **Sat 23:30 · R0** | Spikes answered; D-10 to D-15 decided; contract and example files committed; oracle tests written and failing |
-| **Sun 03:30 · R1** | Version 1 trained; hold-out test for Europe in `scorecard.json` |
-| **Sun 06:00 · R2** | World predictions for tomorrow on Blob; the fire-risk screen live on the public URL |
-| **Sun 08:00 · R3** | Freeze, together with plan 1's CP4; the video shows the fire-risk screen and the scorecard |
+| **Sat 23:30 · R0** | Spikes answered; D-10 to D-15 decided; contract, example files and the placeholder committed; protocol (`PROTOCOL.md`) committed; oracle tests written and failing |
+| **Sun 01:30 · R0.5** | Baselines (official index, history) scored end to end at 0.25° for Europe: the scorecard works before the model exists. M37–M39 merged |
+| **Sun 03:30 · R1** | Version 1 trained; hold-out test for Europe in `scorecard.json`; M36 rows checked by the second agent |
+| **Sun 06:00 · R2** | World predictions for tomorrow on Blob at the final grid; `engine_ready` set to true only if the test passed; the fire-risk screen live on the public URL |
+| **Sun 08:00 · R3** | Freeze, together with plan 1's CP4; the video shows the fire-risk screen (or its placeholder) and the scorecard |
 
 **First to cut if late, in order:**
-1. S12 week outlook;
-2. S13 wind arrows;
-3. version 2 (LightGBM);
-4. the world hold-out test, limited to Europe and the USA (world predictions stay).
+1. S17 season-so-far chart;
+2. S12 week outlook;
+3. S13 wind arrows;
+4. version 2 (LightGBM);
+5. the final 0.1° run (ship at 0.25°, say so);
+6. the world hold-out test, limited to Europe and the USA (world predictions stay).
+
+**If the engine doesn't pass in time:** the placeholder stays, and the scorecard shows the baselines honestly. That is still a working, honest product for the video.
 
 **Never cut:** vegetation dryness, forest share, the scorecard against the official index, and "no data" kept apart from zero.
 
 ---
 
-## 12. Open decisions (owner and deadline)
+## 12. Shortcuts: faster and cheaper, same or better quality
+
+Plan 1's 14 shortcuts (its section 8) apply too. These are specific to plan 2.
+
+| # | Shortcut | Saves `[U]` | Quality effect |
+|---|---|---|---|
+| 1 | **Develop at 0.25°, ship at 0.1°.** The grid size is one setting. 0.25° matches the GFWED weather grid and plan 1's cell id, and has about 6 times fewer squares, so every run during development is fast. The final run uses 0.1° with the same code | Hours of training and re-runs | Same final result; bugs are found sooner |
+| 2 | **Labels from plan 1's cell-day table** (`cell_days.parquet`) with one DuckDB query, not from the 43.5 GB of CSV files | 1–2 h | Higher: the same cleaning rules as plan 1, so the two plans agree |
+| 3 | **Baselines first.** Ranking by the official index and by history needs no training. Build and test the whole scorecard on them before the model exists; the model then only has to beat them | Debugging time | Higher: the scorecard is proven on simple inputs; and there is an honest fallback if the model is late |
+| 4 | **Download only what the model uses.** One GFWED file a day at the live lead time, 8 downloads at once, each turned straight into a land-only Parquet of the 7 index values, then the NetCDF is deleted | Disk and download time (about 30 GB becomes a few GB) | Same |
+| 5 | **Static inputs computed once.** Land cover, plant-greenness normals, regions and history per spot go into one Parquet file on Blob. The daily job then downloads only the day's GFWED file (about 16 MiB `[V]`) and the FIRMS 24-hour files | The daily run takes minutes, not hours | Higher: the daily job has fewer moving parts |
+| 6 | **The pipeline writes the answers; the app only shows them.** Ranks, levels, fire type and "why" keys are computed in Python and tested there; the app maps keys to phrases | App code and app tests | Higher: one tested place for every number |
+| 7 | **Reuse plan 1's parts:** area report, proof-page tables and charts, the layer registry (GFWED's `nasa_geos5.fwi` becomes one more entry), the `/api/recent` route pattern for `/api/risk`, the Blob store and the language files | New components | Higher: already tested on phones and in two languages |
+| 8 | **Placeholder and example files first.** All screens are built and tested before any real prediction exists; going live is a data change (`engine_ready`) | Waiting on the pipeline | Higher: the demo always works |
+| 9 | **Write the test rules first, test once** (`PROTOCOL.md`: metric, top 5, test year, baselines) | No re-runs chasing a better score | Higher: a score judges can trust |
+| 10 | **Report fixes from data we already have:** M37 uses `meta.last_data_day` and each source's date; M38 the years the calculation already used; M39 the existing validation file; S16 the heat value the card already receives; S17 the monthly series already loaded | No new data or pipeline work | Same data, clearer answers |
+| 11 | **Official numbers from one spreadsheet:** EFFIS's `report_2024.xlsx` holds burned area and fire counts for every member country, 1980–2024, at a fixed address with no login `[V]`; Bulgaria's burned area in it matches the Executive Forest Agency to the hectare `[V]`. One parser covers the EU; the Agency's reports add Bulgaria's ground counts, and NIFC covers the USA ([`reported-fires-bg-effis-summary.md`](../../docs/research/reported-fires-bg-effis-summary.md)) | Many manual transcriptions | Higher: one source, checked by a second agent |
+| 12 | **Europe first, world by a setting:** the hold-out test runs on Europe first (the Bulgaria demo); the world is the same command with a bigger box | Early answers | Same |
+| 13 | **Brief agents with section numbers and file paths, not pasted text.** The feature map's shortlist already lists the exact files for M36–M39, S16 and S17; the data register stops repeat research; each spike writes 5 lines to `docs/plans/spike-results.md` | Tokens and agent time | Same |
+| 14 | **Right-sized models:** a cheaper model for fixtures, phrase lists, translations and transcription; the strongest for the engine, the leakage check and the final review. Reviews read the diff, not the whole repo | Tokens | Same |
+| 15 | **Test the Copernicus addresses from the build machine first:** the research sandbox failed TLS checks on `*.copernicus.eu` `[V]`, which can look like an outage | A false dead end | Same |
+
+---
+
+## 13. Open decisions (owner and deadline)
 
 | # | Decision | Options | Proposed | Deadline |
 |---|---|---|---|---|
-| D-10 | **Spot size** | 0.05° · 0.1° · 0.25° | **0.1° (about 11 km)**: close to "a place on the mountain", and still small files. 0.25° if training is too slow | Sat 23:30 |
+| D-10 | **Spot size** | 0.05° · 0.1° · 0.25° | **Develop at 0.25°, ship at 0.1° (about 11 km)** (shortcut 1): close to "a place on the mountain", and still small files. Ship at 0.25° if the 0.1° run is late, and say so | Sat 23:30 |
 | D-11 | **Fire-weather source** | NASA GFWED GEOS-5 forecasts (past forecasts from Dec 2017 and live, one system, 0.25°, no login `[V]`) · Copernicus CEMS (past only; no numeric forecast `[V]`; offline from 16 Nov `[V]`) | **NASA GFWED for both.** It is the only free numeric next-day source found `[V]`, and it is NASA data | Sat 23:30 |
 | D-12 | **Years** | Train, validate, test | **Train 2021–2023, validate 2024, test 2025** (about 30 GB `[U]`); earlier years later | Sat 23:30 |
 | D-13 | **Default ranking** | Forest and wildland fires · all vegetation fires | **Forest and wildland by default**, with an "all fires" switch | Sat 23:30 |
 | D-14 | **List size** | Top 5 scored, top 10 shown · other | **Top 5 scored, top 10 shown** | Sat 23:30 |
 | D-15 | **"New fire"** | No detection in the spot on the previous 1, 2 or 3 days | **2 days** | Sat 23:30 |
+| D-16 | **Bulgaria's "reported" number (M36)** | The Executive Forest Agency's ground count (all fires reported) · EFFIS's mapped fires (about 30 ha or more) | **Show both, clearly named:** "reported by the Forest Agency" and "mapped from satellite by EFFIS". Burned area agrees between them; fire counts differ by method `[V]` | Sun 01:30 |
