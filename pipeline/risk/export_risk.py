@@ -72,6 +72,9 @@ def main():
     con.execute('CREATE TEMP TABLE grid AS SELECT * FROM read_parquet(?)', [str(args.data / 'grid_0.25.parquet')])
     con.execute('CREATE TEMP TABLE predictions AS SELECT * FROM read_parquet(?)', [str(args.predictions)])
     country_regions = defaultdict(lambda: defaultdict(dict))
+    # Represent regions without eligible vegetation explicitly as empty lists.
+    for country, region in con.execute('SELECT DISTINCT country,region_id FROM grid WHERE country IS NOT NULL').fetchall():
+        country_regions[country][region] = {day: [] for day in DAYS}
     total_null_country = 0
     for day in DAYS:
         weather = args.data / 'fwi_0.25' / f'month={day[:7]}' / f'{day}.parquet'
