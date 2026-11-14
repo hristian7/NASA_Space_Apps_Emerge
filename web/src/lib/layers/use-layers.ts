@@ -59,6 +59,9 @@ export function useLayers(): LayersValue {
   const [recent, setRecent] = useState<RecentPayload | null>(null);
   const [recentStatus, setRecentStatus] = useState<LoadStatus>('off');
   const started = useRef(false);
+  // Nothing is fetched before the address bar and the last data year are both
+  // known, or the first paint would ask for a year nobody chose.
+  const [hydrated, setHydrated] = useState(false);
 
   // The last data year decides where the year control stops, so the state is
   // read from the address bar only once that is known.
@@ -77,6 +80,7 @@ export function useLayers(): LayersValue {
       if (cancelled) return;
       setLastMonth(month);
       setState(layerStateFromSearch(window.location.search, month));
+      setHydrated(true);
     })();
     return () => {
       cancelled = true;
@@ -142,6 +146,10 @@ export function useLayers(): LayersValue {
       setHistoryStatus('off');
       return;
     }
+    if (!hydrated) {
+      setHistoryStatus('loading');
+      return;
+    }
     let cancelled = false;
     setHistoryStatus('loading');
     (async () => {
@@ -159,12 +167,16 @@ export function useLayers(): LayersValue {
     return () => {
       cancelled = true;
     };
-  }, [historyOn, state.historyYear]);
+  }, [historyOn, hydrated, state.historyYear]);
 
   useEffect(() => {
     if (!recentOn) {
       setRecent(null);
       setRecentStatus('off');
+      return;
+    }
+    if (!hydrated) {
+      setRecentStatus('loading');
       return;
     }
     let cancelled = false;
@@ -186,7 +198,7 @@ export function useLayers(): LayersValue {
     return () => {
       cancelled = true;
     };
-  }, [recentOn, state.recentWindow]);
+  }, [recentOn, hydrated, state.recentWindow]);
 
   const cells = useMemo(() => (historyOn ? historyCells(history) : []), [historyOn, history]);
   const points = useMemo(() => (recentOn ? recentPoints(recent) : []), [recentOn, recent]);

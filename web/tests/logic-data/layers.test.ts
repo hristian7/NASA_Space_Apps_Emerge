@@ -27,13 +27,13 @@ describe('the layer registry', () => {
     expect(history?.timeStep).toBe('month');
   });
 
-  it('says plainly that the recent-fires loader is not built yet', () => {
+  it('points recent fires at the route that reads the live detection files', () => {
     const recent = layer('recent-fires');
-    expect(recent?.loader.status).toBe('not_built');
-    expect(recent?.verified).toBe(false);
-    if (recent?.loader.status === 'not_built') {
-      expect(recent.loader.note.length).toBeGreaterThan(0);
-    }
+    expect(recent?.loader.status).toBe('built');
+    expect(recent?.verified).toBe(true);
+    expect(recent?.source.kind).toBe('api_route');
+    if (recent?.source.kind !== 'api_route') throw new Error('expected a route');
+    expect(recent.source.path).toBe('/api/recent');
   });
 
   it('carries the tested fire-danger address with a date parameter', () => {

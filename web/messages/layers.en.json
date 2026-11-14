@@ -19,7 +19,7 @@
   "window7d": "Last 7 days",
   "dayLabel": "Day",
   "today": "Today",
-  "inDays": "In {days} days",
+  "inDays": "{days, plural, one {In # day} other {In # days}}",
   "orMore": " or more",
   "fireDays": "fire days",
   "pointSmall": "Under 20 MW of heat output",

@@ -39,7 +39,13 @@ export function rgbaFrom(color: string, alpha: number): [number, number, number,
   return [Number(found[1]), Number(found[2]), Number(found[3]), alpha];
 }
 
-/** Cells worth drawing for one year, already classed. */
+/**
+ * Cells worth drawing for one year, already classed.
+ *
+ * This is the only place that reads the globe file's own shape. Everything
+ * downstream takes `HistoryCell[]`, which is a centre, a fire-days value and a
+ * class, so a different file layout is one edit here and nowhere else.
+ */
 export function historyCells(file: GlobeFile | null): HistoryCell[] {
   if (file === null) return [];
   const { cols, cell_deg: cellDeg } = file;

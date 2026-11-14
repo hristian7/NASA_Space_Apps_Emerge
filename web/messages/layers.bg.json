@@ -19,7 +19,7 @@
   "window7d": "Последните 7 дни",
   "dayLabel": "Ден",
   "today": "Днес",
-  "inDays": "След {days} дни",
+  "inDays": "{days, plural, one {След # ден} other {След # дни}}",
   "orMore": " и повече",
   "fireDays": "дни с пожар",
   "pointSmall": "Под 20 MW топлинна мощност",
