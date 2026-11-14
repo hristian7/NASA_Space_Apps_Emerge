@@ -51,6 +51,55 @@ Sources for each row are in the list at the end.
 - **It is our data source,** not a rival. FIRMS is the best live map; it does not answer "is this season worse than usual?" Saying "we turn FIRMS into answers" is respectful and true.
 - **Notice on the FIRMS map (seen 14 Nov 2026):** "Delivery of Suomi NPP satellite observations will cease on November 2, 2026", users should move to NOAA-20 and NOAA-21 `[V]`. Our harmonization uses S-NPP as the reference, so the record from November 2026 on must continue on NOAA-20/21 (they agree with S-NPP within about 1% `[V]`, per the overview). Good answer to "what happens next?" in the Q&A.
 
+## Full feature map of 16 sites (14 Nov, evening)
+
+The detailed map is in [`feature-map.md`](feature-map.md): 16 sites (EFFIS and its viewers, JRC, DW, fire.ai, Google's boundary tracking, EFFIS annual reports, FIRMS, Watch Duty, NIFC, Ready.gov, NOAA NCEI, CAL FIRE, OroraTech), 47 feature rows with effort, a table of their data sources, and a ranked shortlist.
+
+**Most important finding:** our "Detected vs reported" panel (M28) shows EFFIS **satellite-mapped** estimates for Bulgaria (2024: 133 fires, 44,745 ha) under the word "reported". Bulgaria's own national figures, from the Executive Forest Agency in the EFFIS 2024 annual report, are **595 forest fires and 17,116 ha** `[V]`. They count different things. Both files in `web/public/data/reported/` are still marked as examples with one year each `[V]`. Filling them from the national report (Bulgaria) and the NIFC table (USA, 1983 to 2025 `[V]`) is the top recommendation.
+
+**Shortlist before the freeze** (ranked; S = 1 to 2 h, M = 3 to 5 h):
+
+| # | What | Effort | Raises |
+|---|---|---|---|
+| 1 | Real national reported numbers in M28, labelled apart from EFFIS satellite estimates | M | Relevance, Validity |
+| 2 | Data date and source next to the result (history date vs live map date) | S | Validity, Presentation |
+| 3 | Name the comparison years in "Is this unusual?" | S | Validity |
+| 4 | A short verdict above the proof tables, including what failed | S | Validity, Presentation |
+| 5 | Show the fire heat (FRP) the "this fire vs past fires" card already receives, with units | S | Relevance, Validity |
+| 6 | Say plainly that "chance of fire" is a historical frequency, not yet scored (its Brier score is still empty) | S | Validity |
+| 7 | A cumulative season chart, this year against the median | M | Presentation, Impact |
+
+**Not worth taking:** dispatch and evacuation features, alerts (cut already), accounts, spread simulation, buying private satellite data, AI-written safety advice.
+
+**Geostationary satellites (Meteosat, GOES):** see [their own section](#geostationary-satellites-meteosat-and-goes-checked-14-nov) below.
+
+## Geostationary satellites: Meteosat and GOES (checked 14 Nov)
+
+Polar satellites (MODIS, VIIRS) pass over a place a few times a day. Geostationary weather satellites stay above one spot and scan every 10 to 15 minutes, at the cost of bigger pixels.
+
+- **GOES** (NOAA, the US satellites) sees only the Americas, so it cannot help with Bulgaria `[V]`. GOES-19 has an open fire product every 10 minutes with 2 km bands, public domain `[V]`. Japan's Himawari covers Asia and Australia.
+- **Meteosat** (EUMETSAT) covers Europe and Africa. Its fire products come from the LSA SAF service, licensed CC BY 4.0 (free with credit) `[V]`:
+
+| | MSG, SEVIRI instrument | MTG, FCI instrument (Meteosat-12) |
+|---|---|---|
+| Pixel size | 3 km at the equator, larger over Bulgaria `[U]` | 1 km `[V]` |
+| Repeats every | 15 min `[V]` | 10 min `[V]` |
+| History | Data record 2004 to 2015, near real time from 2016 `[V]` | From January 2025 `[V]` |
+| Status | Operational `[V]` | Demonstration since October 2025: availability not guaranteed, validation ongoing `[V]` |
+| Live map service (WMS) | `https://adaguc.lsasvcs.ipma.pt/adagucserver?dataset=MSG-FRP` | `https://adaguc.lsasvcs.ipma.pt/adagucserver?dataset=MTG-FRP` |
+
+**Tested on 14 Nov:** both map services answer without a login and allow use from any website (CORS open); each keeps a rolling year of time steps; the newest MTG image was about 35 minutes old `[V]`. Bulk data (HDF5 files) needs a free LSA SAF account.
+
+**The catch:** bigger pixels catch only larger fires and miss most small farm burns. A different instrument with a different detection limit cannot go into our MODIS and VIIRS calendar; it complements the record, it does not extend it.
+
+**Three ways to use it, best first:**
+
+| Use | Effort | Raises | When |
+|---|---|---|---|
+| A live "fires in the last hour" layer over Europe and Africa, using the same map-tile mechanism as the GWIS fire danger layer, labelled "demonstration product" | S | Presentation, Impact | Could be before the freeze; great in the video |
+| Time of day: polar satellites pass at fixed times (Terra mid-morning, Aqua and VIIRS early afternoon). Meteosat sees the whole day, so it shows how much burning happens between passes and helps explain the Terra and Aqua gap | M to L | Validity | Later |
+| An independent check of our trend: one instrument type (SEVIRI) runs from 2004 to today across the 2012 switch to VIIRS. If its trend agrees with ours, the jump is not caused by the sensor change | L | Validity | After the hackathon; a good "next step" line for the pitch |
+
 ## EFFIS, the JRC and the EU response: what we learn (checked 14 Nov)
 
 The European Forest Fire Information System (EFFIS) is run by the EU's Joint Research Centre (JRC) and has been part of Copernicus Emergency Management since 2015 `[V]`. Its expert group has members from 43 countries in Europe, the Middle East and North Africa `[V]`.
@@ -90,7 +139,7 @@ The European Commission's JRC page itself only describes the JRC (independent sc
 
 ## What they have that we don't (prototype state, Sat 14 Nov evening)
 
-What our prototype has today: the report panel is merged (fire calendar, "Is this unusual?", "This fire vs past fires", chance of fire, detected vs reported, trend chart, CSV and PNG downloads, glossary, English and Bulgarian). The map and the place selection are on the `shell-map` branch, not yet merged. The proof page data (`validation.json`) is still the empty example.
+What our prototype has (updated late on 14 Nov): the map, place selection, layer menu and share links; the report (fire calendar, "Is this unusual?", "This fire vs past fires", chance of fire, detected vs reported, trend chart, CSV and PNG downloads, glossary, links to FIRMS, GWIS and EFFIS for the same place, English and Bulgarian); and a proof page with real test results `[V]`. The history now runs to 14 Nov 2026 `[V]`. Still open: the "reported" numbers are placeholder examples (see the feature map finding above), and the chance of fire has no test score yet.
 
 | They have | Who | Do we need it this weekend? |
 |---|---|---|
@@ -124,7 +173,7 @@ What our prototype has today: the report panel is merged (fire calendar, "Is thi
 - **Beyond about two weeks, history is the honest default,** and a place-level base rate is something their tools do not give. That is our honest claim: "a fire base rate for any place, with its uncertainty", not "a better forecast".
 - **We can't claim even that until it is scored.** The plan (M13) is a backtest on past years: Brier score and a calibration check ("when we said 30%, did fire happen about 30% of the time?"). Those numbers do not exist yet.
 - **What is new is the harmonization, not the forecast.** Bake-off results (`bakeoff-results.md`) give the conversion error for whole countries per month of about 0.10 to 0.32 (nRMSE, fire days) `[V]`, about 0.8 to 1.4 for 50 km circles, and 1.7 to 3.8 for single 0.25° cells per month `[V]` (winning pipeline A): small places are much noisier. The world gate failed one check (Bulgaria, 0.32 against a limit of 0.30) `[V]`. Say this honestly in the pitch; it is our Validity score.
-- **Cheapest way to say "we build on them":** on every report, links to EFFIS, GWIS and FIRMS for the same place (an hour of work `[U]`).
+- **"We build on them" is now visible:** every report links to FIRMS, GWIS and EFFIS for the same place (built 14 Nov).
 
 ## Research we should mention (it proves the problem is real)
 
@@ -168,4 +217,8 @@ Spot That Fire (2018-2020) and "Help Fight Fires" (2017) teams built real-time d
 - NASA harmonized burned area plan (Boschetti, 2022 and 2023): https://modis.gsfc.nasa.gov/sci_team/meetings/202305/presentations/boschetti.pdf
 - Fused MODIS + VIIRS FRP: https://www.mdpi.com/2072-4292/18/10/1650
 - GFED5NRT: https://essd.copernicus.org/articles/18/7535/2026/
+- LSA SAF fire products: https://lsa-saf.eumetsat.int/data/products/fire-products/
+- MTG fire product released as demonstration: https://lsa-saf.eumetsat.int/en/news/news/2025/10/01/release-of-mtg-fire-radiative-power-product-as-demonstration/
+- LSA SAF map service: https://lsa-saf.eumetsat.int/data/map-service/
+- GOES-19 fire product (Earth Engine catalogue): https://developers.google.com/earth-engine/datasets/catalog/NOAA_GOES_19_FDCF
 - Past Space Apps fire teams: https://2020.spaceappschallenge.org/challenges/confront/spot-fire-3/teams/fierr and https://2017.spaceappschallenge.org/challenges/warning-danger-ahead/and-you-can-help-fight-fires/teams/hotmap

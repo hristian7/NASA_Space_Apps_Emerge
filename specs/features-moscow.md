@@ -15,6 +15,7 @@
 - **Removed to save time (16:50):** push alerts (S11), combined data (M22) and the installable app (M15). They are listed under Won't. (Suggestion 2 still lists M22; this file decides.)
 - **Suggestion 2 merged (evening):** adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
 - **Every item on NASA's challenge page is a Must (evening):** added M27 and M28, and widened M3, M4, M5 and M11. The checklist is in [`specification.md`](specification.md), section 2 ("Challenge-page checklist").
+- **Plan 2 added (14 Nov, night): next-day fire risk**, from an interview with a Bulgarian firefighter ([`../docs/research/firefighter-interview.md`](../docs/research/firefighter-interview.md)). Approved: Musts M30–M35 and Shoulds S12–S15 (section "Plan 2" below). Recorded for later: Coulds C11–C13 and C15, Won'ts W9–W12. Dropped: a fire-spread hint. Build plan: [`plan-2-fire-risk/overview.md`](plan-2-fire-risk/overview.md) (short) and [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md) (build spec).
 
 Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](interview-answers.md)) and updated the same day. The research files are linked where a feature depends on them. The build details are in [`specification.md`](specification.md).
 
@@ -75,6 +76,32 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | S9 | **Fire-intensity visuals** | Shows how strong fires are (FRP, the fire's heat output), not just how many | S |
 | S10 | **Shareable links** | The link remembers the place, radius or area, dates and layers | S |
 
+## Plan 2: next-day fire risk (approved 14 Nov, night)
+
+From the firefighter interview. The same logic works for every country in the world; Bulgaria is the demo example. Build details: [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md).
+
+**Must have**
+
+| # | Feature | What it means, in one sentence | Effort |
+|---|---|---|---|
+| M30 | **Top risk spots per region** | Any fire service in any country opens its own area and sees the places most likely to catch fire today and tomorrow, ranked from number one down. | M |
+| M31 | **Next-day risk engine** | The engine gives every small square of land on Earth a fire-risk score for tomorrow, learned from that place's own seasons and past fires. | M–L |
+| M32 | **All the data that drives fire** | For every place on Earth we collect temperature, wind, humidity, rain, how dry the plants are, whether it is forest or grass, and 25 years of past fires. | L |
+| M33 | **Scorecard: predicted vs what happened** | Every day we check yesterday's predictions against the fires NASA satellites actually saw, and publish how often we were right compared with the official fire-danger index. | M |
+| M34 | **"Why this spot"** | Each risky spot comes with a short plain reason, such as "very hot, strong wind, dry forest, burned in 6 of the last 25 Julys." | S |
+| M35 | **One screen instead of 10 websites** | Tomorrow's danger, fires burning now, fire history and links to the official services sit on one simple page, so crews stop switching between ten websites. Needs S3 and S5 from plan 1, so build those early. | S |
+
+**Should have**
+
+| # | Feature | What it means, in one sentence | Effort |
+|---|---|---|---|
+| S12 | **Week outlook** | Shows the risk for the next 7 days, clearly marked as less certain than tomorrow. | S |
+| S13 | **Wind on the map** | Arrows show how strong the wind is and which way it blows, now and tomorrow. | S–M |
+| S14 | **Crew suggestion** (builds on S8) | Gives a plain suggestion such as "consider a standby team near spot 1", which the fire service is free to follow or ignore. | S |
+| S15 | **Fire type label** | Tags every fire and risky spot as forest, farmland or grass, so crews know what kind of fire to expect. | S |
+
+**Links to plan 1:** M31 uses the chance of fire this month (M13) as one input, replaces our own forecast model (C2), and covers the Bulgarian provinces view (C6) for every country.
+
 ## Could have
 
 | # | Feature | What it is (plain language) | Effort |
@@ -88,6 +115,10 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | C9 | **Several base maps** (was M16) | Switch the background, 2D or 3D: NASA imagery, OpenStreetMap and others. The layer menu (S6) already switches NASA day and night views | S |
 | C10 | **Several data layers** (was M17) | Show and use different kinds of data: MODIS, VIIRS, temperature, wind and more | M |
 | C8 | **More data layers, actually added** | Add layers beyond fire, such as temperature, wind, humidity and drought, not just room for them (M26) | M–L |
+| C11 | **Model that improves each season** (plan 2) | After the weekend, the engine keeps learning from every new fire season and gets more accurate | L |
+| C12 | **Sharper spots** (plan 2) | Narrows risky spots from about 10 km squares to 1–2 km, closer to "this slope of this mountain" | L |
+| C13 | **Printable daily brief** (plan 2) | Puts tomorrow's top spots for a region on one page, ready for the morning crew briefing | S |
+| C15 | **Method sheet for fire chiefs** (plan 2) | A short document on how the prediction works and how accurate it is, so fire-service managers can approve official use | S |
 
 ## Won't have this weekend
 
@@ -101,6 +132,10 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | W8 | **Installable app (PWA)** (was M15) | Add to home screen. Removed 14 Nov to save time (2–3 h `[U]`); the site still works on phones (M9) |
 | W4 | **Making blurry images sharp** | Not needed: we convert fire counts statistically, not pictures (interview answer E3) |
 | W5 | **Burned-area mapping from imagery** | A different, much bigger problem |
+| W9 | **Fire-station locations** (plan 2) | Distance from each fire station to the risky spots; maybe later |
+| W10 | **Firebreak planning** (plan 2) | Planning the ploughed strips that stop a fire jumping between blocks of forest or farmland |
+| W11 | **Web cameras** (plan 2) | Spotting smoke with cameras on hills |
+| W12 | **Live response coordination** (plan 2) | Dispatching and coordinating teams during a fire; we focus on prevention |
 
 ## Build order and cuts `[U]`
 

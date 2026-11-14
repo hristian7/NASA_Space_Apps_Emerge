@@ -1,6 +1,6 @@
 # Emerge in one page
 
-Short version for newcomers (14 Nov 2026). Feature list: [`features-moscow.md`](features-moscow.md). Build details: [`specification.md`](specification.md).
+Short version for newcomers (14 Nov 2026). Feature list: [`features-moscow.md`](features-moscow.md). Build details: [`specification.md`](specification.md). **Plan 2** (next-day fire risk, from a firefighter interview): [`plan-2-fire-risk/overview.md`](plan-2-fire-risk/overview.md).
 
 ## Part 1: what we build this weekend
 

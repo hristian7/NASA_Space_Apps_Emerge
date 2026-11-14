@@ -23,6 +23,7 @@ import {
 import reportStyles from "@/components/report/styles";
 import type { MonthKey, UnitMode } from "@/components/report/types";
 import {
+  formatCount,
   monthYearLong,
   monthYearShort,
   formatIsoDate,
@@ -48,17 +49,22 @@ import {
   anomalyPoints,
   clipByMonth,
   clipSeries,
+  daysSoFar,
+  lastCompleteMonth,
   hotspotsLink,
   isLargeArea,
-  lastMonthWithData,
   monthRank,
   monthsOf,
   noFireEver,
+  pointAt,
+  sameMonth,
+  unfinishedMonthOf,
   resolveMonth,
   scopeOf,
   typicalFireDays,
 } from "./adapter";
 import { csvFilename, csvHeader, monthlyFile, saveText, summaryFile } from "./downloads";
+import CountryTest from "./country-test";
 import DateRange from "./date-range";
 import styles from "./app-styles";
 
@@ -269,7 +275,11 @@ function Report({
     return clipByMonth(points, from, to);
   }, [full, from, to]);
 
-  const selectedMonth = resolveMonth(series, view.month);
+  // The record's own calendar, read from meta rather than from the series:
+  // a month with no measurement is still a month of the record.
+  const unfinished = unfinishedMonthOf(data.meta.last_data_day);
+  const defaultMonth = lastCompleteMonth(data.meta.last_data_day);
+  const selectedMonth = resolveMonth(series, view.month ?? defaultMonth);
   // The report package's own summing, which applies no rule from the number
   // logic: it adds the months already on screen.
   const yearTotals = useMemo(() => yearTotalsFromSeries(series), [series]);
@@ -277,19 +287,25 @@ function Report({
   const theExtremes = useMemo(() => extremes(series), [series]);
   const theTrend = useMemo(() => trend(series), [series]);
 
-  const lastDataMonth = lastMonthWithData(series);
-  const partial = isPartialMonth(data.meta);
-  const monthToDate =
-    partial &&
-    selectedMonth !== null &&
-    lastDataMonth !== null &&
-    selectedMonth.y === lastDataMonth.y &&
-    selectedMonth.m === lastDataMonth.m &&
-    data.monthToDate !== null;
+  // The selected month is the part month the record stops inside.
+  const partMonth = sameMonth(selectedMonth, unfinished);
+  const daysHeld = daysSoFar(data.meta.last_data_day);
+  // Days 1 to D against the same days in past years comes from the daily
+  // files, which hold grid squares and not countries, and which answer null
+  // for a day the record has no measurement for.
+  const toDateReady =
+    partMonth &&
+    selection.kind !== "country" &&
+    data.monthToDate !== null &&
+    data.monthToDate.current.hot !== null;
+  const monthToDate = toDateReady;
+  const selectedPoint =
+    selectedMonth === null ? undefined : pointAt(series, selectedMonth);
 
   const theUnusual = useMemo(() => {
     if (selectedMonth === null) return null;
-    if (monthToDate && data.monthToDate !== null) {
+    if (partMonth) {
+      if (!toDateReady || data.monthToDate === null) return null;
       const toDate = data.monthToDate;
       return unusualToDate(
         toDate.current.hot,
@@ -299,8 +315,11 @@ function Report({
         toDate.day,
       );
     }
+    // A month with no measurement has nothing to compare, which is a different
+    // thing from having too few past years.
+    if (pointAt(series, selectedMonth)?.value == null) return null;
     return unusual(series, selectedMonth.y, selectedMonth.m);
-  }, [series, selectedMonth, monthToDate, data.monthToDate]);
+  }, [series, selectedMonth, partMonth, toDateReady, data.monthToDate]);
 
   const theChance = useMemo(
     () =>
@@ -371,7 +390,11 @@ function Report({
   }
 
   function downloadSummary() {
-    if (theUnusual === null || theChance === null) return;
+    if (selectedMonth === null || theChance === null) return;
+    // The card can be absent (a part month, or a month with no measurement at
+    // all); the file still carries the comparison the rule gives for it.
+    const figure =
+      theUnusual ?? unusual(series, selectedMonth.y, selectedMonth.m);
     const header = csvHeader({
       selection,
       meta: data.meta,
@@ -384,7 +407,7 @@ function Report({
     });
     saveText(
       summaryFile(
-        { extremes: theExtremes, trend: theTrend, unusual: theUnusual, chance: theChance },
+        { extremes: theExtremes, trend: theTrend, unusual: figure, chance: theChance },
         header,
       ),
       csvFilename(["emerge", "summary", place]),
@@ -450,7 +473,12 @@ function Report({
             month:
               selectedMonth === null
                 ? "-"
-                : monthYearLong(selectedMonth.y, selectedMonth.m, locale),
+                : partMonth
+                  ? t("partMonth", {
+                      day: daysHeld,
+                      month: monthYearLong(selectedMonth.y, selectedMonth.m, locale),
+                    })
+                  : monthYearLong(selectedMonth.y, selectedMonth.m, locale),
           })}
         </span>
         <span>{t("selectMonthHint")}</span>
@@ -484,6 +512,33 @@ function Report({
             monthToDate={monthToDate}
           />
         ) : null}
+        {theUnusual === null && selectedMonth !== null ? (
+          <section className={reportStyles.card} data-testid="month-note">
+            <h2 className={reportStyles.heading}>
+              {partMonth ? t("soFarHeading") : t("noMeasurementHeading")}
+            </h2>
+            <p className={reportStyles.sub}>
+              {partMonth
+                ? t("partMonth", {
+                    day: daysHeld,
+                    month: monthYearLong(selectedMonth.y, selectedMonth.m, locale),
+                  })
+                : monthYearLong(selectedMonth.y, selectedMonth.m, locale)}
+            </p>
+            {partMonth && selectedPoint?.value != null ? (
+              <p className={reportStyles.cardFigure}>
+                {formatCount(selectedPoint.value, locale)}
+              </p>
+            ) : null}
+            <p className={reportStyles.cardLine}>
+              {!partMonth
+                ? t("noMeasurement")
+                : selection.kind === "country"
+                  ? t("soFarCountry", { day: daysHeld })
+                  : t("soFarNoDays", { day: daysHeld })}
+            </p>
+          </section>
+        ) : null}
         {theChance !== null && selectedMonth !== null ? (
           <ChanceCard
             chance={theChance}
@@ -496,6 +551,10 @@ function Report({
           />
         ) : null}
       </div>
+
+      {selection.kind === "country" ? (
+        <CountryTest iso3={selection.iso3} locale={locale} />
+      ) : null}
 
       {comparison !== null ? (
         <WindowCard comparison={comparison} locale={locale} />
@@ -553,7 +612,10 @@ function Report({
 
       <div className={styles.hotspots}>
         <p className={styles.notice} data-testid="hotspots-note">
-          {t("hotspotsNote", { year: hotspots.year, rows: MAX_ROWS })}
+          {t("hotspotsNote", {
+            year: hotspots.year,
+            rows: formatCount(MAX_ROWS, locale),
+          })}
           {hotspots.link?.partial === true ? ` ${t("hotspotsPartial")}` : ""}
         </p>
         <p className="rp-sub">{t("hotspotsSlow")}</p>
@@ -573,13 +635,5 @@ function inRecord(months: MonthKey[], month: MonthKey): boolean {
   const lastRank =
     months.length === 0 ? rank : monthRank(months[months.length - 1]);
   return rank >= firstRank && rank <= lastRank;
-}
-
-/** Whether the record stops before the end of its last month (number logic 4). */
-function isPartialMonth(meta: MetaFile): boolean {
-  const [y, m, d] = meta.last_data_day.split("-").map(Number);
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return false;
-  const length = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  return d < length;
 }
 

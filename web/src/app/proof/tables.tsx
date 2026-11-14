@@ -121,6 +121,7 @@ function Holdout({ rows, t }: { rows: HoldoutResult[]; t: Translate }) {
   return (
     <section>
       <h2>{t("holdout.heading")}</h2>
+      <p>{t("holdout.chosenBy")}</p>
       <p>{t("holdout.caption")}</p>
       <table>
         <thead>
@@ -376,10 +377,119 @@ function Controls({ rows, t }: { rows: ControlTotal[]; t: Translate }) {
   );
 }
 
+
+interface WorldScopeRow {
+  test: string;
+  unit: "hot" | "cd";
+  group: string;
+  n_countries: number | null;
+  too_little_fire: number | null;
+  nrmse_p50: number | null;
+  nrmse_p10: number | null;
+  nrmse_p90: number | null;
+  bias_p50: number | null;
+  coverage_in_range: number | null;
+  pooled_nrmse: number | null;
+  pooled_bias: number | null;
+  pooled_r: number | null;
+}
+
+/**
+ * The model the app actually uses: fitted on every country, scored on years it
+ * never saw. This comes first, because the two-country bake-off below is how
+ * the method was chosen, not how the app's numbers were checked.
+ */
+function WorldScope({ validation, t }: ProofTablesProps) {
+  const rows = ((validation as unknown as { world_scope?: WorldScopeRow[] })
+    .world_scope ?? []) as WorldScopeRow[];
+  const note = extra(validation, "world_scope_note");
+  if (rows.length === 0) return null;
+
+  const pooled = rows.filter((row) => row.pooled_nrmse !== null);
+  const spread = rows.filter((row) => row.pooled_nrmse === null);
+
+  return (
+    <section>
+      <h2>{t("world.heading")}</h2>
+      {note === null ? null : <p>{note}</p>}
+
+      {pooled.length === 0 ? null : (
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{t("world.test")}</th>
+              <th scope="col">{t("world.unit")}</th>
+              <th scope="col">{t("world.pooledNrmse")}</th>
+              <th scope="col">{t("world.pooledBias")}</th>
+              <th scope="col">{t("world.pooledR")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pooled.map((row, at) => (
+              <tr key={`pooled-${row.test}-${row.unit}-${at}`}>
+                <td>{row.test}</td>
+                <td>{unitWord(row.unit, t)}</td>
+                <td className="num">{figure(row.pooled_nrmse, t)}</td>
+                <td className="num">{figure(row.pooled_bias, t)}</td>
+                <td className="num">{figure(row.pooled_r, t)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <p>{t("world.spreadCaption")}</p>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t("world.test")}</th>
+            <th scope="col">{t("world.unit")}</th>
+            <th scope="col">{t("world.group")}</th>
+            <th scope="col">{t("world.countries")}</th>
+            <th scope="col">{t("world.tooLittle")}</th>
+            <th scope="col">{t("world.median")}</th>
+            <th scope="col">{t("world.p10")}</th>
+            <th scope="col">{t("world.p90")}</th>
+            <th scope="col">{t("world.biasMedian")}</th>
+            <th scope="col">{t("world.coverage")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {spread.map((row, at) => (
+            <tr key={`${row.test}-${row.unit}-${row.group}-${at}`}>
+              <td>{row.test}</td>
+              <td>{unitWord(row.unit, t)}</td>
+              <td>{groupWord(row.group, t)}</td>
+              <td className="num">{figure(row.n_countries, t)}</td>
+              <td className="num">{figure(row.too_little_fire, t)}</td>
+              <td className="num">{figure(row.nrmse_p50, t)}</td>
+              <td className="num">{figure(row.nrmse_p10, t)}</td>
+              <td className="num">{figure(row.nrmse_p90, t)}</td>
+              <td className="num">{figure(row.bias_p50, t)}</td>
+              <td className="num">{figure(row.coverage_in_range, t)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/** The size band a row covers, in words, or the file's own word for it. */
+function groupWord(group: string, t: Translate): string {
+  if (group === "all") return t("world.groupAll");
+  if (group === "small") return t("world.groupSmall");
+  if (group === "medium") return t("world.groupMedium");
+  if (group === "large") return t("world.groupLarge");
+  if (group === "pooled_world") return t("world.groupPooled");
+  return group.replace(/_/g, " ");
+}
+
 export default function ProofTables({ validation, t }: ProofTablesProps) {
   return (
     <>
       <Method validation={validation} t={t} />
+      <WorldScope validation={validation} t={t} />
       <Holdout rows={validation.holdout} t={t} />
       <Coverage rows={validation.range_coverage} t={t} />
       <Agreement rows={validation.satellite_agreement} t={t} />

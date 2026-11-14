@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { calendar, monthCell, openReport, unitButton } from "./helpers";
-import { asShown, monthOf } from "./data";
+import { asShown, lastCompleteMonthName, monthOf } from "./data";
 
 /**
  * Bulgaria, the whole record: the calendar is there, the unit toggle changes
@@ -17,10 +17,6 @@ test("a country shows a calendar that answers the unit toggle and the month", as
 
   await expect(calendar(page)).toBeVisible();
   await expect(page.getByText("Bulgaria", { exact: true })).toBeVisible();
-
-  // A whole country is near certain to see fire in any month, so the card
-  // shows a typical number of fire days instead of a share (M13).
-  await expect(page.getByText("Expected fire days this month")).toBeVisible();
 
   await expect(monthCell(page, "August 2024")).toHaveAttribute(
     "aria-label",
@@ -39,12 +35,17 @@ test("a country shows a calendar that answers the unit toggle and the month", as
     new RegExp(`${asShown(august.cd)} fire days`),
   );
 
-  // The month the cards follow to begin with is the last one in the record.
-  const lastMonth = monthOf("BGR", 2025, 12);
-  await expect(page.getByText(`Selected month: December ${lastMonth.y}`)).toBeVisible();
+  // The month the cards follow to begin with is the last COMPLETE month of
+  // the record, never the part month it stops inside.
+  await expect(
+    page.getByText(`Selected month: ${lastCompleteMonthName()}`),
+  ).toBeVisible();
 
   await monthCell(page, "August 2024").click();
   await expect(page.getByText("Selected month: August 2024")).toBeVisible();
+  // A whole country is near certain to see fire in any month, so the card
+  // shows a typical number of fire days instead of a share (M13).
+  await expect(page.getByText("Expected fire days this month")).toBeVisible();
   await expect(page.getByText(/the usual August/)).toBeVisible();
   // The month travels in the address bar, so the view can be shared.
   expect(page.url()).toContain("mo=2024-08");
