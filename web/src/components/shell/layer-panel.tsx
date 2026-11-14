@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getMeta } from "@/lib/data/api";
-import { formatIsoDate, type ReportLocale } from "@/components/report/lib/format";
+import { formatCount, formatIsoDate, type ReportLocale } from "@/components/report/lib/format";
 import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
 import { dangerClasses, dangerDate, dangerDays } from "@/lib/layers/danger";
@@ -273,10 +273,10 @@ export default function LayerPanel({
       if (lastDay === null) return t("failed");
       if (lastDay.slice(0, 4) === String(state.historyYear) && !lastDay.endsWith("-12-31")) {
         return t("harmonizedHistoryPartialTime", {
-          year: state.historyYear, date: formatIsoDate(lastDay, locale), cells: historyCellCount,
+          year: state.historyYear, date: formatIsoDate(lastDay, locale), cells: formatCount(historyCellCount, locale),
         });
       }
-      return t(key, { year: state.historyYear, cells: historyCellCount });
+      return t(key, { year: state.historyYear, cells: formatCount(historyCellCount, locale) });
     }
     if (definition.id === "recent-fires") {
       if (recentStatus === "loading") return t("loading");
