@@ -3,61 +3,35 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import BrandLogo from "./brand-logo";
-import LanguageSwitch from "./language-switch";
+import SearchBox from "./search-box";
+import { AboutMenu, LanguageMenu } from "./top-menus";
 import ViewTabs, { type AppView } from "./view-tabs";
 
 type Props = {
-  view?: AppView;
-  openMenu?: "place" | "view" | null;
-  onToggleMenu?: (menu: "place" | "view") => void;
+  view: AppView;
+  onView?: (view: AppView) => void;
+  onCountry?: (iso3: string) => void;
+  onPoint?: (lat: number, lon: number) => void;
 };
 
 /**
- * The bar across the top of both views. The Place and View menus belong to
- * the history map, so the forecast view shows the bar without them.
+ * Left: the name, the History / Forecast switch and the search. Right: the
+ * explanation pages and the language. Other pages show the bar without the
+ * search, linking back into the shell.
  */
-export default function TopBar({ view = "history", openMenu = null, onToggleMenu }: Props) {
+export default function TopBar({ view, onView, onCountry, onPoint }: Props) {
   const t = useTranslations("shell");
 
   return (
-    <header className={view === "forecast" ? "top top-flow" : "top"}>
-      <span className="brand">
+    <header className={onView ? "top" : "top top-flow"}>
+      <Link className="brand" href="/">
         <BrandLogo label={t("name")} />
-      </span>
-      {onToggleMenu ? (
-        <div className="chip-group glass">
-          <button
-            type="button"
-            className="chip"
-            aria-expanded={openMenu === "place"}
-            aria-controls="place-menu"
-            onClick={() => onToggleMenu("place")}
-          >
-            {t("placeMenu")}
-          </button>
-          <button
-            type="button"
-            className="chip"
-            aria-expanded={openMenu === "view"}
-            aria-controls="view-menu"
-            onClick={() => onToggleMenu("view")}
-          >
-            {t("viewMenu")}
-          </button>
-        </div>
-      ) : null}
+      </Link>
+      <ViewTabs current={view} onChange={onView} />
+      {onCountry && onPoint ? <SearchBox onCountry={onCountry} onPoint={onPoint} /> : null}
       <span className="spacer" />
-      <ViewTabs current={view} />
-      <span className="spacer" />
-      <nav className="chip-group glass top-links" aria-label={t("name")}>
-        <Link className="chip" href="/proof">
-          {t("proofLink")}
-        </Link>
-        <Link className="chip" href="/about">
-          {t("aboutLink")}
-        </Link>
-      </nav>
-      <LanguageSwitch />
+      <AboutMenu />
+      <LanguageMenu />
     </header>
   );
 }

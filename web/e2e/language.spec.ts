@@ -17,7 +17,8 @@ test("the language switch keeps the view", async ({ page }) => {
     new RegExp(`${asShown(august.hot)} hotspots`),
   );
 
-  await page.getByRole("button", { name: "Bulgarian" }).click();
+  await page.getByRole("button", { name: "Language" }).click();
+  await page.getByRole("button", { name: "Български" }).click();
   await page.waitForSelector('svg[role="grid"]');
 
   await expect(page.locator("html")).toHaveAttribute("lang", "bg");
@@ -34,6 +35,7 @@ test("the language switch keeps the view", async ({ page }) => {
   expect(page.url()).toContain("sel=c:BGR");
   expect(page.url()).toContain("u=hot");
 
+  await page.getByRole("button", { name: "Език" }).click();
   await page.getByRole("button", { name: "English" }).click();
   await page.waitForSelector('svg[role="grid"]');
   await expect(page.getByText("Selected month: August 2024")).toBeVisible();

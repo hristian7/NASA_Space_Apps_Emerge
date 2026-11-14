@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
-import { defaultLook, lookBootScript } from "@/lib/ui/look";
+import { defaultLook } from "@/lib/ui/look";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,10 +22,8 @@ const fonts =
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
 
-  // The inline script in the head applies a remembered look to <html> before
-  // React starts, so that element's attributes do not match the ones rendered
-  // on the server. The difference is intended, and suppressing the warning on
-  // this one element is how React is told so.
+  // The phone sheet height is changed on <html> by the shell after start-up,
+  // so that element's attributes can differ from the server render.
   return (
     <html
       lang={locale}
@@ -37,8 +35,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href={fonts} />
-        {/* Applies a remembered look before the first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: lookBootScript }} />
       </head>
       <body>
         <NextIntlClientProvider>{children}</NextIntlClientProvider>

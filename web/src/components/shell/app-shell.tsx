@@ -1,38 +1,44 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
-import MapView, { type Projection } from "@/components/map/map-view";
-import ViewSettings from "@/components/map/view-settings";
-import SelectionTools from "@/components/selection/selection-tools";
-import MenuPanel from "@/components/ui/menu-panel";
+import MapView from "@/components/map/map-view";
 import { defaultBasemapId } from "@/config/basemaps";
+import { historyYears } from "@/lib/layers/history";
 import { useLayers } from "@/lib/layers/use-layers";
+import { removeQueryParam, setQueryParam } from "@/lib/ui/query";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
 import LayerPanel from "./layer-panel";
+import MapTools from "./map-tools";
 import ReportPanel from "./report-panel";
+import TimeSlider from "./time-slider";
 import TopBar from "./top-bar";
+import { type AppView, viewParam } from "./view-tabs";
 
 const sheetHeights = ["peek", "half", "full"] as const;
 const defaultRadiusKm = 50;
 /** A tapped detection is looked at with a 10 km search distance (M27). */
 const recentRadiusKm = 10;
 
+function replaceSearch(search: string) {
+  window.history.replaceState(null, "", `${window.location.pathname}${search}${window.location.hash}`);
+}
+
 export default function AppShell() {
-  const t = useTranslations("shell");
   const [selection, setSelection] = useState<Selection | null>(null);
   const [radiusKm, setRadiusKm] = useState(defaultRadiusKm);
-  const [basemapId, setBasemapId] = useState(defaultBasemapId);
-  const [projection, setProjection] = useState<Projection>("globe");
   const [drawing, setDrawing] = useState(false);
-  const [menu, setMenu] = useState<"place" | "view" | null>(null);
+  const [radiusTool, setRadiusTool] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const [view, setView] = useState<AppView>("history");
 
   // The address bar is the source of truth on arrival, so a copied link opens
-  // the same place. Read here rather than through the router's hooks, which
-  // would turn this page into a client-only render.
+  // the same place and view. Read here rather than through the router's hooks,
+  // which would turn this page into a client-only render.
   useEffect(() => {
-    const restored = selectionFromSearch(window.location.search);
+    const search = window.location.search;
+    if (/(?:^|[?&])v=f(?:&|$)/.test(search)) setView("forecast");
+    const restored = selectionFromSearch(search);
     if (restored === null) return;
     setSelection(restored);
     if (restored.kind === "point") setRadiusKm(restored.radiusKm);
@@ -40,12 +46,16 @@ export default function AppShell() {
 
   const apply = useCallback((next: Selection | null) => {
     setSelection(next);
-    const search = selectionSearch(window.location.search, next);
-    window.history.replaceState(
-      null,
-      "",
-      `${window.location.pathname}${search}${window.location.hash}`,
-    );
+    replaceSearch(selectionSearch(window.location.search, next));
+    if (next !== null && window.innerWidth < 768) {
+      document.documentElement.setAttribute("data-sheet", "half");
+    }
+  }, []);
+
+  const changeView = useCallback((next: AppView) => {
+    setView(next);
+    const search = window.location.search;
+    replaceSearch(next === "forecast" ? setQueryParam(search, viewParam, "f") : removeQueryParam(search, viewParam));
   }, []);
 
   const pickPoint = useCallback(
@@ -57,8 +67,17 @@ export default function AppShell() {
 
   const layers = useLayers();
 
-  // Tapping a recent fire looks at that spot rather than wherever the search
-  // distance happened to be left.
+  // The forecast opens with the official fire danger on, unless the reader
+  // already chose forecast layers.
+  const { state: layerState, toggle } = layers;
+  useEffect(() => {
+    if (view !== "forecast") return;
+    const forecastIds = ["fire-danger", "nasa-fwi", "wind", "air-temperature", "soil-moisture", "greenness", "land-type"];
+    if (!layerState.on.some((id) => forecastIds.includes(id))) toggle("fire-danger");
+    // Only on entering the view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   const pickRecent = useCallback(
     (lat: number, lon: number) => {
       setRadiusKm(recentRadiusKm);
@@ -67,23 +86,15 @@ export default function AppShell() {
     [apply],
   );
 
-  const changeRadius = useCallback(
-    (km: number) => {
-      setRadiusKm(km);
-      setSelection((current) => {
-        if (current === null || current.kind !== "point") return current;
-        const next: Selection = { ...current, radiusKm: km };
-        const search = selectionSearch(window.location.search, next);
-        window.history.replaceState(
-          null,
-          "",
-          `${window.location.pathname}${search}${window.location.hash}`,
-        );
-        return next;
-      });
-    },
-    [],
-  );
+  const changeRadius = useCallback((km: number) => {
+    setRadiusKm(km);
+    setSelection((current) => {
+      if (current === null || current.kind !== "point") return current;
+      const next: Selection = { ...current, radiusKm: km };
+      replaceSearch(selectionSearch(window.location.search, next));
+      return next;
+    });
+  }, []);
 
   const cycleSheet = useCallback(() => {
     const root = document.documentElement;
@@ -92,71 +103,60 @@ export default function AppShell() {
     root.setAttribute("data-sheet", sheetHeights[(index + 1) % sheetHeights.length]);
   }, []);
 
+  // Each view draws only its own layers; the choices of the other are kept.
+  const history = view === "history";
+  const rasterDates = history ? {} : layers.rasterDates;
+
   return (
-    <>
+    <div className="shell" data-view={view} data-has-report={selection !== null}>
       <MapView
         selection={selection}
-        basemapId={basemapId}
-        projection={projection}
+        basemapId={defaultBasemapId}
+        projection="globe"
         drawing={drawing}
-        historyCells={layers.historyCells}
+        historyCells={history ? layers.historyCells : []}
         recentPoints={layers.recentPoints}
-        rasterDates={layers.rasterDates}
+        rasterDates={rasterDates}
+        pickMode={radiusTool ? "point" : "country"}
         onPickPoint={pickPoint}
+        onPickCountry={(iso3) => apply({ kind: "country", iso3 })}
         onPickRecent={pickRecent}
         onDrawArea={(ring) => apply({ kind: "polygon", ring: closeRing(ring) })}
         onDrawingEnd={() => setDrawing(false)}
       />
 
       <TopBar
-        openMenu={menu}
-        onToggleMenu={(which) =>
-          setMenu((current) => {
-            const next = current === which ? null : which;
-            // On a phone the menu opens above the sheet, so the sheet makes room.
-            if (next !== null && window.innerWidth < 768) {
-              document.documentElement.setAttribute("data-sheet", "peek");
-            }
-            return next;
-          })
-        }
+        view={view}
+        onView={changeView}
+        onCountry={(iso3) => apply({ kind: "country", iso3 })}
+        onPoint={pickPoint}
       />
 
-      {menu === "place" ? (
-        <MenuPanel
-          id="place-menu"
-          title={t("placeMenu")}
-          closeLabel={t("closeMenu")}
-          onClose={() => setMenu(null)}
-        >
-          <SelectionTools
-            selection={selection}
-            radiusKm={radiusKm}
-            drawing={drawing}
-            onRadiusChange={changeRadius}
-            onPoint={pickPoint}
-            onCountry={(iso3) => apply({ kind: "country", iso3 })}
-            onDrawToggle={() => setDrawing((value) => !value)}
-            onClear={() => apply(null)}
-          />
-        </MenuPanel>
-      ) : null}
-
-      {menu === "view" ? (
-        <MenuPanel
-          id="view-menu"
-          title={t("viewMenu")}
-          closeLabel={t("closeMenu")}
-          onClose={() => setMenu(null)}
-        >
-          <ViewSettings
-            basemapId={basemapId}
-            projection={projection}
-            onBasemapChange={setBasemapId}
-            onProjectionChange={setProjection}
-          />
-        </MenuPanel>
-      ) : null}
+      <MapTools
+        drawing={drawing}
+        radiusOn={radiusTool}
+        radiusKm={radiusKm}
+        layersOpen={layersOpen}
+        onDraw={() => {
+          setRadiusTool(false);
+          setLayersOpen(false);
+          setDrawing((value) => !value);
+        }}
+        onRadius={() => {
+          setDrawing(false);
+          setLayersOpen(false);
+          setRadiusTool((value) => !value);
+        }}
+        onRadiusKm={changeRadius}
+        onLayers={() => {
+          setDrawing(false);
+          setRadiusTool(false);
+          setLayersOpen((value) => {
+            if (!value && window.innerWidth < 768) document.documentElement.setAttribute("data-sheet", "peek");
+            return !value;
+          });
+        }}
+      />
 
       <LayerPanel
         state={layers.state}
@@ -165,14 +165,32 @@ export default function AppShell() {
         historyCellCount={layers.historyCells.length}
         recentStatus={layers.recentStatus}
         recent={layers.recent}
-        covered={menu !== null}
+        open={layersOpen}
+        onClose={() => setLayersOpen(false)}
+        view={view}
         onToggle={layers.toggle}
-        onYear={layers.setYear}
         onWindow={layers.setWindow}
+      />
+
+      <TimeSlider
+        view={view}
+        years={historyYears(layers.lastMonth)}
+        year={layers.state.historyYear}
+        onYear={layers.setYear}
+        day={layers.state.dangerDay}
         onDay={layers.setDay}
       />
 
-      <ReportPanel selection={selection} onCycleHeight={cycleSheet} />
-    </>
+      {selection !== null ? (
+        <ReportPanel
+          selection={selection}
+          view={view}
+          day={layers.state.dangerDay === 0 ? "today" : "tomorrow"}
+          onPickPoint={pickPoint}
+          onClose={() => apply(null)}
+          onCycleHeight={cycleSheet}
+        />
+      ) : null}
+    </div>
   );
 }

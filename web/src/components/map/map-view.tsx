@@ -44,7 +44,10 @@ type Props = {
   /** Recent detections. Empty when the layer is off. */
   recentPoints: RecentPoint[];
   rasterDates: Record<string, string>;
+  /** What a plain click on the map chooses. */
+  pickMode: "country" | "point";
   onPickPoint: (lat: number, lon: number) => void;
+  onPickCountry: (iso3: string) => void;
   onPickRecent: (lat: number, lon: number) => void;
   onDrawArea: (ring: [lon: number, lat: number][]) => void;
   onDrawingEnd: () => void;
@@ -55,6 +58,12 @@ const selectionSource = "emerge-selection";
 const fillLayer = "emerge-selection-fill";
 const lineLayer = "emerge-selection-line";
 const pointLayer = "emerge-selection-point";
+const countrySource = "emerge-countries";
+const countryHitLayer = "emerge-countries-hit";
+const countryBorderLayer = "emerge-countries-border";
+const countryChosenFill = "emerge-country-chosen-fill";
+const countryChosenLine = "emerge-country-chosen-line";
+const countriesUrl = "/geo/countries.json";
 
 
 function rasterStyle(id: string): StyleSpecification | string {
@@ -75,7 +84,13 @@ function rasterStyle(id: string): StyleSpecification | string {
     },
     layers: [
       { id: "space", type: "background", paint: { "background-color": "rgb(10,10,12)" } },
-      { id: "base", type: "raster", source: "base" },
+      // Greyed and dimmed so the data layers carry the colour.
+      {
+        id: "base",
+        type: "raster",
+        source: "base",
+        paint: { "raster-saturation": -0.82, "raster-brightness-max": 0.62, "raster-contrast": 0.05 },
+      },
     ],
   } satisfies StyleSpecification;
 }
@@ -135,7 +150,9 @@ export default function MapView({
   historyCells,
   recentPoints,
   rasterDates,
+  pickMode,
   onPickPoint,
+  onPickCountry,
   onPickRecent,
   onDrawArea,
   onDrawingEnd,
@@ -161,11 +178,17 @@ export default function MapView({
   const rasters = useRef(rasterDates);
   rasters.current = rasterDates;
   const paintDangerRef = useRef<(() => void) | null>(null);
+  const paintCountriesRef = useRef<(() => void) | null>(null);
+  const measureRef = useRef<(() => void) | null>(null);
   const rasterKey = JSON.stringify(rasterDates);
   useWindLayer(map, ready, Boolean(rasterDates.wind));
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
+  const pickCountry = useRef(onPickCountry);
+  pickCountry.current = onPickCountry;
+  const mode = useRef(pickMode);
+  mode.current = pickMode;
   const area = useRef(onDrawArea);
   const drawEnd = useRef(onDrawingEnd);
   const isDrawing = useRef(drawing);
@@ -203,14 +226,27 @@ export default function MapView({
         });
         map.current = instance;
 
+        // Every credit in one place: the map's own button, which opens the
+        // full list. Layers drawn outside MapLibre add theirs here.
         instance.addControl(
-          new maplibregl.AttributionControl({ compact: false }),
+          new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: [
+              "Fire history: NASA FIRMS (MODIS, VIIRS), harmonized by this project",
+              "Wind and weather: Open-Meteo",
+              "Place search: Photon, data from OpenStreetMap contributors (ODbL)",
+              "Country borders: Natural Earth",
+            ],
+          }),
           "bottom-right",
         );
-        instance.addControl(
-          new maplibregl.NavigationControl({ showCompass: false }),
-          "bottom-left",
-        );
+        // Zoom buttons live in the shell's tool column, which asks by event.
+        const zoomBy = (event: Event) => {
+          const step = (event as CustomEvent<number>).detail;
+          if (step > 0) instance.zoomIn();
+          else instance.zoomOut();
+        };
+        window.addEventListener("emerge-zoom", zoomBy);
 
         instance.on("error", (event) => {
           // A missing tile must not blank the page; the credit bar and the
@@ -260,6 +296,53 @@ export default function MapView({
           source?.setData(selectionFeatures(current.current));
         };
 
+        const paintCountries = () => {
+          if (instance.getSource(countrySource) === undefined) {
+            instance.addSource(countrySource, { type: "geojson", data: countriesUrl });
+          }
+          const stroke = tokenColor("--outline");
+          const accent = tokenColor("--accent");
+          const chosen = current.current?.kind === "country" ? current.current.iso3 : "";
+          const before = instance.getLayer(fillLayer) ? fillLayer : undefined;
+          if (instance.getLayer(countryHitLayer) === undefined) {
+            // Invisible, but it is what a click is tested against.
+            instance.addLayer(
+              { id: countryHitLayer, type: "fill", source: countrySource, paint: { "fill-color": "#000", "fill-opacity": 0 } },
+              before,
+            );
+          }
+          if (instance.getLayer(countryBorderLayer) === undefined) {
+            instance.addLayer(
+              {
+                id: countryBorderLayer,
+                type: "line",
+                source: countrySource,
+                paint: { "line-color": "rgba(255,255,255,0.16)", "line-width": 0.6 },
+              },
+              before,
+            );
+          }
+          if (instance.getLayer(countryChosenFill) === undefined) {
+            instance.addLayer({
+              id: countryChosenFill,
+              type: "fill",
+              source: countrySource,
+              filter: ["==", ["get", "iso3"], chosen],
+              paint: { "fill-color": accent, "fill-opacity": 0.07 },
+            });
+          }
+          if (instance.getLayer(countryChosenLine) === undefined) {
+            instance.addLayer({
+              id: countryChosenLine,
+              type: "line",
+              source: countrySource,
+              filter: ["==", ["get", "iso3"], chosen],
+              paint: { "line-color": stroke, "line-width": 1.8 },
+            });
+          }
+        };
+        paintCountriesRef.current = paintCountries;
+
         // A new style wipes every source, so the tiles are put back the same
         // way the selection is.
         const paintDanger = () => {
@@ -280,12 +363,15 @@ export default function MapView({
         // The report panel covers part of the map, so the camera is told how
         // much room it really has. A phone's sheet changes height, hence the
         // observer rather than a one-off measurement.
+        // Setting padding stops any camera move under way, so it is applied
+        // only when the free space really changed.
+        let lastPadding = "";
         const applyPadding = () => {
           const panel = document.getElementById("report");
           const box = panel?.getBoundingClientRect();
           const narrow = window.innerWidth < 768;
           const topBar = document.querySelector(".top")?.getBoundingClientRect();
-          instance.setPadding(
+          const padding =
             narrow
               ? {
                   top: Math.round((topBar?.bottom ?? 96) + 8),
@@ -298,8 +384,11 @@ export default function MapView({
                   right: box ? Math.max(0, window.innerWidth - box.left) : 16,
                   bottom: 24,
                   left: 16,
-                },
-          );
+                };
+          const key = JSON.stringify(padding);
+          if (key === lastPadding) return;
+          lastPadding = key;
+          instance.setPadding(padding);
         };
 
         /**
@@ -329,9 +418,15 @@ export default function MapView({
         ].filter((node): node is HTMLElement => node !== null);
         const observer = new ResizeObserver(() => measure());
         for (const node of watched) observer.observe(node);
+        measureRef.current = () => {
+          const panel = document.getElementById("report");
+          if (panel !== null) observer.observe(panel);
+          measure();
+        };
         window.addEventListener("resize", measure);
         measure();
         cleanUp.current = () => {
+          window.removeEventListener("emerge-zoom", zoomBy);
           observer.disconnect();
           window.removeEventListener("resize", measure);
           document.documentElement.style.removeProperty("--credit-h");
@@ -352,11 +447,16 @@ export default function MapView({
         });
 
         instance.on("load", () => {
+          // The credits start folded behind their button on every screen size.
+          const credits = node.querySelector(".maplibregl-ctrl-attrib");
+          credits?.classList.remove("maplibregl-compact-show");
+          credits?.removeAttribute("open");
           publishCamera();
           instance.getCanvas().setAttribute("aria-label", label.current);
           instance.setProjection({ type: projection });
           measure();
           paintSelection();
+          paintCountries();
           paintDanger();
           // A selection read from the address bar is already set by now.
           frameSelection(instance, current.current, boxes.current);
@@ -368,6 +468,7 @@ export default function MapView({
         instance.on("style.load", () => {
           instance.setProjection({ type: projection });
           paintSelection();
+          paintCountries();
           paintDanger();
         });
 
@@ -377,7 +478,26 @@ export default function MapView({
 
         instance.on("click", (event) => {
           if (isDrawing.current || closingClick.current) return;
-          pick.current(event.lngLat.lat, event.lngLat.lng);
+          if (mode.current === "point") {
+            pick.current(event.lngLat.lat, event.lngLat.lng);
+            return;
+          }
+          const hit = instance.getLayer(countryHitLayer)
+            ? instance.queryRenderedFeatures(event.point, { layers: [countryHitLayer] })
+            : [];
+          const iso3 = hit[0]?.properties?.iso3;
+          if (typeof iso3 === "string" && iso3 !== "") pickCountry.current(iso3);
+        });
+
+        instance.on("mousemove", (event) => {
+          if (mode.current !== "country" || isDrawing.current) {
+            instance.getCanvas().style.cursor = "";
+            return;
+          }
+          const over = instance.getLayer(countryHitLayer)
+            ? instance.queryRenderedFeatures(event.point, { layers: [countryHitLayer] }).length > 0
+            : false;
+          instance.getCanvas().style.cursor = over ? "pointer" : "";
         });
       } catch (error) {
         console.warn("map", error);
@@ -417,6 +537,13 @@ export default function MapView({
     if (instance === null) return;
     const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
     source?.setData(selectionFeatures(selection));
+    const chosen = selection?.kind === "country" ? selection.iso3 : "";
+    for (const layer of [countryChosenFill, countryChosenLine]) {
+      if (instance.getLayer(layer)) instance.setFilter(layer, ["==", ["get", "iso3"], chosen]);
+    }
+    // The report panel opens or closes with the selection, so the free space
+    // is measured before the camera moves into it.
+    measureRef.current?.();
     // The country boxes arrive with their file, which can be after a link
     // naming a country has already been read, so this runs again then.
     frameSelection(instance, selection, countryBoxes);

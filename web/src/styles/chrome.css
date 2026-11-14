@@ -1,0 +1,567 @@
+/* The map screen's frame: top bar, search, tool column, layer list, time
+   slider, report panel and the one credits button. Loaded after shell.css
+   and layers.css and wins over them where both set a rule. */
+
+.shell {
+  --gap: 16px;
+  --bar-h: 40px;
+  --tool: 38px;
+  --time-h: 58px;
+  /* Room the report panel takes on the right; zero while it is closed. */
+  --report-space: 0px;
+}
+
+.shell[data-has-report="true"] {
+  --report-space: 416px;
+}
+
+/* Top bar */
+
+.top {
+  top: var(--gap);
+  left: var(--gap);
+  right: var(--gap);
+  flex-wrap: nowrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  height: var(--bar-h);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.top .chip-group,
+.chip-solo,
+.icon-btn {
+  height: var(--bar-h);
+}
+
+.top .chip {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.chip-solo,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 13px;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.chip-solo:hover,
+.icon-btn:hover,
+.chip-solo[aria-expanded="true"],
+.icon-btn[aria-expanded="true"] {
+  color: var(--ink);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.icon-btn-text {
+  font: 500 12px/1 var(--font-ui);
+  letter-spacing: 0.04em;
+}
+
+/* Search */
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--bar-h);
+  width: 300px;
+  min-width: 0;
+  padding: 0 12px;
+  gap: 8px;
+  color: var(--ink-3);
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--ink);
+}
+
+.search input::placeholder {
+  color: var(--ink-3);
+}
+
+.search:focus-within {
+  border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
+}
+
+.search input::-webkit-search-cancel-button {
+  filter: invert(1) opacity(0.5);
+}
+
+.search-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel-solid);
+  max-height: min(380px, calc(100dvh - 120px));
+  overflow-y: auto;
+  z-index: 6;
+}
+
+.search-list li[role="option"] {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.search-list li[aria-selected="true"] {
+  background: var(--line);
+}
+
+.search-name {
+  color: var(--ink);
+}
+
+.search-detail,
+.search-state {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.search-state {
+  padding: 8px 10px;
+}
+
+/* Small menus in the top bar */
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  padding: 4px;
+  display: grid;
+  background: var(--panel-solid);
+  z-index: 6;
+}
+
+.dropdown-item {
+  display: block;
+  text-align: left;
+  padding: 9px 11px;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item[aria-current="true"] {
+  background: var(--line);
+  color: var(--ink);
+}
+
+/* Tool column, lower left */
+
+.tools {
+  position: fixed;
+  left: var(--gap);
+  bottom: calc(var(--gap) + var(--time-h) + 10px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  padding: 3px;
+  gap: 2px;
+}
+
+.tool {
+  width: var(--tool);
+  height: var(--tool);
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+}
+
+.tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tool:hover {
+  color: var(--ink);
+  background: var(--empty);
+}
+
+.tool[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--space);
+}
+
+.tool-tip {
+  position: absolute;
+  left: calc(var(--tool) + 6px + 12px);
+  top: 0;
+  width: 260px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.tool-radius {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-radius input {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.tool-radius output {
+  min-width: 56px;
+  text-align: right;
+  color: var(--ink);
+}
+
+/* Layer list, opened from the tool column */
+
+.layers {
+  top: auto;
+  left: calc(var(--gap) + var(--tool) + 6px + 12px);
+  bottom: calc(var(--gap) + var(--time-h) + 10px);
+  width: 300px;
+  max-height: calc(100dvh - var(--gap) - var(--time-h) - 10px - 84px);
+}
+
+.layers-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px 8px 13px;
+}
+
+.layers-head::after {
+  content: none;
+}
+
+.layers-head h2 {
+  font: 600 13px/1.3 var(--font-ui);
+  color: var(--ink);
+}
+
+.layers-count {
+  margin-right: auto;
+}
+
+.layers-close {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-s);
+  color: var(--ink-2);
+}
+
+.layers-close:hover {
+  background: var(--empty);
+  color: var(--ink);
+}
+
+.layers-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Time slider, along the bottom */
+
+.timeline {
+  position: fixed;
+  left: var(--gap);
+  right: calc(var(--gap) + var(--report-space) + var(--tool) + 14px);
+  bottom: var(--gap);
+  height: var(--time-h);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 0 9px;
+}
+
+.timeline .play {
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+
+.timeline-now {
+  flex: none;
+  display: grid;
+  min-width: 112px;
+}
+
+.timeline-value {
+  font: 600 17px/1.15 var(--font-head);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.timeline-kind {
+  font-size: 11px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.timeline-track {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.timeline-track input {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.timeline-ticks {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -2px;
+  height: 14px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.timeline-ticks span {
+  position: absolute;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+
+/* Report panel: only while a place is chosen */
+
+.report {
+  top: calc(var(--gap) + var(--bar-h) + 16px);
+  bottom: var(--gap);
+}
+
+.report-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.report-head h1 {
+  overflow-wrap: anywhere;
+}
+
+.report-kind {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Credits: the map's own button, beside the time slider */
+
+.maplibregl-ctrl-bottom-right {
+  z-index: 5;
+  right: calc(var(--gap) + var(--report-space));
+  bottom: var(--gap);
+  max-width: calc(100vw - var(--report-space) - 2 * var(--gap));
+}
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+  margin: 0;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  min-height: var(--tool);
+  min-width: var(--tool);
+  border-radius: var(--radius);
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact-show {
+  padding: 9px 44px 9px 12px;
+  max-width: min(560px, calc(100vw - var(--report-space) - 2 * var(--gap)));
+}
+
+.maplibregl-ctrl-attrib-button {
+  top: 50%;
+  translate: 0 -50%;
+  right: 5px;
+  filter: invert(0.8);
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact .maplibregl-ctrl-attrib-button {
+  background-color: transparent;
+}
+
+/* Phones */
+
+@media (max-width: 767px) {
+  .shell {
+    --gap: 10px;
+    --bar-h: 38px;
+    --tool: 36px;
+    --report-space: 0px;
+  }
+
+  .top {
+    flex-wrap: wrap;
+  }
+
+  .top .search {
+    order: 5;
+    flex: 1 1 100%;
+    width: auto;
+  }
+
+  .top .spacer {
+    display: block;
+  }
+
+  .chip-solo .about-text {
+    display: none;
+  }
+
+  /* The tools move to the right edge, under the top bar. */
+  .tools {
+    left: auto;
+    right: var(--gap);
+    top: calc(var(--top-bar-h, 96px) + 18px);
+    bottom: auto;
+  }
+
+  .tool-tip {
+    left: auto;
+    right: calc(var(--tool) + 6px + 8px);
+    width: min(260px, calc(100vw - var(--tool) - 40px));
+  }
+
+  .timeline {
+    right: var(--gap);
+    bottom: var(--gap);
+  }
+
+  .shell[data-has-report="true"] .timeline {
+    bottom: calc(var(--sheet) + 8px);
+  }
+
+  .timeline-now {
+    min-width: 0;
+  }
+
+  .timeline-kind,
+  .timeline-ticks [data-minor] {
+    display: none;
+  }
+
+  .timeline-value {
+    font-size: 15px;
+  }
+
+  .layers {
+    left: var(--gap);
+    right: calc(var(--gap) + var(--tool) + 14px);
+    width: auto;
+    top: calc(var(--top-bar-h, 96px) + 18px);
+    bottom: auto;
+    max-height: calc(100dvh - var(--top-bar-h, 96px) - var(--time-h) - 60px);
+  }
+
+  .shell[data-has-report="true"] .layers {
+    max-height: calc(100dvh - var(--top-bar-h, 96px) - var(--sheet) - var(--time-h) - 40px);
+  }
+
+  .maplibregl-ctrl-bottom-right {
+    left: auto;
+    right: var(--gap);
+    top: auto;
+    bottom: calc(var(--gap) + var(--time-h) + 8px);
+    display: block;
+  }
+
+  .shell[data-has-report="true"] .maplibregl-ctrl-bottom-right {
+    bottom: calc(var(--sheet) + var(--time-h) + 16px);
+  }
+
+  .report {
+    top: auto;
+  }
+}
+
+/* Mid-size screens: a narrower panel leaves the slider room. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .shell[data-has-report="true"] {
+    --report-space: 356px;
+  }
+
+  .report {
+    width: 340px;
+  }
+}
+
+/* A short slider keeps only its first and last labels. */
+.timeline-track {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .timeline-ticks span:not(:first-child):not(:last-child) {
+    display: none;
+  }
+}

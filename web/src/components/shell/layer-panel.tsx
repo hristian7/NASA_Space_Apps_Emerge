@@ -6,14 +6,13 @@ import { getMeta } from "@/lib/data/api";
 import { formatIsoDate, type ReportLocale } from "@/components/report/lib/format";
 import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
-import { dangerClasses, dangerDate, dangerDays } from "@/lib/layers/danger";
+import { dangerClasses, dangerDate } from "@/lib/layers/danger";
 import DriverLegend from "./driver-legend";
-import { historyBreaks, historyRampTokens, historyYears } from "@/lib/layers/history";
+import { historyBreaks, historyRampTokens } from "@/lib/layers/history";
 import { recentWindows, type RecentWindow } from "@/lib/layers/firms";
 import type { RecentPayload } from "@/lib/layers/recent";
 import type { LayerDefinition } from "@/config/layers";
 import Disclaimer from "./disclaimer";
-import "@/styles/layers.css";
 
 export type LoadStatus = "off" | "loading" | "ready" | "empty" | "failed";
 
@@ -25,11 +24,17 @@ type Props = {
   recentStatus: LoadStatus;
   recent: RecentPayload | null;
   onToggle: (id: string) => void;
-  onYear: (year: number) => void;
   onWindow: (window: RecentWindow) => void;
-  onDay: (day: number) => void;
-  /** True while a menu from the top bar covers the same corner. */
-  covered: boolean;
+  /** Opened and closed from the map's tool column. */
+  open: boolean;
+  onClose: () => void;
+  view: "history" | "forecast";
+};
+
+/** Which layers each view lists. Recent fires belong to both. */
+const viewLayers: Record<Props["view"], string[]> = {
+  history: ["harmonized-history", "recent-fires"],
+  forecast: ["fire-danger", "nasa-fwi", "wind", "air-temperature", "soil-moisture", "greenness", "land-type", "recent-fires"],
 };
 
 /** Registry keys carry their namespace; `useTranslations` already has it. */
@@ -53,10 +58,10 @@ export default function LayerPanel({
   recentStatus,
   recent,
   onToggle,
-  onYear,
   onWindow,
-  onDay,
-  covered,
+  open,
+  onClose,
+  view,
 }: Props) {
   const t = useTranslations("layers");
   const locale = useLocale() as ReportLocale;
@@ -70,7 +75,7 @@ export default function LayerPanel({
     });
     return () => { cancelled = true; };
   }, []);
-  const [open, setOpen] = useState(true);
+  const shell = useTranslations("shell");
   const [rasterErrors, setRasterErrors] = useState<string[]>([]);
   const [wind, setWind] = useState({ state: "loading", time: "" });
   useEffect(() => {
@@ -85,25 +90,8 @@ export default function LayerPanel({
     return () => window.removeEventListener("emerge-raster-error", update);
   }, []);
 
-  // A phone opens with the list folded away, so the map and the report sheet
-  // keep their room; a wide screen has space for it from the start.
-  useEffect(() => {
-    setOpen(window.innerWidth >= 768);
-  }, []);
-
-  // On a phone the list and the report sheet share the lower half of the
-  // screen, so opening the list lowers the sheet, the same move the top bar's
-  // own menus make.
-  const show = (next: boolean) => {
-    setOpen(next);
-    if (next && window.innerWidth < 768) {
-      document.documentElement.setAttribute("data-sheet", "peek");
-    }
-  };
-
-  const layers = panelLayers();
+  const layers = panelLayers().filter((entry) => viewLayers[view].includes(entry.id));
   const onCount = layers.filter((entry) => state.on.includes(entry.id)).length;
-  const years = historyYears(lastMonth);
   const dangerOn = layers.some(
     (entry) => entry.panel?.showsDisclaimer === true && state.on.includes(entry.id),
   );
@@ -111,45 +99,9 @@ export default function LayerPanel({
   const control = (definition: LayerDefinition) => {
     switch (definition.panel?.control) {
       case "history_year":
-        return (
-          <div className="layer-control">
-            <label className="label" htmlFor="layer-year">
-              {t("yearLabel")}
-            </label>
-            <div className="layer-steps">
-              <button
-                type="button"
-                className="btn step"
-                onClick={() => onYear(state.historyYear - 1)}
-                disabled={state.historyYear <= years[0]}
-                aria-label={t("yearBack")}
-              >
-                {"<"}
-              </button>
-              <select
-                id="layer-year"
-                className="field num"
-                value={state.historyYear}
-                onChange={(event) => onYear(Number(event.target.value))}
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn step"
-                onClick={() => onYear(state.historyYear + 1)}
-                disabled={state.historyYear >= years[years.length - 1]}
-                aria-label={t("yearForward")}
-              >
-                {">"}
-              </button>
-            </div>
-          </div>
-        );
+      case "danger_day":
+        // The time slider at the bottom of the map sets these.
+        return null;
       case "recent_window":
         return (
           <div className="layer-control">
@@ -169,28 +121,6 @@ export default function LayerPanel({
                 </button>
               ))}
             </div>
-          </div>
-        );
-      case "danger_day":
-        return (
-          <div className="layer-control">
-            <label className="label" htmlFor={`layer-day-${definition.id}`}>
-              {t("dayLabel")}
-            </label>
-            <select
-              id={`layer-day-${definition.id}`}
-              className="field"
-              value={state.dangerDay}
-              onChange={(event) => onDay(Number(event.target.value))}
-            >
-              {dangerDays().map((day) => (
-                <option key={day} value={day}>
-                  {day === 0
-                    ? `${t("today")} (${dangerDate(0)})`
-                    : `${t("inDays", { days: day })} (${dangerDate(day)})`}
-                </option>
-              ))}
-            </select>
           </div>
         );
       default:
@@ -298,21 +228,18 @@ export default function LayerPanel({
   };
 
   return (
-    <section className="layers glass" aria-label={t("title")} hidden={covered}>
-      <h2>
-        <button
-          type="button"
-          className="layers-head"
-          aria-expanded={open}
-          aria-controls="layer-list"
-          onClick={() => show(!open)}
-        >
-          <span>{t("title")}</span>
-          <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+    <section className="layers glass" id="layer-panel" aria-label={t("title")} hidden={!open}>
+      <div className="layers-head">
+        <h2>{t("title")}</h2>
+        <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+        <button type="button" className="layers-close" aria-label={shell("closeMenu")} onClick={onClose}>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
         </button>
-      </h2>
+      </div>
 
-      <div id="layer-list" className="layers-body" hidden={!open}>
+      <div id="layer-list" className="layers-body">
         {layers.map((definition) => {
           const on = state.on.includes(definition.id);
           return (
@@ -335,7 +262,6 @@ export default function LayerPanel({
                   <p className="hint" aria-live="polite">
                     {timeLine(definition)}
                   </p>
-                  <p className="hint credit">{definition.credit}</p>
                 </div>
               ) : null}
             </div>
