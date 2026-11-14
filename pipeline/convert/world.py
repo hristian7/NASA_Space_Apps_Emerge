@@ -169,13 +169,15 @@ def pick_background_form(
     k_ratio: float,
     picks_term: dict,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
 ) -> tuple:
     """Choose a background form per country on the same inner split as A2."""
-    inner_fit = (FIT[0], FIT[1], FIT[2] - INNER_HOLD_YEARS, 12)
-    inner_hold = (FIT[2] - INNER_HOLD_YEARS + 1, 1, FIT[2], FIT[3])
+    w = fit_window
+    inner_fit = (w[0], w[1], w[2] - INNER_HOLD_YEARS, 12)
+    inner_hold = (w[2] - INNER_HOLD_YEARS + 1, 1, w[2], w[3])
     fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
     assert not set(fit_m) & set(hold_m), "inner split overlaps"
-    index = M.activity_index(cm, unit, sat, FIT)
+    index = M.activity_index(cm, unit, sat, w)
     base_fit = M.pair_frame(univ, cm, fit_m, unit, sat, with_truth=True)
     base_hold = M.pair_frame(univ, cm, hold_m, unit, sat, with_truth=True)
     terms = {n: (t, k) for n, t, k in M.A2_OPTIONS}
@@ -283,15 +285,17 @@ def pick_per_country(
     modis_sat: str,
     k_ratio: float,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
 ) -> tuple[dict, dict]:
     """Choose `moy` or `moy_pooled` per country on an inner split of the fit
     years. A country with too few positive MODIS pairs in the inner fit, or no
     measured fire in the inner holdout, cannot be judged and takes
     `moy_pooled`, the safer of the two for a thin group."""
-    inner_fit = (FIT[0], FIT[1], FIT[2] - INNER_HOLD_YEARS, 12)
-    inner_hold = (FIT[2] - INNER_HOLD_YEARS + 1, 1, FIT[2], FIT[3])
+    w = fit_window
+    inner_fit = (w[0], w[1], w[2] - INNER_HOLD_YEARS, 12)
+    inner_hold = (w[2] - INNER_HOLD_YEARS + 1, 1, w[2], w[3])
     fit_m, hold_m = months_in(inner_fit), months_in(inner_hold)
-    assert set(hold_m) <= set(months_in(FIT)), "inner holdout outside the fit years"
+    assert set(hold_m) <= set(months_in(w)), "inner holdout outside the fit years"
     assert not set(fit_m) & set(hold_m), "inner split overlaps"
 
     models, pairs = fit_options(cm, univ, fit_m, unit, modis_sat, k_ratio, rng)
@@ -338,13 +342,15 @@ def fit_production(
     modis_sat: str,
     k_ratio: float,
     rng: np.random.Generator,
+    fit_window: tuple[int, int, int, int] = FIT,
+    pred_window: tuple[int, int, int, int] | None = None,
 ) -> tuple[dict, dict]:
     """Refit both options on all fit years and record where S-NPP came from.
 
     The leakage record is taken from the rows that actually built the fitted
     parameters, not from a frame that was just filtered, so it can fail.
     """
-    months = months_in(FIT)
+    months = months_in(fit_window)
     models, pairs = fit_options(cm, univ, months, unit, modis_sat, k_ratio, rng)
     truth = pairs.loc[pairs["y"] > 0, "ym"]
     record = {
@@ -357,6 +363,10 @@ def fit_production(
     assert record["snpp_first_ym"] >= record["window_first_ym"], "S-NPP before the fit window"
     assert record["snpp_last_ym"] <= record["window_last_ym"], "S-NPP after the fit window"
     assert record["snpp_first_ym"] >= ym(2012, 2), "S-NPP used before Feb 2012"
+    if pred_window is not None:
+        bad = np.isin(truth.to_numpy(), months_in(pred_window))
+        record["snpp_rows_inside_the_prediction_window"] = int(bad.sum())
+        assert not bad.any(), "S-NPP from a prediction year entered the fit"
     pools = {n: fast_country_pools(m, pairs) for n, m in models.items()}
     del pairs
     return models, record, pools
@@ -741,6 +751,126 @@ def partial_months(agg: pd.DataFrame) -> dict:
     return out
 
 
+
+# ------------------------------------------------- the world model's own tests
+
+Q25_COUNTRIES = ("Bulgaria", "United_States")
+
+
+def holdout_run(agg, cm, rng, report, out_dir):
+    """Hold-out predictions from the world model, for the independent scorer.
+
+    The scored bake-off fitted two countries. These rows come from the same
+    functions fitted on all of them, so the scorer can say what the world
+    model is worth, including for a small country.
+    """
+    pieces, counts, leak = [], {}, {}
+    for test in ("t1", "t2"):
+        fitw, predw = M.TESTS[test]["fit"], M.TESTS[test]["pred"]
+        univ = M.universe(cm, fitw)
+        k_cd = M.K_RATIO_CD
+        aqua = cm[(cm["sat"] == "Aqua") & M.window_mask(cm["ym"], fitw)]
+        k_scale = {u: float(aqua[u].sum() / aqua["cd"].sum()) for u in M.UNITS}
+        picks_term, inner_t = pick_per_country(
+            cm, univ, "cd", "Aqua", k_cd * k_scale["cd"], rng, fit_window=fitw
+        )
+        A3_STATE.clear()
+        index, picks_form, scores, calib, rep = pick_background_form(
+            cm, univ, "cd", "Aqua", k_cd * k_scale["cd"], picks_term, rng,
+            fit_window=fitw,
+        )
+        for unit in M.UNITS:
+            A3_STATE[(unit, "Aqua")] = (
+                M.activity_index(cm, unit, "Aqua", fitw), picks_form, calib,
+            )
+        report.setdefault("tests", {})[test] = {
+            "fit": f"{fitw[0]}-{fitw[1]:02d} to {fitw[2]}-{fitw[3]:02d}",
+            "predict": f"{predw[0]}-{predw[1]:02d} to {predw[2]}-{predw[3]:02d}",
+            "time_term_counts": pd.Series(picks_term).value_counts().to_dict(),
+            "background_form_counts": pd.Series(picks_form).value_counts().to_dict(),
+            "inner_split": inner_t,
+            "country_band_calibration": rep,
+        }
+        for unit in M.UNITS:
+            models, record, pools = fit_production(
+                cm, univ, unit, "Aqua", k_cd * k_scale[unit], rng,
+                fit_window=fitw, pred_window=predw,
+            )
+            leak[f"{test}_{unit}"] = record
+            future = pair_frame(
+                univ, cm, months_in(predw), unit, "Aqua", with_truth=False
+            )
+            cr = joint_country_ranges(
+                models, picks_term, univ, cm, months_in(predw), unit, "Aqua",
+                pools, rng,
+            ).rename(
+                columns={
+                    f"{unit}_joint": "pred",
+                    f"{unit}_joint_lo": "lo",
+                    f"{unit}_joint_hi": "hi",
+                }
+            )
+            cr = cr.drop(
+                columns=[c for c in cr.columns if c.endswith("_raw")], errors="ignore"
+            )
+            cr["grid"], cr["cell"] = "country", 0
+            q = predict_rows(
+                models, picks_term, future[future["country"].isin(Q25_COUNTRIES)]
+            )
+            q = q[q["pred"] > 0].copy()
+            q["grid"] = "q25"
+            for frame in (cr, q):
+                frame["pipeline"], frame["test"], frame["unit"] = "W", test, unit
+                frame["year"] = frame["ym"] // 12
+                frame["month"] = (frame["ym"] % 12) + 1
+                pieces.append(
+                    frame[
+                        [
+                            "pipeline", "test", "unit", "country", "grid", "cell",
+                            "year", "month", "pred", "lo", "hi",
+                        ]
+                    ]
+                )
+            counts[f"{test}_{unit}_country"] = int(len(cr))
+            counts[f"{test}_{unit}_q25"] = int(len(q))
+            print(f"W {test} {unit}: {len(cr):,} country rows "
+                  f"({cr['country'].nunique()} countries), {len(q):,} q25 rows",
+                  flush=True)
+            del models, pools, future, cr, q
+    pred = pd.concat(pieces, ignore_index=True)
+    pred["cell"] = pred["cell"].astype("int64")
+    pred["year"] = pred["year"].astype("int32")
+    pred["month"] = pred["month"].astype("int32")
+    for c in ("pred", "lo", "hi"):
+        pred[c] = pred[c].astype("float64")
+    pred["pred"] = pred["pred"].clip(lower=0.0)
+    pred["lo"] = np.minimum(pred["lo"].clip(lower=0.0), pred["pred"])
+    pred["hi"] = np.maximum(pred["hi"], pred["pred"])
+    assert list(pred.columns) == [
+        "pipeline", "test", "unit", "country", "grid", "cell",
+        "year", "month", "pred", "lo", "hi",
+    ]
+    assert set(pred["pipeline"]) == {"W"}
+    assert set(pred["test"]) == {"t1", "t2"}
+    assert set(pred["unit"]) == set(M.UNITS)
+    assert set(pred["grid"]) == {"country", "q25"}
+    assert set(pred.loc[pred["grid"] == "country", "cell"]) == {0}
+    assert set(pred.loc[pred["grid"] == "q25", "country"]) <= set(Q25_COUNTRIES)
+    assert not pred.isna().any().any(), "NaN in the hold-out output"
+    assert (pred["pred"] >= 0).all()
+    assert (pred["lo"] <= pred["pred"]).all() and (pred["pred"] <= pred["hi"]).all()
+    assert pred["month"].between(1, 12).all()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pred.to_parquet(out_dir / "pred.parquet", index=False, compression="zstd")
+    report["rows"] = counts
+    report["rows_total"] = int(len(pred))
+    report["countries"] = int(
+        pred.loc[pred["grid"] == "country", "country"].nunique()
+    )
+    report["leakage_record"] = leak
+    return pred
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="World run of the scored A2 conversion")
     ap.add_argument("--data", default=str(ROOT / "data"))
@@ -749,6 +879,9 @@ def main() -> int:
                     help="A3 is the adopted model and the default. A2 is the "
                          "earlier scored model, kept so the bake-off rows can "
                          "be reproduced.")
+    ap.add_argument("--holdout", action="store_true",
+                    help="Write the hold-out predictions of the world model "
+                         "for the scorer instead of the record.")
     ap.add_argument("--check-bakeoff", action="store_true")
     args = ap.parse_args()
     data = Path(args.data).resolve()
@@ -761,6 +894,35 @@ def main() -> int:
 
     src = data / "derived" / "world" / "cell_days.parquet"
     agg = aggregate(src, args.threads)
+    if args.holdout:
+        cm = model_frame(agg)
+        rng = np.random.default_rng(M.SEED + 7)
+        MODEL_VARIANT.append("A3")
+        hout = data / "derived" / "bakeoff" / "W"
+        report["pipeline"] = "W"
+        report["band"] = BAND
+        report["model"] = (
+            "The world model (A3) fitted on all countries, predicting the protocol "
+            "t1 and t2 windows. Country rows carry the jointly computed and "
+            "conformally calibrated range. q25 rows are written for Bulgaria and "
+            "the United States so the world model can sit next to A3 on the "
+            "existing levels."
+        )
+        t_h = time.time()
+        holdout_run(agg, cm, rng, report, hout)
+        report["seconds_model"] = round(time.time() - t_h, 1)
+        report["seconds_total"] = round(time.time() - t0, 1)
+        for key, rec in report["leakage_record"].items():
+            print(f"  leakage {key}: S-NPP months {rec['snpp_first_ym']} to "
+                  f"{rec['snpp_last_ym']}, fit window {rec['window_first_ym']} to "
+                  f"{rec['window_last_ym']}, rows inside the prediction window "
+                  f"{rec.get('snpp_rows_inside_the_prediction_window')}")
+        (hout / "manifest.json").write_text(
+            json.dumps(report, indent=2, default=str) + "\n"
+        )
+        print(f"\nwrote {hout}: {report['rows_total']:,} rows, "
+              f"{report['countries']} countries, {report['seconds_total']} s")
+        return 0
     print(f"aggregate: {len(agg):,} country x satellite x cell x month rows "
           f"in {time.time() - t0:.0f} s")
     cm = model_frame(agg)
