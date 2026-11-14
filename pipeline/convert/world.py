@@ -379,6 +379,7 @@ def harmonize(
 
     est_parts, backgrounds = [], []
     joint_ranges: dict = {}
+    factor_parts: list = []
     if MODEL_VARIANT and MODEL_VARIANT[0] == "A3":
         report["a3_background"] = {}
         for sat in ("Terra", "Aqua"):
@@ -415,8 +416,10 @@ def harmonize(
             )
             if unit == "cd":
                 bg_cd = background_table(models, picks, src, unit, sat)
+                f_cd = factor_table(models, picks, src, unit, sat)
             else:
                 bg_hot = background_table(models, picks, src, unit, sat)
+                f_hot = factor_table(models, picks, src, unit, sat)
             joint = joint_country_ranges(
                 models, picks, univ, cm, months_in(
                     TERRA_PERIOD if src == SRC_TERRA else MODIS_PERIOD
@@ -438,6 +441,9 @@ def harmonize(
             how="left",
         )
         backgrounds.append(bg)
+        factor_parts.append(
+            f_cd.merge(f_hot[["group", "moy", "k_hot"]], on=["group", "moy"], how="left")
+        )
 
     estimated = pd.concat(est_parts, ignore_index=True)
     report["joint_country_range"] = (
@@ -485,7 +491,13 @@ def harmonize(
         [estimated[measured.columns], measured], ignore_index=True
     )
     joint = {u: pd.concat(v, ignore_index=True) for u, v in joint_ranges.items()}
-    return per_country, pd.concat(backgrounds, ignore_index=True), picks, joint
+    return (
+        per_country,
+        pd.concat(backgrounds, ignore_index=True),
+        picks,
+        joint,
+        pd.concat(factor_parts, ignore_index=True),
+    )
 
 
 def joint_country_ranges(
@@ -537,6 +549,77 @@ def centre_band(out: pd.DataFrame, joint: pd.DataFrame, unit: str) -> pd.DataFra
     return merged.drop(
         columns=[f"{unit}_joint", f"{unit}_joint_lo", f"{unit}_joint_hi"]
     )
+
+
+def factor_table(models: dict, picks: dict, period: str, unit: str, sat: str) -> pd.DataFrame:
+    """The multiplier the model applies to the source sensor's raw count.
+
+    For a cell-month in which the source sensor saw fire the model is exactly
+    `value = raw source count x factor`; nothing is added. The factor is the
+    pooled ratio of the cell's group for that calendar month, so a group with
+    no ratio of its own carries the group, country or global value the
+    shrinkage cascade actually gives it. Built by predicting a raw count of 1,
+    through the same predict path the record itself uses.
+    """
+    groups = sorted({g for m in models.values() for g in m.ix["groups"]})
+    rows = pd.DataFrame(
+        {"group": np.repeat(groups, 12), "moy": np.tile(np.arange(1, 13), len(groups))}
+    )
+    rows["country"] = rows["group"].str.rsplit("|", n=1).str[0]
+    rows["cell"] = 0
+    rows["x"] = 1.0
+    rows["ym"] = 2005 * 12 + rows["moy"] - 1
+    rows = attach_background(rows, unit, sat)
+    got = predict_rows(models, picks, rows)
+    got["period"] = period
+    return got[["group", "period", "moy", "pred"]].rename(columns={"pred": f"k_{unit}"})
+
+
+def check_factors(
+    cells: pd.DataFrame, agg: pd.DataFrame, factors: pd.DataFrame, groups_map: dict
+) -> list:
+    """Three groups: does value equal raw source count times the factor?"""
+    out = []
+    one = agg.groupby(["cell", "ym"], as_index=False)["country"].nunique()
+    single = one.loc[one["country"] == 1, ["cell", "ym"]]
+    for period, sat, window in (
+        (SRC_MODIS, "Aqua", MODIS_PERIOD),
+        (SRC_TERRA, "Terra", TERRA_PERIOD),
+    ):
+        raw = agg.loc[
+            (agg["sat"] == sat) & M.window_mask(agg["ym"], window) & (agg["cd"] > 0),
+            ["cell", "ym", "group", "cd", "hot"],
+        ]
+        for g in sorted(raw["group"].unique())[:: max(len(raw["group"].unique()) // 3, 1)][:3]:
+            part = raw[raw["group"] == g].head(5000).merge(
+                single, on=["cell", "ym"], how="inner"
+            )
+            if part.empty:
+                continue
+            r = part.iloc[0]
+            row = cells[(cells["cell"] == r["cell"])
+                        & (cells["year"] * 12 + cells["month"] - 1 == r["ym"])]
+            f = factors[(factors["group"] == g) & (factors["period"] == period)
+                        & (factors["moy"] == (r["ym"] % 12) + 1)]
+            if row.empty or f.empty:
+                continue
+            got = {u: float(row.iloc[0][u]) for u in M.UNITS}
+            want = {u: float(r[u]) * float(f.iloc[0][f"k_{u}"]) for u in M.UNITS}
+            ok = all(abs(got[u] - want[u]) <= 1e-6 * max(abs(want[u]), 1.0) for u in M.UNITS)
+            out.append({
+                "group": g, "group_id": int(groups_map.get(g, -1)), "period": period,
+                "cell": int(r["cell"]), "year": int(r["ym"] // 12),
+                "month": int((r["ym"] % 12) + 1),
+                "raw_source_cd": float(r["cd"]), "raw_source_hot": float(r["hot"]),
+                "value_cd": got["cd"], "expected_cd": want["cd"],
+                "value_hot": got["hot"], "expected_hot": want["hot"],
+                "matches": bool(ok),
+            })
+            print(f"factor check {period} {g} cell {int(r['cell'])}: "
+                  f"cd {got['cd']:.4f} vs raw x k {want['cd']:.4f} "
+                  f"{'PASS' if ok else 'MISS'}")
+    assert out and all(c["matches"] for c in out), "factor check failed"
+    return out
 
 
 def noaa20_ratio(agg: pd.DataFrame, report: dict) -> dict:
@@ -603,7 +686,7 @@ def main() -> int:
 
     rng = np.random.default_rng(M.SEED)
     t_fit = time.time()
-    cells, background, picks, joint = harmonize(agg, cm, univ, rng, report)
+    cells, background, picks, joint, factors = harmonize(agg, cm, univ, rng, report)
     report["seconds_model"] = round(time.time() - t_fit, 1)
 
     # One row per cell-month: a border cell's countries are added together.
@@ -660,11 +743,34 @@ def main() -> int:
     countries.to_parquet(
         out_dir / "countries_monthly.parquet", index=False, compression="zstd"
     )
+    factors = factors.rename(columns={"moy": "month"})
+    factors["group_id"] = factors["group"].map(groups_map).astype("int32")
+    assert factors[["k_cd", "k_hot"]].notna().all().all(), "factors has a null"
+    assert (factors[["k_cd", "k_hot"]] > 0).all().all(), "factors has a non-positive k"
+    assert len(factors) == len(background), "factors and background do not line up"
+    report["factor_checks"] = check_factors(per_cell, agg, factors, groups_map)
+    report["factor_formula"] = (
+        "For a cell-month before Feb 2012 in which the period's source sensor "
+        "(Terra for estimated_terra, Aqua for estimated_modis) saw fire, the "
+        "harmonized value is exactly raw source count x k, with nothing added: "
+        "cd = cd_source x k_cd and hot = hot_source x k_hot, where k is the row of "
+        "factors.parquet for the cell's group, period and calendar month. The "
+        "background is NOT added on top; it applies only to a cell-month in which "
+        "the source sensor saw nothing, which is ruling 10. One exception: a cell "
+        "on a border belongs to more than one country, and cells_monthly adds the "
+        "countries together, so its value is the sum over countries of that "
+        "country's own group factor times that country's own raw count. For a cell "
+        "inside one country, which is nearly all of them, the single factor holds."
+    )
+    factors[["group_id", "period", "month", "k_hot", "k_cd"]].to_parquet(
+        out_dir / "factors.parquet", index=False, compression="zstd"
+    )
 
     report["rows"] = {
         "cells_monthly": int(len(per_cell)),
         "background": int(len(background)),
         "cell_groups": int(len(cell_groups)),
+        "factors": int(len(factors)),
         "countries_monthly": int(len(countries)),
         "aggregate": int(len(agg)),
     }
