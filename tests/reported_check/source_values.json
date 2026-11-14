@@ -1,0 +1,825 @@
+{
+  "read_date": "2026-11-14",
+  "sources": {
+    "nifc": {
+      "url": "https://www.nifc.gov/fire-information/statistics/wildfires",
+      "location": "Total Wildland Fires and Acres table",
+      "read_date": "2026-11-14"
+    },
+    "annual": {
+      "url": "https://op.europa.eu/o/opportal-service/download-handler?identifier=1f960275-d187-11f0-8da2-01aa75ed71a1&format=pdf&language=en&productionSystem=cellar&part=",
+      "location": "printed pages 270 to 273, Tables 1 and 2",
+      "read_date": "2026-11-14"
+    }
+  },
+  "rows": [
+    {
+      "country": "USA",
+      "year": 2025,
+      "fires": 77850,
+      "acres": 5131474,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2024,
+      "fires": 64897,
+      "acres": 8924884,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2023,
+      "fires": 56580,
+      "acres": 2693910,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2022,
+      "fires": 68988,
+      "acres": 7577183,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2021,
+      "fires": 58985,
+      "acres": 7125643,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2020,
+      "fires": 58950,
+      "acres": 10122336,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2019,
+      "fires": 50477,
+      "acres": 4664364,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2018,
+      "fires": 58083,
+      "acres": 8767492,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2017,
+      "fires": 71499,
+      "acres": 10026086,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2016,
+      "fires": 67743,
+      "acres": 5509995,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2015,
+      "fires": 68151,
+      "acres": 10125149,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2014,
+      "fires": 63312,
+      "acres": 3595613,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2013,
+      "fires": 47579,
+      "acres": 4319546,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2012,
+      "fires": 67774,
+      "acres": 9326238,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2011,
+      "fires": 74126,
+      "acres": 8711367,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2010,
+      "fires": 71971,
+      "acres": 3422724,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2009,
+      "fires": 78792,
+      "acres": 5921786,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2008,
+      "fires": 78979,
+      "acres": 5292468,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2007,
+      "fires": 85705,
+      "acres": 9328045,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2006,
+      "fires": 96385,
+      "acres": 9873745,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2005,
+      "fires": 66753,
+      "acres": 8689389,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2004,
+      "fires": 65461,
+      "acres": 8097880,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2003,
+      "fires": 63629,
+      "acres": 3960842,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2002,
+      "fires": 73457,
+      "acres": 7184712,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2001,
+      "fires": 84079,
+      "acres": 3570911,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 2000,
+      "fires": 92250,
+      "acres": 7393493,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1999,
+      "fires": 92487,
+      "acres": 5626093,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1998,
+      "fires": 81043,
+      "acres": 1329704,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1997,
+      "fires": 66196,
+      "acres": 2856959,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1996,
+      "fires": 96363,
+      "acres": 6065998,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1995,
+      "fires": 82234,
+      "acres": 1840546,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1994,
+      "fires": 79107,
+      "acres": 4073579,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1993,
+      "fires": 58810,
+      "acres": 1797574,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1992,
+      "fires": 87394,
+      "acres": 2069929,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1991,
+      "fires": 75754,
+      "acres": 2953578,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1990,
+      "fires": 66481,
+      "acres": 4621621,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1989,
+      "fires": 48949,
+      "acres": 1827310,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1988,
+      "fires": 72750,
+      "acres": 5009290,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1987,
+      "fires": 71300,
+      "acres": 2447296,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1986,
+      "fires": 85907,
+      "acres": 2719162,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1985,
+      "fires": 82591,
+      "acres": 2896147,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1984,
+      "fires": 20493,
+      "acres": 1148409,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "USA",
+      "year": 1983,
+      "fires": 18229,
+      "acres": 1323666,
+      "source": "nifc",
+      "page": "table"
+    },
+    {
+      "country": "BGR",
+      "year": 1991,
+      "fires": 73,
+      "burned_ha": 511.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1992,
+      "fires": 602,
+      "burned_ha": 5243.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1993,
+      "fires": 1196,
+      "burned_ha": 18164.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1994,
+      "fires": 667,
+      "burned_ha": 18100.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1995,
+      "fires": 114,
+      "burned_ha": 550.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1996,
+      "fires": 246,
+      "burned_ha": 906.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1997,
+      "fires": 200,
+      "burned_ha": 595.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1998,
+      "fires": 578,
+      "burned_ha": 6967.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 1999,
+      "fires": 320,
+      "burned_ha": 8291.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2000,
+      "fires": 1710,
+      "burned_ha": 57406.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2001,
+      "fires": 825,
+      "burned_ha": 20152.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2002,
+      "fires": 402,
+      "burned_ha": 6513.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2003,
+      "fires": 452,
+      "burned_ha": 5000.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2004,
+      "fires": 294,
+      "burned_ha": 1137.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2005,
+      "fires": 241,
+      "burned_ha": 1456.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2006,
+      "fires": 393,
+      "burned_ha": 3540.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2007,
+      "fires": 1479,
+      "burned_ha": 42999.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2008,
+      "fires": 582,
+      "burned_ha": 5289.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2009,
+      "fires": 314,
+      "burned_ha": 2271.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2010,
+      "fires": 222,
+      "burned_ha": 6526.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2011,
+      "fires": 635,
+      "burned_ha": 6883.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2012,
+      "fires": 876,
+      "burned_ha": 12730.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2013,
+      "fires": 408,
+      "burned_ha": 3314.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2014,
+      "fires": 151,
+      "burned_ha": 916.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2015,
+      "fires": 429,
+      "burned_ha": 4313.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2016,
+      "fires": 584,
+      "burned_ha": 6340.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2017,
+      "fires": 513,
+      "burned_ha": 4569.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2018,
+      "fires": 222,
+      "burned_ha": 1453.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2020,
+      "fires": 499,
+      "burned_ha": 5258.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2021,
+      "fires": 349,
+      "burned_ha": 3143.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2022,
+      "fires": 516,
+      "burned_ha": 8126.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2023,
+      "fires": 448,
+      "burned_ha": 6388.0,
+      "source": "annual",
+      "page": "272, 273"
+    },
+    {
+      "country": "BGR",
+      "year": 2024,
+      "fires": 595,
+      "burned_ha": 17116.4,
+      "source": "annual",
+      "page": "272, Bulgaria Table 2"
+    },
+    {
+      "country": "PRT",
+      "year": 2020,
+      "fires": 9619,
+      "burned_ha": 67170,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ESP",
+      "year": 2020,
+      "fires": 7745,
+      "burned_ha": 65923,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "FRA",
+      "year": 2020,
+      "fires": 2760,
+      "burned_ha": 10722,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ITA",
+      "year": 2020,
+      "fires": 4865,
+      "burned_ha": 55656,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "GRC",
+      "year": 2020,
+      "fires": 1060,
+      "burned_ha": 9300,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "PRT",
+      "year": 2021,
+      "fires": 8186,
+      "burned_ha": 28360,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ESP",
+      "year": 2021,
+      "fires": 8780,
+      "burned_ha": 87880,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "FRA",
+      "year": 2021,
+      "fires": 2332,
+      "burned_ha": 12779,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ITA",
+      "year": 2021,
+      "fires": 5989,
+      "burned_ha": 151964,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "GRC",
+      "year": 2021,
+      "fires": 1250,
+      "burned_ha": 108418,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "PRT",
+      "year": 2022,
+      "fires": 10390,
+      "burned_ha": 110097,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ESP",
+      "year": 2022,
+      "fires": 10507,
+      "burned_ha": 267947,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "FRA",
+      "year": 2022,
+      "fires": 4215,
+      "burned_ha": 58123,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ITA",
+      "year": 2022,
+      "fires": 6529,
+      "burned_ha": 71694,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "GRC",
+      "year": 2022,
+      "fires": 962,
+      "burned_ha": 18807,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "PRT",
+      "year": 2023,
+      "fires": 7523,
+      "burned_ha": 34510,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ESP",
+      "year": 2023,
+      "fires": 7748,
+      "burned_ha": 89068,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "FRA",
+      "year": 2023,
+      "fires": 2666,
+      "burned_ha": 5361,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "ITA",
+      "year": 2023,
+      "fires": 4265,
+      "burned_ha": 88806,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "GRC",
+      "year": 2023,
+      "fires": 941,
+      "burned_ha": 136499,
+      "source": "annual",
+      "page": "270, 271"
+    },
+    {
+      "country": "PRT",
+      "year": 2024,
+      "fires": 6255,
+      "burned_ha": 137651,
+      "source": "annual",
+      "page": "270, Table 1"
+    },
+    {
+      "country": "ESP",
+      "year": 2024,
+      "fires": 6134,
+      "burned_ha": 47711,
+      "source": "annual",
+      "page": "270, Table 1"
+    },
+    {
+      "country": "FRA",
+      "year": 2024,
+      "fires": 1452,
+      "burned_ha": 2949,
+      "source": "annual",
+      "page": "270, Table 1"
+    },
+    {
+      "country": "ITA",
+      "year": 2024,
+      "fires": 3784,
+      "burned_ha": 52623,
+      "source": "annual",
+      "page": "270, Table 1"
+    },
+    {
+      "country": "GRC",
+      "year": 2024,
+      "fires": 981,
+      "burned_ha": 28288,
+      "source": "annual",
+      "page": "270, Table 1"
+    }
+  ]
+}
