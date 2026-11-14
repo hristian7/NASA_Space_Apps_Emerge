@@ -63,7 +63,7 @@ A separate agent read the specs, guides, summaries and the preview page. Its mai
 |---|---|---|
 | 17 | The query function is "one Python function" (spec 5) but lane B owns `web/src/app/api/`, which is TypeScript | Spike (a) decides Python or TypeScript; the answer goes into the contract |
 | 18 | Proof-method IDs: the spec says they carry a `V-` prefix; `verification-plan.md` uses bare `M11, M19, M20, M21, M24`, which are also feature IDs | Use `V-M..` in the verification plan |
-| 19 | Cut features still read as in scope in `features-moscow-suggestion-2.md`, `research-tasks.md`, `interview-answers.md` (installable app, push alerts, combined data) | One "superseded 16:50" line at the top of each |
+| 19 | Cut features still read as in scope in `research-tasks.md` and `interview-answers.md` (installable app, push alerts, combined data). The old suggestion file was removed by a teammate at 17:40 | One "superseded 16:50" line at the top of each |
 | 20 | Old estimates kept beside measured values: download size 53 GB `[D]` vs 43.5 GB `[V]`; Bulgaria ratio 2.7 to 3.9 `[D]` vs 2.5 to 3.5 `[V]` | Keep the measured value |
 | 21 | Added-scope hours: "15 to 22 h" in the spec vs "11 to 18 h after the removals" in the feature list | Use 11 to 18 h |
 | 22 | January 2012 has no label: M1 says estimated through Jan 2012, the label rule ends "estimated" in 2011 | Both say "through Jan 2012" |
