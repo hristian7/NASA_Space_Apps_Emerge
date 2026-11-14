@@ -52,6 +52,28 @@ function record(value: unknown): value is Record<string, unknown> {
 function aggregate(value: unknown): boolean {
   return record(value) && typeof value.region_days === "number" && record(value.methods);
 }
+/**
+ * The exporter writes each region as a plain list in the order of
+ * `region_fields`, to keep the file small; the screen reads named rows.
+ */
+function expandRegions(regions: Record<string, unknown>, fields: unknown): Record<string, unknown> {
+  if (!Array.isArray(fields)) return regions;
+  const out: Record<string, unknown> = {};
+  for (const [name, row] of Object.entries(regions)) {
+    if (!Array.isArray(row)) { out[name] = row; continue; }
+    const v = Object.fromEntries(fields.map((field, i) => [String(field), row[i] ?? null])) as Record<string, number | null>;
+    out[name] = {
+      land_spots: v.land_spots, min_scored_spots: v.min_scored_spots, max_scored_spots: v.max_scored_spots,
+      region_days: v.fire_positive_region_days ?? 0, new_fires: v.new_fires ?? 0,
+      methods: {
+        model: { capture_rate: v.model_capture, hit_rate: v.model_hit, lift_over_random: v.model_lift },
+        fwi: { capture_rate: v.fwi_capture }, history: { capture_rate: v.history_capture }, random: { capture_rate: v.random_capture },
+      },
+    };
+  }
+  return out;
+}
+
 export function parseScorecard(value: unknown): RiskScorecard | null {
   if (!record(value) || value.schema !== "emerge-risk-scorecard-1" ||
       typeof value.grid_g !== "number" || typeof value.test_year !== "number" || !record(value.scopes)) return null;
@@ -62,7 +84,11 @@ export function parseScorecard(value: unknown): RiskScorecard | null {
     for (const selection of Object.values(year.selections)) {
       if (!record(selection) || !aggregate(selection.pooled) || !aggregate(selection.regions_under_20) ||
           !aggregate(selection.regions_20_or_more) || !record(selection.coverage) ||
-          !record(selection.regions) || !record(selection.months) || !record(selection.bootstrap) || !record(selection.probability)) return null;
+          !(record(selection.regions) || selection.regions == null) ||
+          !record(selection.months) || !record(selection.bootstrap) || !record(selection.probability)) return null;
+      // The exporter leaves out the per-region breakdown of secondary slices to keep the file small.
+      if (selection.regions == null) selection.regions = {};
+      selection.regions = expandRegions(selection.regions as Record<string, unknown>, selection.region_fields);
     }
   }
   return value as unknown as RiskScorecard;

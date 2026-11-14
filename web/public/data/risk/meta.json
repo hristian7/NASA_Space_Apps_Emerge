@@ -1,0 +1,39 @@
+{
+  "engine_ready": true,
+  "example": false,
+  "model_version": "lightgbm-v2",
+  "made_at": "2026-11-14T22:32:59.869389Z",
+  "grid_g": 0.25,
+  "days": {
+    "today": "2026-11-14",
+    "tomorrow": "2026-11-15"
+  },
+  "fire_weather_run": "2026-11-12",
+  "sources": [
+    {
+      "name": "NASA GFWED lead +3 forecast for today",
+      "url": "https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/2026111100/FWI.GEOS-5.Daily.Default.2026111100.20261114.nc",
+      "date": "2026-11-11"
+    },
+    {
+      "name": "NASA GFWED lead +3 forecast for tomorrow",
+      "url": "https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/2026111200/FWI.GEOS-5.Daily.Default.2026111200.20261115.nc",
+      "date": "2026-11-12"
+    },
+    {
+      "name": "NASA FIRMS NOAA-20 detections",
+      "url": "https://firms.modaps.eosdis.nasa.gov/",
+      "date": "2026-11-13"
+    },
+    {
+      "name": "MODIS MCD12Q1 2021 land class mosaic, CC BY-SA 4.0",
+      "url": "https://zenodo.org/records/8367523",
+      "date": "2021-01-01"
+    },
+    {
+      "name": "Natural Earth administrative regions",
+      "url": "https://www.naturalearthdata.com/",
+      "date": "2026-11-14"
+    }
+  ]
+}

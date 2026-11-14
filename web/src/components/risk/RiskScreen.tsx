@@ -12,7 +12,7 @@ import { formatIsoDateTime } from '@/components/report/lib/format';
 import './risk.css';
 
 export default function RiskScreen({example=false}:{example?:boolean}) {
- const t=useTranslations('risk'); const locale=useLocale();
+ const t=useTranslations('risk'); const locale=useLocale(); const tc=useTranslations('country');
  const [index,setIndex]=useState<RiskIndex|null>(null); const [failed,setFailed]=useState(false);
  const [regionId,setRegionId]=useState(''); const [day,setDay]=useState<'today'|'tomorrow'|'week'>('tomorrow');
  const [countryData,setCountryData]=useState<CountryResult|null>(null); const [countryFailed,setCountryFailed]=useState(false);
@@ -27,14 +27,15 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const spots=useMemo(()=>regionSpots(countryData?.file.country===country?countryData.file:null,regionId,date),[countryData,country,regionId,date]);
  const selectRegion=useCallback((id:string)=>setRegionId(id),[]);
  const selectSpot=useCallback((id:number)=>{const node=document.getElementById(`risk-spot-${id}`);node?.scrollIntoView({block:'nearest'});node?.focus({preventScroll:true});},[]);
- const countries=[...new Set(index?.regions.map(r=>r.country)??[])];
+ const countryLabel=(code:string)=>tc.has(code)?tc(code):code;
+ const countries=[...new Set(index?.regions.map(r=>r.country)??[])].sort((a,b)=>countryLabel(a).localeCompare(countryLabel(b),locale));
  return <main className="risk-page">
   <header className="risk-header"><h1>{t('title')}</h1><nav className="risk-nav"><a href={example?'/proof?risk=example#next-day-risk':'/proof#next-day-risk'}>{t('proof')}</a></nav></header>
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
   {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">
     <div className="risk-days" role="group" aria-label={t('day')}>{(['today','tomorrow'] as const).map(value=><button key={value} aria-pressed={day===value} onClick={()=>setDay(value)}>{t(value)}</button>)}<button aria-pressed={day==='week'} onClick={()=>setDay('week')}>{t('weekTitle')}</button></div>
-    <label>{t('country')}<select aria-label={t('country')} value={country} onChange={e=>setRegionId(index.regions.find(r=>r.country===e.target.value)?.region_id??'')}>{countries.map(code=><option key={code} value={code}>{t.has(`countries.${code}`)?t(`countries.${code}`):code}</option>)}</select></label>
+    <label>{t('country')}<select aria-label={t('country')} value={country} onChange={e=>setRegionId(index.regions.find(r=>r.country===e.target.value)?.region_id??'')}>{countries.map(code=><option key={code} value={code}>{countryLabel(code)}</option>)}</select></label>
     <label>{t('region')}<select aria-label={t('region')} value={regionId} onChange={e=>setRegionId(e.target.value)}>{index.regions.filter(r=>r.country===country).map(r=><option key={r.region_id} value={r.region_id}>{locale==='bg'?r.name_local:r.name_en}</option>)}</select></label>
    </div>
    {region?(day==='week'?<WeekOutlook region={region} example={example}/>:<div className="risk-workspace">

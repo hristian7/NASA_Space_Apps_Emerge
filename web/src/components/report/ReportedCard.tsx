@@ -58,6 +58,10 @@ export default function ReportedCard({
         <p className={styles.sub}>{t("reported.countryContext")}</p>
       ) : null}
 
+      {!views.some((view) => view.kind === "national_report") ? (
+        <p className={styles.cardLine}>{t("reported.none")}</p>
+      ) : null}
+
       {views.length === 0 ? (
         <p className={styles.cardLine}>{t("reported.noYears")}</p>
       ) : (

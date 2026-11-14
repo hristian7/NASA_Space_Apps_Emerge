@@ -96,7 +96,7 @@
       "countryContext": "Country total, for context: the selection is smaller than the country.",
       "fires": "Reported fires",
       "burned": "Burned hectares",
-      "none": "No official reported numbers available.",
+      "none": "No official national reported numbers available.",
       "noYears": "The source covers this place but has published no figures yet.",
       "notComparable": "The three blocks count different things, so a number from one does not belong next to a number from another.",
       "kindNational": "Reported by national authorities",
