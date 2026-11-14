@@ -20,6 +20,7 @@ import {
   UnusualCard,
   WindowCard,
 } from "@/components/report";
+import CumulativeChart from "@/components/report/CumulativeChart";
 import reportStyles from "@/components/report/styles";
 import type { MonthKey, UnitMode } from "@/components/report/types";
 import {
@@ -598,6 +599,7 @@ function Report({
         <WindowCard comparison={comparison} locale={locale} />
       ) : null}
 
+      <CumulativeChart series={series} year={(selectedMonth ?? last).y} lastDataDay={data.meta.last_data_day} locale={locale} place={place} />
       <TrendChart
         years={yearTotals}
         trend={theTrend}

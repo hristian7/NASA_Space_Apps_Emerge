@@ -69,6 +69,13 @@
       "expectedDetail": "A typical {month} here, from the past years with a measurement.",
       "noHistory": "No past {month} here has a measurement."
     },
+    "cumulative": {
+      "exportKey": "Solid: {year}; dashed: past median",
+      "heading": "Season so far",
+      "summary": "Cumulative {unit} in {year} and the median of earlier years, through completed months.",
+      "key": "Solid: {year}. Dashed: median of earlier years with complete data from January. Gaps mean no cumulative total is available.",
+      "download": "Download season chart PNG"
+    },
     "window": {
       "heatMissing": "Heat: no data",
       "heatValue": "Heat: {value} MW",
