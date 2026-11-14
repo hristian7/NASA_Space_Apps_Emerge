@@ -95,3 +95,40 @@ Rules for the route:
 **Licences `[V]`:** the data is CC0-1.0 (NASA's data), the catalogue's code is Apache-2.0. This closes conflict 8 in the build plan.
 
 **Not checked (needs a deployment):** speed on the hosting plan's single core; the worst case (one year, 200 km, up to 100,000 rows); a stream larger than 4.5 MB; caching. **Fallback** if it fails there: a small static points file for Bulgaria and the USA, as the spec says.
+
+## Plan 2 spikes
+
+### (a) Fire weather and raw weather
+- Rila (42.15, 23.45) [V], nearest forecast cell, valid 2024-05-01: FWI 2.84984 [V].
+- Valid 2024-05-02: FWI 0.01741 [V], from the next file.
+- The corresponding run dates are 2024-04-28 and 2024-04-29, both lead +3 [V].
+- Only one lead +3 file exists per valid date in this download [V], so two adjacent valid dates were checked.
+- One Open-Meteo request returned daily maximum temperature, maximum wind speed and dominant direction for 10 locations [V]: https://api.open-meteo.com/v1/forecast.
+
+### (b) Forecast download rate
+- The local directory held 208 forecast files at measurement [V].
+- First observed file modification time: 2026-11-14 22:40:59 EET [V].
+- Last observed file modification time: 2026-11-14 22:55:25 EET [V].
+- Elapsed-file rate: 14.35 files per minute [V], from first and last modification times.
+- The download was still running; the rate is a snapshot, not a guarantee [D].
+
+### (c) Satellite plant greenness
+- Waiting on the Earthdata login [V].
+- The requested monthly MOD13C2 greenness is not available locally [V].
+- Tonight's fallback is the 2021 majority land class [V].
+- The fallback supplies a fuel category, not greenness [U].
+- Source: https://lpdaac.usgs.gov/products/mod13c2v061/.
+
+### (d) Land-cover shares
+- Waiting on the Earthdata login [V].
+- Tonight's fallback is the 2021 majority land class [V].
+- Forest is IGBP 1-5; shrub and grass 6-10; farmland 12 and 14 [V].
+- A majority class is not a land-cover share [U]; D-17 remains a fallback.
+- Source: https://lpdaac.usgs.gov/products/mcd12c1v061/.
+
+### (e) Administrative regions
+- Natural Earth admin-1 GeoJSON has 4,596 features [V].
+- The 0.25-degree global grid has 342,924 centres in a polygon [V].
+- Those spots cover 3,548 distinct ISO 3166-2 region identifiers [V].
+- Some features share identifiers: 95 repeated feature identifiers [V].
+- Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson.
