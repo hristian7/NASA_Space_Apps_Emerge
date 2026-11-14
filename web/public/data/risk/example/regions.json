@@ -1,0 +1,379 @@
+[
+  {
+    "region_id": "BG-01",
+    "name_en": "Blagoevgrad",
+    "name_local": "Благоевград",
+    "country": "BGR",
+    "bbox": [
+      23.26,
+      41.76,
+      23.84,
+      42.24
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-02",
+    "name_en": "Burgas",
+    "name_local": "Бургас",
+    "country": "BGR",
+    "bbox": [
+      27.36,
+      41.86,
+      27.94,
+      42.34
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-03",
+    "name_en": "Varna",
+    "name_local": "Варна",
+    "country": "BGR",
+    "bbox": [
+      27.46,
+      43.06,
+      28.04,
+      43.54
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-04",
+    "name_en": "Veliko Tarnovo",
+    "name_local": "Велико Търново",
+    "country": "BGR",
+    "bbox": [
+      25.46,
+      42.86,
+      26.04,
+      43.34
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-05",
+    "name_en": "Vidin",
+    "name_local": "Видин",
+    "country": "BGR",
+    "bbox": [
+      22.46,
+      43.66,
+      23.04,
+      44.14
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-06",
+    "name_en": "Vratsa",
+    "name_local": "Враца",
+    "country": "BGR",
+    "bbox": [
+      23.46,
+      43.16,
+      24.04,
+      43.64
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-07",
+    "name_en": "Gabrovo",
+    "name_local": "Габрово",
+    "country": "BGR",
+    "bbox": [
+      25.06,
+      42.66,
+      25.64,
+      43.14
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-08",
+    "name_en": "Dobrich",
+    "name_local": "Добрич",
+    "country": "BGR",
+    "bbox": [
+      27.66,
+      43.36,
+      28.24,
+      43.84
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-09",
+    "name_en": "Kardzhali",
+    "name_local": "Кърджали",
+    "country": "BGR",
+    "bbox": [
+      25.16,
+      41.46,
+      25.74,
+      41.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-10",
+    "name_en": "Kyustendil",
+    "name_local": "Кюстендил",
+    "country": "BGR",
+    "bbox": [
+      22.86,
+      41.96,
+      23.44,
+      42.44
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-11",
+    "name_en": "Lovech",
+    "name_local": "Ловеч",
+    "country": "BGR",
+    "bbox": [
+      24.46,
+      42.86,
+      25.04,
+      43.34
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-12",
+    "name_en": "Montana",
+    "name_local": "Монтана",
+    "country": "BGR",
+    "bbox": [
+      23.06,
+      43.26,
+      23.64,
+      43.74
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-13",
+    "name_en": "Pazardzhik",
+    "name_local": "Пазарджик",
+    "country": "BGR",
+    "bbox": [
+      23.96,
+      41.86,
+      24.54,
+      42.34
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-14",
+    "name_en": "Pernik",
+    "name_local": "Перник",
+    "country": "BGR",
+    "bbox": [
+      22.76,
+      42.46,
+      23.34,
+      42.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-15",
+    "name_en": "Pleven",
+    "name_local": "Плевен",
+    "country": "BGR",
+    "bbox": [
+      24.46,
+      43.26,
+      25.04,
+      43.74
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-16",
+    "name_en": "Plovdiv",
+    "name_local": "Пловдив",
+    "country": "BGR",
+    "bbox": [
+      24.56,
+      41.96,
+      25.14,
+      42.44
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-17",
+    "name_en": "Razgrad",
+    "name_local": "Разград",
+    "country": "BGR",
+    "bbox": [
+      26.36,
+      43.36,
+      26.94,
+      43.84
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-18",
+    "name_en": "Ruse",
+    "name_local": "Русе",
+    "country": "BGR",
+    "bbox": [
+      25.76,
+      43.46,
+      26.34,
+      43.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-19",
+    "name_en": "Silistra",
+    "name_local": "Силистра",
+    "country": "BGR",
+    "bbox": [
+      26.86,
+      43.76,
+      27.44,
+      44.24
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-20",
+    "name_en": "Sliven",
+    "name_local": "Сливен",
+    "country": "BGR",
+    "bbox": [
+      26.16,
+      42.46,
+      26.74,
+      42.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-21",
+    "name_en": "Smolyan",
+    "name_local": "Смолян",
+    "country": "BGR",
+    "bbox": [
+      24.46,
+      41.46,
+      25.04,
+      41.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-22",
+    "name_en": "Sofia City",
+    "name_local": "София-град",
+    "country": "BGR",
+    "bbox": [
+      23.16,
+      42.46,
+      23.74,
+      42.94
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-23",
+    "name_en": "Sofia Province",
+    "name_local": "Софийска област",
+    "country": "BGR",
+    "bbox": [
+      23.36,
+      42.06,
+      23.94,
+      42.54
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-24",
+    "name_en": "Stara Zagora",
+    "name_local": "Стара Загора",
+    "country": "BGR",
+    "bbox": [
+      25.46,
+      42.26,
+      26.04,
+      42.74
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-25",
+    "name_en": "Targovishte",
+    "name_local": "Търговище",
+    "country": "BGR",
+    "bbox": [
+      26.36,
+      43.06,
+      26.94,
+      43.54
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-26",
+    "name_en": "Haskovo",
+    "name_local": "Хасково",
+    "country": "BGR",
+    "bbox": [
+      25.36,
+      41.66,
+      25.94,
+      42.14
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-27",
+    "name_en": "Shumen",
+    "name_local": "Шумен",
+    "country": "BGR",
+    "bbox": [
+      26.76,
+      43.06,
+      27.34,
+      43.54
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "BG-28",
+    "name_en": "Yambol",
+    "name_local": "Ямбол",
+    "country": "BGR",
+    "bbox": [
+      26.36,
+      42.16,
+      26.94,
+      42.64
+    ],
+    "spots": 10
+  },
+  {
+    "region_id": "US-CA",
+    "name_en": "California",
+    "name_local": "California",
+    "country": "USA",
+    "bbox": [
+      -124.48,
+      32.53,
+      -114.13,
+      42.01
+    ],
+    "spots": 10
+  }
+]
