@@ -19,6 +19,8 @@ export function riskSquare(lat: number, lon: number, grid: number) {
 export async function loadSpotScore(country: string, day: string, lat: number, lon: number, fetcher = fetch): Promise<RiskSquareResult> {
   if (!/^[A-Z]{3}$/.test(country)) throw new Error('Invalid country code');
   const response = await fetcher(`/data/risk/scores/${country}.json`, { cache: 'no-store' });
+  // An unread error body keeps the request open.
+  if (!response.ok) void response.body?.cancel().catch(() => {});
   if (response.status === 404) return { status: 'missing country' };
   if (!response.ok) throw new Error(`Risk data: ${response.status}`);
   const file = await response.json() as RiskScoresFile;

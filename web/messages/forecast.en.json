@@ -52,5 +52,6 @@
   "notScored": "Not among today's highest-risk spots",
   "notScoredWhy": "Our model ranks only the places with the highest chance of fire each day. A place without a score is lower than those, not risk-free.",
   "nearestSpot": "Nearest scored spot: {km} km away, level {level} of 5.",
-  "goToSpot": "Go to that spot"
+  "goToSpot": "Go to that spot",
+  "squareNote": "Score for this 0.25 degree square. Reasons are listed for the highest-ranked spots only; the nearest one is below."
 }

@@ -6,6 +6,7 @@ import type { Selection } from "@/types/ui";
 import type { RiskIndex, RiskSpot } from "@/types/risk";
 import { exampleMode, loadRiskCountry, loadRiskIndex, showForecast } from "@/lib/risk/loaders";
 import { distanceKm, nearestSpot } from "@/lib/risk/geo";
+import { loadSpotScore } from "@/lib/risk/spot-scores";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
 import {
   blowsToward,
@@ -37,8 +38,10 @@ type ScoreResult =
       index: RiskIndex;
       open: boolean;
       spot: RiskSpot | null;
-      /** The closest scored spot when the place itself has none. */
+      /** The closest ranked spot when the place itself is not one. */
       nearest: { spot: RiskSpot; km: number } | null;
+      /** The place's own square, scored for every land square. */
+      square: { p: number; level: number } | null;
       top: RiskSpot[] | null;
       countryMissing: boolean;
       country: string;
@@ -61,8 +64,8 @@ async function lookupOnDay(
   lon: number,
   day: string,
   example: boolean,
-): Promise<{ spot: RiskSpot | null; nearest: { spot: RiskSpot; km: number } | null }> {
-  if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return { spot: null, nearest: null };
+): Promise<{ spot: RiskSpot | null; nearest: { spot: RiskSpot; km: number } | null; square: { p: number; level: number } | null }> {
+  if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return { spot: null, nearest: null, square: null };
   const reach = index.meta.grid_g * 112;
   const countries = [
     ...new Set(
@@ -75,14 +78,24 @@ async function lookupOnDay(
   const forest = files.flatMap(({ file }) => Object.values(file.regions).flatMap((days) => days[day] ?? []));
   const all = files.flatMap(({ file }) => Object.values(file.all_vegetation ?? {}).flatMap((days) => days[day] ?? []));
   const spot = nearestSpot(forest, lat, lon) ?? nearestSpot(all, lat, lon);
-  if (spot !== null) return { spot, nearest: null };
+  if (spot !== null) return { spot, nearest: null, square: null };
   const scored = [...forest, ...all].filter((candidate) => candidate.p !== null);
   let nearest: { spot: RiskSpot; km: number } | null = null;
   for (const candidate of scored) {
     const km = distanceKm(lat, lon, candidate.lat, candidate.lon);
     if (nearest === null || km < nearest.km) nearest = { spot: candidate, km };
   }
-  return { spot: null, nearest };
+  let square: { p: number; level: number } | null = null;
+  if (!example) {
+    for (const country of countries) {
+      const result = await loadSpotScore(country, day, lat, lon).catch(() => null);
+      if (result?.status === "ready") {
+        square = { p: result.p, level: result.level };
+        break;
+      }
+    }
+  }
+  return { spot: null, nearest, square };
 }
 
 function topSpots(spots: RiskSpot[]): RiskSpot[] {
@@ -132,7 +145,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     const example = exampleMode(search);
     (async (): Promise<ScoreResult> => {
       const index = await loadRiskIndex(example);
-      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, top: null, countryMissing: false };
+      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, square: null, top: null, countryMissing: false };
       if (!index.meta || !showForecast(index.meta, example)) {
         return { ...base, open: false, country: sel.kind === "country" ? sel.iso3 : "" };
       }
@@ -143,10 +156,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         return { ...base, open: true, top: topSpots(spots), countryMissing: status === "missing", country: sel.iso3 };
       }
       const at = selectionPoint(sel, noCountries);
-      const found = at ? await lookupOnDay(index, at.lat, at.lon, dayKey, example) : { spot: null, nearest: null };
+      const found = at ? await lookupOnDay(index, at.lat, at.lon, dayKey, example) : { spot: null, nearest: null, square: null };
       const regionOf = found.spot?.region_id ?? found.nearest?.spot.region_id;
       const country = index.regions.find((region) => region.region_id === regionOf)?.country ?? "";
-      return { ...base, open: true, spot: found.spot, nearest: found.nearest, country };
+      return { ...base, open: true, spot: found.spot, nearest: found.nearest, square: found.square, country };
     })()
       .then((result) => {
         if (live) setScore(result);
@@ -202,7 +215,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const scoreSection = (): ReactNode => {
     if (!currentScore) return <p role="status" className="fc-muted">{tr("loading")}</p>;
     if (currentScore.status === "failed") return <p role="alert">{tr("failed")}</p>;
-    const { example, open, spot, nearest, top, countryMissing, index } = currentScore;
+    const { example, open, spot, nearest, square, top, countryMissing, index } = currentScore;
     const validDate = index.meta ? dateText(index.meta.days[day]) : "";
     return (
       <>
@@ -286,6 +299,36 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               <p className="fc-muted">{tr("valid", { date: validDate })}</p>
             </div>
           )
+        ) : square !== null ? (
+          <div className="fc-score">
+            <p className="fc-level" aria-label={t("levelAria", { level: square.level })}>
+              <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true">{square.level}</span>
+              <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
+            </p>
+            <div className="fc-meter" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((step) => (
+                <span key={step} data-on={step <= square.level} />
+              ))}
+            </div>
+            <p className="fc-levelName">{t(`levelName${square.level}`)}</p>
+            <p className="fc-facts">
+              <span>{chance(square.p)}</span>
+            </p>
+            <p className="fc-muted">{t("squareNote")}</p>
+            {nearest !== null ? (
+              <div className="fc-nearest">
+                <p className="fc-muted">
+                  {t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })}
+                </p>
+                {onPickPoint ? (
+                  <button type="button" className="whole-country" onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}>
+                    {t("goToSpot")}
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+            <p className="fc-muted">{tr("valid", { date: validDate })}</p>
+          </div>
         ) : nearest !== null ? (
           <div className="fc-score">
             <p className="fc-levelName">{t("notScored")}</p>
