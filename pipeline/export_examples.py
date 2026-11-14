@@ -381,7 +381,13 @@ def build_country_files(con: duckdb.DuckDBPyConnection, out: Path) -> None:
         pts = centres[country]
         clat = sum(p[0] for p in pts) / len(pts)
         clon = sum(p[1] for p in pts) / len(pts)
-        radius = max(haversine_km(clat, clon, p[0], p[1]) for p in pts)
+        # A country whose fire all sits in one cell would otherwise get a
+        # radius of 0, which claims more precision than a 0.25 degree cell has.
+        # The floor is that cell's own precision radius.
+        radius = max(
+            max(haversine_km(clat, clon, p[0], p[1]) for p in pts),
+            precision_radius_km(clat),
+        )
         west, east = lon_box([p[1] for p in pts])
         index.append({
             "iso3": iso3,

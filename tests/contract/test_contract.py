@@ -138,6 +138,11 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
 
 
 SENSOR_LABELS = ["modis", "viirs"]
+# Levels the independent scorer reports. The last two are shown for information.
+VALIDATION_SCOPES = (
+    "country_month", "cell_month", "circle_month",
+    "circle_month_weighted", "cell_month_0p1",
+)
 BACKGROUND_PERIODS = ["estimated_terra", "estimated_modis"]
 BACKGROUND_UNITS = ["hot", "hot_hi", "cd", "cd_hi"]
 BACKGROUND_GROUPS = set(read_json(DATA / "background.json")["groups"])
@@ -231,7 +236,9 @@ def test_country_file(path: Path):
         assert isinstance(rec["flags"], list), where
         for flag in rec["flags"]:
             assert flag in FLAG_LABELS, f"{where}: unknown flag {flag}"
-        if rec["src"].startswith("estimated"):
+        if not IS_EXAMPLE:
+            assert "example" not in rec["flags"], f"{where}: a real export has no example flag"
+        elif rec["src"].startswith("estimated"):
             assert "example" in rec["flags"], f"{where}: estimated months must be flagged"
         else:
             assert "example" not in rec["flags"], f"{where}: measured months are not examples"
@@ -355,7 +362,10 @@ def test_tile_file(path: Path):
             bits = cell["flags"][pos]
             assert is_whole(bits) and 0 <= bits < (1 << len(FLAG_LABELS)), where
             example_bit = 1 << FLAG_LABELS.index("example")
-            if SRC_LABELS[src_i].startswith("estimated"):
+            if not IS_EXAMPLE:
+                # A real conversion's estimated months are real numbers.
+                assert not bits & example_bit, f"{where} {y}-{m:02d}: a real export has no example flag"
+            elif SRC_LABELS[src_i].startswith("estimated"):
                 assert bits & example_bit, f"{where} {y}-{m:02d}: estimated months must be flagged"
             else:
                 assert not bits & example_bit, f"{where} {y}-{m:02d}: measured months are not examples"
@@ -489,7 +499,7 @@ def test_validation_file_has_everything_the_proof_page_needs():
     for entry in doc["holdout"]:
         assert entry["direction"] in ("forward", "reverse")
         assert entry["unit"] in ("hot", "cd")
-        assert entry["scope"] in ("country_month", "cell_month", "circle_month")
+        assert entry["scope"] in VALIDATION_SCOPES
         for field in ("n", "nrmse", "mae", "bias_pct", "r", "slope"):
             assert field in entry
     for entry in doc["slices"]:
@@ -500,7 +510,8 @@ def test_validation_file_has_everything_the_proof_page_needs():
     for entry in doc["published_ratios"]:
         assert entry["scope"] and "ours" in entry and "published" in entry
     for entry in doc["range_coverage"]:
-        assert entry["level_pct"] == 90 and "observed_pct" in entry
+        assert entry["level_pct"] in (80, 90) and "observed_pct" in entry
+        assert entry["scope"] in VALIDATION_SCOPES
     assert len(doc["chance_of_fire"]["reliability"]) == 10
     for entry in doc["control_totals"]:
         assert entry["check"] and entry["passed"] in (True, False, None)

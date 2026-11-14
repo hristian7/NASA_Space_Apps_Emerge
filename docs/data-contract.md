@@ -28,7 +28,7 @@ Everything lives under `web/public/data/`, so the app fetches static files and d
 | `background.json` | the value of a month before Feb 2012 that a cell does not list | 1.5 KB |
 | `reported/<ISO3>.json` | officially reported fires and burned area per year | 1 to 3 KB |
 | `tiles/<lat0>_<lon0>.json.gz` | every fire cell in a 5 degree square, monthly, pre-gzipped | 46 to 56 KB |
-| `globe/<year>.json.gz` | one year's totals per cell, for the globe layer, pre-gzipped | 12 KB |
+| `globe/<year>.json.gz` | one year's totals per cell, for the globe layer, pre-gzipped | 3.3 KB |
 | `daily/<lat0>_<lon0>.json.gz` | the daily window per cell, pre-gzipped | 4 to 5 KB |
 | `validation.json` | everything the "How we know it's right" page shows | 7 KB |
 
@@ -205,7 +205,7 @@ One file per country, keyed by its three-letter code. The country is a single po
 | `name_key` | string | translation key, `country.<ISO3>` |
 | `type` | `"country"` | |
 | `lat`, `lon` | number | the mean of the country's fire cell centres. A summary point, **not** a border centroid |
-| `precision_radius_km` | number | distance from that point to the furthest of those cells, so the circle covers all the data in the file |
+| `precision_radius_km` | number | distance from that point to the furthest of those cells, so the circle covers all the data in the file. Never below the precision radius of one cell: a country whose fire all sits in a single cell is no more precise than that cell |
 | `first_month`, `last_month` | `"YYYY-MM"` | |
 | `months` | list | **every** month from `first_month` to `last_month`, in order, with no gaps |
 

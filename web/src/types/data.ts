@@ -402,13 +402,25 @@ export interface MetaFile {
   sources: SourceEntry[];
 }
 
+/** What one scored row of the validation stands for. */
+export type ValidationScope =
+  | 'country_month'
+  | 'cell_month'
+  | 'circle_month'
+  | 'circle_month_weighted'
+  | 'cell_month_0p1';
+
 /** One hold-out run of the conversion. null until the run exists. */
 export interface HoldoutResult {
   /** "forward" = learn early years, test later ones. "reverse" = the other way. */
   direction: 'forward' | 'reverse';
   unit: 'hot' | 'cd';
-  /** What each scored row is: a country-month, a cell-month or a 50 km circle. */
-  scope: 'country_month' | 'cell_month' | 'circle_month';
+  /**
+   * What each scored row is. The last two are reported for information:
+   * circle_month_weighted weights each cell by the share of it inside the
+   * circle, and cell_month_0p1 is the finer 0.1 degree grid.
+   */
+  scope: ValidationScope;
   train_years: [number, number] | null;
   test_years: [number, number] | null;
   n: number | null;
@@ -455,7 +467,7 @@ export interface RangeCoverage {
   /** The range we claim, for example 90. */
   level_pct: number;
   unit: 'hot' | 'cd';
-  scope: 'country_month' | 'cell_month' | 'circle_month';
+  scope: ValidationScope;
   n: number | null;
   /** The share the range actually held. */
   observed_pct: number | null;
