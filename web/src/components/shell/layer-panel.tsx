@@ -13,6 +13,8 @@ import { recentWindows, type RecentWindow } from "@/lib/layers/firms";
 import type { RecentPayload } from "@/lib/layers/recent";
 import type { LayerDefinition } from "@/config/layers";
 import Disclaimer from "./disclaimer";
+import { useTemperatureStatus } from "@/components/map/temperature-field";
+import { temperatureGradient } from "@/lib/layers/temperature";
 
 export type LoadStatus = "off" | "loading" | "ready" | "empty" | "failed";
 
@@ -158,6 +160,8 @@ export default function LayerPanel({
           </ul>
         );
       case "classes":
+        if (definition.id === "air-temperature") return <TemperatureLegend day={state.dangerDay} />;
+        if (definition.id === "rain") return <RainLegend />;
         if (definition.id !== "fire-danger") return <DriverLegend id={definition.id} />;
         return (
           <ul className="legend">
@@ -268,3 +272,58 @@ export default function LayerPanel({
     </section>
   );
 }
+
+/** Weather legends share the established ramp layout and typography. */
+function TemperatureLegend({ day }: { day: number }) {
+  const t = useTranslations("layers");
+  const status = useTemperatureStatus();
+  const date = status.date || dangerDate(day);
+  return (
+    <div className="ramp-key" data-temperature-state={status.state}>
+      <div className="ramp-bar" aria-hidden="true" style={{ background: temperatureGradient }} />
+      <div className="ramp-ticks num">
+        <span style={{ left: "0%" }} data-edge="start">≤ -40</span>
+        <span style={{ left: "44.444%" }}>0</span>
+        <span style={{ left: "100%" }} data-edge="end">≥ 50</span>
+      </div>
+      <p className="ramp-unit">{t("temperatureUnit")}</p>
+      <p className="hint" aria-live="polite">
+        {t("temperatureDate", { date })} {day > 1 || status.state === "empty" || status.state === "failed" ? t("temperatureNoData") : status.state === "ready" ? t("temperatureCredit") : t("loading")}
+      </p>
+    </div>
+  );
+}
+
+function RainLegend() {
+  const t = useTranslations("layers");
+  return (
+    <div className="ramp-key">
+      {rainRamps.map((ramp) => (
+        <div key={ramp.key}>
+          <p className="ramp-unit">{t(ramp.key)}</p>
+          <div className="ramp-bar" aria-hidden="true" style={{ background: ramp.gradient }} />
+          <div className="ramp-ticks num">
+            <span style={{ left: "0%" }} data-edge="start">0.1</span>
+            <span style={{ left: "36.697%" }}>1</span>
+            <span style={{ left: "73.394%" }}>10</span>
+            <span style={{ left: "100%" }} data-edge="end">≥ 53.1</span>
+          </div>
+        </div>
+      ))}
+      <p className="hint">{t("rainNoData")}</p>
+      <p className="hint">NASA GPM IMERG / NASA GIBS</p>
+    </div>
+  );
+}
+
+// NASA GIBS GPM_Precipitation_Rate colour map, logarithmic rates [V].
+const rainRamps = [
+  {
+    "key": "rainUnit",
+    "gradient": "linear-gradient(to right, rgb(0,118,78), rgb(0,145,41), rgb(16,173,0), rgb(95,200,0), rgb(195,228,0), rgb(255,194,1), rgb(255,115,28), rgb(255,38,38), rgb(231,0,0), rgb(169,0,0), rgb(106,0,0), rgb(51,0,0))"
+  },
+  {
+    "key": "snowUnit",
+    "gradient": "linear-gradient(to right, rgb(177,250,238), rgb(146,238,242), rgb(118,201,230), rgb(95,158,215), rgb(79,115,196), rgb(67,80,208), rgb(74,55,219), rgb(106,43,231), rgb(119,11,209), rgb(121,8,157), rgb(102,5,105), rgb(58,3,48))"
+  }
+];

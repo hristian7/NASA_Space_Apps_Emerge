@@ -21,6 +21,7 @@ import type { CountryIndexEntry } from "@/types/data";
 import { historyRampTokens } from "@/lib/layers/history";
 import type { HistoryCell, RecentPoint } from "@/lib/layers/overlay";
 import { useWindLayer } from "./wind-layer";
+import { useTemperatureLayer } from "./temperature-field";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -212,6 +213,7 @@ export default function MapView({
   const paintFireRef = useRef<(() => void) | null>(null);
   const rasterKey = JSON.stringify(rasterDates);
   useWindLayer(map, ready, Boolean(rasterDates.wind));
+  useTemperatureLayer(map, ready);
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);

@@ -24,6 +24,8 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | MODIS MCD12Q1 500 m global mosaic, Zenodo record 8367523 | Backup land-cover input | https://zenodo.org/records/8367523 | CC BY-SA 4.0; accessed 14 Nov 2026 |
 | GFED4.1s basis regions; Global fire emissions estimates (2017), Earth System Science Data 9, 697 | Regional groups for the conversion | https://doi.org/10.5194/essd-9-697-2017; [data](https://daac.ornl.gov/VEGETATION/guides/fire_emissions_v4.html) | Paper CC BY 3.0; data terms not stated in the reference; accessed 14 Nov 2026 |
 | Open-Meteo | Planned regional weather forecast | https://open-meteo.com/en/terms | Free for non-commercial use, subject to terms; accessed 14 Nov 2026 |
+| NASA GPM IMERG precipitation rate via GIBS | Daily rain and snow rate map in mm/hour; latest observation 2026-11-13 [V] | https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml; https://gibs.earthdata.nasa.gov/colormaps/v1.3/GPM_Precipitation_Rate.xml | NASA open data |
+| Open-Meteo forecast temperature | Daily maximum air temperature, today and tomorrow, interpolated from a coarse view grid | https://open-meteo.com/en/docs; https://open-meteo.com/en/terms | Attribution required; free API for non-commercial use, subject to usage limits |
 | NASA challenge page | Challenge text | https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/ | Public |
 
 ## Fire-danger map reuse (D-4)
