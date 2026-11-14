@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import type { CountryFile, MetaFile, ReportedFile } from "@/types/data";
+import type { Bbox } from "@/lib/hotspots/geo";
+import type { MetaFile, ReportedFile } from "@/types/data";
 import type { SatelliteMonth, Selection, Series } from "@/types/ui";
 import {
   ChanceCard,
@@ -35,7 +36,7 @@ import {
   getReported,
   getSeries,
   getWindowTotals,
-  loadCountry,
+  loadCountryIndex,
 } from "@/lib/data/api";
 import { chance, extremes, rankWindow, trend, unusual, unusualToDate } from "@/lib/stats";
 import { encodeSelection } from "@/lib/ui/selection-url";
@@ -66,10 +67,11 @@ interface Loaded {
   hotspots: Series;
   satellites: SatelliteMonth[] | null;
   reported: ReportedFile | null;
-  country: CountryFile | null;
+  /** The selected country's own box, for the hotspots link. */
+  countryBox: Bbox | null;
   window: Awaited<ReturnType<typeof getWindowTotals>> | null;
   monthToDate: Awaited<ReturnType<typeof getMonthToDate>> | null;
-  /** True when the pre-2012 background file could not be read. */
+  /** True when the pre-2012 background or its factors could not be read. */
   backgroundMissing: boolean;
 }
 
@@ -115,13 +117,17 @@ export default function ReportView({ selection }: { selection: Selection }) {
       ]);
       // Read straight after the series runs, which is what sets it.
       const background = backgroundStatus();
-      const [satellites, reported, country] = await Promise.all([
+      const [satellites, reported, index] = await Promise.all([
         getPerSatellite(selection),
         getReported(selection).catch(() => null),
         selection.kind === "country"
-          ? loadCountry(selection.iso3).catch(() => null)
+          ? loadCountryIndex().catch(() => null)
           : Promise.resolve(null),
       ]);
+      const entry =
+        selection.kind === "country"
+          ? (index?.countries.find((row) => row.iso3 === selection.iso3) ?? null)
+          : null;
       const [windowTotals, toDate] = await Promise.all([
         getWindowTotals(selection).catch(() => null),
         getMonthToDate(selection).catch(() => null),
@@ -133,10 +139,20 @@ export default function ReportView({ selection }: { selection: Selection }) {
         hotspots,
         satellites,
         reported,
-        country,
+        countryBox:
+          entry === null
+            ? null
+            : {
+                west: entry.bbox[0],
+                south: entry.bbox[1],
+                east: entry.bbox[2],
+                north: entry.bbox[3],
+              },
         window: windowTotals,
         monthToDate: toDate,
-        backgroundMissing: selection.kind !== "country" && !background.loaded,
+        backgroundMissing:
+          selection.kind !== "country" &&
+          (!background.loaded || background.unscaledDays > 0),
       } satisfies Loaded;
     }
 
@@ -315,10 +331,10 @@ function Report({
         selection,
         year,
         lastDay: data.meta.last_data_day,
-        countryCentre: data.country,
+        countryBox: data.countryBox,
       }),
     };
-  }, [selection, selectedMonth, last, data.meta.last_data_day, data.country]);
+  }, [selection, selectedMonth, last, data.meta.last_data_day, data.countryBox]);
 
   function downloadMonthly() {
     const header = csvHeader({

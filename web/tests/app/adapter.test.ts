@@ -195,12 +195,12 @@ describe("the hotspots link", () => {
     expect(link?.box).toBe(true);
   });
 
-  it("asks for the box around a country, from the country's own centre and reach", () => {
+  it("asks for the box the country index holds for a country", () => {
     const link = hotspotsLink({
       selection: { kind: "country", iso3: "BGR" },
       year: 2024,
       lastDay,
-      countryCentre: { lat: 42.7886, lon: 25.2032, precision_radius_km: 292.486 },
+      countryBox: { west: 22.36, south: 41.24, east: 28.6, north: 44.22 },
     });
     const params = new URLSearchParams(link?.href.split("?")[1]);
     expect(params.get("bbox")).not.toBeNull();

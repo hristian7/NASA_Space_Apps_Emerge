@@ -15,7 +15,7 @@ import type { AnomalyPoint, MonthKey, Scope } from "../report/types";
 import { unusual } from "../../lib/stats";
 import { haversineKm } from "../../lib/data/api";
 import { MAX_DAYS, MAX_RADIUS_KM, FIRST_DAY } from "../../lib/hotspots/query";
-import { bboxAround, type Bbox } from "../../lib/hotspots/geo";
+import type { Bbox } from "../../lib/hotspots/geo";
 
 /** Above this width a chance of fire is near certain, so M13 asks for days instead. */
 export const LARGE_AREA_KM = 50;
@@ -129,12 +129,6 @@ export function ringBox(ring: [lon: number, lat: number][]): Bbox {
   return { west, south, east, north };
 }
 
-export interface CountryCentre {
-  lat: number;
-  lon: number;
-  precision_radius_km: number;
-}
-
 export interface HotspotsLink {
   href: string;
   from: string;
@@ -175,7 +169,8 @@ export function hotspotsLink(input: {
   selection: Selection;
   year: number;
   lastDay: string;
-  countryCentre?: CountryCentre | null;
+  /** The country's own box, from the data set's country index. */
+  countryBox?: Bbox | null;
 }): HotspotsLink | null {
   const { selection, year, lastDay } = input;
   const params = new URLSearchParams();
@@ -189,13 +184,7 @@ export function hotspotsLink(input: {
     const shape =
       selection.kind === "polygon"
         ? ringBox(selection.ring)
-        : input.countryCentre
-          ? bboxAround(
-              input.countryCentre.lat,
-              input.countryCentre.lon,
-              input.countryCentre.precision_radius_km,
-            )
-          : null;
+        : (input.countryBox ?? null);
     if (shape === null) return null;
     const wide = widen(shape);
     params.set(

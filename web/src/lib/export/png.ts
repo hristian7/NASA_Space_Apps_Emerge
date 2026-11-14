@@ -266,12 +266,61 @@ const LEGEND_SWATCH = 10;
 const LEGEND_GAP = 6;
 const LEGEND_TEXT = 10;
 const LEGEND_PAD = 8;
+const LEGEND_ROW = LEGEND_SWATCH + 6;
+
+/** A rough width per character, which is enough to keep the pieces apart. */
+function wordsWidth(text: string): number {
+  return text.length * LEGEND_TEXT * 0.52;
+}
+
+/** How wide one piece of the legend is, its words included. */
+function itemWidth(item: PngLegendItem): number {
+  if (item.kind === "text") return wordsWidth(item.text) + LEGEND_GAP;
+  if (item.kind === "swatch") return LEGEND_SWATCH;
+  return LEGEND_SWATCH + 3 + wordsWidth(item.text) + LEGEND_GAP + 4;
+}
+
+/**
+ * Where every piece goes. A piece that would run past the right edge starts a
+ * new row rather than being dropped, so a long legend in any language keeps
+ * all of its keys. A run of touching colour swatches is never split.
+ */
+function layoutLegend(
+  items: readonly PngLegendItem[],
+  width: number,
+): { rows: { item: PngLegendItem; x: number; row: number }[]; rows_count: number } {
+  const placed: { item: PngLegendItem; x: number; row: number }[] = [];
+  let x = CAPTION_PAD;
+  let row = 0;
+
+  for (let at = 0; at < items.length; at += 1) {
+    const item = items[at];
+    // A swatch belongs with the run it is part of, so the run is measured whole.
+    let needed = itemWidth(item);
+    if (item.kind === "swatch") {
+      for (let next = at + 1; next < items.length; next += 1) {
+        if (items[next].kind !== "swatch") break;
+        needed += itemWidth(items[next]);
+      }
+    }
+    if (x > CAPTION_PAD && x + needed > width - CAPTION_PAD) {
+      row += 1;
+      x = CAPTION_PAD;
+    }
+    placed.push({ item, x, row });
+    x += itemWidth(item);
+  }
+
+  return { rows: placed, rows_count: row + 1 };
+}
 
 /** Height of the legend band, 0 when there is nothing to draw. */
-function legendHeight(items: readonly PngLegendItem[] | undefined): number {
-  return items === undefined || items.length === 0
-    ? 0
-    : LEGEND_PAD + LEGEND_SWATCH + 4;
+function legendHeight(
+  items: readonly PngLegendItem[] | undefined,
+  width: number,
+): number {
+  if (items === undefined || items.length === 0) return 0;
+  return LEGEND_PAD + layoutLegend(items, width).rows_count * LEGEND_ROW;
 }
 
 /**
@@ -286,10 +335,10 @@ function legendNode(
   options: { textColour: string; lineColour: string; fontFamily: string },
 ): SVGGElement {
   const group = document_.createElementNS(SVG_NS, "g") as SVGGElement;
-  const top = LEGEND_PAD / 2;
+  let top = LEGEND_PAD / 2;
   let x = CAPTION_PAD;
 
-  function words(text: string, after: number): void {
+  function words(text: string): void {
     const node = document_.createElementNS(SVG_NS, "text");
     node.setAttribute("x", String(x));
     node.setAttribute("y", String(top + LEGEND_SWATCH - 1));
@@ -299,8 +348,6 @@ function legendNode(
     node.setAttribute("font-weight", "400");
     node.textContent = text;
     group.appendChild(node);
-    // A rough width per character, which is enough to keep the pieces apart.
-    x += text.length * LEGEND_TEXT * 0.52 + after;
   }
 
   function box(colour: string | null, pattern?: "stripes"): void {
@@ -337,17 +384,18 @@ function legendNode(
     }
   }
 
-  for (const item of items) {
-    if (x > width - 40) break;
+  for (const placed of layoutLegend(items, width).rows) {
+    x = placed.x;
+    top = LEGEND_PAD / 2 + placed.row * LEGEND_ROW;
+    const item = placed.item;
     if (item.kind === "text") {
-      words(item.text, LEGEND_GAP);
+      words(item.text);
     } else if (item.kind === "swatch") {
       box(item.colour);
-      x += LEGEND_SWATCH;
     } else {
       box(item.colour, item.pattern);
       x += LEGEND_SWATCH + 3;
-      words(item.text, LEGEND_GAP + 4);
+      words(item.text);
     }
   }
 
@@ -393,7 +441,7 @@ export function buildExportSvg(
 
   const { width, height } = sourceSize(source);
   const captionHeight = CAPTION_HEIGHT;
-  const legend = legendHeight(options.legend);
+  const legend = legendHeight(options.legend, width);
   const totalHeight = height + captionHeight + legend;
 
   const root = document.createElementNS(SVG_NS, "svg") as SVGSVGElement;
