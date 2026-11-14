@@ -17,14 +17,14 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M14 | Worldwide coverage | — |
 | M2 | Data pipeline: whole world | Download and process NASA fire data for the whole world before the demo, so the app shows data at once |
 | M15 | Installable app (PWA) | — |
+| M21 | Fetch simple data | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
+| M22 | Fetch complex data | In raw or table format, or visualised (same as simple data, combined) |
 | C3 | Second source of truth | — |
 | C4 | Older or more satellites | Data before 2000 or from more satellites |
 | C7 | Support for different base maps | Actually offer more base maps than NASA/OpenStreetMap, not just leave room for them |
 | C8 | Support for different data layers | Actually add data layers beyond MODIS or VIIRS, not just leave room for them |
 | C9 | Multiple base maps | 2D or 3D base map — support different base maps (NASA, OpenStreetMap, etc.) |
 | C10 | Multiple data layers | Support multiple different types of data to be seen, used, or visualised — MODIS, VIIRS, temperature, wind, etc. |
-| M21 | Fetch simple data | In raw or table format, or visualised on a map, from the current moment back to however many years MODIS and VIIRS go (by point or area + timeframe + visualisation) |
-| M22 | Fetch complex data | In raw or table format, or visualised (same as simple data, combined) |
 
 ## Using fetched data for all of the following
 
@@ -34,6 +34,13 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M3 | Pick a country or a point | Select by a point and a search distance, or by a polygon (drawn, or predefined like a country boundary) — the fetched result is always points, regardless of the selection shape used |
 | M7 | Plain-language explanations | — |
 | M12 | Tests on the main paths | — |
+| M23 | Statistics and visualisation | Group heading |
+| M1 | ↳ Harmonized fire history | — |
+| M4 | ↳ Fire calendar | For a point or area — raw or visualised; how much burned, statistics, graphics, etc. |
+| M5 | ↳ "Is this unusual?" indicator | — |
+| M13 | ↳ "Chance of fire this month" | From history |
+| M24 | Verification | Group heading |
+| M6 | ↳ "How we know it's right" page | — |
 | S1 | 3D globe view | A spinning Earth with fires and risk zones on it; the 2D map stays as the fast fallback |
 | S3 | Fire-risk outlook | Official forecasts |
 | S5 | Recent fires | Last 24h / 7 days of NASA detections |
@@ -45,13 +52,6 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | C2 | Our own forecast model | — |
 | C5 | Time-lapse animation | — |
 | C6 | Bulgarian regions view | Statistics per Bulgarian province (oblast), for local crews |
-| M23 | Statistics and visualisation | Group heading |
-| M1 | ↳ Harmonized fire history | — |
-| M4 | ↳ Fire calendar | For a point or area — raw or visualised; how much burned, statistics, graphics, etc. |
-| M5 | ↳ "Is this unusual?" indicator | — |
-| M13 | ↳ "Chance of fire this month" | From history |
-| M24 | Verification | Group heading |
-| M6 | ↳ "How we know it's right" page | — |
 
 ## Won't have
 
