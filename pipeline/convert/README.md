@@ -7,6 +7,10 @@ app reads, using the model the independent scorer scored in the bake-off as A2.
 python3 pipeline/convert/world.py --data data --threads 16 --check-bakeoff
 ```
 
+`--model A2` (the default) runs the model the scorer scored. `--model A3` runs
+the variant whose background follows the period's own MODIS activity; the
+independent scorer decides whether it replaces A2.
+
 The model is not written again here. `world.py` imports the fit and predict
 functions from `../bakeoff/a/run.py`, so the world record and the scored model
 are the same code. `--check-bakeoff` refits the bake-off's t1 through those same
@@ -34,6 +38,7 @@ imports and asserts the result matches the A2 rows already in
 |---|---|
 | `cells_monthly.parquet` | one row per 0.25 degree cell-month that any satellite saw fire in, values added across the countries a border cell belongs to |
 | `background.parquet` | the background value per group and calendar month and period, which is ruling 10 of `../../docs/number-logic.md`. It is a function of group and calendar month only, never of the cell |
+| `factors.parquet` | the multiplier applied to the source sensor's raw count, per group, period and calendar month, for the app to scale raw daily counts before 2012. Where the source sensor saw fire the value is exactly raw count times this factor and nothing is added; the background applies only where it saw nothing |
 | `cell_groups.parquet` | each cell's group, and the country with the most fire rows in it |
 | `countries_monthly.parquet` | per country and month, the cells added up plus the background for every cell of the country's cell universe with no row, and the raw per-satellite hotspot counts |
 | `manifest.json` | model, per-country picks, ratios, timings, row counts, control totals, what is left out |
