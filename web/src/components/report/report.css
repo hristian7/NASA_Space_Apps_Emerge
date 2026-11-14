@@ -6,7 +6,7 @@
  * token home once the theme file grows one.
  */
 
-.report {
+.rp-report {
   /* Diverging scale for the calendar's anomaly mode: blue below the median,
      orange above it. Blue against orange stays separable for every common
      colour-vision type, which a red-green pair would not. */
@@ -23,34 +23,34 @@
   color: var(--ink);
 }
 
-.section {
+.rp-section {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
 
-.heading {
+.rp-heading {
   margin: 0;
   font: 600 12px/1.3 var(--font-ui);
   color: var(--ink-2);
   letter-spacing: 0.01em;
 }
 
-.sub {
+.rp-sub {
   margin: 0;
   font-size: 12px;
   color: var(--ink-3);
   text-wrap: pretty;
 }
 
-.num {
+.rp-num {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 
 /* Unit toggle */
 
-.toggle {
+.rp-toggle {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
@@ -59,7 +59,7 @@
   border-radius: var(--radius-s);
 }
 
-.chip {
+.rp-chip {
   flex: 1 1 auto;
   border: 0;
   background: none;
@@ -72,103 +72,105 @@
   cursor: pointer;
 }
 
-.chip[aria-pressed="true"] {
+.rp-chip[aria-pressed="true"] {
   background: var(--line);
   color: var(--ink);
   font-weight: 500;
 }
 
-.chip:focus-visible,
-.cell:focus-visible,
-.btn:focus-visible,
-.term:focus-visible {
+.rp-chip:focus-visible,
+.rp-cell:focus-visible,
+.rp-btn:focus-visible,
+.rp-term:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 /* Calendar */
 
-.calendarWrap {
+.rp-calendarWrap {
   position: relative;
   min-width: 0;
 }
 
-.calendar {
+.rp-calendar {
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
 }
 
-.calendar text {
+.rp-calendar text {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 
-.monthHead,
-.yearHead {
+.rp-monthHead,
+.rp-yearHead {
   fill: var(--ink-3);
   font-size: 9.5px;
 }
 
-.yearHeadEstimated {
+.rp-yearHeadEstimated {
   fill: var(--ink-2);
 }
 
-.cell {
+.rp-cell {
   cursor: pointer;
 }
 
-.cellZero {
+.rp-cellZero {
   fill: var(--empty);
 }
 
-.cellNoData {
+.rp-cellNoData {
   fill: none;
   stroke: var(--nodata);
   stroke-width: 1px;
 }
 
-.cellNoDataSlash {
+.rp-cellNoDataSlash {
   stroke: var(--nodata);
   stroke-width: 1px;
 }
 
-.cellHatch {
-  fill: url(#emerge-hatch);
+/* The pattern reference is set as an attribute: its id is made per instance,
+   so two calendars on one page cannot collide. */
+.rp-cellHatch {
   pointer-events: none;
 }
 
-.cellSelected {
+.rp-cellSelected {
   fill: none;
   stroke: var(--ink);
   stroke-width: 2px;
 }
 
-.hatchLine {
+.rp-hatchLine {
   stroke: var(--ink-3);
-  stroke-width: 1px;
+  stroke-width: 0.6px;
+  stroke-opacity: 0.75;
 }
 
-.estimatedMark {
+.rp-estimatedMark {
   fill: var(--ink-3);
 }
 
-.total {
+.rp-total {
   fill: var(--ink-3);
 }
 
-.totalSelected {
+.rp-totalSelected {
   fill: var(--accent);
 }
 
-.totalTrack {
+.rp-totalTrack {
   fill: var(--empty);
 }
 
 /* Tooltip */
 
-.tip {
+.rp-tip {
   position: absolute;
   z-index: 2;
   min-width: 150px;
@@ -184,19 +186,19 @@
   box-shadow: 0 6px 18px oklch(0 0 0 / 0.3);
 }
 
-.tipTitle {
+.rp-tipTitle {
   display: block;
   font-weight: 600;
 }
 
-.tipRow {
+.rp-tipRow {
   display: block;
   color: var(--ink-2);
 }
 
 /* Legend */
 
-.legend {
+.rp-legend {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -205,29 +207,29 @@
   font-size: 11px;
 }
 
-.legendKey {
+.rp-legendKey {
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
 
-.legendSteps {
+.rp-legendSteps {
   display: inline-flex;
   gap: 2px;
 }
 
-.legendSwatch {
+.rp-legendSwatch {
   width: 18px;
   height: 9px;
   border-radius: 1px;
 }
 
-.legendSwatchZero {
+.rp-legendSwatchZero {
   background: var(--empty);
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.legendSwatchNoData {
+.rp-legendSwatchNoData {
   background: none;
   box-shadow: inset 0 0 0 1px var(--nodata);
   background-image: linear-gradient(
@@ -239,25 +241,25 @@
   );
 }
 
-.legendSwatchEstimated {
+.rp-legendSwatchEstimated {
   background: var(--ramp-2);
   background-image: repeating-linear-gradient(
     45deg,
-    oklch(1 0 0 / 0.42) 0 1px,
-    transparent 1px 4px
+    var(--panel-solid) 0 1px,
+    transparent 1px 5px
   );
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
 /* Cards */
 
-.cards {
+.rp-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 8px;
 }
 
-.card {
+.rp-card {
   display: grid;
   gap: 4px;
   align-content: start;
@@ -267,23 +269,23 @@
   min-width: 0;
 }
 
-.cardFigure {
+.rp-cardFigure {
   font: 500 24px/1.1 var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 
-.cardFigureUp {
+.rp-cardFigureUp {
   color: var(--accent);
 }
 
-.cardLine {
+.rp-cardLine {
   margin: 0;
   color: var(--ink-2);
   font-size: 12px;
   text-wrap: pretty;
 }
 
-.cardList {
+.rp-cardList {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -293,7 +295,7 @@
   font-size: 12px;
 }
 
-.cardList li::before {
+.rp-cardList li::before {
   content: "";
   display: inline-block;
   width: 3px;
@@ -305,40 +307,40 @@
 
 /* Tables */
 
-.tableScroll {
+.rp-tableScroll {
   max-height: 320px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-s);
 }
 
-.table {
+.rp-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
 }
 
-.table caption {
+.rp-table caption {
   padding: 8px 10px;
   text-align: left;
   color: var(--ink-3);
   font-size: 11px;
 }
 
-.table th,
-.table td {
+.rp-table th,
+.rp-table td {
   padding: 5px 8px;
   text-align: right;
   white-space: nowrap;
   border-bottom: 1px solid var(--line);
 }
 
-.table th:first-child,
-.table td:first-child {
+.rp-table th:first-child,
+.rp-table td:first-child {
   text-align: left;
 }
 
-.table thead th {
+.rp-table thead th {
   position: sticky;
   top: 0;
   background: var(--panel-solid);
@@ -348,33 +350,33 @@
   z-index: 1;
 }
 
-.table tbody tr:last-child td {
+.rp-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.table td {
+.rp-table td {
   color: var(--ink-2);
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 
-.table td:first-child {
+.rp-table td:first-child {
   color: var(--ink);
 }
 
-.flagEstimated {
+.rp-flagEstimated {
   color: var(--ink-3);
   font-size: 11px;
 }
 
 /* Bars and charts */
 
-.bars {
+.rp-bars {
   display: grid;
   gap: 3px;
 }
 
-.barRow {
+.rp-barRow {
   display: grid;
   grid-template-columns: 40px 1fr auto;
   align-items: center;
@@ -383,17 +385,17 @@
   color: var(--ink-3);
 }
 
-.barLabel {
+.rp-barLabel {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
 }
 
-.barLabelEstimated {
+.rp-barLabelEstimated {
   box-shadow: inset 2px 0 0 var(--ink-3);
   padding-left: 6px;
 }
 
-.barTrack {
+.rp-barTrack {
   position: relative;
   height: 9px;
   background: var(--empty);
@@ -401,80 +403,82 @@
   min-width: 0;
 }
 
-.barFill {
+.rp-barFill {
   position: absolute;
   inset: 0 auto 0 0;
   background: var(--ink-3);
   border-radius: 1px;
 }
 
-.barFillCurrent {
+.rp-barFillCurrent {
   background: var(--accent);
 }
 
-.barFillEstimated {
+/* Stripes cut out of the bar in the panel's own colour, so the mark reads
+   the same way in a light look and in a dark one. */
+.rp-barFillEstimated {
   background-image: repeating-linear-gradient(
     45deg,
-    oklch(1 0 0 / 0.4) 0 1px,
-    transparent 1px 4px
+    var(--panel-solid) 0 1px,
+    transparent 1px 5px
   );
 }
 
-.barValue {
+.rp-barValue {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
 }
 
-.chart {
+.rp-chart {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.chart text {
+.rp-chart text {
   font-family: var(--font-num);
   font-variant-numeric: tabular-nums;
   fill: var(--ink-3);
   font-size: 9.5px;
 }
 
-.band {
+.rp-band {
   fill: var(--ink-3);
   opacity: 0.22;
 }
 
-.line {
+.rp-line {
   fill: none;
   stroke: var(--accent);
   stroke-width: 1.5px;
 }
 
-.lineEstimated {
+.rp-lineEstimated {
   fill: none;
   stroke: var(--ink-3);
   stroke-width: 1.5px;
   stroke-dasharray: 3 3;
 }
 
-.dot {
+.rp-dot {
   fill: var(--accent);
 }
 
-.axis {
+.rp-axis {
   stroke: var(--line);
   stroke-width: 1px;
 }
 
 /* Buttons */
 
-.buttons {
+.rp-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.btn {
+.rp-btn {
   border: 1px solid var(--line);
   background: none;
   color: var(--ink);
@@ -485,31 +489,31 @@
   cursor: pointer;
 }
 
-.btn:hover:not(:disabled) {
+.rp-btn:hover:not(:disabled) {
   border-color: var(--ink-3);
 }
 
-.btnPrimary {
+.rp-btnPrimary {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--space);
   font-weight: 600;
 }
 
-.btn:disabled {
+.rp-btn:disabled {
   color: var(--ink-3);
   cursor: not-allowed;
 }
 
 /* Glossary */
 
-.glossary {
+.rp-glossary {
   margin: 0;
   display: grid;
   gap: 8px;
 }
 
-.glossaryRow {
+.rp-glossaryRow {
   display: grid;
   grid-template-columns: minmax(96px, 30%) 1fr;
   gap: 4px 12px;
@@ -517,18 +521,18 @@
   border-bottom: 1px solid var(--line);
 }
 
-.glossaryRow:last-child {
+.rp-glossaryRow:last-child {
   border-bottom: 0;
   padding-bottom: 0;
 }
 
-.glossaryTerm {
+.rp-glossaryTerm {
   margin: 0;
   font-weight: 500;
   font-size: 13px;
 }
 
-.glossaryText {
+.rp-glossaryText {
   margin: 0;
   color: var(--ink-2);
   font-size: 12px;
@@ -537,12 +541,12 @@
 
 /* Inline term with an explanation on hover or focus */
 
-.termWrap {
+.rp-termWrap {
   position: relative;
   display: inline-block;
 }
 
-.term {
+.rp-term {
   border: 0;
   background: none;
   padding: 0;
@@ -553,7 +557,7 @@
   text-underline-offset: 3px;
 }
 
-.termTip {
+.rp-termTip {
   position: absolute;
   left: 0;
   top: calc(100% + 6px);
@@ -572,7 +576,7 @@
   box-shadow: 0 6px 18px oklch(0 0 0 / 0.3);
 }
 
-.srOnly {
+.rp-srOnly {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -585,11 +589,11 @@
 }
 
 @media (max-width: 420px) {
-  .glossaryRow {
+  .rp-glossaryRow {
     grid-template-columns: 1fr;
   }
 
-  .barRow {
+  .rp-barRow {
     grid-template-columns: 34px 1fr auto;
     gap: 6px;
   }

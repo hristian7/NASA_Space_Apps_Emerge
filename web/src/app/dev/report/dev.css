@@ -1,6 +1,6 @@
 /* Dev harness only. Not part of the report components. */
 
-.page {
+.dv-page {
   min-height: 100dvh;
   background: var(--space);
   color: var(--ink);
@@ -9,7 +9,7 @@
   overflow-x: clip;
 }
 
-.top {
+.dv-top {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -17,19 +17,19 @@
   margin-bottom: 16px;
 }
 
-.title {
+.dv-title {
   margin: 0;
   font: 600 20px/1.2 var(--font-head);
 }
 
-.switches {
+.dv-switches {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   font-size: 13px;
 }
 
-.switch {
+.dv-switch {
   color: var(--ink-3);
   text-decoration: none;
   border: 1px solid var(--line);
@@ -37,19 +37,19 @@
   padding: 4px 9px;
 }
 
-.switchOn {
+.dv-switchOn {
   color: var(--ink);
   border-color: var(--ink-3);
 }
 
-.columns {
+.dv-columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 440px));
   gap: 16px;
   align-items: start;
 }
 
-.panel {
+.dv-panel {
   background: var(--panel-solid);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -57,25 +57,25 @@
   min-width: 0;
 }
 
-.panelTitle {
+.dv-panelTitle {
   margin: 0 0 4px;
   font: 600 22px/1.15 var(--font-head);
 }
 
-.panelSub {
+.dv-panelSub {
   margin: 0 0 14px;
   font-size: 12px;
   color: var(--ink-3);
 }
 
-.divider {
+.dv-divider {
   height: 1px;
   background: var(--line);
   border: 0;
   margin: 18px 0;
 }
 
-.state {
+.dv-state {
   margin: 0;
   font-size: 12px;
   color: var(--ink-3);

@@ -18,7 +18,7 @@ import {
   UnusualCard,
   WindowCard,
 } from "@/components/report";
-import reportStyles from "@/components/report/report.module.css";
+import reportStyles from "@/components/report/styles";
 import type { MonthKey, UnitMode } from "@/components/report/types";
 import type { ReportLocale } from "@/components/report/lib/format";
 import { svgToPng } from "@/lib/export/png";
@@ -29,7 +29,7 @@ import {
   yearTotals,
 } from "./adapter";
 import * as fixtures from "./fixtures";
-import styles from "./dev.module.css";
+import styles from "./dev-styles";
 import "./preview-tokens.css";
 
 export type Look = "ember" | "field" | "ops";

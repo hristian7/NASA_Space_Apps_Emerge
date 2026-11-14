@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { Chance } from "@/types/ui";
 import { chanceText } from "./lib/sentences";
 import { formatCount, monthLong, type ReportLocale } from "./lib/format";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export interface ChanceCardProps {
   chance: Chance;

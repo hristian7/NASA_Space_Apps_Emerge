@@ -25,9 +25,9 @@ import {
   type ReportLocale,
 } from "./lib/format";
 import { isEstimated, sourceLabel } from "./lib/sentences";
-import styles from "./report.module.css";
+import styles from "./styles";
 
-const LABEL_W = 28;
+const LABEL_W = 34;
 const CELL_W = 23;
 const CELL_H = 12;
 const STEP_X = 25;
@@ -162,12 +162,12 @@ export default function FireCalendar({
         <defs>
           <pattern
             id={patternId}
-            width="4"
-            height="4"
+            width="5"
+            height="5"
             patternUnits="userSpaceOnUse"
             patternTransform="rotate(45)"
           >
-            <line className={styles.hatchLine} x1="0" y1="0" x2="0" y2="4" />
+            <line className={styles.hatchLine} x1="0" y1="0" x2="0" y2="5" />
           </pattern>
         </defs>
 
@@ -203,7 +203,7 @@ export default function FireCalendar({
               <text
                 className={`${styles.yearHead} ${rowEstimated ? styles.yearHeadEstimated : ""}`}
                 role="rowheader"
-                x={rowEstimated ? 6 : 2}
+                x={rowEstimated ? 6 : 3}
                 y={top + CELL_H - 2}
               >
                 {year}

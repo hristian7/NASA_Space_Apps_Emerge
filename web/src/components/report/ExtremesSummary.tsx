@@ -9,7 +9,7 @@ import {
   monthYearLong,
   type ReportLocale,
 } from "./lib/format";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export interface ExtremesSummaryProps {
   extremes: Extremes;

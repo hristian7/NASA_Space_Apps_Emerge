@@ -3,7 +3,7 @@
 import { useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { downloadSvgAsPng, pngFilename } from "@/lib/export/png";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export interface DownloadsMenuProps {
   /** The three CSV files are built by the caller. */

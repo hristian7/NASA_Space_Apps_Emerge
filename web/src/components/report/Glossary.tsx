@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { GLOSSARY_TERMS } from "./lib/constants";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 /** Every term the report uses, explained in one line each. */
 export default function Glossary() {

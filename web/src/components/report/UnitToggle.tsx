@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { UnitMode } from "./types";
 import { DEFAULT_UNIT_MODE, UNIT_MODES } from "./lib/constants";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export { DEFAULT_UNIT_MODE, UNIT_MODES };
 

@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 import { GLOSSARY_TERMS, type GlossaryTermId } from "./lib/constants";
 

@@ -7,7 +7,7 @@ import {
   monthYearShort,
   type ReportLocale,
 } from "./lib/format";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 const SATELLITES = ["terra", "aqua", "snpp", "noaa20", "noaa21"] as const;
 

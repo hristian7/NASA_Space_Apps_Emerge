@@ -5,7 +5,7 @@ import type { Unusual } from "@/types/ui";
 import { unusualFigure, unusualText } from "./lib/sentences";
 import { monthYearLong, type ReportLocale } from "./lib/format";
 import TermTip from "./TermTip";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export interface UnusualCardProps {
   unusual: Unusual;

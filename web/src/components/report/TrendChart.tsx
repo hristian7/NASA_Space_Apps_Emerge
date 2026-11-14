@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Trend } from "@/types/ui";
 import type { YearTotal } from "./types";
 import { formatCount, type ReportLocale } from "./lib/format";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 const W = 386;
 const H = 136;

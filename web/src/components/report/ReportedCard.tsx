@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { ReportedFile } from "@/types/data";
 import type { Scope, YearTotal } from "./types";
 import { formatCount, type ReportLocale } from "./lib/format";
-import styles from "./report.module.css";
+import styles from "./styles";
 
 export interface ReportedCardProps {
   /** null when no authority publishes figures for this place (M28). */
