@@ -1,0 +1,302 @@
+{
+ "source": "raw NASA S-NPP country CSV files, read with the csv module only",
+ "rules": "type == 0; confidence in n, h; frp >= 0; finite coordinates inside the valid range; days in snpp_gap_days.csv dropped; cy = floor(lat * 100), cx = floor(lon * 100) in double arithmetic; cd = distinct (cy, cx, day); hot = number of kept rows; q25 cell of a 0.01 degree cell by exact integer arithmetic on its centre.",
+ "gap_days_count": 34,
+ "samples": [
+  {
+   "country": "Bulgaria",
+   "year": 2014,
+   "month": 3,
+   "total_cd": 470,
+   "total_hot": 593,
+   "q25_cells_with_fire": 135,
+   "busiest_cell_by_cd": {
+    "cell": 270097,
+    "cd": 36,
+    "hot": 40
+   },
+   "busiest_cell_by_hot": {
+    "cell": 270097,
+    "cd": 36,
+    "hot": 40
+   },
+   "top3_cells_by_cd": [
+    {
+     "cell": 270097,
+     "cd": 36,
+     "hot": 40
+    },
+    {
+     "cell": 270098,
+     "cd": 21,
+     "hot": 31
+    },
+    {
+     "cell": 265772,
+     "cd": 13,
+     "hot": 13
+    }
+   ],
+   "top3_cells_by_hot": [
+    {
+     "cell": 270097,
+     "cd": 36,
+     "hot": 40
+    },
+    {
+     "cell": 270098,
+     "cd": 21,
+     "hot": 31
+    },
+    {
+     "cell": 264345,
+     "cd": 10,
+     "hot": 15
+    }
+   ],
+   "dropped": {
+    "rows_in_month": 697,
+    "type_not_0": 85,
+    "confidence_low": 19
+   },
+   "rows_where_float_and_decimal_floor_differ": 0,
+   "info_total_cd_if_exact_decimal_floor": 470
+  },
+  {
+   "country": "Bulgaria",
+   "year": 2020,
+   "month": 8,
+   "total_cd": 211,
+   "total_hot": 334,
+   "q25_cells_with_fire": 83,
+   "busiest_cell_by_cd": {
+    "cell": 277300,
+    "cd": 13,
+    "hot": 31
+   },
+   "busiest_cell_by_hot": {
+    "cell": 277303,
+    "cd": 9,
+    "hot": 39
+   },
+   "top3_cells_by_cd": [
+    {
+     "cell": 277300,
+     "cd": 13,
+     "hot": 31
+    },
+    {
+     "cell": 275863,
+     "cd": 10,
+     "hot": 17
+    },
+    {
+     "cell": 268659,
+     "cd": 9,
+     "hot": 17
+    }
+   ],
+   "top3_cells_by_hot": [
+    {
+     "cell": 277303,
+     "cd": 9,
+     "hot": 39
+    },
+    {
+     "cell": 277300,
+     "cd": 13,
+     "hot": 31
+    },
+    {
+     "cell": 268659,
+     "cd": 9,
+     "hot": 17
+    }
+   ],
+   "dropped": {
+    "rows_in_month": 480,
+    "type_not_0": 110,
+    "confidence_low": 36
+   },
+   "rows_where_float_and_decimal_floor_differ": 0,
+   "info_total_cd_if_exact_decimal_floor": 211
+  },
+  {
+   "country": "Bulgaria",
+   "year": 2022,
+   "month": 7,
+   "total_cd": 254,
+   "total_hot": 345,
+   "q25_cells_with_fire": 100,
+   "busiest_cell_by_cd": {
+    "cell": 268655,
+    "cd": 11,
+    "hot": 20
+   },
+   "busiest_cell_by_hot": {
+    "cell": 268655,
+    "cd": 11,
+    "hot": 20
+   },
+   "top3_cells_by_cd": [
+    {
+     "cell": 268655,
+     "cd": 11,
+     "hot": 20
+    },
+    {
+     "cell": 265773,
+     "cd": 10,
+     "hot": 15
+    },
+    {
+     "cell": 267215,
+     "cd": 7,
+     "hot": 17
+    }
+   ],
+   "top3_cells_by_hot": [
+    {
+     "cell": 268655,
+     "cd": 11,
+     "hot": 20
+    },
+    {
+     "cell": 267215,
+     "cd": 7,
+     "hot": 17
+    },
+    {
+     "cell": 265773,
+     "cd": 10,
+     "hot": 15
+    }
+   ],
+   "dropped": {
+    "rows_in_month": 521,
+    "type_not_0": 135,
+    "confidence_low": 41
+   },
+   "rows_where_float_and_decimal_floor_differ": 0,
+   "info_total_cd_if_exact_decimal_floor": 254
+  },
+  {
+   "country": "United_States",
+   "year": 2020,
+   "month": 9,
+   "total_cd": 66020,
+   "total_hot": 227892,
+   "q25_cells_with_fire": 3226,
+   "busiest_cell_by_cd": {
+    "cell": 302642,
+    "cd": 2448,
+    "hot": 10382
+   },
+   "busiest_cell_by_hot": {
+    "cell": 302642,
+    "cd": 2448,
+    "hot": 10382
+   },
+   "top3_cells_by_cd": [
+    {
+     "cell": 302642,
+     "cd": 2448,
+     "hot": 10382
+    },
+    {
+     "cell": 286787,
+     "cd": 1899,
+     "hot": 7547
+    },
+    {
+     "cell": 281026,
+     "cd": 1758,
+     "hot": 7161
+    }
+   ],
+   "top3_cells_by_hot": [
+    {
+     "cell": 302642,
+     "cd": 2448,
+     "hot": 10382
+    },
+    {
+     "cell": 286787,
+     "cd": 1899,
+     "hot": 7547
+    },
+    {
+     "cell": 281026,
+     "cd": 1758,
+     "hot": 7161
+    }
+   ],
+   "dropped": {
+    "rows_in_month": 248403,
+    "type_not_0": 8605,
+    "confidence_low": 11906
+   },
+   "rows_where_float_and_decimal_floor_differ": 25,
+   "info_total_cd_if_exact_decimal_floor": 66020
+  },
+  {
+   "country": "United_States",
+   "year": 2022,
+   "month": 8,
+   "total_cd": 9702,
+   "total_hot": 18878,
+   "q25_cells_with_fire": 2489,
+   "busiest_cell_by_cd": {
+    "cell": 282465,
+    "cd": 497,
+    "hot": 1295
+   },
+   "busiest_cell_by_hot": {
+    "cell": 282465,
+    "cd": 497,
+    "hot": 1295
+   },
+   "top3_cells_by_cd": [
+    {
+     "cell": 282465,
+     "cd": 497,
+     "hot": 1295
+    },
+    {
+     "cell": 256582,
+     "cd": 280,
+     "hot": 1080
+    },
+    {
+     "cell": 272385,
+     "cd": 236,
+     "hot": 808
+    }
+   ],
+   "top3_cells_by_hot": [
+    {
+     "cell": 282465,
+     "cd": 497,
+     "hot": 1295
+    },
+    {
+     "cell": 256582,
+     "cd": 280,
+     "hot": 1080
+    },
+    {
+     "cell": 272385,
+     "cd": 236,
+     "hot": 808
+    }
+   ],
+   "dropped": {
+    "rows_in_month": 26458,
+    "type_not_0": 6532,
+    "confidence_low": 1048
+   },
+   "rows_where_float_and_decimal_floor_differ": 0,
+   "info_total_cd_if_exact_decimal_floor": 9702
+  }
+ ]
+}
