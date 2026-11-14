@@ -1,0 +1,1179 @@
+{
+ "about": "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. For no_history and too_early the median, mean and ratios are null and higherThan is 0 (section 9, ruling 4).",
+ "cases": [
+  {
+   "name": "Above: value 200 against median 100",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 200
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "above",
+    "value": 200,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 2.0,
+    "ratioMean": 2.0,
+    "higherThan": 5,
+    "years": 5
+   }
+  },
+  {
+   "name": "Below: value 50 against median 100",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 50
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "below",
+    "value": 50,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 0.5,
+    "ratioMean": 0.5,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Near: value 100 against median 100",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 100,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 1.0,
+    "ratioMean": 1.0,
+    "higherThan": 2,
+    "years": 5
+   }
+  },
+  {
+   "name": "Edge: exactly 1.25 x median is near, not above",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 125
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 125,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 1.25,
+    "ratioMean": 1.25,
+    "higherThan": 5,
+    "years": 5
+   }
+  },
+  {
+   "name": "Edge: just above 1.25 x median is above",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 125.5
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "above",
+    "value": 125.5,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 1.255,
+    "ratioMean": 1.255,
+    "higherThan": 5,
+    "years": 5
+   }
+  },
+  {
+   "name": "Edge: exactly 0.75 x median is near, not below",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 75
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 75,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 0.75,
+    "ratioMean": 0.75,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Edge: just below 0.75 x median is below",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 74.5
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "below",
+    "value": 74.5,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 0.745,
+    "ratioMean": 0.745,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "No history: two years",
+   "input": {
+    "series": [
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": 100,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 2
+   }
+  },
+  {
+   "name": "History of exactly 3 years is enough",
+   "input": {
+    "series": [
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 100,
+    "median": 90.0,
+    "mean": 90.0,
+    "ratioMedian": 1.111111,
+    "ratioMean": 1.111111,
+    "higherThan": 2,
+    "years": 3
+   }
+  },
+  {
+   "name": "Median 0 and value above 0 is above",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 3
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "above",
+    "value": 3,
+    "median": 0.0,
+    "mean": 1.0,
+    "ratioMedian": null,
+    "ratioMean": 3.0,
+    "higherThan": 4,
+    "years": 5
+   }
+  },
+  {
+   "name": "Median 0 and value 0 is near",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 5
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 0
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 0,
+    "median": 0.0,
+    "mean": 1.0,
+    "ratioMedian": null,
+    "ratioMean": 0.0,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Mean and median far apart (one huge year)",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 10
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 10
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 11
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 10
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 1000
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 12
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 12,
+    "median": 10.0,
+    "mean": 208.2,
+    "ratioMedian": 1.2,
+    "ratioMean": 0.057637,
+    "higherThan": 4,
+    "years": 5
+   }
+  },
+  {
+   "name": "Null history years are left out",
+   "input": {
+    "series": [
+     {
+      "y": 2012,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2013,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2014,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 100,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 1.0,
+    "ratioMean": 1.0,
+    "higherThan": 1,
+    "years": 4
+   }
+  },
+  {
+   "name": "Even history size (4 years): median rule matters",
+   "input": {
+    "series": [
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 140
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "above",
+    "value": 140,
+    "median": 105.0,
+    "mean": 102.5,
+    "ratioMedian": 1.333333,
+    "ratioMean": 1.365854,
+    "higherThan": 4,
+    "years": 4
+   }
+  },
+  {
+   "name": "Null current value with 5 history years gives no_history",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 120
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 80
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 110
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": null,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Null current value with no history at all",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": null,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No history: no past years",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": 100,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No history: one past year",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": 100,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 1
+   }
+  },
+  {
+   "name": "Higher than: ties are not counted (strictly below)",
+   "input": {
+    "series": [
+     {
+      "y": 2015,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2016,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2017,
+      "m": 8,
+      "value": 50
+     },
+     {
+      "y": 2018,
+      "m": 8,
+      "value": 150
+     },
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "near",
+    "value": 100,
+    "median": 100.0,
+    "mean": 100.0,
+    "ratioMedian": 1.0,
+    "ratioMean": 1.0,
+    "higherThan": 1,
+    "years": 5
+   }
+  },
+  {
+   "name": "Values with decimals (weighted selections)",
+   "input": {
+    "series": [
+     {
+      "y": 2016,
+      "m": 3,
+      "value": 10.4
+     },
+     {
+      "y": 2017,
+      "m": 3,
+      "value": 9.76
+     },
+     {
+      "y": 2018,
+      "m": 3,
+      "value": 11.2
+     },
+     {
+      "y": 2019,
+      "m": 3,
+      "value": 10.0
+     },
+     {
+      "y": 2020,
+      "m": 4,
+      "value": 999999
+     },
+     {
+      "y": 2021,
+      "m": 3,
+      "value": 12.5
+     },
+     {
+      "y": 2022,
+      "m": 3,
+      "value": 888888
+     }
+    ],
+    "year": 2021,
+    "month": 3
+   },
+   "expected": {
+    "status": "near",
+    "value": 12.5,
+    "median": 10.2,
+    "mean": 10.34,
+    "ratioMedian": 1.22549,
+    "ratioMean": 1.208897,
+    "higherThan": 4,
+    "years": 4
+   }
+  },
+  {
+   "name": "Unfinished month, Day 5 of the month: too_early",
+   "input": {
+    "dayOfMonth": 5,
+    "currentSum": 40,
+    "historySums": [
+     30,
+     35,
+     38,
+     45,
+     50
+    ]
+   },
+   "expected": {
+    "status": "too_early",
+    "value": 40,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Unfinished month, Day 7: too_early",
+   "input": {
+    "dayOfMonth": 7,
+    "currentSum": 40,
+    "historySums": [
+     30,
+     35,
+     38,
+     45,
+     50
+    ]
+   },
+   "expected": {
+    "status": "too_early",
+    "value": 40,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Unfinished month, Day 8: allowed",
+   "input": {
+    "dayOfMonth": 8,
+    "currentSum": 40,
+    "historySums": [
+     30,
+     35,
+     38,
+     45,
+     50
+    ]
+   },
+   "expected": {
+    "status": "near",
+    "median": 38.0,
+    "mean": 39.6,
+    "ratioMedian": 1.052632,
+    "ratioMean": 1.010101,
+    "higherThan": 3,
+    "years": 5
+   }
+  },
+  {
+   "name": "Unfinished month, Day 9: allowed",
+   "input": {
+    "dayOfMonth": 9,
+    "currentSum": 40,
+    "historySums": [
+     30,
+     35,
+     38,
+     45,
+     50
+    ]
+   },
+   "expected": {
+    "status": "near",
+    "median": 38.0,
+    "mean": 39.6,
+    "ratioMedian": 1.052632,
+    "ratioMean": 1.010101,
+    "higherThan": 3,
+    "years": 5
+   }
+  }
+ ]
+}
