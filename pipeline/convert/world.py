@@ -73,6 +73,10 @@ def aggregate(src: Path, threads: int) -> pd.DataFrame:
     con = duckdb.connect()
     con.execute(f"SET threads = {threads}")
     con.execute("SET memory_limit = '40GB'")
+    # Spill beside the output, not into the working tree.
+    spill = src.parent / "duckdb_tmp"
+    spill.mkdir(parents=True, exist_ok=True)
+    con.execute(f"SET temp_directory = '{spill.as_posix()}'")
     con.execute(
         f"""
         CREATE TEMP TABLE agg AS
