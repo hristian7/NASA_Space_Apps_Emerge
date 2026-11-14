@@ -19,3 +19,7 @@ data/raw/
 
 # Computed totals (rebuild with pipeline/build_cells.py)
 data/derived/
+
+# Vercel link and local env files (hold tokens), never in git
+.vercel
+.env*
