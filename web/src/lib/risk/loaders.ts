@@ -42,3 +42,9 @@ export async function loadRiskWeek(country: string, example: boolean, fetcher = 
   const file = await read<RiskCountry>(`${riskRoot(example)}/week/${country}.json`, fetcher);
   return file ? { status: "ready", file } : { status: "missing", file: { country, days: [], regions: {} } };
 }
+
+/** Compare ISO dates in the viewer's local calendar, not UTC. */
+export function forecastIsStale(lastDay: string, now = new Date()): boolean {
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  return today > lastDay;
+}
