@@ -11,6 +11,7 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M18 | Points-only data model | MODIS, VIIRS, and every other data type are stored and fetched only as points — never as polygons. Each point's `precision-radius` field is the accuracy/precision of that measurement (e.g. the sensor's pixel footprint: ~1 km for MODIS, ~375 m for VIIRS), not a search parameter. Polygons are only built after data has already been fetched — for visualisation (e.g. a heatmap/choropleth grid) or other specific derived purposes (e.g. regional rollups, clustering) — never as the stored or fetched format itself |
 | M19 | No-data vs. zero | Difference between "nothing measured" and "no measurement made" |
 | M20 | Multiple data types per point | Every data type (fire, temperature, wind, humidity, etc.) is stored as a point measurement. A single point can carry more than one data type at once (e.g. fire and temperature on the same point) |
+| M27 | Minimum point schema | Each data point has a `type` field and multiple fields. Minimum fields: `type`, `location`, `precision-radius`, `measurement_1` (more measurements can be added per M20) |
 | M8 | English and Bulgarian interface | — |
 | M9 | Works on phones | — |
 | M10 | Public web address | — |
