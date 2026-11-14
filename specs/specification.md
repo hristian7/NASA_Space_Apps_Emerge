@@ -81,6 +81,22 @@ All Musts and Shoulds from [`features-moscow.md`](features-moscow.md), plus S11 
 | S9 | Fire intensity | FRP (fire heat output) shown as colour or size; FRP mode in the calendar toggle | Toggle switches the series |
 | S8 | Advice panel | Rule-based: "high danger + historically active this month → consider pre-positioning", with a disclaimer | Rules unit-tested; disclaimer always shown |
 
+### Later (Could) and not planned (Won't)
+
+Built only if all Musts and Shoulds are done; details in [`features-moscow.md`](features-moscow.md).
+
+| # | Could have |
+|---|---|
+| C2 | Our own forecast model (only if it beats M13's historical chance) |
+| C3 | Statistical comparison with EFFIS and US records on the proof page |
+| C4 | More satellites (Sentinel-3, geostationary); no honest pre-2000 extension |
+| C5 | Time-lapse animation |
+| C6 | Bulgarian provinces view |
+| C7, C9 | More base maps (OpenStreetMap and others) |
+| C8, C10 | More data layers (temperature, wind, humidity, drought) |
+
+**Won't (this weekend):** W1 accounts, W2 official warning service, W3 app-store apps, W4 sharpening images, W5 burned-area mapping.
+
 ### Challenge-page checklist
 
 Every item NASA's challenge page states, and the feature that covers it. Section names refer to [`../docs/challenge-brief.md`](../docs/challenge-brief.md).
