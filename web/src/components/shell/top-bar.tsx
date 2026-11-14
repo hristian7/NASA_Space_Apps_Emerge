@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import BrandLogo from "./brand-logo";
 import LanguageSwitch from "./language-switch";
 
 type Props = {
@@ -14,7 +15,9 @@ export default function TopBar({ openMenu, onToggleMenu }: Props) {
 
   return (
     <header className="top">
-      <span className="brand glass">{t("name")}</span>
+      <span className="brand">
+        <BrandLogo label={t("name")} />
+      </span>
       <div className="chip-group glass">
         <button
           type="button"
