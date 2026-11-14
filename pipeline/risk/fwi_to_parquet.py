@@ -29,9 +29,12 @@ def main():
     parser.add_argument('--grid', type=Path, default=DATA / 'derived/risk/grid_0.25.parquet')
     parser.add_argument('--out', type=Path, default=DATA / 'derived/risk/fwi_0.25')
     args = parser.parse_args()
-    grid_bytes = args.grid.read_bytes()
-    grid_hash = hashlib.sha256(grid_bytes).hexdigest()
     grid = pq.read_table(args.grid, columns=['spot_id', 'lat', 'lon'])
+    # Only geometry influences regridding; region metadata changes do not.
+    digest = hashlib.sha256()
+    for column in grid.columns:
+        digest.update(repr(column.combine_chunks().to_pylist()).encode())
+    grid_hash = digest.hexdigest()
     ids = grid['spot_id'].combine_chunks()
     lats = grid['lat'].to_numpy().astype(np.float64)
     lons = ((grid['lon'].to_numpy().astype(np.float64) + 180) % 360) - 180

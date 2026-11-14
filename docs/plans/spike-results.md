@@ -132,3 +132,5 @@ Rules for the route:
 - Those spots cover 3,548 distinct ISO 3166-2 region identifiers [V].
 - Some features share identifiers: 95 repeated feature identifiers [V].
 - Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson.
+
+Country codes in the admin-1 file are Natural Earth administrative codes, not always ISO alpha-3: for example, South Sudan is `SDS` in admin-1 [V]. The grid uses the corresponding ISO values from Natural Earth's [admin-0 countries file](https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_0_countries.geojson) [V]. Where that source has no ISO value for a disputed unit, the country is null rather than guessed [U].

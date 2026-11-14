@@ -4,6 +4,9 @@ import argparse
 from pathlib import Path
 
 import duckdb
+import json
+
+from countries import country_lookup
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / 'data/raw'
@@ -23,10 +26,15 @@ def main():
     geo = str(RAW / 'naturalearth/ne_10m_admin_1_states_provinces.geojson')
     land = str(RAW / 'landcover/cell_table.csv')
     temp = OUT / 'grid_0.25.parquet.tmp'
+    lookup = country_lookup()
+    features = json.loads(Path(geo).read_text())['features']
+    pairs = sorted({(f['properties']['adm0_a3'], f['properties']['iso_a2']) for f in features})
+    con.execute('CREATE TEMP TABLE country_map(admin VARCHAR, alpha2 VARCHAR, country VARCHAR)')
+    con.executemany('INSERT INTO country_map VALUES (?,?,?)', [(a, b, lookup(a, b)) for a, b in pairs])
     con.execute("""
       CREATE TEMP TABLE regions AS
-      SELECT iso_3166_2 AS region_id, adm0_a3 AS country, geom
-      FROM ST_Read(?)
+      SELECT iso_3166_2 AS region_id, m.country, geom
+      FROM ST_Read(?) r LEFT JOIN country_map m ON r.adm0_a3=m.admin AND r.iso_a2=m.alpha2
     """, [geo])
     # The spatial join uses the square's centre; ties are deterministic.
     con.execute("""
