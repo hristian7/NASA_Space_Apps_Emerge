@@ -10,5 +10,8 @@
   "landShrubGrass": "Shrubs, savanna and grass",
   "landFarmland": "Farmland",
   "landOther": "Wetland, towns, snow, bare ground, water",
-  "windArrow": "Points where the wind blows to"
+  "windArrow": "Points where the wind blows to",
+  "heatLess": "Fewer fire days",
+  "heatMore": "More fire days",
+  "heatNote": "The glow blends neighbouring 0.25 degree cells so patterns read at any zoom. The report on the right gives the exact figures for a place."
 }

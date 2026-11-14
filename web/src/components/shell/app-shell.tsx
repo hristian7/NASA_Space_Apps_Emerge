@@ -69,14 +69,15 @@ export default function AppShell() {
 
   // The forecast opens with the official fire danger on, unless the reader
   // already chose forecast layers.
-  const { state: layerState, toggle } = layers;
+  const { state: layerState, toggle, ready: layersReady } = layers;
   useEffect(() => {
-    if (view !== "forecast") return;
+    // Waits for the address bar to be read, or this would overwrite its layers.
+    if (view !== "forecast" || !layersReady) return;
     const forecastIds = ["fire-danger", "nasa-fwi", "wind", "air-temperature", "soil-moisture", "greenness", "land-type"];
     if (!layerState.on.some((id) => forecastIds.includes(id))) toggle("fire-danger");
     // Only on entering the view.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view]);
+  }, [view, layersReady]);
 
   const pickRecent = useCallback(
     (lat: number, lon: number) => {

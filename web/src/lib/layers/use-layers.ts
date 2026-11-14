@@ -32,6 +32,7 @@ import {
 export type LoadStatus = 'off' | 'loading' | 'ready' | 'empty' | 'failed';
 
 export interface LayersValue {
+  ready: boolean;
   state: LayerState;
   lastMonth: string | null;
   historyStatus: LoadStatus;
@@ -223,6 +224,8 @@ export function useLayers(): LayersValue {
   const points = useMemo(() => (recentOn ? recentPoints(recent) : []), [recentOn, recent]);
 
   return {
+    /** True once the address bar has been read, so changes made now keep it. */
+    ready: hydrated,
     state,
     lastMonth,
     historyStatus,

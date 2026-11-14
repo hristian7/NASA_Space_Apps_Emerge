@@ -8,7 +8,7 @@ import { panelLayers } from "@/lib/layers/url-state";
 import type { LayerState } from "@/lib/layers/url-state";
 import { dangerClasses, dangerDate } from "@/lib/layers/danger";
 import DriverLegend from "./driver-legend";
-import { historyBreaks, historyRampTokens } from "@/lib/layers/history";
+import { historyRampTokens } from "@/lib/layers/history";
 import { recentWindows, type RecentWindow } from "@/lib/layers/firms";
 import type { RecentPayload } from "@/lib/layers/recent";
 import type { LayerDefinition } from "@/config/layers";
@@ -42,14 +42,6 @@ function short(key: string): string {
   return key.startsWith("layers.") ? key.slice("layers.".length) : key;
 }
 
-/** "1 to 2", "21 or more": the numbers a ramp colour stands for. */
-function breakLabel(index: number, more: string): string {
-  const low = historyBreaks[index];
-  const next = historyBreaks[index + 1];
-  if (next === undefined) return `${low}${more}`;
-  return next - low === 1 ? `${low}` : `${low} to ${next - 1}`;
-}
-
 export default function LayerPanel({
   state,
   lastMonth,
@@ -76,6 +68,7 @@ export default function LayerPanel({
     return () => { cancelled = true; };
   }, []);
   const shell = useTranslations("shell");
+  const keyText = useTranslations("legend");
   const [rasterErrors, setRasterErrors] = useState<string[]>([]);
   const [wind, setWind] = useState({ state: "loading", time: "" });
   useEffect(() => {
@@ -133,20 +126,18 @@ export default function LayerPanel({
       case "ramp":
         return (
           <>
-            <ul className="legend">
-              {historyRampTokens.map((token, index) => (
-                <li key={token}>
-                  <span
-                    className="swatch"
-                    style={{ background: `var(${token})` }}
-                    aria-hidden="true"
-                  />
-                  <span className="num">{breakLabel(index, t("orMore"))}</span>
-                  <span className="legend-word">{t("fireDays")}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="hint">{t("mergedNote")}</p>
+            <div className="ramp-key">
+              <div
+                className="ramp-bar"
+                aria-hidden="true"
+                style={{ background: `linear-gradient(to right, ${historyRampTokens.map((token) => `var(${token})`).join(", ")})` }}
+              />
+              <div className="ramp-ends">
+                <span>{keyText("heatLess")}</span>
+                <span>{keyText("heatMore")}</span>
+              </div>
+            </div>
+            <p className="hint">{keyText("heatNote")}</p>
           </>
         );
       case "points":
