@@ -1,0 +1,170 @@
+{
+  "report": {
+    "unitToggle": "Values shown",
+    "unit": {
+      "cd": { "label": "Fire days", "short": "fire days" },
+      "hot": { "label": "Hotspots", "short": "hotspots" },
+      "sat": { "label": "Per satellite", "short": "detections" },
+      "anomaly": { "label": "Anomaly", "short": "fire days" }
+    },
+    "calendar": {
+      "label": "Fire calendar: years down, months across",
+      "yearTotal": "Year",
+      "noData": "No satellite measurement",
+      "noRange": "No range for this month",
+      "range": "Range {lo} to {hi}",
+      "timesMedian": "{ratio} times the usual month",
+      "noComparison": "No usual level to compare with"
+    },
+    "legend": {
+      "less": "Less",
+      "more": "More",
+      "below": "Below usual",
+      "above": "Above usual",
+      "zero": "0, looked and saw no fire",
+      "noData": "No measurement at all",
+      "estimated": "Estimated from MODIS",
+      "rampSteps": "Colour steps: {first}, {second}, {third}, {fourth} and more.",
+      "anomalySteps": "Colour steps: under half the usual month, up to 0.8, up to the usual level, up to 1.25, up to twice, and twice or more."
+    },
+    "unusual": {
+      "heading": "Is this unusual?",
+      "monthToDate": "month so far",
+      "timesShort": "{ratio} times",
+      "headline": {
+        "above": "Higher than usual for this month.",
+        "near": "About the usual level for this month.",
+        "below": "Lower than usual for this month.",
+        "noHistory": "Not enough past years to compare.",
+        "tooEarly": "Too early in the month to compare."
+      },
+      "noHistory": "Fewer than three past {month} months have a measurement here.",
+      "tooEarly": "Fewer than eight days of data this month, and counts over shorter periods are biased.",
+      "noFire": "No fire was seen this {month}.",
+      "medianZero": "The first {month} with fire here in {years} years.",
+      "ratioMedian": "{ratio} times the usual {month} (median)",
+      "ratioMean": "{ratio} times the average",
+      "higherThan": "higher than {higher} of {years} years"
+    },
+    "chance": {
+      "heading": "Chance of fire this month",
+      "headingExpected": "Expected fire days this month",
+      "range": "Range {lo} to {hi}",
+      "detail": "{month} had fire in {fireYears} of {years} past years.",
+      "expectedDetail": "A typical {month} here, from the past years with a measurement.",
+      "noHistory": "No past {month} here has a measurement."
+    },
+    "window": {
+      "heading": "This fire against past fires, last {days} days",
+      "chartLabel": "Hotspots in the same days of each year",
+      "endsOn": "The window ends on {date}.",
+      "highest": "The highest of the {of} years with a measurement.",
+      "rank": "Number {rank} of {of} years, over the same {days} days.",
+      "noPast": "No past year has a measurement for these {days} days.",
+      "yearValue": "{year}: {value} {unit}",
+      "yearNoData": "{year}: no measurement",
+      "estimatedNote": "Years before 2012 are estimated from MODIS and marked with a bar and stripes."
+    },
+    "reported": {
+      "heading": "Detected against reported",
+      "countryContext": "Country total, for context: the selection is smaller than the country.",
+      "caption": "Officially reported figures from {source}, next to what the satellites saw.",
+      "fires": "Reported fires",
+      "burned": "Burned hectares",
+      "none": "No official reported numbers available.",
+      "noYears": "The source covers this place but has published no figures yet.",
+      "notComparable": "The two columns count different things: a reported fire is one event, a satellite figure counts cell-days."
+    },
+    "extremes": {
+      "worstMonth": "Worst month",
+      "worstYear": "Worst year",
+      "trend": "Trend",
+      "none": "No measurement yet.",
+      "trendTooShort": "Fewer than five complete years ({years} so far), so no trend is drawn.",
+      "trendPerDecade": "change per decade, against the average year",
+      "trendPerYear": "{unit} per year",
+      "trendBase": "From {years} complete years, {perYear} {unit} per year."
+    },
+    "trend": {
+      "heading": "Year by year",
+      "noYears": "No complete year has a measurement yet.",
+      "lineKey": "A solid line is measured, a dashed line is estimated from MODIS. The band is the lower to upper range.",
+      "summary": "Yearly totals from {first} to {last}, highest {max} {unit}, over {years} complete years.",
+      "yearNoData": "{year}: no measurement"
+    },
+    "satellites": {
+      "heading": "Raw counts per satellite",
+      "caption": "What each satellite measured, with no conversion applied.",
+      "countryOnly": "Per-satellite counts are held for whole countries only.",
+      "note": "An empty cell means the satellite was not in orbit or not measuring.",
+      "terra": "Terra",
+      "aqua": "Aqua",
+      "snpp": "S-NPP",
+      "noaa20": "NOAA-20",
+      "noaa21": "NOAA-21"
+    },
+    "table": {
+      "heading": "The months as rows",
+      "caption": "Every month in the calendar, in {unit}.",
+      "month": "Month",
+      "year": "Year",
+      "low": "Low",
+      "high": "High",
+      "source": "Source",
+      "noData": "no data",
+      "zeroNote": "0 means the satellites looked and saw no fire. \"no data\" means there was no measurement at all."
+    },
+    "source": {
+      "measured": "measured",
+      "estimated": "estimated",
+      "provisional": "provisional",
+      "none": "no measurement"
+    },
+    "downloads": {
+      "heading": "Downloads",
+      "monthlyCsv": "Monthly numbers, CSV",
+      "summaryCsv": "Summary, CSV",
+      "hotspotsCsv": "Hotspots, CSV",
+      "calendarPng": "Fire calendar",
+      "chartPng": "Year by year",
+      "note": "Every file starts with comment lines naming the place, the dates and the sources. An empty field means no measurement; 0 means no fire seen.",
+      "pngMissing": "The picture is not on screen, so it could not be saved.",
+      "pngFailed": "The picture could not be turned into a PNG in this browser."
+    },
+    "glossary": {
+      "heading": "What the words mean",
+      "hotspot": {
+        "term": "Hot spot",
+        "text": "One satellite reading that a patch of ground was burning when the satellite passed over."
+      },
+      "fireDay": {
+        "term": "Fire day",
+        "text": "One small square of ground counted on one day with fire, added up over the area, so a long fire counts more than a brief one."
+      },
+      "anomaly": {
+        "term": "Anomaly",
+        "text": "How far a month sits from the usual level for that same month in past years."
+      },
+      "frp": {
+        "term": "FRP",
+        "text": "Fire radiative power, in megawatts: how much heat the fire was giving off as the satellite passed."
+      },
+      "harmonized": {
+        "term": "Harmonized",
+        "text": "Older and newer satellites are brought to one scale, so a change in the record is a change on the ground."
+      },
+      "estimated": {
+        "term": "Estimated",
+        "text": "A month before February 2012, worked out from the older MODIS satellites, with a lower and upper bound."
+      },
+      "noData": {
+        "term": "No data",
+        "text": "Nothing was measured. Different from 0, which means the satellites looked and saw no fire."
+      },
+      "searchDistance": {
+        "term": "Search distance",
+        "text": "How far from the chosen point the app keeps readings, from 0 to 500 km."
+      }
+    }
+  }
+}
