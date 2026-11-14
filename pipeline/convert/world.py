@@ -900,7 +900,7 @@ def main() -> int:
         MODEL_VARIANT.append("A3")
         hout = data / "derived" / "bakeoff" / "W"
         report["pipeline"] = "W"
-        report["band"] = BAND
+        report["band"] = M.BAND
         report["model"] = (
             "The world model (A3) fitted on all countries, predicting the protocol "
             "t1 and t2 windows. Country rows carry the jointly computed and "
