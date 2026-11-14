@@ -19,15 +19,35 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 
-# The example set by default. Point EMERGE_OUT at another export, such as the
-# world one, to check that against the same contract. The checks that only make
-# sense for the two-country example set are skipped when the set says it is not
-# an example.
-DATA = Path(os.environ.get("EMERGE_OUT") or (REPO / "web" / "public" / "data"))
+# The example checks read a FIXED copy of the example set. The world export
+# writes web/public/data and must never change what the tests are measured
+# against, so the copy lives under tests/ and pipeline/export_examples.py
+# writes it by default.
+DATA = Path(os.environ.get("EMERGE_FIXTURES") or (REPO / "tests" / "fixtures" / "data"))
 IS_EXAMPLE = json.loads((DATA / "meta.json").read_text())["example"]
 example_only = pytest.mark.skipif(
     not IS_EXAMPLE, reason="only the two-country example set has this"
 )
+
+# The world checks read the real export. Until it exists, web/public/data still
+# holds the example set and they skip with that reason.
+WORLD = Path(os.environ.get("EMERGE_OUT") or (REPO / "web" / "public" / "data"))
+
+
+def _world_is_ready() -> tuple[bool, str]:
+    meta = WORLD / "meta.json"
+    if not meta.is_file():
+        return False, f"no export at {WORLD}"
+    if json.loads(meta.read_text())["example"]:
+        return False, (
+            f"{WORLD} still holds the example set: run pipeline/export_app.py "
+            "before the world checks mean anything"
+        )
+    return True, ""
+
+
+WORLD_READY, WORLD_REASON = _world_is_ready()
+world_only = pytest.mark.skipif(not WORLD_READY, reason=WORLD_REASON or "world export ready")
 
 SRC_LABELS = [
     "estimated_terra",
@@ -789,3 +809,233 @@ def test_the_country_box_holds_every_cell_of_that_country():
             assert s <= cell["lat"] <= n, f"{iso3} cell {cell['id']} outside its box"
             inside = (cell["lon"] >= w or cell["lon"] <= e) if w > e else (w <= cell["lon"] <= e)
             assert inside, f"{iso3} cell {cell['id']} outside its box in longitude"
+
+
+# ---------------------------------------------------------------------------
+# The world export, checked against the same contract
+#
+# These read WORLD, not the fixed example copy, and skip with a plain reason
+# while web/public/data still holds the example set. They walk every file with
+# the same helpers the example checks use, so the contract is enforced once.
+# ---------------------------------------------------------------------------
+
+
+@world_only
+def test_world_meta():
+    meta = read_json(WORLD / "meta.json")
+    assert meta["schema"] == "emerge-meta-1"
+    assert meta["example"] is False
+    assert meta["first_month"] == "2000-11"
+    assert meta["last_month"] == "2025-12"
+    assert meta["last_data_day"] == "2025-12-31"
+    assert list(meta["src_labels"]) == SRC_LABELS
+    assert list(meta["flag_labels"]) == FLAG_LABELS
+    assert meta["units"]["cd"] == "fire_cell_days"
+    assert meta["daily_window"]["values"] == "raw"
+    assert meta["no_data"], "the world export must still list its no-data periods"
+    assert meta["countries"] == sorted(
+        p.stem for p in (WORLD / "countries").glob("*.json") if p.stem != "index"
+    )
+    assert meta["tiles"] == sorted(
+        p.name[: -len(".json.gz")] for p in (WORLD / "tiles").glob("*.json.gz")
+    )
+    assert meta["daily"] == sorted(
+        p.name[: -len(".json.gz")] for p in (WORLD / "daily").glob("*.json.gz")
+    )
+    assert meta["globe_years"] == sorted(
+        int(p.name[: -len(".json.gz")]) for p in (WORLD / "globe").glob("*.json.gz")
+    )
+
+
+@world_only
+def test_world_background_and_factors():
+    doc = read_json(WORLD / "background.json")
+    assert doc["schema"] == "emerge-background-1"
+    assert doc["example"] is False
+    assert doc["units"] == {"background": "hundredths", "factors": "thousandths"}
+    assert doc["periods"] == BACKGROUND_PERIODS
+    assert doc["groups"]
+    assert list(doc["groups"]) == sorted(doc["groups"])
+    for gid, periods in doc["groups"].items():
+        assert list(periods) == BACKGROUND_PERIODS, gid
+        for period, series in periods.items():
+            where = f"{gid} {period}"
+            assert list(series) == BACKGROUND_UNITS + FACTOR_UNITS, where
+            for unit, values in series.items():
+                assert len(values) == 12, f"{where} {unit}"
+                assert all(is_whole(v) and v >= 0 for v in values), f"{where} {unit}"
+            for m in range(12):
+                assert series["hot"][m] <= series["hot_hi"][m], where
+                assert series["cd"][m] <= series["cd_hi"][m], where
+                for unit in FACTOR_UNITS:
+                    assert series[unit][m] > 0, f"{where} {unit} month {m + 1}: no factor"
+
+
+@world_only
+def test_world_country_files():
+    """Every country, every month, no gaps, and no example flag anywhere."""
+    paths = sorted(p for p in (WORLD / "countries").glob("*.json") if p.stem != "index")
+    assert len(paths) > 100, "the world export should hold most of the world's countries"
+    for path in paths:
+        doc = read_json(path)
+        assert doc["schema"] == "emerge-country-1"
+        assert doc["example"] is False, path.name
+        assert doc["iso3"] == path.stem
+        check_point_head(doc, path.name, "country")
+        months = doc["months"]
+        assert len(months) == LAST_INDEX - FIRST_INDEX + 1, (
+            f"{path.name}: the series must run from November 2000 to December 2025 with no gaps"
+        )
+        for pos, rec in enumerate(months):
+            where = f"{path.name} {rec['y']}-{rec['m']:02d}"
+            assert month_index(rec["y"], rec["m"]) == FIRST_INDEX + pos, where
+            check_month_values(rec, rec["y"], rec["m"], where)
+            assert rec["src"] == expected_src(rec["y"], rec["m"]), where
+            assert "example" not in rec["flags"], f"{where}: a real export has no example flag"
+            for flag in rec["flags"]:
+                assert flag in FLAG_LABELS, f"{where}: unknown flag {flag}"
+            for sat in SAT_FIELDS:
+                assert sat in rec, where
+                if rec[sat] is not None:
+                    assert is_whole(rec[sat]) and rec[sat] >= 0, f"{where} {sat}"
+
+
+@world_only
+def test_world_country_index():
+    doc = read_json(WORLD / "countries" / "index.json")
+    assert doc["schema"] == "emerge-country-index-1"
+    assert doc["example"] is False
+    entries = doc["countries"]
+    assert [e["iso3"] for e in entries] == sorted(
+        p.stem for p in (WORLD / "countries").glob("*.json") if p.stem != "index"
+    )
+    for e in entries:
+        assert e["name"], e["iso3"]
+        west, south, east, north = e["bbox"]
+        assert -90 <= south < north <= 90, e["iso3"]
+        assert -180 <= west <= 180 and -180 <= east <= 180, e["iso3"]
+
+
+@world_only
+def test_world_tiles():
+    groups = set(read_json(WORLD / "background.json")["groups"])
+    paths = sorted((WORLD / "tiles").glob("*.json.gz"))
+    assert len(paths) > 500, "the world export should hold a tile for most land"
+    seen_above_31 = False
+    for path in paths:
+        key = path.name[: -len(".json.gz")]
+        doc = read_gzip_json(path)
+        assert doc["schema"] == "emerge-tile-1"
+        assert doc["example"] is False, path.name
+        assert doc["src_labels"] == SRC_LABELS
+        assert doc["flag_labels"] == FLAG_LABELS
+        cells = doc["cells"]
+        assert cells, path.name
+        assert [c["id"] for c in cells] == sorted(c["id"] for c in cells), path.name
+        example_bit = 1 << FLAG_LABELS.index("example")
+        for cell in cells:
+            where = f"{path.name} cell {cell['id']}"
+            check_point_head(cell, where, "cell")
+            assert cell["id"] == cell_id_of(cell["lat"], cell["lon"]), where
+            assert tile_key_of(cell["lat"], cell["lon"]) == key, where
+            want = half_diagonal_km(cell["lat"])
+            assert abs(cell["precision_radius_km"] - want) <= 0.01 * want, where
+            assert cell["g"] in groups, f"{where}: group {cell['g']} is not in background.json"
+            n = len(cell["mi"])
+            assert cell["mi"] == sorted(cell["mi"]) and len(set(cell["mi"])) == n, where
+            for name in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi",
+                         "frp", "src", "flags"):
+                assert len(cell[name]) == n, f"{where}: {name}"
+            for pos, mi in enumerate(cell["mi"]):
+                assert FIRST_INDEX <= mi <= LAST_INDEX, where
+                y = 2000 + mi // 12
+                m = mi - (y - 2000) * 12 + 1
+                values = {name: cell[name][pos] for name in HARM_FIELDS}
+                values.update({"y": y, "m": m})
+                check_month_values(values, y, m, f"{where} {y}-{m:02d}")
+                assert SRC_LABELS[cell["src"][pos]] == expected_src(y, m), where
+                assert not cell["flags"][pos] & example_bit, (
+                    f"{where} {y}-{m:02d}: a real export has no example flag"
+                )
+                if cell["cd"][pos] > 31:
+                    seen_above_31 = True
+    assert seen_above_31, "no cell-month above 31 fire days: the old cap may be back"
+
+
+@world_only
+def test_world_globe():
+    for path in sorted((WORLD / "globe").glob("*.json.gz")):
+        doc = read_gzip_json(path)
+        assert doc["schema"] == "emerge-globe-1"
+        assert doc["example"] is False, path.name
+        assert doc["point_from_id"] is True
+        assert doc["year"] == int(path.name[: -len(".json.gz")])
+        cols = doc["cols"]
+        assert list(cols) == ["id", "hot", "cd", "frp"], path.name
+        assert all(len(v) == doc["n"] for v in cols.values()), path.name
+        assert cols["id"] == sorted(cols["id"]), path.name
+        for i in range(doc["n"]):
+            cell_id = cols["id"][i]
+            lat, lon = cell_center(cell_id)
+            assert cell_id == cell_id_of(lat, lon), f"{path.name} cell {cell_id}"
+            for field in ("hot", "cd", "frp"):
+                v = cols[field][i]
+                assert is_whole(v) and v >= 0, f"{path.name} cell {cell_id} {field}"
+
+
+@world_only
+def test_world_daily():
+    groups = set(read_json(WORLD / "background.json")["groups"])
+    for path in sorted((WORLD / "daily").glob("*.json.gz")):
+        key = path.name[: -len(".json.gz")]
+        doc = read_gzip_json(path)
+        assert doc["schema"] == "emerge-daily-1"
+        assert doc["example"] is False, path.name
+        assert doc["values"] == "raw"
+        assert doc["sensor_labels"] == SENSOR_LABELS
+        window = doc["window"]
+        assert window["days"] == 45 and window["latest_day"] == "2025-12-31"
+        for cell in doc["cells"]:
+            where = f"{path.name} cell {cell['id']}"
+            check_point_head(cell, where, "cell")
+            assert cell["id"] == cell_id_of(cell["lat"], cell["lon"]), where
+            assert tile_key_of(cell["lat"], cell["lon"]) == key, where
+            assert cell["g"] in groups, f"{where}: group {cell['g']} is unknown"
+            assert cell["years"], where
+            for block in cell["years"]:
+                w2 = f"{where} {block['y']}"
+                assert SRC_LABELS[block["src"]] == expected_src(block["y"], 12), w2
+                if block["y"] < 2002:
+                    want = "terra"
+                elif block["y"] < 2012:
+                    want = "aqua"
+                else:
+                    want = "snpp"
+                assert SENSOR_LABELS[block["sensor"]] == want, f"{w2}: wrong sensor"
+                n = len(block["d"])
+                assert len(block["hot"]) == n and len(block["frp"]) == n, w2
+                assert block["d"] == sorted(block["d"]) and len(set(block["d"])) == n, w2
+                for pos in range(n):
+                    assert 0 <= block["d"][pos] < window["days"], w2
+                    assert is_whole(block["hot"][pos]) and block["hot"][pos] >= 1, w2
+                    assert is_whole(block["frp"][pos]) and block["frp"][pos] >= 0, w2
+
+
+@world_only
+def test_world_validation_and_reported():
+    doc = read_json(WORLD / "validation.json")
+    assert doc["schema"] == "emerge-validation-1"
+    assert doc["example"] is False
+    for section in ("method", "holdout", "slices", "satellite_agreement",
+                    "published_ratios", "range_coverage", "chance_of_fire",
+                    "control_totals", "limits"):
+        assert doc[section], f"validation.json: {section} is empty"
+    assert doc["method"]["tested_countries"], "the proof page must say which countries were tested"
+    for entry in doc["holdout"]:
+        assert entry["scope"] in VALIDATION_SCOPES
+    # The reported figures are the two verified ones whatever the export.
+    for iso3, year in VERIFIED_REPORTED:
+        rows = {r["y"]: r for r in read_json(WORLD / "reported" / f"{iso3}.json")["years"]}
+        want = VERIFIED_REPORTED[(iso3, year)]
+        assert rows[year]["fires"] == want["fires"]
+        assert rows[year]["burned_ha"] == want["burned_ha"]

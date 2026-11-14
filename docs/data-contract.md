@@ -528,8 +528,8 @@ Non-blocking points found while reading the spec and the build plan, and how eac
 
 | Script | Writes | Numbers |
 |---|---|---|
-| `pipeline/export_examples.py` | the whole file set for Bulgaria and two squares of the USA | measured S-NPP from Feb 2012; stand-ins before that, flagged `example` |
-| `pipeline/export_app.py` | the whole file set for the world | the conversion's own output, `"example": false` |
+| `pipeline/export_examples.py` | the whole file set for Bulgaria and two squares of the USA, into `tests/fixtures/data` | measured S-NPP from Feb 2012; stand-ins before that, flagged `example` |
+| `pipeline/export_app.py` | the whole file set for the world, into `web/public/data` | the conversion's own output, `"example": false` |
 
 They share the grid rules, the labels, the writers and the reported figures from one place, so the two cannot drift apart. The real exporter reads five files from the conversion (`cells_monthly`, `countries_monthly`, `cell_groups`, `background`, `factors`), the raw cell-day table for the daily window, and the independent scorer's results for `validation.json`. A missing input is a hard stop that names the file: a missing `factors.parquet` read as a factor of 1 would show the whole pre-2012 daily window far too low.
 
@@ -540,10 +540,10 @@ Every value the conversion gives as a decimal is rounded half up to a whole numb
 ## 14. How the example files are made and checked
 
 ```bash
-python pipeline/export_examples.py --data <data dir> --out web/public/data
+python pipeline/export_examples.py --data <data dir>
 ```
 
-`--data` defaults to `data` beside the repo root and must hold `derived/bg_us/cell_days.parquet`. `--out` defaults to `web/public/data`. The world export is `python pipeline/export_app.py --in <conversion dir> --out <dir>`. The output is deterministic: JSON with no spaces and a fixed field order, and gzip written with no timestamp, so two runs give byte-identical files.
+`--data` defaults to `data` beside the repo root and must hold `derived/bg_us/cell_days.parquet`. **`--out` defaults to `tests/fixtures/data`**, a fixed copy of the example set that only this generator writes. The tests are measured against that copy, so the world export into `web/public/data` can never move the target under them. The world export is `python pipeline/export_app.py --in <conversion dir> --out <dir>`. The output is deterministic: JSON with no spaces and a fixed field order, and gzip written with no timestamp, so two runs give byte-identical files.
 
 `tests/contract/test_contract.py` checks the generated files against this page: required fields on every record, `src` inside the five labels and matching the date rule, `hot_lo <= hot <= hot_hi` and the same for `cd`, whole numbers where this page says whole numbers, no negative values, no month before November 2000, each cell id consistent with its own `lat` and `lon`, `precision_radius_km` within 1 per cent of half the cell diagonal, every `.gz` file valid gzip, and that `cd` is not capped at the days in a month.
 
@@ -557,3 +557,5 @@ Three control totals sit on top of that, each against something this stream did 
 python -m pytest tests/contract -q
 cd web && npm test
 ```
+
+The contract tests read two sets. The example checks always read `tests/fixtures/data`. The world checks read `web/public/data`, or whatever `EMERGE_OUT` names, and skip with a plain reason while that folder still holds the example set.
