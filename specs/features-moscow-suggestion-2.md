@@ -12,11 +12,13 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M26 | Extensible data layers | Written so that, in the future, it can support different data layers beyond MODIS or VIIRS without reworking the architecture |
 | M18 | Point + radius / polygon data model | Two selection shapes only: point + radius (a geodesic distance filter — not a buffered circle polygon, to avoid faceting error) and polygon (an enclosed area, drawn or predefined). No separate plain-point mode: a point is point + radius with radius → 0 |
 | M19 | No-data vs. zero | Difference between "nothing measured" and "no measurement made" |
-| M20 | Simple vs. complex data | Separation of simple data (temperature, fire occurrence, wind speed and direction, humidity) and complex data (a combination of a few simple data points for a point or area, and a timeframe) |
+| M20 | Data types on point or polygon | Each data type (fire, temperature, wind, humidity, etc.) is applied to either a point (a raw source measurement) or a polygon (an aggregated or area measurement, e.g. a grid cell or region). A single point or polygon can carry more than one data type at once (e.g. fire and temperature on the same point) |
 | M8 | English and Bulgarian interface | — |
 | M9 | Works on phones | — |
 | M10 | Public web address | — |
 | M14 | Worldwide coverage | — |
+| M2 | Data pipeline: whole world | Download and process NASA fire data for the whole world before the demo, so the app shows data at once |
+| M15 | Installable app (PWA) | — |
 | C3 | Second source of truth | — |
 | C4 | Older or more satellites | Data before 2000 or from more satellites |
 | C7 | Support for different base maps | Actually offer more base maps than NASA/OpenStreetMap, not just leave room for them |
@@ -32,13 +34,17 @@ IDs reuse [`features-moscow.md`](features-moscow.md)'s numbering where a feature
 | M3 | Pick a country or a point | Using point + radius, or a polygon (a drawn area, or a predefined one like a country boundary) |
 | M7 | Plain-language explanations | — |
 | M12 | Tests on the main paths | — |
+| S1 | 3D globe view | A spinning Earth with fires and risk zones on it; the 2D map stays as the fast fallback |
 | S3 | Fire-risk outlook | Official forecasts |
+| S5 | Recent fires | Last 24h / 7 days of NASA detections |
+| S6 | Hazard-style navigation | A compact layer menu over a full-screen globe |
 | S8 | Advice for crews and volunteers | — |
 | S9 | Fire-intensity visuals | — |
 | S10 | Shareable links | — |
 | S11 | Push alerts | For people in danger areas (was Could have; moved up by the team on 14 Nov) |
 | C2 | Our own forecast model | — |
 | C5 | Time-lapse animation | — |
+| C6 | Bulgarian regions view | Statistics per Bulgarian province (oblast), for local crews |
 | M23 | Statistics and visualisation | Group heading |
 | M1 | ↳ Harmonized fire history | — |
 | M4 | ↳ Fire calendar | For a point or area — raw or visualised; how much burned, statistics, graphics, etc. |
