@@ -35,3 +35,9 @@ export async function scorecardHref(example: boolean, fetcher = fetch): Promise<
   const path = `${riskRoot(example)}/scorecard.json`;
   return (await read<unknown>(path, fetcher)) === null ? "/proof" : path;
 }
+
+export async function loadRiskWeek(country: string, example: boolean, fetcher = fetch): Promise<CountryResult> {
+  if (!/^[A-Z]{3}$/.test(country)) throw new Error("Invalid country code");
+  const file = await read<RiskCountry>(`${riskRoot(example)}/week/${country}.json`, fetcher);
+  return file ? { status: "ready", file } : { status: "missing", file: { country, days: [], regions: {} } };
+}
