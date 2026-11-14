@@ -78,7 +78,7 @@ export async function loadScorecard(example = false, request: typeof fetch = fet
 }
 
 export function brierSkill(selection: Selection, method: Method): Metric {
-  if (method === "fwi" || method === "random") return null;
+  if (method === "fwi" || method === "random" || !selection.pooled.methods[method]) return null;
   return (method === "model" ? selection.probability.brier_skill : selection.probability.history_brier_skill) ?? null;
 }
 

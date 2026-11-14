@@ -1,0 +1,20 @@
+.scorecard {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.scorecard table {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.scorecard th,
+.scorecard td {
+  overflow-wrap: anywhere;
+}
+
+.scorecard caption {
+  text-align: left;
+  color: var(--ink-2);
+}
