@@ -329,15 +329,19 @@ def build_pools(df: pd.DataFrame, col: str) -> dict:
     pools: dict = {}
     e = df[col].to_numpy(dtype=np.float64)
     bins = df["expbin"].to_numpy()
-    grp = df["group"].to_numpy()
-    ctry = df["country"].to_numpy()
     for b in np.unique(bins):
-        mb = bins == b
-        pools[("*", int(b))] = e[mb]
-        for c in np.unique(ctry[mb]):
-            pools[(str(c), int(b))] = e[mb & (ctry == c)]
-        for g in np.unique(grp[mb]):
-            pools[(str(g), int(b))] = e[mb & (grp == g)]
+        idx = np.flatnonzero(bins == b)
+        pools[("*", int(b))] = e[idx]
+        # One stable sort per key column instead of one pass per key. A stable
+        # sort keeps each pool in original row order, which is what the old
+        # mask loop produced, so the pools are identical member for member.
+        for column in ("country", "group"):
+            codes, names = pd.factorize(df[column].iloc[idx], sort=False)
+            order = np.argsort(codes, kind="stable")
+            edges = np.searchsorted(codes[order], np.arange(len(names) + 1))
+            sel = idx[order]
+            for i, name in enumerate(names):
+                pools[(str(name), int(b))] = e[sel[edges[i] : edges[i + 1]]]
     pools[("*", -1)] = e if len(e) else np.ones(1)
     return pools
 
@@ -515,7 +519,10 @@ def choose_time_term(
 
     pairs = pair_frame(univ, cm, fit_m, unit, modis_sat, with_truth=True)
     held = pair_frame(univ, cm, hold_m, unit, modis_sat, with_truth=True)
-    assert not set(pairs["ym"]) & set(hold_m.tolist()), "inner fit holds a holdout month"
+    inner_truth = pairs.loc[pairs["y"] > 0, "ym"].to_numpy()
+    assert len(inner_truth), "no measured S-NPP entered the inner fit"
+    assert not np.isin(inner_truth, hold_m).any(), "inner fit holds a holdout month"
+    assert int(inner_truth.max()) <= int(fit_m[-1]), "inner fit S-NPP past its window"
 
     scores: dict = {}
     for name, n_terms, k_mult in A2_OPTIONS:
@@ -566,8 +573,11 @@ def run_conversion(
         inner = {"scores": None, "picks": picks, "note": "picks supplied by caller"}
 
     pairs = pair_frame(univ, cm, fit_m, unit, modis_sat, with_truth=True)
-    snpp_used = cm[(cm["sat"] == "SNPP") & cm["ym"].isin(fit_m)]
-    assert not snpp_used["ym"].isin(pred_m).any(), "S-NPP leak"
+    truth_ym = pairs.loc[pairs["y"] > 0, "ym"]
+    assert len(truth_ym), "no measured S-NPP entered the fit"
+    assert int(truth_ym.min()) >= int(fit_m[0]), "S-NPP before the fit window"
+    assert int(truth_ym.max()) <= int(fit_m[-1]), "S-NPP after the fit window"
+    assert not np.isin(truth_ym.to_numpy(), pred_m).any(), "S-NPP leak"
     future = pair_frame(univ, cm, pred_m, unit, modis_sat, with_truth=False)
 
     terms = {name: (n, k) for name, n, k in A2_OPTIONS}
@@ -647,11 +657,15 @@ def main() -> int:
         for unit in UNITS:
             t0 = time.time()
             pairs = pair_frame(univ, cm, fit_months, unit, "Aqua", with_truth=True)
-            # Leakage gate: the S-NPP frame used for fitting holds no row from
-            # a prediction year of this test.
-            snpp_used = cm[(cm["sat"] == "SNPP") & cm["ym"].isin(fit_months)]
-            assert not snpp_used["ym"].isin(pred_months).any(), "S-NPP leak"
-            assert not set(pairs["ym"]) & set(pred_months.tolist()), "fit month leak"
+            # Leakage gate, read off the rows that actually carry measured
+            # S-NPP into the fitted parameters rather than off a frame that was
+            # just filtered, so it can fail: every such row's month must sit
+            # inside the fit window and outside the prediction window.
+            truth_ym = pairs.loc[pairs["y"] > 0, "ym"]
+            assert len(truth_ym), "no measured S-NPP entered the fit"
+            assert int(truth_ym.min()) >= int(fit_months[0]), "S-NPP before the fit window"
+            assert int(truth_ym.max()) <= int(fit_months[-1]), "S-NPP after the fit window"
+            assert not np.isin(truth_ym.to_numpy(), pred_months).any(), "S-NPP leak"
             model = T1Model(K_RATIO_CD * k_scale[unit], rng).fit(pairs)
             fit_seconds += time.time() - t0
 
