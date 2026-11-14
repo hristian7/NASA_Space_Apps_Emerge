@@ -53,7 +53,7 @@ Rank **20** stack options from best to worst. Score each 1–5 on: polish and wo
 - **Back ends:** FastAPI, Vercel serverless, DuckDB-WASM, a VM with PostGIS and a tile server.
 
 **Also:**
-- **Check the navigation:** describe the pattern of https://everydayweather.com/lab/hazards.
+- **Navigation pattern:** a full-screen dark globe; one compact side panel listing the layers (each with an on/off switch, a short legend and a one-line explanation); a small switcher for the map look (satellite, night, plain data); hover or tap a mark to open a fact card. On phones the panel becomes a bottom sheet.
 - **Confirm the PWA estimate:** the guess is +5–10% for installable and +25–35% with push (interview B4). The iPhone push limits are already verified (interview B4).
 - **Starter repos:** list open-source repos we could start from.
 

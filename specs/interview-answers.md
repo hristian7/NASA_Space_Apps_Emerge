@@ -11,7 +11,7 @@ The team's answers to [`interview-questions.md`](interview-questions.md), summar
 | A3 | Wow moment | **The whole world** on a globe, not just one Bulgarian region |
 | A4 | Story | Must cover **Bulgaria**, so local crews and volunteers can use it |
 | A5 | Name | **Emerge** |
-| B1 | Top tasks | Pick an area and dates; a world overview map; a **fire-risk outlook** for the coming days or months with a certainty level ("like a weather forecast for fires"); a heat map of risk zones with levels; a globe like Google Earth; navigation like [everydayweather.com/lab/hazards](https://everydayweather.com/lab/hazards) |
+| B1 | Top tasks | Pick an area and dates; a world overview map; a **fire-risk outlook** for the coming days or months with a certainty level ("like a weather forecast for fires"); a heat map of risk zones with levels; a globe like Google Earth; a clean layer menu over a full-screen globe |
 | B2 | Decisions supported | Warn people in danger areas in advance; advise crews and volunteers on where and when to pre-position |
 | B3 | Language | **English and Bulgarian** |
 | B4 | Device | Desktop and mobile. **Decided 14 Nov: an installable PWA** (no push alerts in the MVP) |
