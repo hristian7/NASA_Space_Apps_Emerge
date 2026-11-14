@@ -6,7 +6,13 @@ import type { TerraDraw } from "terra-draw";
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
-import { emptyFeatures, selectionCentre, selectionFeatures } from "@/lib/ui/geo";
+import {
+  emptyFeatures,
+  ringBounds,
+  selectionCentre,
+  selectionFeatures,
+  zoomForRadius,
+} from "@/lib/ui/geo";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -50,6 +56,33 @@ function rasterStyle(id: string): StyleSpecification | string {
   } satisfies StyleSpecification;
 }
 
+/** Moves the camera so the chosen place, and its search circle, are in view. */
+function frameSelection(instance: MapLibreMap, selection: Selection | null): void {
+  const centre = selectionCentre(selection);
+  if (centre === null || selection === null) return;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const duration = reduced ? 0 : 650;
+  const box = instance.getContainer().getBoundingClientRect();
+  const smallest = Math.min(box.width, box.height);
+
+  if (selection.kind === "polygon") {
+    instance.fitBounds(ringBounds(selection.ring), {
+      padding: Math.round(Math.min(90, smallest / 6)),
+      maxZoom: 8,
+      duration,
+    });
+    return;
+  }
+
+  if (selection.kind === "point") {
+    instance.easeTo({
+      center: centre,
+      zoom: zoomForRadius(selection.lat, selection.radiusKm, smallest),
+      duration,
+    });
+  }
+}
+
 export default function MapView({
   selection,
   basemapId,
@@ -65,6 +98,7 @@ export default function MapView({
   label.current = t("label");
   const map = useRef<MapLibreMap | null>(null);
   const draw = useRef<TerraDraw | null>(null);
+  const cleanUp = useRef<(() => void) | null>(null);
   const [failed, setFailed] = useState(false);
 
   // Latest values the map's own listeners need, without rebuilding the map.
@@ -72,6 +106,10 @@ export default function MapView({
   const area = useRef(onDrawArea);
   const drawEnd = useRef(onDrawingEnd);
   const isDrawing = useRef(drawing);
+  // The click that closes a drawn area reaches the map's own click handler as
+  // well, and drawing has already been switched off by then, so that one click
+  // would replace the fresh area with a point.
+  const closingClick = useRef(false);
   const current = useRef(selection);
   pick.current = onPickPoint;
   area.current = onDrawArea;
@@ -94,7 +132,8 @@ export default function MapView({
           container: node,
           style: rasterStyle(basemapId),
           center: [20, 25],
-          zoom: 1.4,
+          // A phone shows the whole globe only at a much smaller scale.
+          zoom: node.clientWidth < 768 ? 0.6 : 2.1,
           attributionControl: false,
           dragRotate: false,
           maxPitch: 0,
@@ -158,10 +197,46 @@ export default function MapView({
           source?.setData(selectionFeatures(current.current));
         };
 
+        // The report panel covers part of the map, so the camera is told how
+        // much room it really has. A phone's sheet changes height, hence the
+        // observer rather than a one-off measurement.
+        const applyPadding = () => {
+          const panel = document.getElementById("report");
+          const box = panel?.getBoundingClientRect();
+          const narrow = window.innerWidth < 768;
+          instance.setPadding(
+            narrow
+              ? {
+                  top: 104,
+                  right: 8,
+                  bottom: box ? Math.max(0, window.innerHeight - box.top) : 0,
+                  left: 8,
+                }
+              : {
+                  top: 72,
+                  right: box ? Math.max(0, window.innerWidth - box.left) : 16,
+                  bottom: 24,
+                  left: 16,
+                },
+          );
+        };
+
+        const panel = document.getElementById("report");
+        const observer = panel === null ? null : new ResizeObserver(() => applyPadding());
+        if (panel !== null && observer !== null) observer.observe(panel);
+        window.addEventListener("resize", applyPadding);
+        cleanUp.current = () => {
+          observer?.disconnect();
+          window.removeEventListener("resize", applyPadding);
+        };
+
         instance.on("load", () => {
           instance.getCanvas().setAttribute("aria-label", label.current);
           instance.setProjection({ type: projection });
+          applyPadding();
           paintSelection();
+          // A selection read from the address bar is already set by now.
+          frameSelection(instance, current.current);
         });
 
         // A new style drops every source and layer, so they are put back.
@@ -171,7 +246,7 @@ export default function MapView({
         });
 
         instance.on("click", (event) => {
-          if (isDrawing.current) return;
+          if (isDrawing.current || closingClick.current) return;
           pick.current(event.lngLat.lat, event.lngLat.lng);
         });
       } catch (error) {
@@ -182,6 +257,8 @@ export default function MapView({
 
     return () => {
       cancelled = true;
+      cleanUp.current?.();
+      cleanUp.current = null;
       draw.current?.stop();
       draw.current = null;
       map.current?.remove();
@@ -210,16 +287,7 @@ export default function MapView({
     if (instance === null) return;
     const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
     source?.setData(selectionFeatures(selection));
-    const centre = selectionCentre(selection);
-    if (centre === null) return;
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      instance.jumpTo({ center: centre });
-    } else {
-      instance.easeTo({ center: centre, duration: 650 });
-    }
+    frameSelection(instance, selection);
   }, [selection]);
 
   useEffect(() => {
@@ -254,6 +322,10 @@ export default function MapView({
           .find((candidate) => candidate.id === id);
         if (feature === undefined || feature.geometry.type !== "Polygon") return;
         const ring = feature.geometry.coordinates[0] as [lon: number, lat: number][];
+        closingClick.current = true;
+        window.setTimeout(() => {
+          closingClick.current = false;
+        }, 400);
         area.current(ring);
         instrument.clear();
         drawEnd.current();

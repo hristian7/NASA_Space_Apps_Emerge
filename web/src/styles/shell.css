@@ -59,8 +59,7 @@ ol {
 .sr-only {
   position: absolute;
   width: 1px;
-  height: 1px
-  ;
+  height: 1px;
   padding: 0;
   margin: -1px;
   overflow: hidden;
@@ -166,13 +165,52 @@ ol {
   inset: 0;
 }
 
+/* The map's own credit bar and buttons, in the current look. */
+
+.maplibregl-ctrl-attrib.maplibregl-compact,
 .maplibregl-ctrl-attrib {
   font: 400 11px/1.4 var(--font-ui);
-  max-width: calc(100vw - 32px);
+  max-width: min(520px, calc(100vw - 32px));
+  background: var(--panel);
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  backdrop-filter: blur(14px);
+  padding: 3px 8px;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--ink-2);
 }
 
 .maplibregl-ctrl-attrib-inner {
   white-space: normal;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+}
+
+.maplibregl-ctrl-group button {
+  width: 30px;
+  height: 30px;
+  background: none;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--line);
+}
+
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: var(--ctrl-icon-filter, invert(1));
+}
+
+[data-look="field"] {
+  --ctrl-icon-filter: none;
 }
 
 .maplibregl-ctrl-bottom-right {
@@ -266,6 +304,7 @@ ol {
 }
 
 .report-scroll {
+  flex: 1;
   overflow-y: auto;
   padding: 18px 18px 8px;
   display: grid;
@@ -364,6 +403,11 @@ ol {
   text-wrap: pretty;
 }
 
+.page a:not(.chip) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .page section {
   display: grid;
   gap: 8px;
@@ -453,6 +497,10 @@ ol {
   .maplibregl-ctrl-bottom-left,
   .maplibregl-ctrl-bottom-right {
     bottom: var(--sheet);
+  }
+
+  .maplibregl-ctrl-attrib {
+    max-width: calc(100vw - 92px);
   }
 
   .report {

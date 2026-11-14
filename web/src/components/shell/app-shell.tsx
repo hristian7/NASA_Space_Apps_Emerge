@@ -90,7 +90,16 @@ export default function AppShell() {
 
       <TopBar
         openMenu={menu}
-        onToggleMenu={(which) => setMenu((current) => (current === which ? null : which))}
+        onToggleMenu={(which) =>
+          setMenu((current) => {
+            const next = current === which ? null : which;
+            // On a phone the menu opens above the sheet, so the sheet makes room.
+            if (next !== null && window.innerWidth < 768) {
+              document.documentElement.setAttribute("data-sheet", "peek");
+            }
+            return next;
+          })
+        }
       />
 
       {menu === "place" ? (

@@ -111,6 +111,31 @@ export function selectionCentre(selection: Selection | null): [lon: number, lat:
   return null;
 }
 
+/**
+ * A zoom level at which the search circle fills about two fifths of the
+ * smaller side of the map, so the chosen area is visible rather than a dot.
+ */
+export function zoomForRadius(lat: number, radiusKm: number, smallestSidePx: number): number {
+  if (radiusKm <= 0) return 6;
+  // 512 pixel tiles, so half the figure quoted for 256 pixel tiles.
+  const metresPerPixelAtZoomZero = 78271.516 * Math.cos((lat * Math.PI) / 180);
+  const wanted = (2 * radiusKm * 1000) / (0.4 * Math.max(240, smallestSidePx));
+  const zoom = Math.log2(metresPerPixelAtZoomZero / wanted);
+  return Math.min(8, Math.max(1.2, zoom));
+}
+
+/** Corner box of a ring, as MapLibre wants it: south west, then north east. */
+export function ringBounds(
+  ring: [lon: number, lat: number][],
+): [[number, number], [number, number]] {
+  const lons = ring.map(([lon]) => lon);
+  const lats = ring.map(([, lat]) => lat);
+  return [
+    [Math.min(...lons), Math.min(...lats)],
+    [Math.max(...lons), Math.max(...lats)],
+  ];
+}
+
 export function cornerCount(selection: Selection): number {
   return selection.kind === "polygon" ? openRing(selection.ring).length : 0;
 }
