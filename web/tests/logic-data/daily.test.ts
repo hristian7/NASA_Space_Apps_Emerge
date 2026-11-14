@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { DailyFile, MetaFile } from '../../src/types/data';
+import type { BackgroundFile, DailyFile, MetaFile } from '../../src/types/data';
 import type { Selection } from '../../src/types/ui';
 import { DataError } from '../../src/lib/data/source';
 import { loadDaily, loadMeta } from '../../src/lib/data/loaders';
@@ -19,7 +19,8 @@ import {
   windowYears,
 } from '../../src/lib/data/daily';
 import { selectionCells } from '../../src/lib/data/selection';
-import { testSource } from './helpers';
+import { backgroundPeriod, backgroundStatus } from '../../src/lib/data/background';
+import { patchedSource, testSource } from './helpers';
 
 const source = testSource();
 
@@ -30,7 +31,12 @@ async function meta(): Promise<MetaFile> {
   return loadMeta(source);
 }
 
-/** Weighted hot and frp summed straight out of the file, for one cell. */
+/**
+ * Weighted hot and frp summed straight out of the file for one cell, with
+ * ruling 11 applied by hand: a raw count before February 2012 is multiplied
+ * by that group's k_hot for the day's own calendar month, and FRP is left as
+ * it is.
+ */
 async function byHand(
   key: string,
   cellIdWanted: number,
@@ -38,16 +44,24 @@ async function byHand(
   offsets: number[],
 ): Promise<{ hot: number; frp: number }> {
   const file = (await loadDaily(key, source)) as DailyFile;
+  const background = (await source.json<BackgroundFile>('background.json')) as BackgroundFile;
+  const m = await meta();
+  const [startM, startD] = m.daily_window.start_md.split('-').map(Number);
+  const windowStart = Date.UTC(year, startM - 1, startD) / 86400000;
   const cell = file.cells.find((entry) => entry.id === cellIdWanted);
   let hot = 0;
   let frp = 0;
   const block = cell?.years.find((entry) => entry.y === year);
-  if (block) {
+  if (block && cell) {
     block.d.forEach((offset, at) => {
-      if (offsets.includes(offset)) {
-        hot += block.hot[at];
-        frp += block.frp[at];
-      }
+      if (!offsets.includes(offset)) return;
+      const day = new Date((windowStart + offset) * 86400000);
+      const period = backgroundPeriod(day.getUTCFullYear(), day.getUTCMonth() + 1);
+      const factor = period
+        ? background.groups[cell.g][period].k_hot[day.getUTCMonth()] / 1000
+        : 1;
+      hot += block.hot[at] * factor;
+      frp += block.frp[at];
     });
   }
   return { hot, frp };
@@ -168,5 +182,65 @@ describe('the month to date', () => {
       const same = window.years.find((entry) => entry.year === year.year);
       expect(year.hot ?? 0).toBeGreaterThanOrEqual(same?.hot ?? 0);
     }
+  });
+});
+
+describe('raw daily counts and the conversion factor (ruling 11)', () => {
+  it('scales a day before Feb 2012 by k_hot of the cell group and leaves FRP raw', async () => {
+    const file = (await loadDaily('40_20', source)) as DailyFile;
+    const background = (await source.json<BackgroundFile>('background.json')) as BackgroundFile;
+    expect(file.values).toBe('raw');
+    expect(file.sensor_labels).toEqual(['terra', 'aqua', 'snpp']);
+
+    const { cells } = selectionCells(ONE_CELL);
+    const cell = file.cells.find((entry) => entry.id === cells[0].id) as DailyFile['cells'][number];
+    const block = cell.years.find((entry) => entry.y === 2009);
+    expect(block, '2009 should have a fire day in this cell').toBeDefined();
+    if (!block) return;
+
+    const totals = await getWindowTotals(ONE_CELL, 45, source);
+    const year = totals.years.find((entry) => entry.year === 2009);
+    const factor = background.groups[cell.g].estimated_modis.k_hot[10] / 1000;
+    const rawHot = block.hot.reduce((sum, value) => sum + value, 0);
+    const rawFrp = block.frp.reduce((sum, value) => sum + value, 0);
+    expect(factor).toBeGreaterThan(1);
+    expect(year?.hot).toBeCloseTo(rawHot * factor, 9);
+    expect(year?.frp).toBeCloseTo(rawFrp, 9);
+  });
+
+  it('uses a day from Feb 2012 as it is', async () => {
+    // A cell whose only fire day in the window is a measured year.
+    const measuredCell: Selection = { kind: 'point', lat: 43.875, lon: 23.875, radiusKm: 2 };
+    const file = (await loadDaily('40_20', source)) as DailyFile;
+    const { cells } = selectionCells(measuredCell);
+    const cell = file.cells.find((entry) => entry.id === cells[0].id) as DailyFile['cells'][number];
+    const block = cell.years.find((entry) => entry.y >= 2012);
+    expect(block, 'a year from 2012 should have a fire day in this cell').toBeDefined();
+    if (!block) return;
+    const totals = await getWindowTotals(measuredCell, 45, source);
+    const year = totals.years.find((entry) => entry.year === block.y);
+    const rawHot = block.hot.reduce((sum, value) => sum + value, 0);
+    expect(year?.hot).toBeCloseTo(rawHot, 9);
+  });
+
+  it('falls back to the raw count with no background file, and says how many days', async () => {
+    const patched = patchedSource({ 'background.json': null });
+    const file = (await loadDaily('40_20', source)) as DailyFile;
+    const { cells } = selectionCells(ONE_CELL);
+    const cell = file.cells.find((entry) => entry.id === cells[0].id) as DailyFile['cells'][number];
+    const block = cell.years.find((entry) => entry.y === 2009) as DailyFile['cells'][number]['years'][number];
+
+    const totals = await getWindowTotals(ONE_CELL, 45, patched);
+    const year = totals.years.find((entry) => entry.year === 2009);
+    const rawHot = block.hot.reduce((sum, value) => sum + value, 0);
+    expect(year?.hot).toBeCloseTo(rawHot, 9);
+    expect(backgroundStatus().loaded).toBe(false);
+    expect(backgroundStatus().unscaledDays).toBeGreaterThan(0);
+  });
+
+  it('reports nothing unscaled when every factor is there', async () => {
+    await getWindowTotals(ONE_CELL, 45, source);
+    expect(backgroundStatus().loaded).toBe(true);
+    expect(backgroundStatus().unscaledDays).toBe(0);
   });
 });
