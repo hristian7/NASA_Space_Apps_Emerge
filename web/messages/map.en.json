@@ -1,0 +1,14 @@
+{
+  "label": "Map of the chosen place",
+  "basemapHeading": "Base map",
+  "blueMarble": "Blue Marble, daytime",
+  "blackMarble": "Black Marble, night lights",
+  "streets": "Streets and places",
+  "viewHeading": "View",
+  "globe": "Globe",
+  "flat": "Flat map",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "resetNorth": "Face north",
+  "failed": "The map could not start in this browser. The rest of the page still works."
+}

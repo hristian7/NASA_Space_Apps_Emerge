@@ -1,10 +1,11 @@
 import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 import { defaultLocale, isLocale, localeCookieName } from "./locales";
+import { loadMessages } from "./messages";
 
 export default getRequestConfig(async ({ locale: requested }) => {
   // `requested` is set when a caller asks for one language by name, as the
-  // home page does to print the disclaimer in both. Otherwise the language
+  // About page does to print the disclaimer in both. Otherwise the language
   // comes from the cookie the switch writes, so the choice survives a visit.
   let locale = defaultLocale;
 
@@ -17,8 +18,5 @@ export default getRequestConfig(async ({ locale: requested }) => {
     }
   }
 
-  return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
-  };
+  return { locale, messages: loadMessages(locale) };
 });

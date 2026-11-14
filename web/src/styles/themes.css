@@ -1,0 +1,96 @@
+/* The three agreed looks, as custom properties.
+   Applied by data-look on <html>: ember (default), field, ops.
+   Every component reads colour, radius and type from these names only. */
+
+:root,
+[data-look="ember"] {
+  --font-ui: "Familjen Grotesk", ui-sans-serif, sans-serif;
+  --font-head: "Familjen Grotesk", ui-sans-serif, sans-serif;
+  --font-num: "Familjen Grotesk", ui-sans-serif, sans-serif;
+  --space: oklch(0.12 0.01 40);
+  --panel: oklch(0.17 0.012 40 / 0.92);
+  --panel-solid: oklch(0.17 0.012 40);
+  --line: oklch(1 0 0 / 0.1);
+  --ink: oklch(0.95 0.01 70);
+  --ink-2: oklch(0.95 0.01 70 / 0.72);
+  --ink-3: oklch(0.95 0.01 70 / 0.55);
+  --accent: oklch(0.76 0.17 55);
+  --empty: oklch(1 0 0 / 0.045);
+  --nodata: oklch(1 0 0 / 0.22);
+  --ramp-0: oklch(0.32 0.09 20);
+  --ramp-1: oklch(0.5 0.17 30);
+  --ramp-2: oklch(0.7 0.18 55);
+  --ramp-3: oklch(0.93 0.12 95);
+  --outline: oklch(0.95 0.05 80);
+  --radius: 14px;
+  --radius-s: 8px;
+}
+
+[data-look="field"] {
+  --font-ui: "Public Sans", ui-sans-serif, sans-serif;
+  --font-head: "Newsreader", Georgia, serif;
+  --font-num: "Public Sans", ui-sans-serif, sans-serif;
+  --space: oklch(0.93 0.01 230);
+  --panel: oklch(0.99 0.003 90 / 0.95);
+  --panel-solid: oklch(0.99 0.003 90);
+  --line: oklch(0.2 0.02 250 / 0.13);
+  --ink: oklch(0.22 0.02 255);
+  --ink-2: oklch(0.22 0.02 255 / 0.76);
+  --ink-3: oklch(0.22 0.02 255 / 0.6);
+  --accent: oklch(0.52 0.19 35);
+  --empty: oklch(0.22 0.02 255 / 0.05);
+  --nodata: oklch(0.22 0.02 255 / 0.3);
+  --ramp-0: oklch(0.92 0.07 85);
+  --ramp-1: oklch(0.8 0.13 65);
+  --ramp-2: oklch(0.6 0.19 35);
+  --ramp-3: oklch(0.36 0.13 15);
+  --outline: oklch(0.99 0.003 90);
+  --radius: 4px;
+  --radius-s: 2px;
+}
+
+[data-look="ops"] {
+  --font-ui: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  --font-head: "IBM Plex Sans Condensed", ui-sans-serif, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, monospace;
+  --space: oklch(0.15 0.015 250);
+  --panel: oklch(0.19 0.015 250 / 0.96);
+  --panel-solid: oklch(0.19 0.015 250);
+  --line: oklch(0.8 0.03 240 / 0.16);
+  --ink: oklch(0.93 0.01 240);
+  --ink-2: oklch(0.93 0.01 240 / 0.74);
+  --ink-3: oklch(0.93 0.01 240 / 0.56);
+  --accent: oklch(0.86 0.17 95);
+  --empty: oklch(1 0 0 / 0.04);
+  --nodata: oklch(1 0 0 / 0.22);
+  --ramp-0: oklch(0.34 0.06 260);
+  --ramp-1: oklch(0.55 0.12 300);
+  --ramp-2: oklch(0.72 0.17 35);
+  --ramp-3: oklch(0.92 0.15 100);
+  --outline: oklch(0.86 0.17 95);
+  --radius: 2px;
+  --radius-s: 1px;
+}
+
+:root {
+  /* Official fire danger classes, very low to extreme. Shared by all looks
+     because the classes are the forecast provider's, not ours. */
+  --d0: oklch(0.72 0.17 145);
+  --d1: oklch(0.88 0.17 100);
+  --d2: oklch(0.76 0.17 65);
+  --d3: oklch(0.62 0.22 30);
+  --d4: oklch(0.45 0.16 25);
+  --d5: oklch(0.38 0.15 320);
+  /* Height of the bottom sheet on phones. */
+  --sheet: 50dvh;
+}
+
+[data-look="field"] {
+  color-scheme: light;
+}
+
+:root,
+[data-look="ember"],
+[data-look="ops"] {
+  color-scheme: dark;
+}
