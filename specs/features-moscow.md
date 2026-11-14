@@ -72,7 +72,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | S3 ⭐ | **Fire-risk outlook (official forecasts)** | The next days' fire danger from official forecasts as coloured zones with levels. Worldwide from Copernicus GWIS (`ecmwf.fwi` `[V]`), USA from the NIFC 4-month outlook. We display and credit trusted forecasts rather than inventing our own ([`../docs/research/forecast-options.md`](../docs/research/forecast-options.md)) | M |
 | S5 ⭐ | **Recent fires (last 24 h / 7 days)** | The latest NASA detections on the map, so the app shows today, not only history | S |
 | S6 ⭐ | **Hazard-style navigation** | A compact layer menu over a full-screen globe: layers on and off, base-map switcher, short legends | M |
-| S8 | **Advice for crews and volunteers** | A plain panel: "High risk and historically active area: consider pre-positioning". Built from rules, with a clear disclaimer and links to official services | S–M |
+| S8 | **Advice for crews and volunteers** (plan 2's S14 builds on it) | A plain panel: "High risk and historically active area: consider pre-positioning". Built from rules, with a clear disclaimer and links to official services | S–M |
 | S9 | **Fire-intensity visuals** | Shows how strong fires are (FRP, the fire's heat output), not just how many | S |
 | S10 | **Shareable links** | The link remembers the place, radius or area, dates and layers | S |
 
@@ -87,7 +87,7 @@ From the firefighter interview. The same logic works for every country in the wo
 | M30 | **Top risk spots per region** | Any fire service in any country opens its own area and sees the places most likely to catch fire today and tomorrow, ranked from number one down. | M |
 | M31 | **Next-day risk engine** | The engine gives every small square of land on Earth a fire-risk score for tomorrow, learned from that place's own seasons and past fires. | M–L |
 | M32 | **All the data that drives fire** | For every place on Earth we collect temperature, wind, humidity, rain, how dry the plants are, whether it is forest or grass, and 25 years of past fires. | L |
-| M33 | **Scorecard: predicted vs what happened** | Every day we check yesterday's predictions against the fires NASA satellites actually saw, and publish how often we were right compared with the official fire-danger index. | M |
+| M33 | **Scorecard: predicted vs what happened** | Every day we check yesterday's predictions against the fires NASA satellites actually saw, and publish how often we were right compared with the NASA fire-weather index shown in the EU's GWIS and with fire history alone. | M |
 | M34 | **"Why this spot"** | Each risky spot comes with a short plain reason, such as "very hot, strong wind, dry forest, burned in 6 of the last 25 Julys." | S |
 | M35 | **One screen instead of 10 websites** | Tomorrow's danger, fires burning now, fire history and links to the official services sit on one simple page, so crews stop switching between ten websites. Needs S3 and S5 from plan 1, so build those early. Until the engine passes its test, it shows a placeholder. | S |
 | M36 | **Real official fire numbers** (fixes M28) | Show each country's own reported fire numbers (Bulgaria's Forest Agency, EU countries via EFFIS, the USA via NIFC), labelled apart from satellite estimates. | M |
@@ -99,7 +99,7 @@ From the firefighter interview. The same logic works for every country in the wo
 
 | # | Feature | What it means, in one sentence | Effort |
 |---|---|---|---|
-| S12 | **Week outlook** | Shows the risk for the next 7 days, clearly marked as less certain than tomorrow. | S |
+| S12 | **Week outlook** | Shows the risk for the following days, up to about a week, ranked by fire weather and clearly marked as less certain than tomorrow. | S |
 | S13 | **Wind on the map** | Arrows show how strong the wind is and which way it blows, now and tomorrow. | S–M |
 | S14 | **Crew suggestion** (builds on S8) | Gives a plain suggestion such as "consider a standby team near spot 1", which the fire service is free to follow or ignore. | S |
 | S15 | **Fire type label** | Tags every fire and risky spot as forest, farmland or grass, so crews know what kind of fire to expect. | S |
@@ -114,11 +114,11 @@ M36–M39, S16 and S17 come from the competitor research ([`../docs/research/fea
 
 | # | Feature | What it is (plain language) | Effort |
 |---|---|---|---|
-| C2 | **Our own forecast model** | Predicts fire chance from weather and history. Only credible if it beats the simple historical chance (M13) | L |
+| C2 | **Our own forecast model** (now M31 in plan 2) | Predicts fire chance from weather and history. Only credible if it beats the simple historical chance (M13) | L |
 | C3 | **Second source of truth** | A statistical comparison of our record with EFFIS and US records on the proof page. Showing the reported numbers themselves is now M28 | M |
 | C4 | **Data before 2000 or from more satellites** | Older sensors or other satellites (Sentinel-3, geostationary). Research says no honest pre-2000 extension: [`../docs/research/data-sources-summary.md`](../docs/research/data-sources-summary.md) | L |
 | C5 | **Time-lapse animation** | Play 25 years of fires on the globe. Great for the demo video | S–M |
-| C6 | **Bulgarian regions view** | Statistics per Bulgarian province (oblast) for local crews | S |
+| C6 | **Bulgarian regions view** (now inside M30 in plan 2, for every country) | Statistics per Bulgarian province (oblast) for local crews | S |
 | C7 | **More base maps, actually added** | Offer more base maps than NASA and OpenStreetMap, not just room for them (M25) | S |
 | C9 | **Several base maps** (was M16) | Switch the background, 2D or 3D: NASA imagery, OpenStreetMap and others. The layer menu (S6) already switches NASA day and night views | S |
 | C10 | **Several data layers** (was M17) | Show and use different kinds of data: MODIS, VIIRS, temperature, wind and more | M |
