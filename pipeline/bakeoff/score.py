@@ -36,6 +36,7 @@ LEVEL_NAMES = {
     "a": "country x month",
     "b": "q25 cell x month",
     "c": "50 km circle x month",
+    "c2": "50 km circle, overlap-weighted (information)",
     "d": "d10 cell x month (information)",
 }
 PRED_COLS = ["pipeline", "test", "unit", "country", "grid", "cell", "year", "month", "pred", "lo", "hi"]
@@ -71,7 +72,7 @@ def q25_cell_from_cd(cy, cx):
     cy = np.asarray(cy, dtype=np.int64)
     cx = np.asarray(cx, dtype=np.int64)
     row = np.clip((17999 - 2 * cy) // 50, 0, 719)
-    col = (2 * cx + 36001) // 50
+    col = ((2 * cx + 36001) // 50) % 1440
     return row * 1440 + col
 
 
@@ -112,6 +113,20 @@ def haversine_km(lat1, lon1, lat2, lon2):
     dl = np.radians(lon2) - np.radians(lon1)
     a = np.sin(dphi / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(dl / 2) ** 2
     return 2 * EARTH_KM * np.arcsin(np.sqrt(np.minimum(1.0, a)))
+
+
+def q25_overlap_weights(cells, lat0, lon0, radius_km):
+    """Share of each q25 cell's 625 sub-cells (0.01 degree) whose centre is within the circle."""
+    cells = np.asarray(cells, dtype=np.int64)
+    off = (np.arange(25) + 0.5) * 0.01
+    out = np.zeros(len(cells))
+    for k, c in enumerate(cells):
+        row, col = int(c // 1440), int(c % 1440)
+        lat = 90.0 - row * 0.25 - off
+        lon = -180.0 + col * 0.25 + off
+        la, lo = np.meshgrid(lat, lon, indexing="ij")
+        out[k] = float((haversine_km(lat0, lon0, la, lo) <= radius_km).mean())
+    return out
 
 
 # ---------------------------------------------------------------- truth
@@ -384,6 +399,25 @@ def score_label(truth, pred, label, band, circle_grid=None, circles=None):
                     tm = truth.dense("d10", country, unit, months)
                     pm, lm, hm = to_dense(d, cells, months, ["pred", "lo", "hi"])
                     add("d", "d10", tm.ravel(), pm.ravel(), lm.ravel(), hm.ravel())
+                if len(q):
+                    qlat, qlon = centre_q25(q["cell"].unique())
+                    qcells = q["cell"].unique()
+                    ymc = np.array([ym_of(y, m) for y, m in months])
+                    tt2, pp2, ll2, hh2 = [], [], [], []
+                    for _, ci in circ[circ["country"] == country].iterrows():
+                        near = haversine_km(ci["lat"], ci["lon"], qlat, qlon) <= ci["radius_km"] + 25.0
+                        wc = qcells[near]
+                        w = dict(zip(wc.tolist(), q25_overlap_weights(wc, ci["lat"], ci["lon"], ci["radius_km"])))
+                        sel = q[q["cell"].isin(wc)].copy()
+                        wv = sel["cell"].map(w).values
+                        for col in ("pred", "lo", "hi"):
+                            sel[col] = sel[col].values * wv
+                        agg = sel.groupby("ym")[["pred", "lo", "hi"]].sum().reindex(ymc, fill_value=0.0)
+                        tt2.append(truth.circle_series(ci["id"], unit, months))
+                        pp2.append(agg["pred"].values)
+                        ll2.append(agg["lo"].values)
+                        hh2.append(agg["hi"].values)
+                    add("c2", "q25", np.concatenate(tt2), np.concatenate(pp2), np.concatenate(ll2), np.concatenate(hh2))
                 cs = sub[sub["grid"] == cg] if cg else sub.iloc[0:0]
                 if cg is None or len(cs) == 0:
                     notes.append("%s %s %s %s: no rows on the circle grid, level c not scored" % (label, test, country, unit))
@@ -570,6 +604,24 @@ def build_report(scores, cdf, winner, wa, wb, d7, gate, manifests, notes, truth_
         for n in notes:
             L.append("- " + n)
         L.append("")
+    L.append("## For information: every pipeline label side by side [V]")
+    L.append("")
+    L.append("Not part of the winner rule. Levels (a), (b), (c) and (c2), nRMSE and bias per label. "
+             "Level (c2) weights each q25 cell by the share of its 625 sub-cells of 0.01 degrees inside the circle.")
+    L.append("")
+    labels = sorted(scores["pipeline"].unique())
+    side = []
+    for (level, test, country, unit), g in scores[scores["level"].isin(["a", "b", "c", "c2"])].groupby(
+            ["level", "test", "country", "unit"], sort=True):
+        row = {"level": level, "test": test, "country": country, "unit": unit}
+        for lab in labels:
+            gl = g[g["pipeline"] == lab]
+            row["nRMSE " + lab] = float(gl["nrmse"].iloc[0]) if len(gl) else float("nan")
+            row["bias " + lab] = float(gl["bias"].iloc[0]) if len(gl) else float("nan")
+        side.append(row)
+    if side:
+        L.append(md_table(pd.DataFrame(side)))
+    L.append("")
     L.append("## Full tables [V]")
     L.append("")
     L.append("Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE = mean absolute error, "
@@ -704,6 +756,9 @@ def selftest(data):
         # a 0.01 cell at the centre of the q25 cell must map to that cell
         got = int(q25_cell_from_cd(cy, cx))
         ck.ok(got == c["cell_id"], "q25 cell of centre of %s: got %d, expected %d" % (c["name"], got, c["cell_id"]))
+    ck.ok(int(q25_cell_from_cd(-1, 18000)) == 518400, "lon 180 wraps to column 0 (cell 518400)")
+    ck.ok(int(q25_cell_from_cd(-1, -18000)) == 518400, "lon -180 is column 0 (cell 518400)")
+    ck.ok(int(q25_cell_from_cd(-1, 17999)) == 360 * 1440 + 1439, "the last column before the wrap is 1439")
     ck.ok(int(d10_cell_from_cd(-1, -1)) == (-1 + 900) * 3600 + (-1 + 1800), "d10 floor for negative indices")
     ck.ok(int(d10_cell_from_cd(-10, -11)) == (-1 + 900) * 3600 + (-2 + 1800), "d10 floor at a negative boundary")
     d = haversine_km(0.0, 0.0, 0.0, 1.0)
@@ -782,6 +837,14 @@ def selftest(data):
         ck.ok(len(scs[(scs.pipeline == "B") & (scs.level == "c")]) == 12, "B has 12 circle scores")
         ck.ok(len(scs[(scs.pipeline == "A") & (scs.level == "d")]) == 0, "A has no d10 level")
         ck.ok(scs[(scs.level == "c")]["nrmse"].notna().all(), "circle nRMSE is defined for all rows")
+        for pipe in ("A", "B"):
+            ck.ok(len(scs[(scs.pipeline == pipe) & (scs.level == "c2")]) == 12, "%s has 12 weighted-circle (c2) scores" % pipe)
+        for test in TESTS:
+            for co in COUNTRIES:
+                for unit in UNITS:
+                    ck.close(1.0 + pick("B", "c2", test, co, unit, "bias"), 2.0 * (1.0 + pick("A", "c2", test, co, unit, "bias")),
+                             "c2 of a 2x prediction is exactly twice c2 of the 1x prediction %s %s %s" % (test, co, unit), 1e-9)
+                    ck.ok(pick("A", "c2", test, co, unit, "nrmse") < 1.0, "c2 nRMSE of a perfect q25 prediction is small %s %s %s" % (test, co, unit))
         cdf = contests(scs)
         w, wa, wb = decide_winner(cdf)
         ck.ok((w, wa, wb) == ("A", 12, 0), "A=truth beats B=2x truth in all 12 contests, got %r" % ((w, wa, wb),))
@@ -833,6 +896,41 @@ def selftest(data):
             else:
                 ck.ok(((rc.bias - 1.0).abs() < 1e-12).all(), "circle bias +1.0 when prediction = 2 x truth")
         ck.ok(truth.circle_series("c08", "cd", test_months("t1")).sum() > 0, "a Northern California circle has fire in t1")
+
+        print("Self-test: overlap weights")
+        w_all = q25_overlap_weights([int(q25_cell_from_cd(4270, 2330))], 42.70, 23.32, 1000.0)
+        ck.close(w_all[0], 1.0, "a cell far inside a huge circle has weight 1")
+        w_far = q25_overlap_weights([int(q25_cell_from_cd(-4000, 2330))], 42.70, 23.32, 50.0)
+        ck.close(w_far[0], 0.0, "a far cell has weight 0")
+        lat0, lon0, rad = 42.70, 23.32, 50.0
+        r0 = int((90 - lat0) // 0.25)
+        c0 = int((lon0 + 180) // 0.25)
+        cells = [rr * 1440 + cc for rr in range(r0 - 4, r0 + 5) for cc in range(c0 - 6, c0 + 7)]
+        total = float(q25_overlap_weights(cells, lat0, lon0, rad).sum()) * 625
+        cyv = np.arange(round(lat0 * 100) - 700, round(lat0 * 100) + 700)
+        cxv = np.arange(round(lon0 * 100) - 700, round(lon0 * 100) + 700)
+        gy, gx = np.meshgrid(cyv, cxv, indexing="ij")
+        direct = int((haversine_km(lat0, lon0, (gy + 0.5) / 100.0, (gx + 0.5) / 100.0) <= rad).sum())
+        ck.close(total, float(direct), "weights x 625 add up to the 0.01 degree cells inside the circle", 1e-6)
+
+        print("Self-test: scored-cell scope")
+        syn = pd.DataFrame({
+            "sat": ["Terra", "Aqua", "SNPP", "Terra", "SNPP"],
+            "country": ["Bulgaria"] * 5,
+            "day": [pd.Timestamp("2010-06-01").date(), pd.Timestamp("2015-06-01").date(),
+                    pd.Timestamp("2015-06-01").date(), pd.Timestamp("2023-06-01").date(),
+                    pd.Timestamp("2023-06-01").date()],
+            "cy": [4300, 4400, 4400, 4500, 4500],
+            "cx": [2300, 2400, 2400, 2500, 2500],
+            "detections": [1, 1, 1, 1, 1]})
+        st = Truth(syn)
+        cx_2010 = int(q25_cell_from_cd(4300, 2300))
+        cx_2015 = int(q25_cell_from_cd(4400, 2400))
+        cx_2023 = int(q25_cell_from_cd(4500, 2500))
+        sc_set = set(st.scored_q25["Bulgaria"].tolist())
+        ck.ok(cx_2010 not in sc_set, "a 2010 MODIS-only cell is not in the scored set")
+        ck.ok(cx_2015 in sc_set, "a 2015 cell is in the scored set")
+        ck.ok(cx_2023 not in sc_set, "a 2023-only cell is not in the scored set")
 
         print("Self-test: validation")
         bad = A.copy()

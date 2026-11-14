@@ -74,6 +74,61 @@ A miss is reported here. The team decides.
 - A: band 0.9.
 - B: band 0.8.
 
+## For information: every pipeline label side by side [V]
+
+Not part of the winner rule. Levels (a), (b), (c) and (c2), nRMSE and bias per label. Level (c2) weights each q25 cell by the share of its 625 sub-cells of 0.01 degrees inside the circle.
+
+| level | test | country | unit | nRMSE A | bias A | nRMSE B | bias B |
+|---|---|---|---|---|---|---|---|
+| a | t1 | Bulgaria | cd | 0.3233 | 0.0923 | 0.3171 | 0.0076 |
+| a | t1 | Bulgaria | hot | 0.3594 | 0.0472 | 0.4066 | -0.0125 |
+| a | t1 | United_States | cd | 0.1203 | -0.0613 | 0.1635 | -0.0656 |
+| a | t1 | United_States | hot | 0.3045 | -0.1178 | 0.4064 | -0.1208 |
+| a | t2 | Bulgaria | cd | 0.2632 | -0.0501 | 0.2330 | -0.0089 |
+| a | t2 | Bulgaria | hot | 0.2603 | -0.0324 | 0.3048 | -0.0026 |
+| a | t2 | United_States | cd | 0.1016 | 0.0734 | 0.1514 | 0.0609 |
+| a | t2 | United_States | hot | 0.1655 | 0.1163 | 0.2930 | 0.1155 |
+| a | t3 | Bulgaria | cd | 0.7617 | 0.5410 | 0.3047 | 0.1381 |
+| a | t3 | Bulgaria | hot | 0.6546 | 0.4338 | 0.2904 | 0.0851 |
+| a | t3 | United_States | cd | 0.1292 | -0.0797 | 0.1421 | -0.0761 |
+| a | t3 | United_States | hot | 0.1466 | -0.0597 | 0.1959 | -0.0210 |
+| b | t1 | Bulgaria | cd | 2.1342 | 0.0923 | 2.3726 | 0.0076 |
+| b | t1 | Bulgaria | hot | 2.5064 | 0.0472 | 2.7379 | -0.0125 |
+| b | t1 | United_States | cd | 3.8178 | -0.0613 | 4.0897 | -0.0656 |
+| b | t1 | United_States | hot | 7.7951 | -0.1178 | 8.7737 | -0.1208 |
+| b | t2 | Bulgaria | cd | 1.6860 | -0.0501 | 1.8112 | -0.0089 |
+| b | t2 | Bulgaria | hot | 1.9286 | -0.0324 | 2.0890 | -0.0026 |
+| b | t2 | United_States | cd | 3.3869 | 0.0734 | 3.7451 | 0.0609 |
+| b | t2 | United_States | hot | 5.0663 | 0.1163 | 6.0280 | 0.1155 |
+| b | t3 | Bulgaria | cd | 2.9705 | 0.5449 | 3.2507 | 0.1392 |
+| b | t3 | Bulgaria | hot | 3.1421 | 0.4390 | 3.3349 | 0.0876 |
+| b | t3 | United_States | cd | 3.1391 | -0.0681 | 3.3078 | -0.0809 |
+| b | t3 | United_States | hot | 5.2011 | -0.0427 | 5.2735 | -0.0245 |
+| c | t1 | Bulgaria | cd | 1.1190 | -0.0264 | 0.8501 | -0.0431 |
+| c | t1 | Bulgaria | hot | 1.3481 | -0.0773 | 1.1091 | -0.0633 |
+| c | t1 | United_States | cd | 1.3618 | -0.0974 | 0.8919 | 0.0013 |
+| c | t1 | United_States | hot | 2.5193 | -0.1580 | 1.7334 | -0.0937 |
+| c | t2 | Bulgaria | cd | 0.8388 | -0.1161 | 0.6537 | 0.0004 |
+| c | t2 | Bulgaria | hot | 0.9615 | -0.1049 | 0.8813 | -0.0005 |
+| c | t2 | United_States | cd | 0.9138 | 0.0229 | 0.8352 | 0.1449 |
+| c | t2 | United_States | hot | 1.4902 | 0.0931 | 1.1586 | 0.1851 |
+| c | t3 | Bulgaria | cd | 1.1063 | 0.4114 | 0.7606 | 0.0819 |
+| c | t3 | Bulgaria | hot | 1.1176 | 0.4116 | 0.7693 | 0.1202 |
+| c | t3 | United_States | cd | 1.2848 | -0.0867 | 1.3399 | 0.0443 |
+| c | t3 | United_States | hot | 1.5561 | -0.1282 | 1.5514 | 0.0120 |
+| c2 | t1 | Bulgaria | cd | 0.9359 | 0.0633 | 0.8909 | -0.0286 |
+| c2 | t1 | Bulgaria | hot | 1.1500 | 0.0134 | 1.1361 | -0.0482 |
+| c2 | t1 | United_States | cd | 1.2087 | -0.1314 | 1.0143 | 0.0001 |
+| c2 | t1 | United_States | hot | 2.2751 | -0.1977 | 1.9114 | -0.0887 |
+| c2 | t2 | Bulgaria | cd | 0.6773 | -0.0411 | 0.6984 | 0.0083 |
+| c2 | t2 | Bulgaria | hot | 0.7816 | -0.0268 | 0.9206 | 0.0077 |
+| c2 | t2 | United_States | cd | 0.8167 | 0.0074 | 0.9154 | 0.1451 |
+| c2 | t2 | United_States | hot | 1.2473 | 0.0649 | 1.3084 | 0.1936 |
+| c2 | t3 | Bulgaria | cd | 1.0972 | 0.5015 | 0.7640 | 0.0714 |
+| c2 | t3 | Bulgaria | hot | 1.1088 | 0.5049 | 0.7770 | 0.1073 |
+| c2 | t3 | United_States | cd | 1.1391 | -0.1006 | 1.1298 | 0.0342 |
+| c2 | t3 | United_States | hot | 1.4030 | -0.1377 | 1.3495 | -0.0004 |
+
 ## Full tables [V]
 
 Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE = mean absolute error, bias = (sum predicted - sum truth) / sum truth, r = Pearson r, slope = slope of truth on prediction, coverage = share of rows with lo <= truth <= hi, MAPE = on rows with truth above 0 (information only).
@@ -129,6 +184,23 @@ Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE =
 | t3 | United_States | cd | q25 | 504 | 1.2848 | 12.3793 | -0.0867 | 0.9070 | 0.8476 | 0.9643 | 0.7737 | 0.9000 |
 | t3 | United_States | hot | q25 | 504 | 1.5561 | 27.5364 | -0.1282 | 0.8788 | 0.8821 | 0.9425 | 1.0801 | 0.9000 |
 
+### Pipeline A, level (c2) 50 km circle, overlap-weighted (information)
+
+| test | country | unit | grid | n | nrmse | mae | bias | r | slope | coverage | mape | band |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| t1 | Bulgaria | cd | q25 | 288 | 0.9359 | 7.5947 | 0.0633 | 0.9489 | 1.2281 | 1.0000 | 1.3745 | 0.9000 |
+| t1 | Bulgaria | hot | q25 | 288 | 1.1500 | 10.8418 | 0.0134 | 0.9560 | 1.3812 | 0.9931 | 1.5834 | 0.9000 |
+| t1 | United_States | cd | q25 | 672 | 1.2087 | 11.7125 | -0.1314 | 0.9281 | 1.0795 | 0.9509 | 0.8322 | 0.9000 |
+| t1 | United_States | hot | q25 | 672 | 2.2751 | 28.6338 | -0.1977 | 0.8913 | 1.4118 | 0.9301 | 1.0749 | 0.9000 |
+| t2 | Bulgaria | cd | q25 | 282 | 0.6773 | 8.5906 | -0.0411 | 0.9759 | 1.2007 | 0.9894 | 0.9792 | 0.9000 |
+| t2 | Bulgaria | hot | q25 | 282 | 0.7816 | 12.2265 | -0.0268 | 0.9760 | 1.2345 | 0.9894 | 1.1212 | 0.9000 |
+| t2 | United_States | cd | q25 | 658 | 0.8167 | 9.3013 | 0.0074 | 0.9600 | 1.0421 | 0.9666 | 0.9715 | 0.9000 |
+| t2 | United_States | hot | q25 | 658 | 1.2473 | 19.5470 | 0.0649 | 0.9371 | 0.9851 | 0.9544 | 1.4545 | 0.9000 |
+| t3 | Bulgaria | cd | q25 | 216 | 1.0972 | 6.2897 | 0.5015 | 0.7675 | 0.8013 | 0.9954 | 1.6164 | 0.9000 |
+| t3 | Bulgaria | hot | q25 | 216 | 1.1088 | 8.3170 | 0.5049 | 0.7921 | 0.8044 | 0.9907 | 1.8198 | 0.9000 |
+| t3 | United_States | cd | q25 | 504 | 1.1391 | 12.9623 | -0.1006 | 0.9223 | 0.9003 | 0.9663 | 0.8616 | 0.9000 |
+| t3 | United_States | hot | q25 | 504 | 1.4030 | 27.9454 | -0.1377 | 0.8999 | 0.9233 | 0.9405 | 1.3236 | 0.9000 |
+
 ### Pipeline B, level (a) country x month
 
 | test | country | unit | grid | n | nrmse | mae | bias | r | slope | coverage | mape | band |
@@ -179,6 +251,23 @@ Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE =
 | t3 | Bulgaria | hot | d10 | 216 | 0.7693 | 5.1802 | 0.1202 | 0.9051 | 0.7844 | 0.6574 | 0.9554 | 0.8000 |
 | t3 | United_States | cd | d10 | 504 | 1.3399 | 12.5084 | 0.0443 | 0.9246 | 0.7685 | 0.5813 | 0.7441 | 0.8000 |
 | t3 | United_States | hot | d10 | 504 | 1.5514 | 27.3188 | 0.0120 | 0.9015 | 0.7946 | 0.6270 | 1.0359 | 0.8000 |
+
+### Pipeline B, level (c2) 50 km circle, overlap-weighted (information)
+
+| test | country | unit | grid | n | nrmse | mae | bias | r | slope | coverage | mape | band |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| t1 | Bulgaria | cd | q25 | 288 | 0.8909 | 5.8633 | -0.0286 | 0.9417 | 1.0855 | 0.6319 | 0.7879 | 0.8000 |
+| t1 | Bulgaria | hot | q25 | 288 | 1.1361 | 8.6488 | -0.0482 | 0.9377 | 1.2307 | 0.6424 | 0.9392 | 0.8000 |
+| t1 | United_States | cd | q25 | 672 | 1.0143 | 11.3501 | 0.0001 | 0.9532 | 0.9025 | 0.5938 | 0.7607 | 0.8000 |
+| t1 | United_States | hot | q25 | 672 | 1.9114 | 28.1699 | -0.0887 | 0.9178 | 1.2615 | 0.6384 | 1.0027 | 0.8000 |
+| t2 | Bulgaria | cd | q25 | 282 | 0.6984 | 8.0367 | 0.0083 | 0.9636 | 1.1014 | 0.6560 | 0.7748 | 0.8000 |
+| t2 | Bulgaria | hot | q25 | 282 | 0.9206 | 12.2453 | 0.0077 | 0.9537 | 1.1895 | 0.7128 | 0.8352 | 0.8000 |
+| t2 | United_States | cd | q25 | 658 | 0.9154 | 10.5773 | 0.1451 | 0.9598 | 0.8743 | 0.6322 | 0.8862 | 0.8000 |
+| t2 | United_States | hot | q25 | 658 | 1.3084 | 22.6994 | 0.1936 | 0.9358 | 0.9156 | 0.6915 | 1.4385 | 0.8000 |
+| t3 | Bulgaria | cd | q25 | 216 | 0.7640 | 3.9015 | 0.0714 | 0.8809 | 0.8016 | 0.6435 | 0.8482 | 0.8000 |
+| t3 | Bulgaria | hot | q25 | 216 | 0.7770 | 5.2346 | 0.1073 | 0.8878 | 0.8216 | 0.6852 | 0.9631 | 0.8000 |
+| t3 | United_States | cd | q25 | 504 | 1.1298 | 12.2029 | 0.0342 | 0.9448 | 0.8070 | 0.5933 | 0.8005 | 0.8000 |
+| t3 | United_States | hot | q25 | 504 | 1.3495 | 27.1631 | -0.0004 | 0.9207 | 0.8406 | 0.6349 | 1.2358 | 0.8000 |
 
 ### Pipeline B, level (d) d10 cell x month (information)
 
