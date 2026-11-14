@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fetchWind, windGrid } from '../../src/lib/layers/wind';
+import { fetchWind, windGrid, windArrowRotation, windVector } from '../../src/lib/layers/wind';
 
 describe('wind grid and cache', () => {
   it('creates at most 25 points inside the view', () => {
@@ -20,5 +20,24 @@ describe('wind grid and cache', () => {
       await fetchWind(bounds, 3610001);
       expect(request).toHaveBeenCalledTimes(2);
     } finally { vi.unstubAllGlobals(); }
+  });
+});
+
+// Cardinal expectations supplied in the brief, independently of the implementation.
+describe('meteorological FROM direction becomes travel TO direction', () => {
+  it.each([
+    [270, 0, 12, 0],
+    [0, 90, 0, -12],
+    [90, 180, -12, 0],
+    [180, 270, 0, 12],
+  ])('from %s degrees', (from, rotation, east, north) => {
+    expect(windArrowRotation(from)).toBe(rotation);
+    expect(windVector(12, from).east).toBeCloseTo(east, 10);
+    expect(windVector(12, from).north).toBeCloseTo(north, 10);
+  });
+  it('normalizes equivalent angles and leaves calm wind still', () => {
+    expect(windArrowRotation(-90)).toBe(0);
+    expect(windArrowRotation(630)).toBe(0);
+    expect(Math.hypot(...Object.values(windVector(0, 270)))).toBe(0);
   });
 });

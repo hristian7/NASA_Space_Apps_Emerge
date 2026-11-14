@@ -1,3 +1,14 @@
+/** Clockwise CSS rotation for a right-facing glyph, from meteorological FROM degrees. */
+export function windArrowRotation(direction: number): number {
+  return ((direction + 90) % 360 + 360) % 360;
+}
+
+/** East/north components in km/h, pointing where the wind blows TO. */
+export function windVector(speed: number, direction: number): { east: number; north: number } {
+  const radians = direction * Math.PI / 180;
+  return { east: -speed * Math.sin(radians), north: -speed * Math.cos(radians) };
+}
+
 /** A coarse, bounded grid for one Open-Meteo request. */
 export type Bounds = { west: number; south: number; east: number; north: number };
 export type WindPoint = { lat: number; lon: number; speed: number; direction: number; time: string };

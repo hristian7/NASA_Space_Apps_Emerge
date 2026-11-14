@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { Map as MapLibreMap, Marker } from 'maplibre-gl';
-import { fetchWind, type Bounds } from '@/lib/layers/wind';
+import { fetchWind, windArrowRotation, type Bounds } from '@/lib/layers/wind';
 
 /** Keeps wind markers in a separate integration so raster rendering stays generic. */
 export function useWindLayer(map: React.RefObject<MapLibreMap | null>, ready: boolean, on: boolean) {
@@ -25,9 +25,11 @@ export function useWindLayer(map: React.RefObject<MapLibreMap | null>, ready: bo
         markers = points.map(point => {
           const el = document.createElement('div');
           el.textContent = '➤';
+          el.dataset.windArrow = '';
+          el.dataset.direction = String(point.direction);
           el.title = `${point.speed} km/h`;
-          el.style.cssText = `color:#fff;text-shadow:0 0 3px #000;font-size:20px;transform:rotate(${point.direction + 90}deg)`;
-          return new maplibre.Marker({ element: el }).setLngLat([point.lon, point.lat]).addTo(instance);
+          el.style.cssText = `color:#fff;text-shadow:0 0 3px #000;font-size:20px`;
+          return new maplibre.Marker({ element: el, rotation: windArrowRotation(point.direction), rotationAlignment: 'map' }).setLngLat([point.lon, point.lat]).addTo(instance);
         });
         status('ready', points[0].time);
       } catch {
