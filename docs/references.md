@@ -29,6 +29,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | d3-scale | Scales for the custom SVG calendar and charts | https://d3js.org/d3-scale | ISC |
 | Vitest | Unit tests | https://vitest.dev | MIT |
 | Playwright | End to end tests | https://playwright.dev | Apache-2.0 |
+| hyparquet with hyparquet-compressors | Reading the public hotspot files by area in the download route | https://github.com/hyparam/hyparquet | MIT |
 | NASA GIBS imagery services | Base maps: Blue Marble and Black Marble | https://nasa-gibs.github.io/gibs-api-docs/ | NASA open data |
 
 ## Licence text
