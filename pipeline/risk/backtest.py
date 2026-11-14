@@ -62,7 +62,7 @@ def bootstrap(rows, year, methods):
         differences = (drawn[valid, model_index] - drawn[valid, index]) / drawn[valid, 0]
         actual = ratio(totals[:, model_index].sum() - totals[:, index].sum(), totals[:, 0].sum())
         low, high = (np.quantile(differences, [0.025, 0.975]).tolist() if len(differences) else (None, None))
-        result[method] = {'difference': actual, 'interval_95': [low, high],
+        result[method] = {'difference': actual, 'interval_95': [low, high], 'valid_draws': int(valid.sum()),
                           'bootstrap_passed': bool(actual is not None and actual > 0 and low is not None and low > 0), 'claim_permitted': False}
     return result
 
