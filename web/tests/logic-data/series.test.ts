@@ -14,16 +14,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { Selection } from '../../src/types/ui';
 import type { MetaFile } from '../../src/types/data';
-import {
-  DataSource,
-  type Fetcher,
-} from '../../src/lib/data/source';
-import { nodeGunzip } from '../../src/lib/data/source.node';
 import { monthIndex } from '../../src/lib/data/cell';
 import { loadMeta } from '../../src/lib/data/loaders';
 import { getPerSatellite, getReported, getSeries, isNoDataMonth } from '../../src/lib/data/series';
 import { backgroundStatus } from '../../src/lib/data/background';
-import { DATA_DIR, REPO_ROOT, testSource } from './helpers';
+import { REPO_ROOT, patchedSource, testSource } from './helpers';
 
 const source = testSource();
 
@@ -311,29 +306,3 @@ describe('the background before February 2012', () => {
     expect(series.months.find((point) => point.y === 2000 && point.m === 12)?.value).toBe(0);
   });
 });
-
-/** A source that answers from the given objects first and from disk otherwise. */
-function patchedSource(overrides: Record<string, unknown>): DataSource {
-  const encoder = new TextEncoder();
-  const fetcher: Fetcher = async (url: string) => {
-    for (const [path_, value] of Object.entries(overrides)) {
-      if (url === `${DATA_DIR}/${path_}`) return encoder.encode(JSON.stringify(value));
-    }
-    if (url === `${DATA_DIR}/background.json` && !('background.json' in overrides)) return null;
-    const { readFile } = await import('node:fs/promises');
-    try {
-      const bytes = await readFile(url);
-      return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    } catch {
-      return null;
-    }
-  };
-  return new DataSource({
-    basePath: DATA_DIR,
-    fetcher,
-    gunzip: async (bytes: Uint8Array) => {
-      if (bytes[0] === 0x1f && bytes[1] === 0x8b) return nodeGunzip(bytes);
-      return bytes;
-    },
-  });
-}

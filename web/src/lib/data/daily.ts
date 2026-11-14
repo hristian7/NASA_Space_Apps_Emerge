@@ -19,10 +19,26 @@ import { DataError, DataSource } from './source';
 import { loadDailyTiles, loadMeta } from './loaders';
 import { selectionCells, tilesForSelection, type WeightedCell } from './selection';
 
+/** One year's window of days, as calendar dates. */
+export interface WindowDates {
+  /** The year that labels the window: the year of its last day. */
+  label: number;
+  /** First day, as YYYY-MM-DD. */
+  start: string;
+  /** Last day, as YYYY-MM-DD. */
+  end: string;
+  /** Every day of the window, ascending, exactly `days` of them. */
+  days: string[];
+  /** True for a year before 2012, where the numbers are converted. */
+  estimated: boolean;
+}
+
 /** Everything section 6 needs before the ranking. */
 export interface WindowTotals {
   /** Length of the window in days. */
   days: number;
+  /** First day of the current window, as YYYY-MM-DD. */
+  start: string;
   /** Last day of the window, as YYYY-MM-DD. */
   end: string;
   /** The year that labels the current window: the year of its last day. */
@@ -209,6 +225,26 @@ function windowDates(end: YMD, days: number): YMD[] {
   return dates;
 }
 
+/**
+ * The window of one year, from the current window's end date (section 9,
+ * ruling 5): the `days` consecutive days ending on the same month and day,
+ * with 29 February falling back to 28 February in a year without one. The
+ * label is the year of the last day, so a window crossing 1 January is
+ * labelled by the later year (ruling 6).
+ */
+export function pastWindow(currentEnd: string, days: number, labelYear: number): WindowDates {
+  const end = parseDate(currentEnd);
+  const yearEnd = sameDayInYear(end.m, end.d, labelYear);
+  const dates = windowDates(yearEnd, days);
+  return {
+    label: labelYear,
+    start: toIso(dates[0]),
+    end: toIso(dates[dates.length - 1]),
+    days: dates.map(toIso),
+    estimated: labelYear < 2012,
+  };
+}
+
 function asWindowYear(
   labelYear: number,
   totals: { hot: number; frp: number } | null,
@@ -248,16 +284,16 @@ export async function getWindowTotals(
 
   const end = parseDate(meta.last_data_day);
   const currentYear = end.y;
+  const current = pastWindow(meta.last_data_day, length, currentYear);
   const years: WindowYear[] = [];
   if (input.hasCells) {
     for (const labelYear of windowYears(meta)) {
-      const yearEnd = sameDayInYear(end.m, end.d, labelYear);
-      const dates = windowDates(yearEnd, length);
+      const dates = pastWindow(meta.last_data_day, length, labelYear).days.map(parseDate);
       years.push(asWindowYear(labelYear, sumDays(input, labelYear, dates)));
     }
   }
 
-  return { days: length, end: meta.last_data_day, currentYear, years };
+  return { days: length, start: current.start, end: meta.last_data_day, currentYear, years };
 }
 
 /**

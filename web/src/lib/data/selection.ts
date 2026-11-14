@@ -54,6 +54,10 @@ export interface SelectionCells {
   cells: WeightedCell[];
   /** True when the selection is smaller than one grid cell (section 1). */
   lowConfidence: boolean;
+  /** Weights added up as returned, so 1 exactly after the small-selection rule. */
+  totalWeight: number;
+  /** Weights added up before the small-selection rule, which is what that rule tests. */
+  rawTotalWeight: number;
 }
 
 /** A selection's extent. Longitude is held as ranges, so a wrap is explicit. */
@@ -297,9 +301,10 @@ function candidateCells(bounds: SelectionBounds): number[] {
  * A country selection has no cells: its own file is used as it is.
  */
 export function selectionCells(selection: Selection): SelectionCells {
-  if (selection.kind === 'country') return { cells: [], lowConfidence: false };
+  const empty = { cells: [], lowConfidence: false, totalWeight: 0, rawTotalWeight: 0 };
+  if (selection.kind === 'country') return empty;
   const bounds = selectionBounds(selection);
-  if (!bounds) return { cells: [], lowConfidence: false };
+  if (!bounds) return empty;
 
   const cells: WeightedCell[] = [];
   let total = 0;
@@ -313,13 +318,20 @@ export function selectionCells(selection: Selection): SelectionCells {
 
   if (total < 1) {
     const only = containingCellId(selection);
-    if (only === null) return { cells: [], lowConfidence: true };
+    if (only === null) {
+      return { cells: [], lowConfidence: true, totalWeight: 0, rawTotalWeight: total };
+    }
     const { lat, lon } = cellCenterOf(only);
-    return { cells: [{ id: only, weight: 1, lat, lon }], lowConfidence: true };
+    return {
+      cells: [{ id: only, weight: 1, lat, lon }],
+      lowConfidence: true,
+      totalWeight: 1,
+      rawTotalWeight: total,
+    };
   }
 
   cells.sort((a, b) => a.id - b.id);
-  return { cells, lowConfidence: false };
+  return { cells, lowConfidence: false, totalWeight: total, rawTotalWeight: total };
 }
 
 /**
