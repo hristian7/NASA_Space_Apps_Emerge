@@ -33,3 +33,4 @@ web/*.tsbuildinfo
 
 # Written by the framework on every dev and build run
 web/next-env.d.ts
+fire-links/
