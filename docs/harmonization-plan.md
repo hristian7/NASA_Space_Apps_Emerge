@@ -1,6 +1,8 @@
 # Harmonization plan: turning MODIS ("low resolution") into VIIRS-level ("high resolution") fire data
 
-Written 14 Nov 2026. This is the plan for feature **M1**. How we prove it works: [`verification-plan.md`](verification-plan.md).
+Written 14 Nov 2026.
+
+> **Superseded on 14 Nov by [`conversion-plan.md`](conversion-plan.md)**, a research-based plan with corrections: harmonize monthly on NASA's 0.25° grid (not daily at 1 km), pair Aqua with VIIRS, handle Terra separately, and calibrate within 2012–2022 because of MODIS drift. This is the plan for feature **M1**. How we prove it works: [`verification-plan.md`](verification-plan.md).
 
 ## The idea in one paragraph
 
