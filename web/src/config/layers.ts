@@ -63,6 +63,37 @@ export type LayerLoader =
       status: 'none';
     };
 
+/** How a layer's legend is drawn. */
+export type LayerLegend =
+  /** A sequential ramp from the look tokens, with the class breaks beside it. */
+  | { kind: 'ramp' }
+  /** Fixed classes the provider itself draws, each with its own colour. */
+  | { kind: 'classes' }
+  /** Points sized by a measurement, explained in words. */
+  | { kind: 'points' };
+
+/**
+ * What the layer panel needs in order to list a layer. A layer without this
+ * block exists in the registry but is not offered on screen, which is how a
+ * layer can be declared before its panel wording is written.
+ */
+export interface LayerPanelInfo {
+  /** Where it sits in the panel, lowest first. */
+  order: number;
+  /** Key under the `layers` namespace for the one-line explanation. */
+  explainKey: string;
+  /** Key under the `layers` namespace for the line about the data's time. */
+  timeKey: string;
+  /** Which control sits under the switch. */
+  control: 'history_year' | 'recent_window' | 'danger_day' | 'none';
+  legend: LayerLegend;
+  defaultOn: boolean;
+  /** Short key this layer uses in the address bar. */
+  urlKey: string;
+  /** true when the project disclaimer must be visible while the layer is on. */
+  showsDisclaimer?: boolean;
+}
+
 export interface LayerDefinition {
   id: string;
   /** Key in the message files, under the `layers` namespace. */
@@ -80,6 +111,8 @@ export interface LayerDefinition {
    * false means it still has to be checked.
    */
   verified: boolean;
+  /** Present when the layer is offered in the layer panel. */
+  panel?: LayerPanelInfo;
 }
 
 export const LAYERS: readonly LayerDefinition[] = [
@@ -102,6 +135,15 @@ export const LAYERS: readonly LayerDefinition[] = [
     credit: 'NASA FIRMS (MODIS and VIIRS active fire data), harmonized by this project',
     loader: { status: 'built', module: 'lib/data/api', fn: 'getSeries' },
     verified: true,
+    panel: {
+      order: 1,
+      explainKey: 'layers.harmonizedHistoryExplain',
+      timeKey: 'layers.harmonizedHistoryTime',
+      control: 'history_year',
+      legend: { kind: 'ramp' },
+      defaultOn: true,
+      urlKey: 'h',
+    },
   },
   {
     id: 'recent-fires',
@@ -109,13 +151,19 @@ export const LAYERS: readonly LayerDefinition[] = [
     kind: 'detections',
     units: ['hot'],
     timeStep: 'day',
-    source: { kind: 'api_route', path: '/api/hotspots' },
-    credit: 'NASA FIRMS, via the public active fire archive (CC0-1.0)',
-    loader: {
-      status: 'not_built',
-      note: 'needs the hotspots route that reads only the blocks overlapping the selection',
+    source: { kind: 'api_route', path: '/api/recent' },
+    credit: 'NASA FIRMS near-real-time active fire data (MODIS and VIIRS)',
+    loader: { status: 'built', module: 'lib/layers/recent', fn: 'compactRecent' },
+    verified: true,
+    panel: {
+      order: 2,
+      explainKey: 'layers.recentFiresExplain',
+      timeKey: 'layers.recentFiresTime',
+      control: 'recent_window',
+      legend: { kind: 'points' },
+      defaultOn: false,
+      urlKey: 'r',
     },
-    verified: false,
   },
   {
     id: 'fire-danger',
@@ -130,9 +178,20 @@ export const LAYERS: readonly LayerDefinition[] = [
       tileSize: 256,
       firstDate: '2018-01-01',
     },
-    credit: 'Copernicus Emergency Management Service, Global Wildfire Information System',
+    credit:
+      'Copernicus GWIS (EFFIS), licence under review',
     loader: { status: 'none' },
     verified: true,
+    panel: {
+      order: 3,
+      explainKey: 'layers.fireDangerExplain',
+      timeKey: 'layers.fireDangerTime',
+      control: 'danger_day',
+      legend: { kind: 'classes' },
+      defaultOn: false,
+      urlKey: 'd',
+      showsDisclaimer: true,
+    },
   },
 ];
 

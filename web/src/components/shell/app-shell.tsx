@@ -8,12 +8,16 @@ import ViewSettings from "@/components/map/view-settings";
 import SelectionTools from "@/components/selection/selection-tools";
 import MenuPanel from "@/components/ui/menu-panel";
 import { defaultBasemapId } from "@/config/basemaps";
+import { useLayers } from "@/lib/layers/use-layers";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
+import LayerPanel from "./layer-panel";
 import ReportPanel from "./report-panel";
 import TopBar from "./top-bar";
 
 const sheetHeights = ["peek", "half", "full"] as const;
 const defaultRadiusKm = 50;
+/** A tapped detection is looked at with a 10 km search distance (M27). */
+const recentRadiusKm = 10;
 
 export default function AppShell() {
   const t = useTranslations("shell");
@@ -51,6 +55,18 @@ export default function AppShell() {
     [apply, radiusKm],
   );
 
+  const layers = useLayers();
+
+  // Tapping a recent fire looks at that spot rather than wherever the search
+  // distance happened to be left.
+  const pickRecent = useCallback(
+    (lat: number, lon: number) => {
+      setRadiusKm(recentRadiusKm);
+      apply({ kind: "point", lat, lon, radiusKm: recentRadiusKm });
+    },
+    [apply],
+  );
+
   const changeRadius = useCallback(
     (km: number) => {
       setRadiusKm(km);
@@ -83,7 +99,11 @@ export default function AppShell() {
         basemapId={basemapId}
         projection={projection}
         drawing={drawing}
+        historyCells={layers.historyCells}
+        recentPoints={layers.recentPoints}
+        dangerDate={layers.dangerDate}
         onPickPoint={pickPoint}
+        onPickRecent={pickRecent}
         onDrawArea={(ring) => apply({ kind: "polygon", ring: closeRing(ring) })}
         onDrawingEnd={() => setDrawing(false)}
       />
@@ -137,6 +157,20 @@ export default function AppShell() {
           />
         </MenuPanel>
       ) : null}
+
+      <LayerPanel
+        state={layers.state}
+        lastMonth={layers.lastMonth}
+        historyStatus={layers.historyStatus}
+        historyCellCount={layers.historyCells.length}
+        recentStatus={layers.recentStatus}
+        recent={layers.recent}
+        covered={menu !== null}
+        onToggle={layers.toggle}
+        onYear={layers.setYear}
+        onWindow={layers.setWindow}
+        onDay={layers.setDay}
+      />
 
       <ReportPanel selection={selection} onCycleHeight={cycleSheet} />
     </>

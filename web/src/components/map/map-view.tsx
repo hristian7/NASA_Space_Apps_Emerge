@@ -6,6 +6,7 @@ import type { TerraDraw } from "terra-draw";
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
+import { layer as layerById, layerUrl } from "@/config/layers";
 import {
   emptyFeatures,
   ringBounds,
@@ -13,6 +14,15 @@ import {
   selectionFeatures,
   zoomForRadius,
 } from "@/lib/ui/geo";
+import {
+  historyRampTokens,
+} from "@/lib/layers/history";
+import {
+  rgbaFrom,
+  recentRadiusPx,
+  type HistoryCell,
+  type RecentPoint,
+} from "@/lib/layers/overlay";
 import { tokenColor } from "@/lib/ui/token-color";
 
 export type Projection = "globe" | "mercator";
@@ -22,7 +32,14 @@ type Props = {
   basemapId: string;
   projection: Projection;
   drawing: boolean;
+  /** Cells of the chosen history year, already classed. Empty when the layer is off. */
+  historyCells: HistoryCell[];
+  /** Recent detections. Empty when the layer is off. */
+  recentPoints: RecentPoint[];
+  /** The day the fire danger tiles show, or null when that layer is off. */
+  dangerDate: string | null;
   onPickPoint: (lat: number, lon: number) => void;
+  onPickRecent: (lat: number, lon: number) => void;
   onDrawArea: (ring: [lon: number, lat: number][]) => void;
   onDrawingEnd: () => void;
 };
@@ -32,6 +49,8 @@ const selectionSource = "emerge-selection";
 const fillLayer = "emerge-selection-fill";
 const lineLayer = "emerge-selection-line";
 const pointLayer = "emerge-selection-point";
+const dangerSource = "emerge-danger";
+const dangerLayer = "emerge-danger-tiles";
 
 function rasterStyle(id: string): StyleSpecification | string {
   const basemap = getBasemap(id) ?? getBasemap(defaultBasemapId) ?? basemaps[0];
@@ -83,12 +102,24 @@ function frameSelection(instance: MapLibreMap, selection: Selection | null): voi
   }
 }
 
+/** The tile source for one day of fire danger, or nothing when it is off. */
+function dangerTiles(date: string | null): string | null {
+  if (date === null) return null;
+  const definition = layerById("fire-danger");
+  if (definition === undefined) return null;
+  return layerUrl(definition.source, date);
+}
+
 export default function MapView({
   selection,
   basemapId,
   projection,
   drawing,
+  historyCells,
+  recentPoints,
+  dangerDate,
   onPickPoint,
+  onPickRecent,
   onDrawArea,
   onDrawingEnd,
 }: Props) {
@@ -100,6 +131,15 @@ export default function MapView({
   const draw = useRef<TerraDraw | null>(null);
   const cleanUp = useRef<(() => void) | null>(null);
   const [failed, setFailed] = useState(false);
+  const [ready, setReady] = useState(false);
+  const overlay = useRef<{ setProps: (props: { layers: unknown[] }) => void } | null>(null);
+  const pickRecent = useRef(onPickRecent);
+  pickRecent.current = onPickRecent;
+  // The danger date is read inside the map's own style listener, which is not
+  // rebuilt when a prop changes.
+  const danger = useRef(dangerDate);
+  danger.current = dangerDate;
+  const paintDangerRef = useRef<(() => void) | null>(null);
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
@@ -197,6 +237,43 @@ export default function MapView({
           source?.setData(selectionFeatures(current.current));
         };
 
+        // A new style wipes every source, so the tiles are put back the same
+        // way the selection is.
+        const paintDanger = () => {
+          const tiles = dangerTiles(danger.current);
+          if (tiles === null) {
+            if (instance.getLayer(dangerLayer) !== undefined) instance.removeLayer(dangerLayer);
+            if (instance.getSource(dangerSource) !== undefined) instance.removeSource(dangerSource);
+            return;
+          }
+          const definition = layerById("fire-danger");
+          if (instance.getSource(dangerSource) === undefined) {
+            instance.addSource(dangerSource, {
+              type: "raster",
+              tiles: [tiles],
+              tileSize:
+                definition?.source.kind === "tile_template" ? definition.source.tileSize : 256,
+              attribution: definition?.credit ?? "",
+            });
+          }
+          if (instance.getLayer(dangerLayer) === undefined) {
+            // Under the selection outline, so the chosen place stays readable.
+            const below = instance.getLayer(fillLayer) === undefined ? undefined : fillLayer;
+            instance.addLayer(
+              {
+                id: dangerLayer,
+                type: "raster",
+                source: dangerSource,
+                // Light enough that the coastline under it stays readable:
+                // the index's lowest class covers most of the world.
+                paint: { "raster-opacity": 0.42 },
+              },
+              below,
+            );
+          }
+        };
+        paintDangerRef.current = paintDanger;
+
         // The report panel covers part of the map, so the camera is told how
         // much room it really has. A phone's sheet changes height, hence the
         // observer rather than a one-off measurement.
@@ -235,14 +312,17 @@ export default function MapView({
           instance.setProjection({ type: projection });
           applyPadding();
           paintSelection();
+          paintDanger();
           // A selection read from the address bar is already set by now.
           frameSelection(instance, current.current);
+          setReady(true);
         });
 
         // A new style drops every source and layer, so they are put back.
         instance.on("style.load", () => {
           instance.setProjection({ type: projection });
           paintSelection();
+          paintDanger();
         });
 
         instance.on("click", (event) => {
@@ -289,6 +369,86 @@ export default function MapView({
     source?.setData(selectionFeatures(selection));
     frameSelection(instance, selection);
   }, [selection]);
+
+  // Fire danger: the day changed, so the old tiles go and the new ones come.
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null || !ready) return;
+    if (instance.getLayer(dangerLayer) !== undefined) instance.removeLayer(dangerLayer);
+    if (instance.getSource(dangerSource) !== undefined) instance.removeSource(dangerSource);
+    paintDangerRef.current?.();
+  }, [dangerDate, ready]);
+
+  // History cells and recent detections, drawn over the map by deck.gl.
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null || !ready) return;
+    let cancelled = false;
+
+    (async () => {
+      const [{ MapboxOverlay }, { PolygonLayer, ScatterplotLayer }] = await Promise.all([
+        import("@deck.gl/mapbox"),
+        import("@deck.gl/layers"),
+      ]);
+      if (cancelled || map.current === null) return;
+
+      const ramp = historyRampTokens.map((token) => rgbaFrom(tokenColor(token), 170));
+      const edge = rgbaFrom(tokenColor("--ramp-3"), 90);
+      const dot = rgbaFrom(tokenColor("--accent"), 230);
+      const hot = rgbaFrom(tokenColor("--ramp-3"), 240);
+
+      const layers: unknown[] = [];
+      if (historyCells.length > 0) {
+        layers.push(
+          new PolygonLayer<HistoryCell>({
+            id: "emerge-history",
+            data: historyCells,
+            getPolygon: (cell) => cell.polygon,
+            getFillColor: (cell) => ramp[cell.klass] ?? ramp[0],
+            getLineColor: edge,
+            lineWidthMinPixels: 0,
+            stroked: false,
+            filled: true,
+            pickable: false,
+            updateTriggers: { getFillColor: [historyCells.length] },
+          }),
+        );
+      }
+      if (recentPoints.length > 0) {
+        layers.push(
+          new ScatterplotLayer<RecentPoint>({
+            id: "emerge-recent",
+            data: recentPoints,
+            getPosition: (point) => point.position,
+            getRadius: (point) => recentRadiusPx(point.frp),
+            radiusUnits: "pixels",
+            radiusMinPixels: 2,
+            getFillColor: (point) => (point.conf === 1 ? hot : dot),
+            stroked: false,
+            pickable: true,
+            onClick: (info: { object?: RecentPoint }) => {
+              const point = info.object;
+              if (point === undefined) return false;
+              pickRecent.current(point.position[1], point.position[0]);
+              return true;
+            },
+          }),
+        );
+      }
+
+      if (overlay.current === null) {
+        const control = new MapboxOverlay({ interleaved: false, layers: layers as never[] });
+        overlay.current = control as unknown as { setProps: (props: { layers: unknown[] }) => void };
+        instance.addControl(control as never);
+      } else {
+        overlay.current.setProps({ layers });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [historyCells, recentPoints, ready]);
 
   useEffect(() => {
     const instance = map.current;
