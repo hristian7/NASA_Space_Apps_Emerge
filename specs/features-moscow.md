@@ -12,7 +12,7 @@
 
 **Team choices (14 Nov):**
 - All Musts and all Shoulds, plus push alerts (moved up from Could to Should, now **S11**). Hosting is Vercel.
-- **Suggestion 2 merged (evening):** [`features-moscow-suggestion-2.md`](features-moscow-suggestion-2.md) adds M16–M26, C7 and C8, and widens M3, M4 and M11. Its numbering is kept.
+- **Suggestion 2 merged (evening):** [`features-moscow-suggestion-2.md`](features-moscow-suggestion-2.md) adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
 - **Every item on NASA's challenge page is a Must (evening):** added M27 and M28, and widened M3, M4, M5 and M11. The checklist is in [`specification.md`](specification.md), section 2 ("Challenge-page checklist").
 
 Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](interview-answers.md)) and updated the same day. The research files are linked where a feature depends on them. The build details are in [`specification.md`](specification.md).
@@ -31,10 +31,10 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M1 | **Harmonized fire history** | The core of the NASA challenge. The older MODIS sensor saw fewer fires than the newer VIIRS sensor. We learn the difference from the years both flew and convert the old years, so 2000 to today becomes one fair record. Every converted number carries an error range. Plans: [`../docs/conversion-plan.md`](../docs/conversion-plan.md), [`../docs/harmonization-pipeline-plan.md`](../docs/harmonization-pipeline-plan.md) | L |
 | M2 | **Data ready in advance: whole world** | We download and process NASA fire data for the whole world **before the demo**, so the app shows data straight away. Only real vegetation fires are kept; daily and monthly totals are pre-computed. Size: 43.5 GB of yearly country files `[V]`, done on 14 Nov: [`../docs/research/first-run-bulgaria-usa.md`](../docs/research/first-run-bulgaria-usa.md) | M |
 | M14 | **Worldwide coverage** | Any place on Earth. Built from NASA's global FIRMS files, prepared in advance (M2). Ready-made burned-area grids were ruled out because they measure something different ([`../docs/research/data-sources-fire.md`](../docs/research/data-sources-fire.md)) | M–L |
-| M18 | **Point + radius, or an area** | Only two ways to choose a place. (1) **A point plus a radius:** everything within that distance, measured on the Earth's curved surface (a "geodesic" distance filter), not a drawn circle polygon, which would have jagged edges. A plain point is just a radius of 0. (2) **An area (polygon):** drawn by the user, or ready-made, such as a country border | M–L |
-| M3 | **Pick a place** | Uses M18: tap a point and set a radius, **type a latitude and longitude** (NASA's brief suggests it), draw an area, or pick a country. The calendar, charts, table and export follow that selection. If no fires were recorded there, the app says so instead of showing an empty chart | M |
+| M18 | **Points-only data model** | Every kind of data is stored and fetched as **points**, never as shapes. Each point has a `precision-radius`: how sharp that measurement is (about 1 km for MODIS, 375 m for VIIRS). Our harmonized monthly values are points too, at the centre of each grid square, with a precision-radius about the size of the square. Shapes (heat maps, region totals) are only drawn **after** fetching, for display | M |
+| M3 | **Pick a place** | Choose by **a point plus a search distance** (tap the map, or **type a latitude and longitude**, which NASA's brief suggests), or by **an area**: drawn, or ready-made like a country. The search distance is measured along the Earth's curved surface. Whatever the choice, the result is always points (M18). The calendar, charts, table and export follow that selection. If no fires were recorded there, the app says so instead of showing an empty chart | M |
 | M19 | **"No data" is not "zero"** | The app tells apart "measured, and no fire was seen" (zero) and "no measurement was made" (no data: before Nov 2000, or a satellite gap), and shows them differently | S |
-| M20 | **Each data type sits on a point or an area** | Every kind of data (fire, temperature, wind, humidity…) belongs either to a **point** (one raw measurement, like a single fire detection) or to an **area** (a total for a grid square or region). One place can carry several data types at once, for example fire and temperature | S |
+| M20 | **Several data types per point** | Every kind of data (fire, temperature, wind, humidity…) is stored as a point measurement, and one point can carry several at once, for example fire and temperature | S |
 | M21 | **Get simple data** | For the selected place and time range, from today back to the start of MODIS and VIIRS: show one data type as raw rows, as a table, or on the map | M |
 | M22 | **Get combined data** | The same, for several data types together, for example harmonized fire counts plus fire intensity plus official fire danger for one place and time range | M |
 
@@ -42,9 +42,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 
 | # | Feature | What it is (plain language) | Effort |
 |---|---|---|---|
-| M16 | **Several base maps** | The background map can be switched, 2D or 3D: NASA satellite imagery (day and night) and OpenStreetMap at least | S |
 | M25 | **Room for more base maps** | Built so new base maps can be added later without redesigning the app (a simple list of map sources) | S |
-| M17 | **Several data layers** | Different kinds of data can be shown and used: MODIS, VIIRS, the harmonized record, recent fires, fire danger, and later temperature, wind and more | M |
 | M26 | **Room for more data layers** | Built so new data layers can be added later without redesigning the app (each layer described once: what it is, point or area, units, source, time step) | S–M |
 
 ### What users see and do
@@ -88,6 +86,8 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | C5 | **Time-lapse animation** | Play 25 years of fires on the globe. Great for the demo video | S–M |
 | C6 | **Bulgarian regions view** | Statistics per Bulgarian province (oblast) for local crews | S |
 | C7 | **More base maps, actually added** | Offer more base maps than NASA and OpenStreetMap, not just room for them (M25) | S |
+| C9 | **Several base maps** (was M16) | Switch the background, 2D or 3D: NASA imagery, OpenStreetMap and others. The layer menu (S6) already switches NASA day and night views | S |
+| C10 | **Several data layers** (was M17) | Show and use different kinds of data: MODIS, VIIRS, temperature, wind and more | M |
 | C8 | **More data layers, actually added** | Add layers beyond fire, such as temperature, wind, humidity and drought, not just room for them (M26) | M–L |
 
 ## Won't have this weekend
@@ -103,12 +103,14 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 ## Build order and cuts `[U]`
 
 - **Before building:** freeze the data contract and run four short risk tests (see [`specification.md`](specification.md), sections 7 and 8).
-- **First, the core:** M2, M14, M18–M20 (selection and data model), M16–M17 and M25–M26 (map and layers), then M1, M3–M6, M11, M13, M27, M28 and the rest of the Musts.
+- **First, the core:** M2, M14, M18–M20 (data model), M25–M26 (room for more maps and layers), then M1, M3–M6, M11, M13, M27, M28 and the rest of the Musts.
 - **Then the Shoulds, in this order:** S6 → S1 → S5 → S3 → S11 → S10 → S9 → S8.
-- **Scope check:** suggestion 2 adds about 12–18 hours of work `[U]`. Push alerts are the biggest Should, at about 6–10 hours `[U]`.
-- **First to cut if late:**
-  1. S8;
-  2. S9;
-  3. drawn areas in M18 (keep point + radius and countries);
-  4. M22 combined data (keep simple data);
-  5. globe polish (the 2D map stays as the fallback).
+- **Scope check:** suggestion 2 and the challenge-page items add about 15–22 hours of work `[U]`, spread across six parallel streams ([`specification.md`](specification.md), section 7). Push alerts are the biggest Should, at about 6–10 hours `[U]`.
+- **First to cut if late, in order:**
+  1. S8 advice;
+  2. S9 intensity;
+  3. M22 combined data (keep simple data);
+  4. globe polish (the 2D map stays as the fallback);
+  5. push alerts, replaced by an in-app banner;
+  6. the raw-hotspots download, limited to Bulgaria and the USA.
+- **Never cut:** drawn areas and the latitude/longitude box (NASA's challenge page names them), and anything in the challenge-page checklist.

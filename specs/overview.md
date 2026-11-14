@@ -20,7 +20,7 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 
 **Making the record fair:**
 1. We count hotspots, and also **fire days per small square**, which removes part of the instrument difference.
-2. Both instruments flew together from 2012 to 2025. From those years we learn how MODIS numbers relate to VIIRS numbers, per region, land type and month.
+2. Both instruments flew together from 2012. From the years they overlap, we learn how MODIS numbers relate to VIIRS numbers, per region, land type and month.
 3. We convert the MODIS-only years (2000–2011) into **"what VIIRS would have seen"**, with an honest error range on every number.
 4. We test it on years it never learned from, and publish the results.
 
@@ -28,8 +28,8 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 
 | Feature | What it does |
 |---|---|
-| **3D globe or 2D map** | NASA satellite or street background; switch data layers on and off |
-| **Choose a place** | Tap a point and set a radius, type latitude/longitude, draw an area, or pick a country. "No data" is shown differently from "zero fires" |
+| **3D globe or 2D map** | NASA satellite background, day or night; switch layers on and off |
+| **Choose a place** | A point plus a search distance (tap or type latitude/longitude), a drawn area, or a country. "No data" is shown differently from "zero fires" |
 | **Choose dates** | Any range from Nov 2000 to today |
 | **Fire calendar** | Years × months showing the number of hotspots, coloured so the worst months and years stand out |
 | **"Is this unusual?"** | This month vs the median and the average for the same month in past years |
@@ -50,7 +50,7 @@ A free website and phone app that turns 25 years of NASA fire data into **one fa
 | Fire hot spots, VIIRS | NASA FIRMS, 375 m (S-NPP, NOAA-20, NOAA-21 satellites) | 2012 → now |
 | 2026 hot spots | firms-catalog, a free online copy of NASA FIRMS | up to today `[V]` |
 | Last 24 hours | NASA FIRMS free daily files | live |
-| Fire-danger forecast | Copernicus GWIS fire weather index (EU) | next 9 days |
+| Fire-danger forecast | Copernicus GWIS fire weather index (EU service, worldwide) | next 9 days |
 | USA outlook | NIFC (US interagency fire centre) | next 4 months |
 | Background maps | NASA GIBS (Blue Marble by day, Black Marble at night) | — |
 | Outside checks | EFFIS (Bulgaria), NIFC statistics (USA), NASA MODIS burned-area maps | various |

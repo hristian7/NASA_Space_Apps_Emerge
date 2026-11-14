@@ -32,29 +32,27 @@ Every term is explained in plain language, in **English and Bulgarian**.
 
 ## 2. Scope: what is built
 
-All Musts and Shoulds from [`features-moscow.md`](features-moscow.md), plus S11 push alerts. Suggestion 2 is merged (M16–M26). Won't-haves: accounts, official warnings, app-store apps, image sharpening, burned-area mapping.
+All Musts and Shoulds from [`features-moscow.md`](features-moscow.md), plus S11 push alerts. Suggestion 2 is merged (M18–M26; several base maps and data layers are Could, C9 and C10). Won't-haves: accounts, official warnings, app-store apps, image sharpening, burned-area mapping.
 
 ### Musts: data, selection, map and layers (from suggestion 2)
 
 | # | Feature | Required behaviour | Done when (completion evidence) |
 |---|---|---|---|
-| M18 | Point + radius, or an area | **Point + radius:** radius slider from 0 to 500 km `[U]`. Raw points are kept if their geodesic (great-circle) distance is ≤ the radius. Grid cells are kept if their centre is within the radius. Radius 0 means the one cell containing the point. **Area:** a drawn polygon, or a ready-made one (country); a cell is kept if its centre is inside | Oracle-written tests: distance cases (equator, high latitude, crossing the 180° line), radius 0, polygon inside and outside, country |
+| M18 | Points-only data model | All data is stored and fetched as points with a `precision_radius_km`: raw detections use the sensor footprint (MODIS about 1, VIIRS about 0.375); harmonized monthly values are points at each 0.25° cell centre with a precision radius of half the cell's diagonal. Shapes are drawn only after fetching (heat maps, region totals). **Selection (M3):** point + search distance, 0 to 500 km `[U]` (a point is kept if its geodesic distance is ≤ the search distance; **the cell containing the chosen point is always included**, because a cell centre can be up to about 19 km away), or a polygon (a point is kept if inside) | Oracle-written tests: distance cases (equator, high latitude, crossing the 180° line), radius 0, polygon inside and outside, country |
 | M19 | No data vs zero | `0` = satellites looked and saw no fire; `null` = no measurement. Shown differently in the calendar (empty pattern vs lightest colour), in tables ("no data" vs 0) and in exports (empty vs 0) | Unit tests on all three outputs; Nov 2000 shows data, Oct 2000 shows "no data" |
-| M20 | Data type on point or area | Every layer declares `kind: point` or `kind: area`. A selection can show several layers at once | Registry test: each layer has a kind, and the area report lists every active layer |
+| M20 | Several data types per point | Every layer's records are points; one point can carry several data types (for example hotspots and fire danger). A selection can show several layers at once | Registry test: every layer returns points with a precision radius; the area report lists every active layer |
 | M21 | Get simple data | Date-range picker (from Nov 2000 to today); view one layer as raw rows, a table or on the map | End-to-end test: Bulgaria, Aug 2024, switching between the three views gives the same totals |
-| M22 | Get combined data | Same as M21 for several layers in one table: harmonized fire, per-satellite counts, FRP and fire danger (where available), joined on place and date | Combined table for Bulgaria matches the single-layer tables |
-| M16 | Several base maps | Switcher between NASA GIBS (Blue Marble day, Black Marble night) and OpenStreetMap, in 2D and 3D | Each base map loads on globe and 2D; attribution shown |
+| M22 | Get combined data | Same as M21 for several layers in one table: harmonized fire, per-satellite counts and FRP, joined on place and date; fire danger only for the last 30 days (GWIS serves past days `[V]`; no long history is stored) | Combined table for Bulgaria matches the single-layer tables |
 | M25 | Room for more base maps | Base maps listed in one config file `web/src/config/basemaps.ts` (id, name, tiles or style, attribution) | Adding a test entry needs no other code change |
-| M17 | Several data layers | Layers: harmonized history, MODIS, VIIRS, recent fires, fire danger (and USA outlook) | Each layer toggles on and off; legend and explanation shown |
 | M26 | Room for more data layers | Layers listed in one registry `web/src/config/layers.ts` (id, name keys, kind, units, time step, source, credit, loader) | Adding a test layer needs no other code change |
 
 ### Musts: what users see and do
 
 | # | Feature | Required behaviour | Done when (completion evidence) |
 |---|---|---|---|
-| M1 | Harmonized fire history | Monthly VIIRS-equivalent fire cell-days from Nov 2000 to now. Years 2000–2011 are labelled "estimated", with a lower and upper bound; 2012+ are labelled "measured" | Pipeline validation report committed; split pre-registered before scoring (M58); oracle values match for 3 hand-computed cell-months |
-| M2 | Data ready in advance | Pipeline outputs exported to small static files the app loads directly; no processing in the browser | Export totals equal pipeline totals (M125); file sizes logged; under Vercel's 100 MB static limit `[V]`, or moved to Blob |
-| M3 | Pick a place | Uses M18: tap a point and set a radius, **type latitude and longitude** (decimal degrees, checked: −90 to 90, −180 to 180), draw an area, or pick a country from a search box. Everything else follows the selection. A place with no fire ever shows "No fires recorded here since Nov 2000" | Unit test point → cell id (oracle-written); end-to-end tests: each selection mode updates the calendar and URL |
+| M1 | Harmonized fire history | Monthly VIIRS-equivalent fire cell-days from Nov 2000 to now. Nov 2000 – Jan 2012 are labelled "estimated", with a lower and upper bound (S-NPP starts on 20 Jan 2012 `[V]`); Feb 2012 onward is "measured" | Pipeline validation report committed; split pre-registered before scoring (V-M58); oracle values match for 3 hand-computed cell-months |
+| M2 | Data ready in advance | Pipeline outputs exported to small static files the app loads directly; no processing in the browser | Export totals equal pipeline totals (V-M125); file sizes logged; under Vercel's 100 MB static limit `[V]`, or moved to Blob |
+| M3 | Pick a place | Point + search distance (tap, or **type latitude and longitude** (decimal degrees, checked: −90 to 90, −180 to 180), ), or an area: drawn, or a country from a search box. The result is always points (M18). Everything else follows the selection. A place with no fire ever shows "No fires recorded here since Nov 2000" | Unit test point → cell id (oracle-written); end-to-end tests: each selection mode updates the calendar and URL |
 | M4 | Fire calendar | For a point or area: years × months grid with a colour-blind-safe ramp. **Default unit: number of hotspots, harmonized to VIIRS level** (the brief's wording); switch to fire days (cell-days) or raw counts per satellite. Hover or tap shows the value, range and label; summary statistics (worst month, worst year, trend); clicking a cell shows that month's fires on the map | Bulgaria values equal the oracle's for 3 cells; works at 375 px width |
 | M5 | "Is this unusual?" | Selected month vs the **median** (Background) **and the average** (Considerations) of the same month over past years, in words, e.g. "2.1× the usual November (median); 1.8× the average; higher than 23 of 25 years". Calendar **anomaly mode**: a diverging, colour-blind-safe ramp around the median. **For the current, unfinished month, compare month-to-date with the same days in past years** (otherwise 14 days are compared with full months and always look "below normal") | Oracle cases pass: above, below, no history, median 0, average vs median differ, unfinished month |
 | M6 | "How we know it's right" page | Renders the committed validation file: hold-out results, slices, satellite agreement, published ratios, error-band coverage, limits | Test confirms the numbers come from the file, not typed text |
@@ -62,11 +60,11 @@ All Musts and Shoulds from [`features-moscow.md`](features-moscow.md), plus S11 
 | M8 | English and Bulgarian | Whole interface switchable; choice remembered | No missing translation keys; a native speaker reviews the Bulgarian |
 | M9 | Phones | Layout from 375 px; layer panel becomes a bottom sheet | Screenshots at 375×812 and 1440×900 |
 | M10 | Public address | https://emerge-beta-ten.vercel.app | Smoke test passes against it from outside |
-| M11 | Downloads | For the selection and date range: (1) **hotspots CSV**, one row per detection (from firms-catalog through the raw-points function, up to 100,000 rows `[U]`, with a notice when cut); (2) monthly numbers CSV; (3) **analytics summary** CSV (worst month and year, trend, anomaly, chance of fire, detected vs reported); (4) **calendar and charts as PNG**. Header rows explain columns, sources and "no data" | Oracle: Bulgaria Aug 2024 hotspot rows equal the raw FIRMS count after cleaning; monthly CSV matches the country file; PNG opens and shows the title, place and dates |
-| M12 | Tests on hot paths | Point + radius, area, country, load calendar, convert, export, language switch | Test log with counts (M131) |
-| M13 | Chance of fire this month | Share of past years with ≥ 1 fire in this place and month, with a Jeffreys interval (a standard range for a proportion). From 2012: measured VIIRS. Before 2012: a year counts as "fire" if MODIS saw one; otherwise it uses the conversion's "MODIS saw none, VIIRS would have" chance, so the MODIS years are not under-counted | Backtest at 0.25°: fit on earlier years, test on later; Brier score and reliability chart on the proof page (M112); leakage check (M62) |
+| M11 | Downloads | For the selection and date range: (1) **hotspots CSV**, one row per detection (from firms-catalog through the query function; limited to 1 year and 200 km or one small country per request `[U]`, up to 100,000 rows, with a notice when cut; one cell-year takes about 5 s `[V]`); (2) monthly numbers CSV; (3) **analytics summary** CSV (worst month and year, trend, anomaly, chance of fire, detected vs reported); (4) **calendar and charts as PNG**. Header rows explain columns, sources and "no data" | Oracle: Bulgaria Aug 2024 hotspot rows equal a direct firms-catalog count after cleaning (not the FIRMS country files, which clip at borders and drop offshore points); monthly CSV matches the country file; PNG opens and shows the title, place and dates |
+| M12 | Tests on hot paths | Point + radius, area, country, load calendar, convert, export, language switch | Test log with counts (V-M131) |
+| M13 | Chance of fire this month | Share of past years with ≥ 1 fire in this place and month, with a Jeffreys interval (a standard range for a proportion). From 2012: measured VIIRS. Before 2012: a year counts as "fire" if MODIS saw one; otherwise it uses the conversion's "MODIS saw none, VIIRS would have" chance, so the MODIS years are not under-counted. For large areas the chance is near 100%, so above 50 km or for a country the card shows the **expected number of fire days** instead | Backtest at 0.25°: fit on earlier years, test on later; Brier score and reliability chart on the proof page (V-M112); leakage check (V-M62) |
 | M27 | This fire vs past fires | For the selection: the **last 8 days** of hotspots and total FRP vs the **same 8 calendar days in each past year** (2001 onwards), with a rank and a small bar chart. **8 days, not 7:** NASA warns that counts over periods shorter than about 8 days are severely biased `[V]` (MODIS fire user guide, via the conversion plan). Years from 2012 are measured VIIRS; 2001–2011 are MODIS scaled by that region and month's conversion factor, marked "estimated" with wider bands. Tapping a recent fire selects its area (point + 10 km radius `[U]`) and shows the same comparison. Uses the daily window table (section 4.3) | Oracle cases: rank, ties, no past fires, window across a year end, estimated years flagged |
-| M28 | Detected vs reported | Next to satellite numbers: official reported fires and burned area per year. EFFIS JSON API for EU countries (2006–2026 `[V]`), NIFC table for the USA (1983–2025 `[V]`), pre-fetched into `reported/<ISO3>.json`. Elsewhere: "No official reported numbers available". **These are national totals:** shown in full for a country selection; for a point or drawn area, shown as "country total, for context". Note shown: EFFIS maps only fires of about 30 ha or more `[D]` | Bulgaria 2024 shows 133 fires and 44,745 ha (EFFIS `[V]`); USA 2024 shows 64,897 fires (NIFC `[V]`) |
+| M28 | Detected vs reported | Next to satellite numbers: official reported fires and burned area per year. EFFIS JSON API for EU countries (2006–2026 `[V]`), NIFC table for the USA (1983–2025 `[V]`; acres converted to hectares), pre-fetched into `reported/<ISO3>.json`. Elsewhere: "No official reported numbers available". **These are national totals:** shown in full for a country selection; for a point or drawn area, shown as "country total, for context". Note shown: EFFIS maps only fires of about 30 ha or more `[D]` | Bulgaria 2024 shows 133 fires and 44,745 ha (EFFIS `[V]`); USA 2024 shows 64,897 fires (NIFC `[V]`) |
 | M14 | Whole world | Any place on Earth | End-to-end test on 5 points (Bulgaria, California, Mato Grosso, Punjab, Siberia) plus an ocean point |
 | M15 | Installable app | Manifest, icons, service worker, offline app shell | Lighthouse "installable"; tested on one Android and one iPhone |
 
@@ -115,7 +113,7 @@ Every item NASA's challenge page states, and the feature that covers it. Section
 
 | Screen | Contents |
 |---|---|
-| **Globe (home)** | Full-screen globe; selection tools: tap a point + radius slider, draw an area, country search; layer panel (M17); base-map switcher (M16); language switch; install hint |
+| **Globe (home)** | Full-screen globe; selection tools: tap or type a point + search distance, draw an area, country search; layer panel (S6); NASA day/night switch (S6; more base maps are C9); language switch; install hint |
 | **Area report** (side panel; bottom sheet on phones) | Title, selection summary and data date; latitude/longitude box; date-range picker; fire calendar; unit and mode toggle (Hotspots / Fire days / Measured per satellite / Fire intensity / Anomaly); "This fire vs past fires" card; "Detected vs reported" card; "Is this unusual?" card; chance-of-fire card; yearly trend chart with measured vs estimated and bands; data view (raw rows / table / map) for one or several layers (M21/M22); downloads menu (hotspots CSV, monthly CSV, analytics summary, PNG images); share button; "Alert me here"; advice card |
 | **How we know it's right** | Validation results with charts; limits stated plainly |
 | **About and sources** | What Emerge is; glossary; every data source with licence and credit; disclaimer; official links (EFFIS/GWIS, NIFC, Bulgaria's NIMH) |
@@ -130,15 +128,15 @@ Every item NASA's challenge page states, and the feature that covers it. Section
 |---|---|---|---|---|
 | MODIS hot spots (Terra, Aqua), Collection 6.1 | NASA FIRMS yearly country files, no login `[V]` | Terra 1 Nov 2000+, Aqua 4 Jul 2002+ `[V]` | NASA open data | M1 |
 | VIIRS 375 m hot spots, S-NPP | NASA FIRMS | 20 Jan 2012 – 2 Nov 2026 `[V]` | NASA open data | M1, reference series |
-| VIIRS 375 m, NOAA-20 / NOAA-21 | NASA FIRMS | 1 Apr 2018+ / 1 Mar 2023+ `[V]` | NASA open data | Gap filling, 2026+ |
-| 2026 detections | firms-catalog GeoParquet on Source Cooperative, data to 14 Nov 2026 `[V]` | 2000–2026 | CC0 `[V]` | 2026 months, raw points |
+| VIIRS 375 m, NOAA-20 / NOAA-21 | NOAA-20: FIRMS yearly files. NOAA-21: firms-catalog only (from Jan 2024); FIRMS has no NOAA-21 yearly files | 1 Apr 2018+ / 1 Mar 2023+ in FIRMS `[V]`; NOAA-21 Mar–Dec 2023 = no data in our files | NASA open data | Gap filling, 2026+ |
+| 2026 detections | firms-catalog GeoParquet on Source Cooperative, data to 14 Nov 2026 `[V]` | 2000–2026 | Data CC0 `[V]` per its catalogue; code Apache-2.0 `[V]`; confirm both | 2026 months, raw points |
 | Last 24 h | FIRMS no-key global CSVs (MODIS, NOAA-20, NOAA-21) `[V]` | live | NASA open data | S5, S11 |
-| Fire danger | Copernicus GWIS WMS: `ecmwf.fwi` tiles, `ecmwf.query` point value `[V]` | today to +9 days | Copernicus CC BY 4.0 `[V]`; the service names the EU Data Licence, **to check** | S3, S11 |
+| Fire danger | Copernicus GWIS WMS: `ecmwf.fwi` tiles, `ecmwf.query` point value `[V]` | today to +9 days | Unclear: Copernicus data is CC BY 4.0 `[V]`, but this map service names the EU Data Licence `[V]`; **to check** (D-4) `[U]` | S3, S11 |
 | USA outlook | NIFC ArcGIS `Outlooks_Monthly_Extended`, layers 0–3, field `FirePotent` `[V]` | 4 months | US government | S3. **Never show the `Comments` field** (staff names) |
-| Base maps | NASA GIBS Blue Marble and Black Marble, no key `[V]` | — | NASA, credit requested | M16 |
-| Base map, streets | OpenStreetMap data, via a free tile service (for example OpenFreeMap, no key `[D]`), or OSM's own tiles under its usage policy `[D]` | — | ODbL, "© OpenStreetMap contributors" | M16. **To verify:** the tile service's terms |
+| Base maps | NASA GIBS Blue Marble and Black Marble, no key `[V]` | — | NASA, credit requested | S6 |
+| Base map, streets | OpenStreetMap data, via a free tile service (for example OpenFreeMap, no key `[D]`), or OSM's own tiles under its usage policy `[D]` | — | ODbL, "© OpenStreetMap contributors" | C9 (Could). **To verify:** the tile service's terms |
 | Country borders | Natural Earth admin-0 | — | Public domain | M3 |
-| Outside checks | EFFIS Bulgaria JSON API (2006–2026) `[V]`; NIFC statistics (1983–2025) `[V]`; MODIS MCD64A1 burned area | — | Open | Proof page (M41) |
+| Outside checks | EFFIS Bulgaria JSON API (2006–2026) `[V]`; NIFC statistics (1983–2025) `[V]`; MODIS MCD64A1 burned area | — | Open | Proof page (V-M41) |
 
 **Cleaning rules:** keep vegetation fires (`type = 0`), MODIS confidence ≥ 30, VIIRS confidence `n` or `h`.
 
@@ -146,10 +144,10 @@ Every item NASA's challenge page states, and the feature that covers it. Section
 
 ### 4.2 Pipeline (teammates; status 14 Nov)
 
-- **Done `[V]`:** all 10,095 country files downloaded (43.5 GB). 461,501,221 detections kept; 324,312,197 cell-days. Checks M125 and M32 pass. Scripts: `pipeline/download_firms.py`, `pipeline/build_cells.py`.
+- **Done `[V]`:** all 10,095 country files downloaded (43.5 GB). 461,501,221 detections kept; 324,312,197 cell-days. Checks V-M125 and V-M32 pass. Scripts: `pipeline/download_firms.py`, `pipeline/build_cells.py`.
 - **Findings `[V]`:**
   - worldwide, S-NPP sees about 2.7× MODIS cell-days, steady across years;
-  - S-NPP has 34 missing days in 2022 and 2024, filled from NOAA-20, which agrees within about 1%;
+  - S-NPP has 34 missing days in 2022 and 2024, **to be filled** from NOAA-20, which agrees within about 1%;
   - Terra drops in 2022–2025, likely orbit drift `[U]`;
   - Terra alone sees about half of what Aqua sees.
 - **Next:** training pairs, models, validation, harmonized table (see section 11 for the grid and test-year decision); also hotspot counts (D-7) and the daily window table (section 4.3).
@@ -163,7 +161,7 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
 | `web/public/data/meta.json` | Data version, build date, last data date, source list | < 5 KB |
 | `web/public/data/countries/<ISO3>.json` | Monthly series for the country: `y, m`, harmonized hotspots `hot, hot_lo, hot_hi`, harmonized fire days `cd, cd_lo, cd_hi`, raw per satellite `terra, aqua, snpp, noaa20, noaa21`, `frp, src, flags` | ~250 files, a few KB each |
 | `web/public/data/reported/<ISO3>.json` | Official reported fires and burned area per year (EFFIS for EU countries, NIFC for the USA), with source and date fetched | A few KB each |
-| `web/public/data/tiles/<lat0>_<lon0>.json` | Every fire cell in that 5° × 5° square, with its monthly series (fire months only) | ~1,000 files, 60–80 MB in total |
+| `web/public/data/tiles/<lat0>_<lon0>.json.gz` | Every fire cell in that 5° × 5° square, with its monthly series (fire months only), stored pre-gzipped | ~1,000 files; about 200 MB unzipped / 60–80 MB gzipped for **one** series `[U]`, so two series plus FRP may pass the limit: **measure (D-9)** |
 | `web/public/data/globe/<year>.json` | Per-cell yearly totals for the globe layer | ~0.3 MB each, gzipped |
 | `web/public/data/validation.json` | Everything the proof page shows | < 1 MB |
 | Daily window table | Hotspots and FRP per 0.25° cell per day, for the **latest 45 days and the same 45 days in every past year**; feeds M5 (unfinished month) and M27. Refreshed with the data | Small per tile `[U]`; measure |
@@ -171,6 +169,7 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
 **Rules for the files:**
 - **Cell id (0.25° grid):** `row = floor((90 − lat) / 0.25)`, `col = floor((lon + 180) / 0.25)`, `cell_id = row × 1440 + col`. This is NASA's 1440 × 720 grid `[V]`.
 - **No data vs zero (M19):** `0` means the satellites looked and saw no fire; `null` means no measurement (before Nov 2000, or a satellite gap that wasn't filled). Files store **fire months only**: a missing month inside the coverage period means 0. The no-data periods are listed once, in `meta.json`. The calendar shows the two differently.
+- **Points only (M18):** every record carries `lat`, `lon` and `precision_radius_km`; cell values use the 0.25° cell centre. `cell_id` stays as the key.
 - **Which files a selection loads:**
   - point + radius or drawn area: every tile that overlaps the selection's bounding box; cells are then filtered by centre (M18);
   - country: its `countries/<ISO3>.json`, which uses NASA's own country assignment of each detection, so border cells can differ slightly from a drawn outline (stated in the app).
@@ -192,7 +191,7 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
 | Globe and map | **MapLibre GL JS** (globe since v5 `[V]`; current 6.x, BSD-3) with react-map-gl | Same code for globe and 2D |
 | Data layers | **deck.gl** 9.x on the MapLibre globe `[V]` | Fire cells, points, selection |
 | Selection | Geodesic distance (haversine) and point-in-polygon with Turf.js; drawing with Terra Draw (MapLibre adapter) | If drawing doesn't work on the globe, drawing switches to the 2D map `[U]` |
-| Registries | `web/src/config/basemaps.ts` (M16/M25), `web/src/config/layers.ts` (M17/M20/M26) | New maps or layers = one new entry |
+| Registries | `web/src/config/basemaps.ts` (M25, C9), `web/src/config/layers.ts` (M20, M26, C10) | New maps or layers = one new entry |
 | Calendar and charts | Custom SVG with d3-scale; a colour-blind-safe sequential ramp | Accessible colours (challenge suggestion) |
 | Languages | **next-intl** (made for the Next.js App Router); `en.json`, `bg.json` | Glossary keys shared |
 | Image export | Calendar and charts are SVG, converted to PNG in the browser; the map snapshot is optional | No WebGL capture needed |
@@ -223,17 +222,19 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
   - the chance-of-fire cases;
   - CSV row counts.
 
+Method IDs carry a `V-` prefix (from the 137-method catalogue in [`../docs/verification-plan.md`](../docs/verification-plan.md)) so they don't clash with feature IDs.
+
 | Method | What it checks | Priority |
 |---|---|---|
-| M44 hold-out backtest | Conversion predicts unseen years | Must |
-| M21 differential | S-NPP vs NOAA-20 agree | Must (done: about 1% `[V]`) |
-| M38 published ratios | Our ratios plausible | Must |
-| M19 known-answer tests | Hot paths | Must |
-| M32 hard limits | Counts ≥ 0, valid coordinates, no future dates | Must (pipeline passes `[V]`) |
-| M125 control totals | Daily = monthly = raw kept rows | Must (pipeline passes `[V]`) |
-| M131 trace audit | Agents' claimed test runs really ran (counts) | Must |
-| M114, M124, M58, M62, M112, M20, M101, M95 | Bands, slices, pre-registration, leakage, calibration, property tests, audit sample, real-user test | Should |
-| M41 triangulation | EFFIS Bulgaria, NIFC USA, MCD64A1 | Could (data feeds verified `[V]`) |
+| V-M44 hold-out backtest | Conversion predicts unseen years | Must |
+| V-M21 differential | S-NPP vs NOAA-20 agree | Must (done: about 1% `[V]`) |
+| V-M38 published ratios | Our ratios plausible | Must |
+| V-M19 known-answer tests | Hot paths | Must |
+| V-M32 hard limits | Counts ≥ 0, valid coordinates, no future dates | Must (pipeline passes `[V]`) |
+| V-M125 control totals | Daily = monthly = raw kept rows | Must (pipeline passes `[V]`) |
+| V-M131 trace audit | Agents' claimed test runs really ran (counts) | Must |
+| V-M114, V-M124, V-M58, V-M62, V-M112, V-M20, V-M101, V-M95 | Bands, slices, pre-registration, leakage, calibration, property tests, audit sample, real-user test | Should |
+| V-M41 triangulation | EFFIS Bulgaria, NIFC USA, MCD64A1 | Could (data feeds verified `[V]`) |
 
 ---
 
@@ -269,11 +270,11 @@ The app reads only these files. The pipeline team writes `pipeline/export_app.py
 | **Sat 23:30 · CP2** | Bulgaria end to end with real T1 numbers on the public URL: calendar, cards, downloads |
 | **Sun 03:30 · CP3** | Whole world live; proof page with real validation; recent fires and fire danger; all Must tests green with counts logged |
 | 03:30–08:00 | Push alerts, share links, intensity, advice; T2 and error bands swapped in if they beat T1 (no app change needed) |
-| **Sun 06:00** | Data refresh to the latest day; English text freeze; Bulgarian pass starts |
+| **Sun 06:00** | Data refresh to the latest day; English text freeze; Bulgarian pass starts. **After the weekend:** a weekly GitHub Actions job refreshes the recent months and the daily window from firms-catalog while judging runs (3 Dec – 26 Jan); Stream D owns it |
 | **Sun 08:00 · CP4** | **Feature freeze for Sofia**; smoke test passes; Bulgarian reviewed |
 | 10:00–12:30 | Record the 30-second video from the live app with English subtitles (fits Sofia's 30–60 s and NASA's ≤ 30 s) |
 | **Sun 13:30 · CP5** | **Sofia video submitted** (due 14:00); link opens without login |
-| **Sun 22:00 · CP6** | **NASA submission** (due 23:59): References, AI-usage note, all fields in English |
+| **Sun 22:00 · CP6** | **NASA submission** (due 23:59): References, AI-usage note, all fields in English; tick "Terms and Conditions" and "Confirm All Work is Original"; every member registered and on the team page; public repo with licence |
 
 **Scope note:** suggestion 2 and the challenge-page items add about 15–22 hours of work `[U]`, spread across the streams.
 
@@ -330,13 +331,13 @@ Drawn areas stay: NASA's challenge page names them.
 
 | # | Decision | Options | Proposed | Deadline |
 |---|---|---|---|---|
-| D-1 | **Harmonization grid** | 0.25° monthly ([`conversion-plan.md`](../docs/conversion-plan.md)) vs 0.1° ([`harmonization-pipeline-plan.md`](../docs/harmonization-pipeline-plan.md)) | **0.25°**: NASA's grid, regions reliable (nRMSE 8% vs 61% per cell `[V]`), smaller files. Keep 0.1° for display only | Sat 17:00 |
-| D-2 | **Training and test years** | Train 2012–2018, test 2019–2025; or calibrate within 2012–2022 and test both ways | **Within 2012–2022, test both ways**: Terra drift shows from 2022 `[V]` | Sat 17:00 |
-| D-3 | Features suggestion 2 | Merge or not | **Merged 14 Nov evening** (M16–M26 now Musts; C7 and C8 Could). Open detail: maximum radius (500 km proposed `[U]`) | Done |
+| D-1 | **Harmonization grid** | 0.25° monthly ([`conversion-plan.md`](../docs/conversion-plan.md)) vs 0.1° ([`harmonization-pipeline-plan.md`](../docs/harmonization-pipeline-plan.md)) | **0.25°**: NASA's grid, regions reliable (nRMSE 8% vs 61% per cell `[V]`), smaller files. Keep 0.1° for display only | Sat 18:00 |
+| D-2 | **Training and test years** | Train 2012–2018, test 2019–2025; or calibrate within 2012–2022 and test both ways | **Within 2012–2022, test both ways**: Terra drift shows from 2022 `[V]` | Sat 18:00 |
+| D-3 | Features suggestion 2 | Merge or not | **Merged 14 Nov evening**, updated to its 16:45 version (points-only model; C9 and C10 Could). Open detail: maximum search distance (500 km proposed `[U]`) | Done |
 | D-4 | GWIS licence | CC BY 4.0 vs EU Data Licence | Check before the demo; credit Copernicus either way | Sun 08:00 |
-| D-5 | Teammates' pushes on Vercel's free plan | Whether pushes by non-owners deploy | Test on the first push | Sat 17:00 |
+| D-5 | Teammates' pushes on Vercel's free plan | Whether pushes by non-owners deploy | Test on the first push | Sat 18:00 |
 | D-6 | Who pitches on site (J1) | — | Team | Sun 12:00 |
-| D-7 | **Calendar's default unit** | Hotspots (the brief's wording) vs fire days (fairer across sensors) | **Hotspots by default**, fire days one tap away; both harmonized with ranges. The pipeline runs the same conversion on hotspot counts as on fire days | Sat 17:00 |
+| D-7 | **Calendar's default unit** | Hotspots (the brief's wording) vs fire days (fairer across sensors) | **Hotspots by default only if their conversion passes its own hold-out test** (Stream A owns it). Hotspot ratios vary more than fire-day ratios (Bulgaria 2.5–3.5 vs 1.7–2.6 `[V]`). If hotspots do worse, fire days are the default and hotspot counts are shown measured per satellite | Sat 18:00 |
 | D-8 | Industrial hotspots | The brief counts farm and industrial fires as burning activity; we filter static industrial sources (`type = 2`) | Keep the filter, say so in the app, and offer the unfiltered count on the proof page | Team |
 | D-9 | **Where the app's data lives** | Static files in the deployment · packed files on Vercel Blob · query function over Parquet | Decide at CP0 from the **measured** size and spike (a). Default: static for globe, countries, validation and reported numbers; tiles static if ≤ 85 MB gzipped, otherwise Blob | Sat 18:00 |
 
