@@ -30,18 +30,22 @@ export default function SelectionTools({
 }: Props) {
   const t = useTranslations("selection");
   const names = useTranslations("country");
-  const { iso3, fromData } = useCountries();
+  const { entries, iso3, fromData } = useCountries();
 
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
+  // The index carries an English name per country; a translated one wins
+  // where the message files have it.
+  const indexName = new Map(entries.map((entry) => [entry.iso3, entry.name]));
+
   const countryName = (code: string) => {
     try {
       return names(code);
     } catch {
-      return code;
+      return indexName.get(code) ?? code;
     }
   };
 
@@ -50,7 +54,8 @@ export default function SelectionTools({
     if (needle === "") return true;
     return (
       code.toLowerCase().startsWith(needle) ||
-      countryName(code).toLowerCase().includes(needle)
+      countryName(code).toLowerCase().includes(needle) ||
+      (indexName.get(code) ?? "").toLowerCase().includes(needle)
     );
   });
 
