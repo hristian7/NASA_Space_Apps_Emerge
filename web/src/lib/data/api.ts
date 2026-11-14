@@ -25,7 +25,15 @@ export {
 } from './loaders';
 export type { GlobeCell } from './loaders';
 
-export { getPerSatellite, getReported, getSeries, isNoDataMonth, srcForMonth } from './series';
+export {
+  countryAt,
+  getPerSatellite,
+  getReported,
+  getSeries,
+  isNoDataMonth,
+  lonInBox,
+  srcForMonth,
+} from './series';
 
 export {
   backgroundPeriod,

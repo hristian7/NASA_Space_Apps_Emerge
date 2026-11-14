@@ -71,3 +71,25 @@ export async function metaWith(changes: Record<string, unknown>): Promise<Record
   >;
   return { ...meta, ...changes };
 }
+
+/**
+ * A source that records every path it is asked for, so a test can prove that
+ * a selection fetches only the files it needs and no file per country.
+ */
+export function countingSource(): { source: DataSource; requests: string[] } {
+  const requests: string[] = [];
+  const fetcher: Fetcher = async (url: string) => {
+    requests.push(url.startsWith(`${DATA_DIR}/`) ? url.slice(DATA_DIR.length + 1) : url);
+    const { readFile } = await import('node:fs/promises');
+    try {
+      const bytes = await readFile(url);
+      return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    } catch {
+      return null;
+    }
+  };
+  return {
+    source: new DataSource({ basePath: DATA_DIR, fetcher, gunzip: nodeGunzip }),
+    requests,
+  };
+}
