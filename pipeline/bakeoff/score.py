@@ -161,7 +161,7 @@ class Truth:
                 g = s.groupby([grid, "ym"]).agg(cd=("detections", "size"), hot=("detections", "sum")).reset_index()
                 g = g.rename(columns={grid: "cell"})
                 store[c] = g
-            scope = df[(df["country"] == c) & (df["year"] <= 2022)]
+            scope = df[(df["country"] == c) & (df["year"] >= 2012) & (df["year"] <= 2022)]
             self.scored_q25[c] = np.sort(scope["q25"].unique())
             self.scored_d10[c] = np.sort(scope["d10"].unique())
         self.circles = read_circles()
