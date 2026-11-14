@@ -45,7 +45,7 @@ test("a country shows a calendar that answers the unit toggle and the month", as
   await expect(page.getByText("Selected month: August 2024")).toBeVisible();
   // A whole country is near certain to see fire in any month, so the card
   // shows a typical number of fire days instead of a share (M13).
-  await expect(page.getByText("Expected fire days this month")).toBeVisible();
+  await expect(page.getByText("A typical number of fire days this month")).toBeVisible();
   await expect(page.getByText(/the usual August/)).toBeVisible();
   // The month travels in the address bar, so the view can be shared.
   expect(page.url()).toContain("mo=2024-08");

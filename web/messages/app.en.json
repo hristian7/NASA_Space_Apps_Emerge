@@ -1,5 +1,7 @@
 {
   "backgroundMissing": "The pre-2012 background file was not loaded, so months before February 2012 may read low.",
+  "chanceMeaning": "How often fire was seen here in this month in past years. It is a count of what happened, not a forecast, and it has not been scored against what followed.",
+  "comparedWith": "Compared with {month} in {first} to {last}, {years} years.",
   "countryTestFair": "That is a fair fit.",
   "countryTestGood": "That is a good fit.",
   "countryTestHeading": "How well this country was tested",
@@ -8,6 +10,7 @@
   "countryTestNone": "This country had too little fire to score on its own.",
   "countryTestWeak": "That is a weak fit, so read this country’s figures as a rough guide.",
   "dataDate": "Satellite data to {date}",
+  "dataLine": "Data to {date}, from {sensors} hotspots, converted by this project with model {model}.",
   "drawnArea": "Drawn area",
   "failed": "The fire record for this place could not be read.",
   "failedDetail": "What went wrong: {reason}",

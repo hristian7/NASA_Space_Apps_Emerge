@@ -21,7 +21,7 @@ test("a drawn area reports, and says its reported figures are national", async (
 
   // This area reaches about 22 km from its middle, under the 50 km above
   // which a chance of fire stops saying anything, so the share is shown.
-  await expect(page.getByText("Chance of fire this month")).toBeVisible();
+  await expect(page.getByText("How often fire was seen here this month")).toBeVisible();
 
   // The date range cuts the calendar down to the months it names: one row
   // per year from 2020 to the last data year.

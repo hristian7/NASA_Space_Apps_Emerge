@@ -24,6 +24,7 @@ import reportStyles from "@/components/report/styles";
 import type { MonthKey, UnitMode } from "@/components/report/types";
 import {
   formatCount,
+  monthLong,
   monthYearLong,
   monthYearShort,
   formatIsoDate,
@@ -54,8 +55,10 @@ import {
   hotspotsLink,
   isLargeArea,
   monthRank,
+  historyYears,
   monthsOf,
   noFireEver,
+  provenance,
   pointAt,
   sameMonth,
   unfinishedMonthOf,
@@ -321,6 +324,14 @@ function Report({
     return unusual(series, selectedMonth.y, selectedMonth.m);
   }, [series, selectedMonth, partMonth, toDateReady, data.monthToDate]);
 
+  const comparedYears = useMemo(
+    () =>
+      selectedMonth === null
+        ? []
+        : historyYears(series, selectedMonth.y, selectedMonth.m),
+    [series, selectedMonth],
+  );
+
   const theChance = useMemo(
     () =>
       selectedMonth === null
@@ -424,6 +435,14 @@ function Report({
         disabled={selection.kind === "country" ? [] : ["sat"]}
       />
 
+      <p className={styles.monthLine} data-testid="data-line">
+        {t("dataLine", {
+          date: formatIsoDate(provenance(data.meta).date, locale),
+          sensors: provenance(data.meta).sensors,
+          model: provenance(data.meta).model,
+        })}
+      </p>
+
       {series.lowConfidence ? (
         <p className={styles.notice} data-testid="low-confidence">
           {t("lowConfidence")}
@@ -512,6 +531,19 @@ function Report({
             monthToDate={monthToDate}
           />
         ) : null}
+        {theUnusual !== null &&
+        selectedMonth !== null &&
+        theUnusual.years > 0 &&
+        comparedYears.length > 0 ? (
+          <p className={styles.notice} data-testid="compared-years">
+            {t("comparedWith", {
+              month: monthLong(selectedMonth.m, locale),
+              first: comparedYears[0],
+              last: comparedYears[comparedYears.length - 1],
+              years: theUnusual.years,
+            })}
+          </p>
+        ) : null}
         {theUnusual === null && selectedMonth !== null ? (
           <section className={reportStyles.card} data-testid="month-note">
             <h2 className={reportStyles.heading}>
@@ -551,6 +583,12 @@ function Report({
           />
         ) : null}
       </div>
+
+      {theChance === null ? null : (
+        <p className={styles.notice} data-testid="chance-meaning">
+          {t("chanceMeaning")}
+        </p>
+      )}
 
       {selection.kind === "country" ? (
         <CountryTest iso3={selection.iso3} locale={locale} />

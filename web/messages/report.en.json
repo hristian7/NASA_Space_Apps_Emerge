@@ -62,8 +62,8 @@
       "higherThan": "higher than {higher} of {years} years"
     },
     "chance": {
-      "heading": "Chance of fire this month",
-      "headingExpected": "Expected fire days this month",
+      "heading": "How often fire was seen here this month",
+      "headingExpected": "A typical number of fire days this month",
       "range": "Range {lo} to {hi}",
       "detail": "{month} had fire in {fireYears} of {years} past years.",
       "expectedDetail": "A typical {month} here, from the past years with a measurement.",
@@ -82,14 +82,25 @@
       "noCurrent": "The last {days} days have no measurement yet, so there is nothing to rank."
     },
     "reported": {
-      "heading": "Detected against reported",
+      "heading": "What is published about fires here",
       "countryContext": "Country total, for context: the selection is smaller than the country.",
-      "caption": "Officially reported figures from {source}, next to what the satellites saw.",
       "fires": "Reported fires",
       "burned": "Burned hectares",
       "none": "No official reported numbers available.",
       "noYears": "The source covers this place but has published no figures yet.",
-      "notComparable": "The two columns count different things: a reported fire is one event, a satellite figure counts cell-days."
+      "notComparable": "The three blocks count different things, so a number from one does not belong next to a number from another.",
+      "kindNational": "Reported by national authorities",
+      "kindEstimate": "Estimated from satellite mapping",
+      "kindOurs": "Detected by satellites, our own record",
+      "latest": "{year}: {fires} fires, {burned} hectares",
+      "oursLatest": "{year}: {value} {unit}",
+      "oursNote": "These are detections, not counts of fires or of burned area: one fire can be seen on many days and in many grid squares, and {unit} counts those sightings.",
+      "firesMapped": "Fires mapped",
+      "burnedMapped": "Hectares mapped",
+      "covers": "Years {first} to {last}",
+      "oneYear": "One year only: {year}",
+      "sourceLink": "The source",
+      "fetched": "Taken on {date}"
     },
     "extremes": {
       "worstMonth": "Worst month",

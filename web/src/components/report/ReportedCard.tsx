@@ -3,20 +3,27 @@
 import { useTranslations } from "next-intl";
 import type { ReportedFile } from "@/types/data";
 import type { Scope, YearTotal } from "./types";
-import { formatCount, type ReportLocale } from "./lib/format";
+import { seriesViews, type SeriesView } from "@/components/app/reported";
+import { formatCount, formatIsoDate, type ReportLocale } from "./lib/format";
 import styles from "./styles";
 
 export interface ReportedCardProps {
-  /** null when no authority publishes figures for this place (M28). */
+  /** null when nobody publishes figures for this place (M28). */
   reported: ReportedFile | null;
-  /** Satellite yearly totals, to sit next to the reported ones. */
+  /** Satellite yearly totals, to sit next to the published ones. */
   satelliteYears: YearTotal[];
   scope: Scope;
   locale: ReportLocale;
   unitShortKey?: "cd" | "hot";
 }
 
-/** M28: official reported fires and burned area next to what satellites saw. */
+/**
+ * M28: what people publish about fires here, next to what the satellites saw.
+ *
+ * Each series stands under its own label, because a count of fires from a
+ * national authority, an area mapped from satellite images, and our own
+ * detections are three different measures. Only the first is "reported".
+ */
 export default function ReportedCard({
   reported,
   satelliteYears,
@@ -37,11 +44,9 @@ export default function ReportedCard({
     );
   }
 
-  const satelliteByYear = new Map(
-    satelliteYears.map((total) => [total.y, total]),
-  );
-  const years = reported.years
-    .filter((row) => row.fires !== null || row.burned_ha !== null)
+  const views = seriesViews(reported);
+  const ours = satelliteYears
+    .filter((total) => total.value !== null)
     .sort((a, b) => b.y - a.y);
 
   return (
@@ -52,54 +57,180 @@ export default function ReportedCard({
       {scope === "area" ? (
         <p className={styles.sub}>{t("reported.countryContext")}</p>
       ) : null}
-      {years.length === 0 ? (
+
+      {views.length === 0 ? (
         <p className={styles.cardLine}>{t("reported.noYears")}</p>
       ) : (
+        views.map((view, at) => (
+          <Series
+            key={`${view.kind}-${view.name}-${at}`}
+            view={view}
+            locale={locale}
+            t={t}
+          />
+        ))
+      )}
+
+      <OurDetections
+        ours={ours}
+        locale={locale}
+        t={t}
+        unitShortKey={unitShortKey}
+      />
+      <p className={styles.sub}>{t("reported.notComparable")}</p>
+    </section>
+  );
+}
+
+type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+/** One published series: what it is, who made it, and its years. */
+function Series({
+  view,
+  locale,
+  t,
+}: {
+  view: SeriesView;
+  locale: ReportLocale;
+  t: Translate;
+}) {
+  const national = view.kind === "national_report";
+  const latest = view.latest;
+
+  return (
+    <div className={styles.card} data-kind={view.kind}>
+      <h3 className={styles.heading}>
+        {national ? t("reported.kindNational") : t("reported.kindEstimate")}
+      </h3>
+      <p className={styles.sub}>{view.name}</p>
+
+      {latest === null ? null : (
+        <p className={styles.cardLine}>
+          {t("reported.latest", {
+            year: latest.y,
+            fires:
+              latest.fires === null
+                ? t("table.noData")
+                : formatCount(latest.fires, locale),
+            burned:
+              latest.burned_ha === null
+                ? t("table.noData")
+                : formatCount(latest.burned_ha, locale),
+          })}
+        </p>
+      )}
+
+      {view.oneYear ? (
+        <p className={styles.sub}>{t("reported.oneYear", { year: view.span?.[0] ?? "" })}</p>
+      ) : view.span === null ? null : (
+        <p className={styles.sub}>
+          {t("reported.covers", { first: view.span[0], last: view.span[1] })}
+        </p>
+      )}
+
+      {view.years.length <= 1 ? null : (
         <div className={styles.tableScroll}>
           <table className={styles.table}>
-            <caption>
-              {t("reported.caption", { source: reported.source.name })}
-            </caption>
             <thead>
               <tr>
                 <th scope="col">{t("table.year")}</th>
-                <th scope="col">{t("reported.fires")}</th>
-                <th scope="col">{t("reported.burned")}</th>
-                <th scope="col">{t(`unit.${unitShortKey}.short`)}</th>
+                <th scope="col">
+                  {national ? t("reported.fires") : t("reported.firesMapped")}
+                </th>
+                <th scope="col">
+                  {national ? t("reported.burned") : t("reported.burnedMapped")}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {years.map((row) => {
-                const satellite = satelliteByYear.get(row.y);
-                return (
-                  <tr key={row.y}>
-                    <th scope="row">{row.y}</th>
-                    <td>
-                      {row.fires === null
-                        ? t("table.noData")
-                        : formatCount(row.fires, locale)}
-                    </td>
-                    <td>
-                      {row.burned_ha === null
-                        ? t("table.noData")
-                        : formatCount(row.burned_ha, locale)}
-                    </td>
-                    <td>
-                      {satellite === undefined || satellite.value === null
-                        ? t("table.noData")
-                        : formatCount(satellite.value, locale)}
-                    </td>
-                  </tr>
-                );
-              })}
+              {view.years.map((row) => (
+                <tr key={row.y}>
+                  <th scope="row">{row.y}</th>
+                  <td className={styles.num}>
+                    {row.fires === null
+                      ? t("table.noData")
+                      : formatCount(row.fires, locale)}
+                  </td>
+                  <td className={styles.num}>
+                    {row.burned_ha === null
+                      ? t("table.noData")
+                      : formatCount(row.burned_ha, locale)}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
-      {reported.source.note === null ? null : (
-        <p className={styles.sub}>{reported.source.note}</p>
+
+      {view.note === null ? null : <p className={styles.sub}>{view.note}</p>}
+      <p className={styles.sub}>
+        {view.url === null ? null : (
+          <a href={view.url} target="_blank" rel="noreferrer">
+            {t("reported.sourceLink")}
+          </a>
+        )}
+        {view.url === null || view.fetched === null ? null : " · "}
+        {view.fetched === null
+          ? null
+          : t("reported.fetched", { date: formatIsoDate(view.fetched, locale) })}
+      </p>
+    </div>
+  );
+}
+
+/** Our own detections, stated as a different measure from the figures above. */
+function OurDetections({
+  ours,
+  locale,
+  t,
+  unitShortKey,
+}: {
+  ours: YearTotal[];
+  locale: ReportLocale;
+  t: Translate;
+  unitShortKey: "cd" | "hot";
+}) {
+  const unit = t(`unit.${unitShortKey}.short`);
+  const latest = ours[0];
+
+  return (
+    <div className={styles.card} data-kind="detections">
+      <h3 className={styles.heading}>{t("reported.kindOurs")}</h3>
+      <p className={styles.sub}>{t("reported.oursNote", { unit })}</p>
+      {latest === undefined || latest.value === null ? (
+        <p className={styles.cardLine}>{t("reported.noYears")}</p>
+      ) : (
+        <>
+          <p className={styles.cardLine}>
+            {t("reported.oursLatest", {
+              year: latest.y,
+              value: formatCount(latest.value, locale),
+              unit,
+            })}
+          </p>
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">{t("table.year")}</th>
+                  <th scope="col">{unit}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ours.map((row) => (
+                  <tr key={row.y}>
+                    <th scope="row">{row.y}</th>
+                    <td className={styles.num}>
+                      {formatCount(row.value, locale)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
-      <p className={styles.sub}>{t("reported.notComparable")}</p>
-    </section>
+    </div>
   );
 }

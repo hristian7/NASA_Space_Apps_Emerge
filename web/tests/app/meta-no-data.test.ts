@@ -7,14 +7,11 @@ import { isNoDataMonth } from "../../src/lib/data/series";
 /**
  * The record's own last months must not sit inside a no-data period.
  *
- * The shipped meta.json still carries a global no-data period that starts on
- * 1 January 2026 and never ends, left over from the example export that
- * stopped on 31 December 2025. Every month of 2026 therefore reads as "no
- * measurement at all", which is what makes the app default to December 2025
- * and refuse to compare it. The data belongs to another part of the team, so
- * this test records the defect rather than working around it: it is marked as
- * expected to fail, and it turns red the moment the period is corrected, so
- * whoever fixes the file removes the marker with it.
+ * An export that stops mid-month once shipped a global no-data period starting
+ * on 1 January of that year, which made every month of it read as "no
+ * measurement at all" and sent the app back to the previous December. The
+ * check stays so the same slip is caught at the data's edge rather than in the
+ * screens.
  */
 const meta = JSON.parse(
   readFileSync(join(process.cwd(), "public", "data", "meta.json"), "utf8"),
