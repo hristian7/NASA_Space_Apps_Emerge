@@ -15,11 +15,16 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / 'data/derived/risk'
 
 
-def probabilities(x, model):
+def probabilities(x, model, booster=None):
     valid = np.isfinite(x).all(axis=1)
     result = np.full(len(x), np.nan)
     if valid.any():
-        z = ((x[valid] - np.asarray(model['mean'])) / np.asarray(model['scale'])) @ np.asarray(model['coefficients']) + model['intercept']
+        if model.get('kind') == 'lightgbm':
+            if booster is None:
+                raise ValueError('LightGBM model is missing its booster')
+            z = booster.predict(x[valid], raw_score=True, num_threads=4)
+        else:
+            z = ((x[valid] - np.asarray(model['mean'])) / np.asarray(model['scale'])) @ np.asarray(model['coefficients']) + model['intercept']
         z = np.clip(model['calibration_slope'] * z + model['calibration_intercept'], -700, 700)
         result[valid] = 1 / (1 + np.exp(-z))
     return result
@@ -38,6 +43,10 @@ def main():
     model = json.loads(args.model.read_text())
     if model['features'] != list(FEATURES):
         raise ValueError('model feature schema differs from pipeline')
+    booster = None
+    if model.get('kind') == 'lightgbm':
+        import lightgbm as lgb
+        booster = lgb.Booster(model_file=str(args.model.parent / model['booster_file']))
     con = duckdb.connect()
     con.execute('SET threads=4')
     con.execute("SET memory_limit='8GB'")
@@ -64,7 +73,7 @@ def main():
                 for batch in reader:
                     frame = pa.Table.from_batches([batch]).to_pandas()
                     x = frame[list(FEATURES)].to_numpy(dtype=np.float64)
-                    p = probabilities(x, model)
+                    p = probabilities(x, model, booster)
                     n += len(p)
                     valid += int(np.isfinite(p).sum())
                     writer.write_table(pa.table({'grid_g': pa.array(np.full(len(p), 0.25)),
