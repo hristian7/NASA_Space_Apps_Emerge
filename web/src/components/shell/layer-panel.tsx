@@ -232,7 +232,7 @@ export default function LayerPanel({
             "land-type": "https://gibs.earthdata.nasa.gov/legends/MODIS_IGBP_Land_Cover_Type_H.svg",
             "air-temperature": "https://gibs.earthdata.nasa.gov/legends/AIRS_Temperature_H.svg",
           };
-          return <><img src={legends[definition.id]} alt={t("providerLegend")} style={{ maxWidth: "100%", height: "auto" }} />{definition.id === "land-type" ? <p className="hint">{t("landLegend")}</p> : null}</>;
+          return <><img src={legends[definition.id]} alt={t("providerLegend")} style={{ maxWidth: "100%", height: "auto", background: "white" }} />{definition.id === "land-type" ? <p className="hint">{t("landLegend")}</p> : null}</>;
         }
         return (
           <ul className="legend">
