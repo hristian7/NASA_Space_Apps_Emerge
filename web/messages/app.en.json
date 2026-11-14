@@ -1,7 +1,7 @@
 {
   "backgroundMissing": "The pre-2012 background file was not loaded, so months before February 2012 may read low.",
   "chanceMeaning": "How often fire was seen here in this month in past years. It is a count of what happened, not a forecast, and it has not been scored against what followed.",
-  "comparedWith": "Compared with {month} in {first} to {last}, {years} years.",
+  "comparedWith": "Compared with {month} in {list}: {years, plural, one {# year} other {# years}}.",
   "countryTestFair": "That is a fair fit.",
   "countryTestGood": "That is a good fit.",
   "countryTestHeading": "How well this country was tested",
