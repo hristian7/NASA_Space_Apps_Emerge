@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: oklch(0.96 0.005 250);
+  --color-muted: oklch(0.74 0.01 250);
+  --color-surface: oklch(0.17 0.008 250);
+  --color-raised: oklch(0.23 0.01 250);
+  --color-line: oklch(0.34 0.012 250);
+  --color-accent: oklch(0.8 0.04 250);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  text-wrap: pretty;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
