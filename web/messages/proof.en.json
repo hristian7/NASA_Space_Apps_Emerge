@@ -12,7 +12,9 @@
     "trainYears": "Learned on",
     "testYears": "Tested on",
     "preRegistered": "Pass rule written first",
-    "leakageCheck": "Leakage check"
+    "leakageCheck": "Leakage check",
+    "worldFit": "The app is fitted on",
+    "worldFitValue": "{countries} countries, months {months}"
   },
   "holdout": {
     "heading": "Hold-out results",
@@ -27,7 +29,9 @@
     "r": "r",
     "slope": "Slope",
     "forward": "Learn early, test later",
-    "reverse": "Learn late, test earlier"
+    "reverse": "Learn late, test earlier",
+    "country": "Country",
+    "test": "Hold-out"
   },
   "slices": {
     "heading": "Results by group",
@@ -69,7 +73,8 @@
     "scope": "Each row is",
     "n": "Rows",
     "observed": "Share it held, per cent",
-    "none": "No range check in the file yet."
+    "none": "No range check in the file yet.",
+    "country": "Country"
   },
   "chance": {
     "heading": "Chance of fire, checked",
@@ -103,5 +108,10 @@
   "unitCd": "fire days",
   "scopeCountryMonth": "one country, one month",
   "scopeCellMonth": "one grid square, one month",
-  "scopeCircleMonth": "one 50 km circle, one month"
+  "scopeCircleMonth": "one 50 km circle, one month",
+  "scopeCountryMonthJoint": "one country, one month, joint range",
+  "scopeCellMonthFine": "one finer 0.1 degree square, one month",
+  "scopeCircleMonthWeighted": "one 50 km circle, one month, cells weighted by overlap",
+  "yes": "Yes",
+  "no": "No"
 }

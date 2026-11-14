@@ -422,6 +422,9 @@ export default function FireCalendar({
         mode={mode}
         thresholds={thresholds}
         locale={locale}
+        anyFire={series.months.some(
+          (month) => month.value !== null && month.value > 0,
+        )}
       />
     </div>
   );
@@ -431,10 +434,13 @@ function CalendarLegend({
   mode,
   thresholds,
   locale,
+  anyFire,
 }: {
   mode: UnitMode;
   thresholds: number[];
   locale: ReportLocale;
+  /** False when no month has a value above 0, so there are no steps to explain. */
+  anyFire: boolean;
 }) {
   const t = useTranslations("report");
 
@@ -488,7 +494,7 @@ function CalendarLegend({
           <span>{t("legend.estimated")}</span>
         </span>
       </div>
-      <p className={styles.sub}>{stepText}</p>
+      {anyFire ? <p className={styles.sub}>{stepText}</p> : null}
     </>
   );
 }

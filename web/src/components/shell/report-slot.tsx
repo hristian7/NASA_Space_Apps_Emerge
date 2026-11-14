@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { cornerCount } from "@/lib/ui/geo";
 import ReportView from "@/components/app/report-view";
+import { useCountryName } from "@/components/app/country-name";
 import reportStyles from "@/components/report/styles";
 
 type Props = { selection: Selection | null };
@@ -15,7 +16,9 @@ type Props = { selection: Selection | null };
  */
 export default function ReportSlot({ selection }: Props) {
   const t = useTranslations("selection");
-  const names = useTranslations("country");
+  const countryName = useCountryName(
+    selection !== null && selection.kind === "country" ? selection.iso3 : null,
+  );
 
   if (selection === null) {
     return <p className="hint">{t("none")}</p>;
@@ -28,11 +31,7 @@ export default function ReportSlot({ selection }: Props) {
 
   if (selection.kind === "country") {
     kind = t("kindCountry");
-    try {
-      what = names(selection.iso3);
-    } catch {
-      what = selection.iso3;
-    }
+    what = countryName;
   } else if (selection.kind === "point") {
     what =
       selection.radiusKm > 0

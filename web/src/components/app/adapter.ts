@@ -135,6 +135,12 @@ export interface HotspotsLink {
   to: string;
   /** True when the file covers the box around the selection, not its shape. */
   box: boolean;
+  /**
+   * True when the selection's box reaches across the 180 degree line, which
+   * the route does not take, so only the side holding the selection's middle
+   * was asked for. The United States is the case that matters.
+   */
+  partial: boolean;
 }
 
 function pad2(n: number): string {
@@ -171,10 +177,13 @@ export function hotspotsLink(input: {
   lastDay: string;
   /** The country's own box, from the data set's country index. */
   countryBox?: Bbox | null;
+  /** The middle of the country, which decides which side of a wrapped box to ask for. */
+  countryLon?: number | null;
 }): HotspotsLink | null {
   const { selection, year, lastDay } = input;
   const params = new URLSearchParams();
   let box = false;
+  let partial = false;
 
   if (selection.kind === "point") {
     params.set("lat", String(selection.lat));
@@ -186,7 +195,18 @@ export function hotspotsLink(input: {
         ? ringBox(selection.ring)
         : (input.countryBox ?? null);
     if (shape === null) return null;
-    const wide = widen(shape);
+    let wide = widen(shape);
+    if (wide.west >= wide.east) {
+      // A box reaching across the 180 degree line, which the route refuses.
+      // The side holding the country's middle is asked for, and the caller
+      // says plainly that the file covers that side only.
+      partial = true;
+      const middle = input.countryLon ?? 0;
+      wide =
+        middle < 0
+          ? { ...wide, west: -180 }
+          : { ...wide, east: 180 };
+    }
     params.set(
       "bbox",
       [wide.west, wide.south, wide.east, wide.north]
@@ -211,7 +231,7 @@ export function hotspotsLink(input: {
   params.set("from", from);
   params.set("to", to);
 
-  return { href: `/api/hotspots?${params.toString()}`, from, to, box };
+  return { href: `/api/hotspots?${params.toString()}`, from, to, box, partial };
 }
 
 /** The selection in English words, for a CSV comment line. */

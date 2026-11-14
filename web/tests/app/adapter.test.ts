@@ -207,6 +207,23 @@ describe("the hotspots link", () => {
     expect(link?.box).toBe(true);
   });
 
+  it("asks for one side when a country reaches across the 180 degree line", () => {
+    const link = hotspotsLink({
+      selection: { kind: "country", iso3: "USA" },
+      year: 2024,
+      lastDay,
+      // The United States, whose box wraps: west 179.49, east -66.74.
+      countryBox: { west: 179.49, south: 18.74, east: -66.74, north: 70.51 },
+      countryLon: -98.5,
+    });
+    const params = new URLSearchParams(link?.href.split("?")[1]);
+    const [west, south, east, north] = (params.get("bbox") ?? "").split(",").map(Number);
+    expect(west).toBe(-180);
+    expect(east).toBeGreaterThan(west);
+    expect(south).toBeLessThan(north);
+    expect(link?.partial).toBe(true);
+  });
+
   it("has no address for a country with no centre to work from", () => {
     expect(
       hotspotsLink({ selection: { kind: "country", iso3: "BGR" }, year: 2024, lastDay }),

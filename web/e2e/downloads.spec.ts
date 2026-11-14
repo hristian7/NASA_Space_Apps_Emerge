@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { openReport } from "./helpers";
+import { monthOf } from "./data";
 
 /**
  * The monthly CSV is built in the browser and saved as a file, so the spec
@@ -28,8 +29,11 @@ test("the monthly CSV saves with its comment lines and its columns", async ({ pa
   expect(lines[lines.findIndex((line) => !line.startsWith("#"))]).toBe(
     "year,month,unit,value,low,high,source,flags",
   );
-  // August 2024 in fire days, as the country file holds it.
-  expect(text).toContain("2024,8,cd,395,395,395,measured,");
+  // August 2024 in fire days, exactly as the country file holds it.
+  const august = monthOf("BGR", 2024, 8);
+  expect(text).toContain(
+    `2024,8,cd,${Math.round(august.cd)},${Math.round(august.cd_lo)},${Math.round(august.cd_hi)},${august.src},`,
+  );
 });
 
 test("the summary CSV saves with the figures the logic worked out", async ({ page }) => {

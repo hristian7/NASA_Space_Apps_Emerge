@@ -47,9 +47,25 @@ function unitWord(unit: "hot" | "cd", t: Translate): string {
 
 function scopeWord(scope: string, t: Translate): string {
   if (scope === "country_month") return t("scopeCountryMonth");
+  if (scope === "country_month_joint_range") return t("scopeCountryMonthJoint");
   if (scope === "cell_month") return t("scopeCellMonth");
+  if (scope === "cell_month_0p1") return t("scopeCellMonthFine");
   if (scope === "circle_month") return t("scopeCircleMonth");
+  if (scope === "circle_month_weighted") return t("scopeCircleMonthWeighted");
   return scope;
+}
+
+/**
+ * The file carries more than the frozen shape in web/src/types declares: which
+ * country and which hold-out a row belongs to, and a note about the method.
+ * They are read as extra keys so the page can show them without the type
+ * changing hands.
+ */
+function extra(row: unknown, key: string): string | null {
+  const value = (row as Record<string, unknown>)[key];
+  if (typeof value === "string") return value.replace(/_/g, " ");
+  if (typeof value === "number") return String(value);
+  return null;
 }
 
 function flag(passed: boolean | null, t: Translate): string {
@@ -68,14 +84,25 @@ function Method({ validation, t }: ProofTablesProps) {
     [t("method.testYears"), years(method.test_years, t)],
     [
       t("method.preRegistered"),
-      method.pre_registered === null ? t("empty") : flag(method.pre_registered, t),
+      method.pre_registered === null
+        ? t("empty")
+        : t(method.pre_registered ? "yes" : "no"),
     ],
     [t("method.leakageCheck"), method.leakage_check ?? t("empty")],
   ];
+  const modelNote = extra(method, "model_note");
+  const testedOn = extra(method, "tested_countries_note");
+  const fitCountries = extra(method, "world_fit_countries");
+  const fitMonths = extra(method, "fit_months");
+  if (fitCountries !== null) {
+    rows.push([t("method.worldFit"), t("method.worldFitValue", { countries: fitCountries, months: fitMonths ?? "" })]);
+  }
 
   return (
     <section>
       <h2>{t("method.heading")}</h2>
+      {modelNote === null ? null : <p>{modelNote}</p>}
+      {testedOn === null ? null : <p>{testedOn}</p>}
       <table>
         <tbody>
           {rows.map(([label, value]) => (
@@ -98,6 +125,8 @@ function Holdout({ rows, t }: { rows: HoldoutResult[]; t: Translate }) {
       <table>
         <thead>
           <tr>
+            <th scope="col">{t("holdout.country")}</th>
+            <th scope="col">{t("holdout.test")}</th>
             <th scope="col">{t("holdout.direction")}</th>
             <th scope="col">{t("holdout.unit")}</th>
             <th scope="col">{t("holdout.scope")}</th>
@@ -112,6 +141,8 @@ function Holdout({ rows, t }: { rows: HoldoutResult[]; t: Translate }) {
         <tbody>
           {rows.map((row, at) => (
             <tr key={`${row.direction}-${row.unit}-${row.scope}-${at}`}>
+              <td>{extra(row, "country") ?? t("empty")}</td>
+              <td>{extra(row, "test") ?? t("empty")}</td>
               <td>{t(`holdout.${row.direction}`)}</td>
               <td>{unitWord(row.unit, t)}</td>
               <td>{scopeWord(row.scope, t)}</td>
@@ -249,6 +280,7 @@ function Coverage({ rows, t }: { rows: RangeCoverage[]; t: Translate }) {
         <table>
           <thead>
             <tr>
+              <th scope="col">{t("coverage.country")}</th>
               <th scope="col">{t("coverage.level")}</th>
               <th scope="col">{t("coverage.unit")}</th>
               <th scope="col">{t("coverage.scope")}</th>
@@ -259,6 +291,7 @@ function Coverage({ rows, t }: { rows: RangeCoverage[]; t: Translate }) {
           <tbody>
             {rows.map((row, at) => (
               <tr key={`${row.level_pct}-${row.unit}-${row.scope}-${at}`}>
+                <td>{extra(row, "country") ?? t("empty")}</td>
                 <td className="num">{String(row.level_pct)}</td>
                 <td>{unitWord(row.unit, t)}</td>
                 <td>{scopeWord(row.scope, t)}</td>
