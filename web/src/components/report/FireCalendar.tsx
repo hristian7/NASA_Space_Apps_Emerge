@@ -33,7 +33,17 @@ const CELL_H = 12;
 const STEP_X = 25;
 const STEP_Y = 15;
 const HEADER_H = 14;
-const TOTAL_W = 58;
+const BAR_W = 26;
+/**
+ * The year total column: a bar, a gap, then the number. The number is given
+ * room for six characters at 9.5px, because a five-digit total is written with
+ * a group separator in some languages ("44 745") and would otherwise run back
+ * under the bar. The grid is drawn in its own units and scaled by the
+ * viewBox, so this holds at every width.
+ */
+const TOTAL_GAP = 5;
+const TOTAL_TEXT_W = 44;
+const TOTAL_W = BAR_W + TOTAL_GAP + TOTAL_TEXT_W;
 const GRID_W = LABEL_W + 12 * STEP_X + TOTAL_W;
 
 export interface FireCalendarProps {
@@ -326,7 +336,7 @@ export default function FireCalendar({
                 className={styles.totalTrack}
                 x={LABEL_W + 12 * STEP_X}
                 y={top + 3}
-                width={26}
+                width={BAR_W}
                 height={CELL_H - 6}
               />
               <rect
@@ -340,7 +350,7 @@ export default function FireCalendar({
                 width={
                   total?.value === null || total === undefined
                     ? 0
-                    : Math.max(1, (total.value / maxTotal) * 26)
+                    : Math.max(1, (total.value / maxTotal) * BAR_W)
                 }
                 height={CELL_H - 6}
               />

@@ -1,0 +1,107 @@
+{
+  "title": "How we know it is right",
+  "lead": "Every number on this page is read from the committed validation file. Nothing here is typed by hand.",
+  "builtOn": "File built on {date}",
+  "exampleBanner": "This is the example file. The measured values are still empty, so the tables show the shape of the check, not its result.",
+  "method": {
+    "heading": "How the check was made",
+    "gridDeg": "Grid size, degrees",
+    "timeStep": "Time step",
+    "model": "Conversion",
+    "reference": "Reference",
+    "trainYears": "Learned on",
+    "testYears": "Tested on",
+    "preRegistered": "Pass rule written first",
+    "leakageCheck": "Leakage check"
+  },
+  "holdout": {
+    "heading": "Hold-out results",
+    "caption": "The conversion is fitted on some years and scored on years it never saw.",
+    "direction": "Direction",
+    "unit": "Unit",
+    "scope": "Each row is",
+    "n": "Rows",
+    "nrmse": "nRMSE",
+    "mae": "MAE",
+    "bias": "Bias, per cent",
+    "r": "r",
+    "slope": "Slope",
+    "forward": "Learn early, test later",
+    "reverse": "Learn late, test earlier"
+  },
+  "slices": {
+    "heading": "Results by group",
+    "caption": "A weak group cannot hide inside an average, so each group is scored on its own.",
+    "slice": "Group",
+    "key": "Which one",
+    "unit": "Unit",
+    "n": "Rows",
+    "nrmse": "nRMSE",
+    "bias": "Bias, per cent",
+    "none": "No group results in the file yet."
+  },
+  "agreement": {
+    "heading": "Two satellites on the same thing",
+    "caption": "Where two sensors overlap, they should see about the same.",
+    "pair": "Pair",
+    "unit": "Unit",
+    "years": "Years",
+    "n": "Rows",
+    "diff": "Typical difference, per cent",
+    "none": "No satellite comparison in the file yet."
+  },
+  "ratios": {
+    "heading": "Our ratio next to a published one",
+    "caption": "Where somebody has published a figure, ours is put beside it.",
+    "scope": "What",
+    "unit": "Unit",
+    "ours": "Ours",
+    "published": "Published",
+    "source": "Published by",
+    "note": "Note",
+    "none": "No published comparison in the file yet."
+  },
+  "coverage": {
+    "heading": "Does the range hold",
+    "caption": "A range stated as 90 per cent should really hold about 90 per cent of the values.",
+    "level": "Range claimed, per cent",
+    "unit": "Unit",
+    "scope": "Each row is",
+    "n": "Rows",
+    "observed": "Share it held, per cent",
+    "none": "No range check in the file yet."
+  },
+  "chance": {
+    "heading": "Chance of fire, checked",
+    "brier": "Brier score, lower is better",
+    "caption": "Each bin holds the months we gave a similar chance, next to how often fire actually followed.",
+    "bin": "Chance we gave",
+    "predicted": "We said",
+    "observed": "It happened",
+    "n": "Months",
+    "none": "No reliability bins in the file yet.",
+    "binRange": "{low} to {high}"
+  },
+  "controls": {
+    "heading": "Control totals",
+    "caption": "Checks that a total did not change along the way.",
+    "check": "Check",
+    "result": "Result",
+    "detail": "Detail",
+    "passed": "Passed",
+    "failed": "Did not pass",
+    "notRun": "Not run yet",
+    "none": "No control totals in the file yet."
+  },
+  "limits": {
+    "heading": "What this data cannot do",
+    "none": "No limits listed in the file yet."
+  },
+  "empty": "not yet measured",
+  "yearSpan": "{first} to {last}",
+  "unitHot": "hotspots",
+  "unitCd": "fire days",
+  "scopeCountryMonth": "one country, one month",
+  "scopeCellMonth": "one grid square, one month",
+  "scopeCircleMonth": "one 50 km circle, one month"
+}
