@@ -108,19 +108,14 @@ NIFC_NOTE = (
     "missing. Acres in the source are converted to hectares, 1 acre = "
     "0.40468564224 hectares."
 )
-REPORT_TABLE1_NOTE = (
-    "One year only. What the country's own national fire service reported for "
-    "2024, from its own records, as Table 1 of the EFFIS annual report prints "
-    "it. Each country counts fires and burned area by its own rules, so a fire "
-    "its service does not record is missing and countries are not directly "
-    "comparable."
-)
 REPORT_BULGARIA_NOTE = (
     "What the Executive Forest Agency reported, from its own database of "
-    "forest fires, as Table 2 of the EFFIS annual report prints it. Forest "
-    "fires only, so fires on other land are missing. The report rounds burned "
-    "area to whole hectares except for 2024, where its Bulgaria chapter gives "
-    "17 116.4 hectares."
+    "forest fires, as the EFFIS annual report prints it in its annex and in "
+    "Table 2 of its Bulgaria chapter. Forest fires only, so fires on other "
+    "land are missing. The agency's own 2025 report later gives 2024 as 565 "
+    "fires on the same area, 171 164 decares, which is 17 116.4 hectares "
+    "(https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf); the "
+    "figure here is the 595 the 2024 report printed."
 )
 
 # The names Table 1 of the annual report prints, and the three-letter code for
@@ -419,6 +414,106 @@ def report_table1(text: str) -> tuple[dict[str, tuple[int, float]], list[str]]:
     return found, sorted(set(unknown))
 
 
+# The annex tables print one column per country, in this order, and the order
+# is checked against the document before any row is read.
+ANNEX_SOUTHERN = ["PORTUGAL", "SPAIN", "FRANCE", "ITALY", "GREECE"]
+ANNEX_SOUTHERN_CODES = ["PRT", "ESP", "FRA", "ITA", "GRC"]
+ANNEX_OTHER = [
+    "Algeria", "Austria", "Bulgaria", "Croatia", "Cyprus", "Czech", "Estonia",
+    "Finland", "Germany", "Hungary", "Latvia", "Lebanon", "Lithuania",
+    "Morocco", "Netherlands", "North", "Norway", "Poland", "Romania", "Serbia",
+    "Slovakia", "Slovenia", "Sweden", "Switzerland", "T\u00fcrkiye", "Ukraine",
+]
+ANNEX_OTHER_CODES = [
+    "DZA", "AUT", "BGR", "HRV", "CYP", "CZE", "EST", "FIN", "DEU", "HUN",
+    "LVA", "LBN", "LTU", "MAR", "NLD", "MKD", "NOR", "POL", "ROU", "SRB",
+    "SVK", "SVN", "SWE", "CHE", "TUR", "UKR",
+]
+
+ANNEX_TITLES = {
+    "fires_southern": "Table 101. Number of forest fires in five Southern "
+                      "Member States (1980-2024).",
+    "area_southern": "Table 102. Burnt area (hectares) in five Southern "
+                     "Member States (1980\u20132024).",
+    "fires_other": "Table 103. Number of forest fires in other countries "
+                   "(1990-2024).",
+    "area_other": "Table 104. Burnt area (hectares) in other countries "
+                  "(1990\u20132024).",
+}
+
+REPORT_ANNEX_NOTE = (
+    "What the countries' own national fire services reported, year by year, as "
+    "the annex of the EFFIS annual report prints it (JRC's wording: its "
+    "elaboration of the country reports). Each country counts fires and burned "
+    "area by its own rules, so a fire its service does not record is missing "
+    "and countries are not directly comparable."
+)
+
+
+def annex_cells(line: str) -> list[str] | None:
+    """One row of an annex table: the year, then one value or "-" per column.
+
+    The tables separate columns by two spaces or more and write thousands with
+    a single space, so a cell of digit groups of three is one number and any
+    other cell holding a space is two columns the layout pushed together.
+    """
+    cells = [c.strip() for c in re.split(r"\s{2,}", line.strip()) if c.strip()]
+    if not cells or not re.fullmatch(r"(19|20)\d\d", cells[0]):
+        return None
+    values = [cells[0]]
+    for cell in cells[1:]:
+        if re.fullmatch(r"\d{1,3}(?: \d{3})+", cell):
+            values.append(cell.replace(" ", ""))
+        else:
+            values += cell.split()
+    return values
+
+
+def report_annex(layout: str) -> tuple[dict[str, dict[int, dict[str, float | int]]], list[str]]:
+    """Fires and burned area per country per year, from Tables 101 to 104."""
+    found: dict[str, dict[int, dict[str, float | int]]] = {}
+    trouble: list[str] = []
+    # The five-country tables carry a TOTAL column, the wide ones do not.
+    tables = [
+        ("fires_southern", ANNEX_SOUTHERN, ANNEX_SOUTHERN_CODES, "fires", 1),
+        ("area_southern", ANNEX_SOUTHERN, ANNEX_SOUTHERN_CODES, "burned_ha", 1),
+        ("fires_other", ANNEX_OTHER, ANNEX_OTHER_CODES, "fires", 0),
+        ("area_other", ANNEX_OTHER, ANNEX_OTHER_CODES, "burned_ha", 0),
+    ]
+    marks = {key: layout.rfind(ANNEX_TITLES[key]) for key, *_ in tables}
+    if any(at < 0 for at in marks.values()):
+        return {}, ["an annex table title is not in the report"]
+    order = sorted(marks.values()) + [len(layout)]
+    for key, names, codes, field, extra in tables:
+        at = marks[key]
+        segment = layout[at:order[order.index(at) + 1]]
+        head = segment[:segment.find("\n19")] if "\n19" in segment else segment
+        position = -1
+        for name in names:
+            position = head.find(name, position + 1)
+            if position < 0:
+                trouble.append(f"{key}: the column order is not the one expected")
+                break
+        else:
+            width = len(names) + extra
+            for line in segment.splitlines():
+                values = annex_cells(line)
+                if values is None:
+                    continue
+                if len(values) - 1 != width:
+                    trouble.append(
+                        f"{key} {values[0]}: {len(values) - 1} columns, not {width}")
+                    continue
+                year = int(values[0])
+                for code, raw in zip(codes, values[1:]):
+                    if raw == "-" or not re.fullmatch(r"\d+(?:\.\d+)?", raw):
+                        continue
+                    row = found.setdefault(code, {}).setdefault(year, {})
+                    row[field] = (int(raw) if field == "fires"
+                                  else tidy(round(float(raw), 2)))
+    return found, trouble
+
+
 def report_bulgaria(layout: str, plain: str) -> list[tuple[int, int, float]]:
     """Ten years of Bulgarian forest fire statistics, from Table 2."""
     start = layout.find("Table 2. Fire statistics for Bulgaria")
@@ -556,27 +651,44 @@ def build(data: Path, offline: bool) -> dict[str, int]:
         if unknown:
             print("  names in Table 1 with no code, left out: "
                   + ", ".join(unknown), flush=True)
+        annex, trouble = report_annex(layout)
+        for line in trouble:
+            print(f"  annex row left out, nothing guessed: {line}", flush=True)
         bulgaria = report_bulgaria(layout, plain)
         report_name = ("EFFIS annual report, Forest Fires in Europe, Middle "
                        "East and North Africa 2024, Publications Office of the "
-                       "European Union")
-        for iso3, (fires, hectares) in sorted(table1.items()):
+                       "European Union, annex Tables 101 to 104 with Table 1 "
+                       "for 2024, source JRC's elaboration of the country "
+                       "reports")
+
+        # The annex is the long series; Table 1 is the same data for 2024 and
+        # prints it to the tenth of a hectare, so it is laid over the annex's
+        # rounded 2024; Bulgaria's own chapter table is laid over that.
+        national_rows: dict[str, dict[int, dict[str, float | int]]] = {
+            code: dict(years) for code, years in annex.items()
+        }
+        for iso3, (fires, hectares) in table1.items():
+            row = national_rows.setdefault(iso3, {}).setdefault(2024, {})
+            row["fires"], row["burned_ha"] = fires, hectares
+        for year, fires, hectares in bulgaria:
+            row = national_rows.setdefault("BGR", {}).setdefault(year, {})
+            row["fires"], row["burned_ha"] = fires, hectares
+
+        for iso3, years in sorted(national_rows.items()):
+            note = REPORT_ANNEX_NOTE
+            name = report_name
             if iso3 == "BGR" and bulgaria:
-                continue
+                name += ", and Table 2 for Bulgaria"
+                note = REPORT_BULGARIA_NOTE
             add(iso3, make_series(
-                NATIONAL, report_name + ", Table 1", REPORT_DOI, fetched,
-                REPORT_LICENCE, REPORT_TABLE1_NOTE, [(2024, hectares, fires)]))
+                NATIONAL, name, REPORT_DOI, fetched, REPORT_LICENCE, note,
+                [(year, row.get("burned_ha"), row.get("fires"))
+                 for year, row in sorted(years.items())]))
             national += 1
-        if bulgaria:
-            add("BGR", make_series(
-                NATIONAL,
-                report_name + ", Table 2, source the Executive Forest Agency, "
-                "Bulgaria",
-                REPORT_DOI, fetched, REPORT_LICENCE, REPORT_BULGARIA_NOTE,
-                [(year, hectares, fires) for year, fires, hectares in bulgaria]))
-            national += 1
-        print(f"annual report: {len(table1)} countries in Table 1, "
-              f"{len(bulgaria)} years for Bulgaria in Table 2", flush=True)
+        spans = [len(y) for y in national_rows.values()]
+        print(f"annual report: {len(national_rows)} countries, "
+              f"{min(spans)} to {max(spans)} years each "
+              f"({len(table1)} of them in Table 1 for 2024)", flush=True)
 
     if not by_country:
         raise SystemExit("nothing was fetched, so no files were written.")
