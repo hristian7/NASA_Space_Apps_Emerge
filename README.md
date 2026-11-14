@@ -23,6 +23,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`specs/plan-2-fire-risk/specification.md`](specs/plan-2-fire-risk/specification.md) | **Plan 2 build spec:** data sources (checked 14 Nov), engine, scorecard, screens, file contract, tests, order of work |
 | [`docs/research/firefighter-interview.md`](docs/research/firefighter-interview.md) | Interview with a Bulgarian firefighter, the source of plan 2 |
 | [`docs/challenge-brief.md`](docs/challenge-brief.md) | NASA's challenge text (source of truth) |
+| [`docs/data-sources-master.md`](docs/data-sources-master.md) | **All data sources in one register:** in use, in development, planned, future; ranked by value for fire prediction. Add new sources here |
 | [`docs/firms-data.md`](docs/firms-data.md) | Deep dive on the FIRMS fire data for this challenge: download URLs, columns, cleaning rules, sizes, how different the sensors are |
 | [`docs/challenges-overview.md`](docs/challenges-overview.md) | All 14 challenges at a glance, plus key rules (added by a teammate) |
 | [`docs/challenges-full.md`](docs/challenges-full.md) | Full NASA text and resources for all 14 challenges (added by a teammate) |
