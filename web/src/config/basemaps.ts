@@ -66,6 +66,16 @@ export const basemaps: Basemap[] = [
       "Imagery from NASA Global Imagery Browse Services (GIBS), part of NASA ESDIS",
     verified: true,
   },
+  {
+    // Vector street map, tested on the globe in risk spike (c). The globe
+    // view has to be set again after this style loads.
+    id: "openfreemap-liberty",
+    nameKey: "streets",
+    style: "https://tiles.openfreemap.org/styles/liberty",
+    attribution:
+      "Tiles by OpenFreeMap, schema by OpenMapTiles, data from OpenStreetMap contributors (ODbL)",
+    verified: true,
+  },
 ];
 
 export const defaultBasemapId = basemaps[0].id;

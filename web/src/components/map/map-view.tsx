@@ -1,0 +1,279 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type { TerraDraw } from "terra-draw";
+import { useTranslations } from "next-intl";
+import type { Selection } from "@/types/ui";
+import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
+import { emptyFeatures, selectionCentre, selectionFeatures } from "@/lib/ui/geo";
+import { tokenColor } from "@/lib/ui/token-color";
+
+export type Projection = "globe" | "mercator";
+
+type Props = {
+  selection: Selection | null;
+  basemapId: string;
+  projection: Projection;
+  drawing: boolean;
+  onPickPoint: (lat: number, lon: number) => void;
+  onDrawArea: (ring: [lon: number, lat: number][]) => void;
+  onDrawingEnd: () => void;
+};
+
+const workerPath = "/vendor/maplibre-worker";
+const selectionSource = "emerge-selection";
+const fillLayer = "emerge-selection-fill";
+const lineLayer = "emerge-selection-line";
+const pointLayer = "emerge-selection-point";
+
+function rasterStyle(id: string): StyleSpecification | string {
+  const basemap = getBasemap(id) ?? getBasemap(defaultBasemapId) ?? basemaps[0];
+  if (basemap.style !== undefined) return basemap.style;
+
+  return {
+    version: 8,
+    sources: {
+      base: {
+        type: "raster",
+        tiles: basemap.tiles,
+        tileSize: basemap.tileSize,
+        minzoom: basemap.minzoom,
+        maxzoom: basemap.maxzoom,
+        attribution: basemap.attribution,
+      },
+    },
+    layers: [
+      { id: "space", type: "background", paint: { "background-color": "rgb(10,10,12)" } },
+      { id: "base", type: "raster", source: "base" },
+    ],
+  } satisfies StyleSpecification;
+}
+
+export default function MapView({
+  selection,
+  basemapId,
+  projection,
+  drawing,
+  onPickPoint,
+  onDrawArea,
+  onDrawingEnd,
+}: Props) {
+  const t = useTranslations("map");
+  const container = useRef<HTMLDivElement | null>(null);
+  const label = useRef(t("label"));
+  label.current = t("label");
+  const map = useRef<MapLibreMap | null>(null);
+  const draw = useRef<TerraDraw | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  // Latest values the map's own listeners need, without rebuilding the map.
+  const pick = useRef(onPickPoint);
+  const area = useRef(onDrawArea);
+  const drawEnd = useRef(onDrawingEnd);
+  const isDrawing = useRef(drawing);
+  const current = useRef(selection);
+  pick.current = onPickPoint;
+  area.current = onDrawArea;
+  drawEnd.current = onDrawingEnd;
+  isDrawing.current = drawing;
+  current.current = selection;
+
+  useEffect(() => {
+    let cancelled = false;
+    const node = container.current;
+    if (node === null) return;
+
+    (async () => {
+      try {
+        const maplibregl = await import("maplibre-gl");
+        if (cancelled) return;
+        maplibregl.setWorkerUrl(workerPath);
+
+        const instance = new maplibregl.Map({
+          container: node,
+          style: rasterStyle(basemapId),
+          center: [20, 25],
+          zoom: 1.4,
+          attributionControl: false,
+          dragRotate: false,
+          maxPitch: 0,
+        });
+        map.current = instance;
+
+        instance.addControl(
+          new maplibregl.AttributionControl({ compact: false }),
+          "bottom-right",
+        );
+        instance.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          "bottom-left",
+        );
+
+        instance.on("error", (event) => {
+          // A missing tile must not blank the page; the credit bar and the
+          // rest of the shell keep working.
+          console.warn("map", event.error?.message ?? event);
+        });
+
+        const paintSelection = () => {
+          if (instance.getSource(selectionSource) === undefined) {
+            instance.addSource(selectionSource, { type: "geojson", data: emptyFeatures });
+          }
+          const stroke = tokenColor("--outline");
+          const accent = tokenColor("--accent");
+          if (instance.getLayer(fillLayer) === undefined) {
+            instance.addLayer({
+              id: fillLayer,
+              type: "fill",
+              source: selectionSource,
+              filter: ["!=", ["geometry-type"], "Point"],
+              paint: { "fill-color": accent, "fill-opacity": 0.14 },
+            });
+          }
+          if (instance.getLayer(lineLayer) === undefined) {
+            instance.addLayer({
+              id: lineLayer,
+              type: "line",
+              source: selectionSource,
+              filter: ["!=", ["geometry-type"], "Point"],
+              paint: { "line-color": stroke, "line-width": 1.6 },
+            });
+          }
+          if (instance.getLayer(pointLayer) === undefined) {
+            instance.addLayer({
+              id: pointLayer,
+              type: "circle",
+              source: selectionSource,
+              filter: ["==", ["geometry-type"], "Point"],
+              paint: {
+                "circle-radius": 5,
+                "circle-color": accent,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": stroke,
+              },
+            });
+          }
+          const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
+          source?.setData(selectionFeatures(current.current));
+        };
+
+        instance.on("load", () => {
+          instance.getCanvas().setAttribute("aria-label", label.current);
+          instance.setProjection({ type: projection });
+          paintSelection();
+        });
+
+        // A new style drops every source and layer, so they are put back.
+        instance.on("style.load", () => {
+          instance.setProjection({ type: projection });
+          paintSelection();
+        });
+
+        instance.on("click", (event) => {
+          if (isDrawing.current) return;
+          pick.current(event.lngLat.lat, event.lngLat.lng);
+        });
+      } catch (error) {
+        console.warn("map", error);
+        if (!cancelled) setFailed(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      draw.current?.stop();
+      draw.current = null;
+      map.current?.remove();
+      map.current = null;
+    };
+    // The map is built once; later changes are applied by the effects below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null) return;
+    instance.setStyle(rasterStyle(basemapId));
+  }, [basemapId]);
+
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null) return;
+    if (instance.loaded() || instance.isStyleLoaded()) {
+      instance.setProjection({ type: projection });
+    }
+  }, [projection]);
+
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null) return;
+    const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
+    source?.setData(selectionFeatures(selection));
+    const centre = selectionCentre(selection);
+    if (centre === null) return;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      instance.jumpTo({ center: centre });
+    } else {
+      instance.easeTo({ center: centre, duration: 650 });
+    }
+  }, [selection]);
+
+  useEffect(() => {
+    const instance = map.current;
+    if (instance === null) return;
+    let cancelled = false;
+
+    if (!drawing) {
+      draw.current?.stop();
+      draw.current = null;
+      return;
+    }
+
+    (async () => {
+      const [{ TerraDraw, TerraDrawPolygonMode }, { TerraDrawMapLibreGLAdapter }] =
+        await Promise.all([
+          import("terra-draw"),
+          import("terra-draw-maplibre-gl-adapter"),
+        ]);
+      if (cancelled) return;
+
+      const instrument = new TerraDraw({
+        adapter: new TerraDrawMapLibreGLAdapter({ map: instance }),
+        modes: [new TerraDrawPolygonMode()],
+      });
+      instrument.start();
+      instrument.setMode("polygon");
+      instrument.on("finish", (id, context) => {
+        if (context.action !== "draw") return;
+        const feature = instrument
+          .getSnapshot()
+          .find((candidate) => candidate.id === id);
+        if (feature === undefined || feature.geometry.type !== "Polygon") return;
+        const ring = feature.geometry.coordinates[0] as [lon: number, lat: number][];
+        area.current(ring);
+        instrument.clear();
+        drawEnd.current();
+      });
+      draw.current = instrument;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawing]);
+
+  return (
+    <>
+      <div ref={container} className="map" />
+      {failed ? (
+        <p className="glass" style={{ position: "fixed", inset: "auto 16px 16px", padding: 12 }}>
+          {t("failed")}
+        </p>
+      ) : null}
+    </>
+  );
+}

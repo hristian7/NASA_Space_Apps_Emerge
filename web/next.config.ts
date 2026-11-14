@@ -4,6 +4,12 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // The language loader reads the messages directory at run time, so a new
+  // `<namespace>.<locale>.json` file needs no code change. The directory has
+  // to travel with the deployment for that to work.
+  outputFileTracingIncludes: {
+    "/**/*": ["./messages/**/*"],
+  },
   turbopack: {
     rules: {
       "*.css": {
