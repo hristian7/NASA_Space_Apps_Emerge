@@ -34,7 +34,7 @@ Every term is explained in plain language, in **English and Bulgarian**.
 
 All Musts and Shoulds from [`features-moscow.md`](features-moscow.md). **Removed to save time (16:50):** push alerts (S11), combined data (M22), installable app (M15). Suggestion 2 is merged (M18–M26; several base maps and data layers are Could, C9 and C10). Won't-haves: accounts, official warnings, app-store apps, image sharpening, burned-area mapping.
 
-### Musts: data, selection, map and layers (from suggestion 2)
+### Musts: data, selection, map and layers
 
 | # | Feature | Required behaviour | Done when (completion evidence) |
 |---|---|---|---|

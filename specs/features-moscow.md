@@ -13,12 +13,12 @@
 **Team choices (14 Nov):**
 - All Musts and all Shoulds. Hosting is Vercel.
 - **Removed to save time (16:50):** push alerts (S11), combined data (M22) and the installable app (M15). They are listed under Won't. (Suggestion 2 still lists M22; this file decides.)
-- **Suggestion 2 merged (evening):** [`features-moscow-suggestion-2.md`](features-moscow-suggestion-2.md) adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
+- **Suggestion 2 merged (evening):** adds M18–M26, C7–C10, and widens M3, M4 and M11. Its numbering is kept. **Updated 16:45** to the teammate's latest version: a points-only data model (M18, M20), and several base maps and data layers moved to Could (C9, C10).
 - **Every item on NASA's challenge page is a Must (evening):** added M27 and M28, and widened M3, M4, M5 and M11. The checklist is in [`specification.md`](specification.md), section 2 ("Challenge-page checklist").
 
 Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](interview-answers.md)) and updated the same day. The research files are linked where a feature depends on them. The build details are in [`specification.md`](specification.md).
 
-**Feature groups (from suggestion 2):**
+**Feature groups:**
 - **M23, Statistics and visualisation:** M1, M4, M5, M13.
 - **M24, Verification:** M6.
 - **"Using fetched data":** everything a user does with a selection (M3, M4, M5, M11, M13, S3, S8–S10, C2, C5, C6).
@@ -35,7 +35,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M18 | **Points-only data model** | Every kind of data is stored and fetched as **points**, never as shapes. Each point has a `precision-radius`: how sharp that measurement is (about 1 km for MODIS, 375 m for VIIRS). Our harmonized monthly values are points too, at the centre of each grid square, with a precision-radius about the size of the square. Shapes (heat maps, region totals) are only drawn **after** fetching, for display | M |
 | M3 | **Pick a place** | Choose by **a point plus a search distance** (tap the map, or **type a latitude and longitude**, which NASA's brief suggests), or by **an area**: drawn, or ready-made like a country. The search distance is measured along the Earth's curved surface. Whatever the choice, the result is always points (M18). The calendar, charts, table and export follow that selection. If no fires were recorded there, the app says so instead of showing an empty chart | M |
 | M19 | **"No data" is not "zero"** | The app tells apart "measured, and no fire was seen" (zero) and "no measurement was made" (no data: before Nov 2000, or a satellite gap), and shows them differently | S |
-| M29 | **Minimum point format** (from suggestion 2) | Every data point has at least: `type`, `location`, `precision-radius` and one measurement; more measurements and other precision fields (scan angle, confidence) can be added | S |
+| M29 | **Minimum point format** | Every data point has at least: `type`, `location`, `precision-radius` and one measurement; more measurements and other precision fields (scan angle, confidence) can be added | S |
 | M20 | **Several data types per point** | Every kind of data (fire, temperature, wind, humidity…) is stored as a point measurement, and one point can carry several at once, for example fire and temperature | S |
 | M21 | **Get simple data** | For the selected place and time range, from today back to the start of MODIS and VIIRS: show one data type as raw rows, as a table, or on the map | M |
 
