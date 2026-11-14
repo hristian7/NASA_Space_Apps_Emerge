@@ -26,8 +26,8 @@ function monthOfLastDay(): { y: number; m: number } {
 }
 
 describe("the record's last months", () => {
-  it.fails(
-    "are not inside a no-data period (fails while meta.json keeps the 2026 period)",
+  it(
+    "are not inside a no-data period",
     () => {
       const last = monthOfLastDay();
       expect(isNoDataMonth(meta, last.y, last.m)).toBe(false);
