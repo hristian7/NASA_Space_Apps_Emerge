@@ -174,7 +174,7 @@ def selection_scores(con, selection, year, has_model=False):
     return result
 
 
-def prepare_candidates(con, data, year, regions, predictions):
+def prepare_candidates(con, data, year, regions, predictions, world=False):
     fwi = sorted((data / 'fwi_0.25').glob(f'month={year}-*/*.parquet'))
     if not fwi:
         return []
@@ -190,7 +190,7 @@ def prepare_candidates(con, data, year, regions, predictions):
     con.execute('CREATE OR REPLACE TEMP TABLE grid AS SELECT spot_id,region_id,fuel_class,lat,lon FROM read_parquet(?)', [str(data / 'grid_0.25.parquet')])
     if regions:
         con.execute('DELETE FROM grid WHERE region_id NOT IN (SELECT unnest(?::VARCHAR[]))', [regions])
-    else:
+    elif not world:
         con.execute('DELETE FROM grid WHERE lon NOT BETWEEN -25 AND 45 OR lat NOT BETWEEN 34 AND 72')
     if predictions:
         reader = 'read_parquet' if predictions.suffix.lower() == '.parquet' else 'read_csv_auto'
@@ -226,10 +226,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--year', type=int, action='append', required=True)
     parser.add_argument('--regions', help='comma-separated Natural Earth region IDs, anywhere in the world; default is Europe')
+    parser.add_argument('--world', action='store_true', help='score all regions worldwide')
+    parser.add_argument('--shipped-grid', action='store_true', help='declare that 0.25 degrees is the shipped grid')
     parser.add_argument('--predictions', type=Path)
     parser.add_argument('--data', type=Path, default=DATA)
     parser.add_argument('--out', type=Path, default=DATA / 'scorecard_baselines_europe.json')
     args = parser.parse_args()
+    if args.world and args.regions:
+        parser.error('--world and --regions are mutually exclusive')
     if args.predictions and args.out == DATA / 'scorecard_baselines_europe.json':
         parser.error('use a separate --out for a model scorecard')
     con = duckdb.connect()
@@ -237,20 +241,23 @@ def main():
     con.execute("SET memory_limit='6GB'")
     con.execute('SET temp_directory=?', [str(args.data / 'duckdb_tmp')])
     card = {'schema': 'emerge-risk-baseline-scorecard-1', 'grid_g': 0.25,
-            'scope': {'name': 'selected regions' if args.regions else 'Europe', 'bounds': None if args.regions else [-25,34,45,72], 'region_ids': args.regions.split(',') if args.regions else None},
+            'scope': {'name': 'world' if args.world else ('selected regions' if args.regions else 'Europe'), 'bounds': None if args.world or args.regions else [-25,34,45,72], 'region_ids': args.regions.split(',') if args.regions else None},
             'seed': SEED, 'bootstrap_draws': DRAWS, 'years': {},
             'notes': ['Rankings use common available candidate spots; all eligible fires on forecast days remain in the capture denominator, even when their spots have missing scores.',
                       'Fuel categories are 2021 majority land classes, not land-cover shares.',
-                      'The 0.25 degree grid is a development grid and cannot support a shipped-grid claim.']}
+                      'The 0.25 degree grid is the shipped grid.' if args.shipped_grid else 'The 0.25 degree grid is a development grid and cannot support a shipped-grid claim.']}
     for year in args.year:
         print('preparing', year, flush=True)
-        days = prepare_candidates(con, args.data, year, args.regions.split(',') if args.regions else None, args.predictions)
+        days = prepare_candidates(con, args.data, year, args.regions.split(',') if args.regions else None, args.predictions, args.world)
         entry = {'weather_days': len(days), 'first_day': min(days).isoformat() if days else None,
                  'last_day': max(days).isoformat() if days else None, 'selections': {}}
         if days:
             for selection in ('forest_wildland','all_vegetation','forest_only','other_vegetation'):
                 print('scoring', year, selection, flush=True)
                 entry['selections'][selection] = selection_scores(con, selection, year, bool(args.predictions))
+                if args.shipped_grid:
+                    for result in entry['selections'][selection]['bootstrap'].values():
+                        result['claim_permitted'] = result['bootstrap_passed']
         card['years'][str(year)] = entry
     args.out.parent.mkdir(parents=True, exist_ok=True)
     temp = args.out.with_suffix(args.out.suffix + '.tmp')
