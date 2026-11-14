@@ -64,6 +64,8 @@ export default function ReportedCard({
         <p className={styles.cardLine}>{t("reported.none")}</p>
       ) : null}
 
+      <ReportedChart views={views} ours={ours} t={t} />
+
       {views.length === 0 ? (
         <p className={styles.cardLine}>{t("reported.noYears")}</p>
       ) : (
@@ -89,6 +91,60 @@ export default function ReportedCard({
 }
 
 type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+/**
+ * Paired bars per year: the national count of fires and our satellite fire
+ * days. They measure different things, so each is scaled to its own largest
+ * year and only the shapes are meant to be compared.
+ */
+function ReportedChart({
+  views,
+  ours,
+  t,
+}: {
+  views: ReturnType<typeof seriesViews>;
+  ours: YearTotal[];
+  t: Translate;
+}) {
+  const national = views.find((view) => view.kind === "national_report");
+  if (national === undefined) return null;
+  const detected = new Map(ours.map((total) => [total.y, total.value ?? 0]));
+  const pairs = national.years
+    .filter((row) => row.fires !== null && detected.has(row.y))
+    .map((row) => ({ y: row.y, reported: row.fires ?? 0, ours: detected.get(row.y) ?? 0 }))
+    .sort((a, b) => a.y - b.y);
+  if (pairs.length < 2) return null;
+  const topReported = Math.max(1, ...pairs.map((pair) => pair.reported));
+  const topOurs = Math.max(1, ...pairs.map((pair) => pair.ours));
+  const step = 100 / pairs.length;
+  const bar = step * 0.34;
+  return (
+    <figure className="rp-paired">
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label={t("reported.chartLabel")}>
+        {pairs.map((pair, index) => {
+          const x = index * step + step * 0.12;
+          const hr = (pair.reported / topReported) * 36;
+          const ho = (pair.ours / topOurs) * 36;
+          return (
+            <g key={pair.y}>
+              <rect className="rp-paired-reported" x={x} y={40 - hr} width={bar} height={hr} />
+              <rect className="rp-paired-ours" x={x + bar + step * 0.06} y={40 - ho} width={bar} height={ho} />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="rp-paired-axis num">
+        <span>{pairs[0].y}</span>
+        <span>{pairs[pairs.length - 1].y}</span>
+      </div>
+      <figcaption className="rp-paired-key">
+        <span><i className="rp-paired-reported" aria-hidden="true" />{t("reported.chartReported")}</span>
+        <span><i className="rp-paired-ours" aria-hidden="true" />{t("reported.chartOurs")}</span>
+        <span className="rp-paired-note">{t("reported.chartNote")}</span>
+      </figcaption>
+    </figure>
+  );
+}
 
 /** One published series: what it is, who made it, and its years. */
 function Series({

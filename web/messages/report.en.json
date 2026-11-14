@@ -122,7 +122,11 @@
         "v7": "What the Executive Forest Agency reported for forest fires, from the EFFIS annual report annex and Bulgaria chapter, and the agency's 2025 report (https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf, page 35). The latter revises the 2024 count to 565 from 595 and reports 546 fires on 154588 decares (15458.8 hectares) in 2025. For 2019, the EFFIS report's Table 2 gives 5619 hectares while its annex gives 5620; the Table 2 value is used. Fires on other land are missing.",
         "v8": "NIFC (National Interagency Fire Center), Total Wildland Fires and Acres (1983-2025), source the National Interagency Coordination Center",
         "v9": "What the National Interagency Coordination Center reported: all wildland fires and the area they burned, counted from the records of the federal and state wildland fire agencies, so a fire none of them recorded is missing. Acres in the source are converted to hectares, 1 acre = 0.40468564224 hectares. The source marks 2004 with an asterisk: 2004 fires and acres do not include state lands for North Carolina."
-      }
+      },
+      "chartLabel": "Reported fires and our fire days per year",
+      "chartReported": "Reported fires",
+      "chartOurs": "Our fire days",
+      "chartNote": "Each series is scaled to its own largest year, so compare the shape, not the height."
     },
     "extremes": {
       "worstMonth": "Worst month",
@@ -225,6 +229,13 @@
       "gwisDanger": "GWIS: today's fire danger map (opens on the world)",
       "newTab": "(new tab)",
       "wholeCountry": "For the whole country, not only the selection."
+    },
+    "parts": {
+      "label": "Parts of the report",
+      "overview": "Overview",
+      "charts": "Charts",
+      "data": "Data",
+      "sources": "Sources"
     }
   }
 }
