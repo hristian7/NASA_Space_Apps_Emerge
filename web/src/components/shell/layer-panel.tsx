@@ -175,15 +175,22 @@ export default function LayerPanel({
     switch (definition.panel?.legend.kind) {
       case "ramp":
         return (
-          <ul className="legend">
-            {historyRampTokens.map((token, index) => (
-              <li key={token}>
-                <span className="swatch" style={{ background: `var(${token})` }} aria-hidden="true" />
-                <span className="num">{breakLabel(index, t("orMore"))}</span>
-                <span className="legend-word">{t("fireDays")}</span>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="legend">
+              {historyRampTokens.map((token, index) => (
+                <li key={token}>
+                  <span
+                    className="swatch"
+                    style={{ background: `var(${token})` }}
+                    aria-hidden="true"
+                  />
+                  <span className="num">{breakLabel(index, t("orMore"))}</span>
+                  <span className="legend-word">{t("fireDays")}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="hint">{t("mergedNote")}</p>
+          </>
         );
       case "points":
         return (

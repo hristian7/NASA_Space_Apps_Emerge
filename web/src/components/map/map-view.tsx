@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 import type { TerraDraw } from "terra-draw";
 import { useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
 import { layer as layerById, layerUrl } from "@/config/layers";
+import { CELL_DEG } from "@/lib/data/cell";
 import {
   countryBounds,
   emptyFeatures,
@@ -21,6 +22,8 @@ import {
   historyRampTokens,
 } from "@/lib/layers/history";
 import {
+  aggregateCells,
+  mergeFactor,
   rgbaFrom,
   recentRadiusPx,
   type HistoryCell,
@@ -158,6 +161,9 @@ export default function MapView({
   boxes.current = countryBoxes;
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
+  // Only how many cells are merged into one square, not the zoom itself, so a
+  // small camera move does not rebuild the layer.
+  const [factor, setFactor] = useState(8);
   const overlay = useRef<{ setProps: (props: { layers: unknown[] }) => void } | null>(null);
   const pickRecent = useRef(onPickRecent);
   pickRecent.current = onPickRecent;
@@ -379,6 +385,7 @@ export default function MapView({
           paintDanger();
           // A selection read from the address bar is already set by now.
           frameSelection(instance, current.current, boxes.current);
+          setFactor(mergeFactor(instance.getZoom()));
           setReady(true);
         });
 
@@ -387,6 +394,10 @@ export default function MapView({
           instance.setProjection({ type: projection });
           paintSelection();
           paintDanger();
+        });
+
+        instance.on("zoomend", () => {
+          setFactor(mergeFactor(instance.getZoom()));
         });
 
         instance.on("click", (event) => {
@@ -445,6 +456,14 @@ export default function MapView({
     paintDangerRef.current?.();
   }, [dangerDate, ready]);
 
+  // What the history layer actually draws at this zoom. Merging is done here
+  // rather than in the loader, because only the map knows how close the
+  // camera is.
+  const drawnCells = useMemo(
+    () => aggregateCells(historyCells, factor, CELL_DEG),
+    [historyCells, factor],
+  );
+
   // History cells and recent detections, drawn over the map by deck.gl.
   useEffect(() => {
     const instance = map.current;
@@ -452,7 +471,7 @@ export default function MapView({
     let cancelled = false;
 
     (async () => {
-      const [{ MapboxOverlay }, { PolygonLayer, ScatterplotLayer }] = await Promise.all([
+      const [{ MapboxOverlay }, { SolidPolygonLayer, ScatterplotLayer }] = await Promise.all([
         import("@deck.gl/mapbox"),
         import("@deck.gl/layers"),
       ]);
@@ -464,19 +483,17 @@ export default function MapView({
       const hot = rgbaFrom(tokenColor("--ramp-3"), 240);
 
       const layers: unknown[] = [];
-      if (historyCells.length > 0) {
+      if (drawnCells.length > 0) {
         layers.push(
-          new PolygonLayer<HistoryCell>({
+          new SolidPolygonLayer<HistoryCell>({
             id: "emerge-history",
-            data: historyCells,
+            data: drawnCells,
             getPolygon: (cell) => cell.polygon,
             getFillColor: (cell) => ramp[cell.klass] ?? ramp[0],
-            getLineColor: edge,
-            lineWidthMinPixels: 0,
-            stroked: false,
             filled: true,
+            extruded: false,
             pickable: false,
-            updateTriggers: { getFillColor: [historyCells.length] },
+            updateTriggers: { getFillColor: [drawnCells.length] },
           }),
         );
       }
@@ -514,7 +531,7 @@ export default function MapView({
     return () => {
       cancelled = true;
     };
-  }, [historyCells, recentPoints, ready]);
+  }, [drawnCells, recentPoints, ready]);
 
   useEffect(() => {
     const instance = map.current;
