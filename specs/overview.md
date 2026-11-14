@@ -29,7 +29,7 @@ A free website, built for phones too, that turns 25 years of NASA fire data into
 | **Choose a place** | A point plus a search distance (tap or type latitude/longitude), a drawn area, or a country |
 | **Choose dates, see the data** | Any range from Nov 2000; as rows, a table or a map |
 | **"No data" is not "zero"** | Shown differently, so gaps are never mistaken for "no fire" |
-| **Fire calendar** | Years × months of hotspots, coloured so the worst months and years stand out |
+| **Fire calendar** | Years × months of hotspots (or fire days, if hotspots fail their test), coloured so the worst months and years stand out |
 | **"Is this unusual?"** | This month vs the median and average of past years |
 | **This fire vs past fires** | The last 8 days vs the same days in every past year |
 | **Chance of fire this month** | How often this place had fires in this month, with a certainty range |
@@ -60,7 +60,7 @@ A free website, built for phones too, that turns 25 years of NASA fire data into
 | 2026 hotspots | firms-catalog (free online copy of FIRMS) | up to today `[V]` |
 | Fire danger | Copernicus GWIS (EU service, worldwide); NIFC (USA) | next days and months |
 | Background maps | NASA GIBS (Blue Marble, Black Marble) | — |
-| Reported fires | EFFIS (Europe), NIFC (USA) | 2006 / 1983 → 2025 |
+| Reported fires | EFFIS (Europe), NIFC (USA) | 2006 → 2026 / 1983 → 2025 |
 
 All free; every source is credited.
 

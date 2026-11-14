@@ -2,7 +2,10 @@
 
 The app lives in [`web/`](../web/). For now it is a single static "hello world" page with no build step, so we can prove that a push to `main` deploys by itself before the real Next.js app replaces it ([`../specs/specification.md`](../specs/specification.md)).
 
-## Quick steps for the Vercel project owner (Hristian)
+## Quick steps for the Vercel project owner
+
+**Status (14 Nov, 16:45): done.** Root Directory `web`, framework Other, pause removed, redeployed; the auto-deploy test (build 1 → 2) passed.
+
 
 1. **Vercel → emerge → Settings → Build and Deployment**
    - **Root Directory:** `web`

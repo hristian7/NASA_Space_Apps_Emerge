@@ -9,7 +9,8 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 - **Interview answered:** decisions are in [`specs/interview-answers.md`](specs/interview-answers.md).
 - **Features chosen (14 Nov evening):** [`specs/features-moscow.md`](specs/features-moscow.md): all Musts and Shoulds; push alerts, combined data and the installable app removed to save time. Hosting on Vercel.
 - **Research done (14 Nov):** data sources, storage, tech stack, forecasting checks and push alerts → [`specs/research-tasks.md`](specs/research-tasks.md).
-- **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)); app not started.
+- **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)). App: a test page and a design preview are live at https://emerge-beta-ten.vercel.app (auto-deploy on every push to `main`).
+- **Plan:** [`specs/overview.md`](specs/overview.md) (short) and [`specs/specification.md`](specs/specification.md) (build spec).
 
 ## Read first
 

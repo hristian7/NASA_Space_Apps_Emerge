@@ -40,6 +40,7 @@ All Musts and Shoulds from [`features-moscow.md`](features-moscow.md). **Removed
 |---|---|---|---|
 | M18 | Points-only data model | All data is stored and fetched as points with a `precision_radius_km`: raw detections use the sensor footprint (MODIS about 1, VIIRS about 0.375); harmonized monthly values are points at each 0.25° cell centre with a precision radius of half the cell's diagonal. Shapes are drawn only after fetching (heat maps, region totals). **Selection (M3):** point + search distance, 0 to 500 km `[U]` (a point is kept if its geodesic distance is ≤ the search distance; **the cell containing the chosen point is always included**, because a cell centre can be up to about 19 km away), or a polygon (a point is kept if inside) | Oracle-written tests: distance cases (equator, high latitude, crossing the 180° line), radius 0, polygon inside and outside, country |
 | M19 | No data vs zero | `0` = satellites looked and saw no fire; `null` = no measurement. Shown differently in the calendar (empty pattern vs lightest colour), in tables ("no data" vs 0) and in exports (empty vs 0) | Unit tests on all three outputs; Nov 2000 shows data, Oct 2000 shows "no data" |
+| M29 | Minimum point format | Every record has `type`, `lat`, `lon`, `precision_radius_km` and at least one measurement; optional extra precision fields (scan angle, confidence) | Contract test: every example file record has the four required fields |
 | M20 | Several data types per point | Every layer's records are points; one point can carry several data types (for example hotspots and fire danger). A selection can show several layers at once | Registry test: every layer returns points with a precision radius; the area report lists every active layer |
 | M21 | Get simple data | Date-range picker (from Nov 2000 to today); view one layer as raw rows, a table or on the map | End-to-end test: Bulgaria, Aug 2024, switching between the three views gives the same totals |
 | M25 | Room for more base maps | Base maps listed in one config file `web/src/config/basemaps.ts` (id, name, tiles or style, attribution) | Adding a test entry needs no other code change |
@@ -261,16 +262,25 @@ Method IDs carry a `V-` prefix (from the 137-method catalogue in [`../docs/verif
 6. **English text freeze** → one Bulgarian translation pass → native-speaker review.
 7. **Feature freeze** → record the video from the live app.
 
-### 7.2 What runs in parallel (6 people, each with AI agents)
+### 7.2 What runs in parallel (one computer, several agents)
 
-| Stream | Owner (role) | Builds | Waits for |
+**All app work runs on one computer.** Several coding agents work at once, each in its own git worktree (a separate working copy) and branch, and each owns its own folders, so they never edit the same file.
+
+| Lane | Builds | Owns folders | Waits for |
 |---|---|---|---|
-| A. Pipeline and science | 2 people | T1 → validation → export → T2 and error bands; hotspot counts (D-7); daily window table | Contract (step 1) |
-| B. App shell and map | 1 person | Next.js app, globe and 2D map, base-map and layer registries, layer panel, selection (point + radius, lat/lon, country, drawn area), install, languages | Contract only (uses example files) |
-| C. Area report | 1 person | Calendar, unusual card, this fire vs past, chance of fire, detected vs reported, data views, downloads | Contract only (example files), then real files |
-| D. Data service | 1 person | Spikes, query function, recent fires, fire-danger layer, data refresh job | Spikes; Blob set up by the account owner |
-| E. Proof and quality | shared, plus a separate oracle agent | Expected answers first, tests, proof page, references and AI-usage logs | Raw CSV samples only; then the validation report |
-| F. Story and pitch | 1 person | Video script, firefighter outreach for a quote, Bulgarian review, pitch | Feature freeze for recording |
+| **A. Design and app (main lane, ~60%)** | Look and feel (start from the teammates' design preview, live at `/preview`), app shell, globe and 2D map, layer menu, place selection (point + distance, lat/lon, drawing, country), calendar and cards (display), charts, image download, English/Bulgarian texts, phone layout, share links, advice, intensity visuals | `web/src/app/` (except `api/`), `web/src/components/`, styles, `web/messages/`, `basemaps.ts` | Contract only |
+| **B. Data and logic (~40%)** | Data contract (types + example files), export from pipeline output, query function, all number logic (median/average, month-to-date, chance of fire, this fire vs past, no data vs zero), reported numbers, recent fires, fire-danger layer, data refresh job | `web/src/lib/data/`, `web/src/types/`, `web/src/app/api/`, `web/public/data/`, `layers.ts`, `pipeline/export*` | Spikes; pipeline output |
+| **Oracle (separate, cheaper agent)** | Expected answers from raw CSVs, written before B's logic | `tests/expected/` | Raw CSV samples |
+| **Tests and proof** | Playwright flows, proof-page data, references and AI-usage logs | `tests/` (except `expected/`), `docs/references.md`, `docs/si-usage.md` | Lanes A and B |
+| **Pipeline** | T1 → validation → T2; hotspot counts (D-7); daily window table | `pipeline/` | Runs where the world data is; hands over files in the contract format |
+
+**Rules:**
+- Lane A owns `package.json`; lane B adds all its libraries in one early change.
+- Lane B delivers number logic as ready functions that A's screens call.
+- Merge small and often into `main`; pull before every push. Vercel gives each branch a preview link.
+- **One person directs all lanes**, so the people's time, not the agents', is the limit.
+
+**Time `[U]`:** about 75–80 h of agent work for the app (Musts ~57 h, Shoulds ~21 h). With 4–5 agents at once on one computer that's about 16–20 h of real time, against about 15 h to the Sun 08:00 freeze. **This is tight: the cut list in 7.3 decides.**
 
 ### 7.3 Checkpoints (Sofia time; now Sat 16:30)
 
@@ -340,7 +350,7 @@ Drawn areas stay: NASA's challenge page names them.
 | # | Decision | Options | Proposed | Deadline |
 |---|---|---|---|---|
 | D-1 | **Harmonization grid** | 0.25° monthly ([`conversion-plan.md`](../docs/conversion-plan.md)) vs 0.1° ([`harmonization-pipeline-plan.md`](../docs/harmonization-pipeline-plan.md)) | **0.25°**: NASA's grid, regions reliable (nRMSE 8% vs 61% per cell `[V]`), smaller files. Keep 0.1° for display only | Sat 18:00 |
-| D-2 | **Training and test years** | Train 2012–2018, test 2019–2025; or calibrate within 2012–2022 and test both ways | **Within 2012–2022, test both ways**: Terra drift shows from 2022 `[V]` | Sat 18:00 |
+| D-2 | **Training and test years** | Train 2012–2018, test 2019–2025; or calibrate within 2012–2022 and test both ways | **Within 2012–2022, test both ways**; score with MAE and nRMSE, not the percentage error (MAPE), which breaks on zero-fire months: Terra drift shows from 2022 `[V]` | Sat 18:00 |
 | D-3 | Features suggestion 2 | Merge or not | **Merged 14 Nov evening**, updated to its 16:45 version (points-only model; C9 and C10 Could). Open detail: maximum search distance (500 km proposed `[U]`) | Done |
 | D-4 | GWIS licence | CC BY 4.0 vs EU Data Licence | Check before the demo; credit Copernicus either way | Sun 08:00 |
 | D-5 | Teammates' pushes on Vercel's free plan | Whether pushes by non-owners deploy | **Answered:** they trigger deployments (seen 14 Nov; canceled only by the pause) | Done |

@@ -38,7 +38,7 @@ Rank **15** storage and format options from best to worst for:
 - worldwide hot-spot points (hundreds of millions of rows);
 - daily and monthly totals per area;
 - fast drawing on a 3D globe;
-- hosting on a VM or Vercel;
+- hosting on Vercel (decided 14 Nov);
 - a 24-hour build.
 
 **Candidates:** CSV, Parquet, GeoParquet, DuckDB, SQLite/SpatiaLite, PostGIS, PMTiles/vector tiles, Zarr, NetCDF, COG rasters, pre-computed JSON, H3-indexed totals, ClickHouse, BigQuery public data, Arrow.
