@@ -1,5 +1,5 @@
 {
- "about": "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. Fields listed under `unpinned` are not defined by the rules.",
+ "about": "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. For no_history and too_early the median, mean and ratios are null and higherThan is 0 (section 9, ruling 4).",
  "cases": [
   {
    "name": "Above: value 200 against median 100",
@@ -449,21 +449,14 @@
    },
    "expected": {
     "status": "no_history",
-    "years": 2,
     "value": 100,
-    "unpinned": {
-     "reason": "the rules give only the status for no_history; median, mean, ratios and higherThan are not stated",
-     "ifComputedAnyway": {
-      "median": 95.0,
-      "mean": 95.0,
-      "ratioMedian": 1.052632,
-      "ratioMean": 1.052632,
-      "higherThan": 1,
-      "status": "near"
-     }
-    }
-   },
-   "ambiguity": "no_history: the other Unusual fields are not defined (null or computed?). Not pinned."
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 2
+   }
   },
   {
    "name": "History of exactly 3 years is enough",
@@ -753,19 +746,6 @@
     "ratioMean": 1.0,
     "higherThan": 1,
     "years": 4
-   },
-   "ambiguity": "Even number of history years: the rules do not say how to take the median. Main answer averages the two middle values; alternatives are given.",
-   "alt": {
-    "lowerMiddle": {
-     "median": 100.0,
-     "ratioMedian": 1.0,
-     "status": "near"
-    },
-    "upperMiddle": {
-     "median": 100.0,
-     "ratioMedian": 1.0,
-     "status": "near"
-    }
    }
   },
   {
@@ -820,23 +800,10 @@
     "ratioMean": 1.365854,
     "higherThan": 4,
     "years": 4
-   },
-   "ambiguity": "Even number of history years: the rules do not say how to take the median. Main answer averages the two middle values; alternatives are given.",
-   "alt": {
-    "lowerMiddle": {
-     "median": 100.0,
-     "ratioMedian": 1.4,
-     "status": "above"
-    },
-    "upperMiddle": {
-     "median": 110.0,
-     "ratioMedian": 1.272727,
-     "status": "above"
-    }
    }
   },
   {
-   "name": "Null current value",
+   "name": "Null current value with 5 history years gives no_history",
    "input": {
     "series": [
      {
@@ -884,20 +851,122 @@
     "month": 8
    },
    "expected": {
-    "years": 5,
-    "unpinned": {
-     "reason": "the rules do not say what a null current value gives; status is not stated",
-     "candidates": {
-      "status": [
-       "no_history",
-       "near"
-      ],
-      "value": null,
-      "median_if_enough_history": 100.0
+    "status": "no_history",
+    "value": null,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
+   }
+  },
+  {
+   "name": "Null current value with no history at all",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
      }
-    }
+    ],
+    "year": 2020,
+    "month": 8
    },
-   "ambiguity": "Null current value: the rules do not cover it. Not pinned."
+   "expected": {
+    "status": "no_history",
+    "value": null,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No history: no past years",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": 100,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 0
+   }
+  },
+  {
+   "name": "No history: one past year",
+   "input": {
+    "series": [
+     {
+      "y": 2019,
+      "m": 8,
+      "value": 90
+     },
+     {
+      "y": 2019,
+      "m": 9,
+      "value": 999999
+     },
+     {
+      "y": 2020,
+      "m": 8,
+      "value": 100
+     },
+     {
+      "y": 2021,
+      "m": 8,
+      "value": 888888
+     }
+    ],
+    "year": 2020,
+    "month": 8
+   },
+   "expected": {
+    "status": "no_history",
+    "value": 100,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 1
+   }
   },
   {
    "name": "Higher than: ties are not counted (strictly below)",
@@ -1010,19 +1079,6 @@
     "ratioMean": 1.208897,
     "higherThan": 4,
     "years": 4
-   },
-   "ambiguity": "Even number of history years: the rules do not say how to take the median. Main answer averages the two middle values; alternatives are given.",
-   "alt": {
-    "lowerMiddle": {
-     "median": 10.0,
-     "ratioMedian": 1.25,
-     "status": "near"
-    },
-    "upperMiddle": {
-     "median": 10.4,
-     "ratioMedian": 1.201923,
-     "status": "near"
-    }
    }
   },
   {
@@ -1039,7 +1095,14 @@
     ]
    },
    "expected": {
-    "status": "too_early"
+    "status": "too_early",
+    "value": 40,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
    }
   },
   {
@@ -1056,7 +1119,14 @@
     ]
    },
    "expected": {
-    "status": "too_early"
+    "status": "too_early",
+    "value": 40,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 5
    }
   },
   {

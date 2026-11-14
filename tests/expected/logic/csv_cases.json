@@ -2,7 +2,7 @@
  "about": "Section 8. Expected text of monthly CSV body rows and the rules as checks.",
  "cases": [
   {
-   "name": "Tiny series, unit hot: body rows",
+   "name": "Tiny series, unit hot: body rows (flags joined with a pipe, half rounds up)",
    "input": {
     "unit": "hot",
     "months": [
@@ -61,14 +61,11 @@
     ]
    },
    "expected": {
-    "bodyRowsIfFlagsJoinedBySemicolon": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example;partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n",
-    "bodyRowsIfFlagsJoinedByCommaAndQuoted": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,\"example,partial_month\"\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n",
-    "bodyRowsIfFlagsJoinedBySpace": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n"
-   },
-   "ambiguity": "Section 8 does not say how several flags share one field. Three candidates are given. Single-flag and no-flag rows are identical in all three."
+    "bodyRows": "2000,11,hot,238,167,309,estimated_terra,example\n2000,12,hot,0,0,0,estimated_terra,\n2012,2,hot,1234,1100,1300,measured,example|partial_month\n2022,7,hot,,,,,\n2025,12,hot,7,7,7,measured,low_confidence\n"
+   }
   },
   {
-   "name": "Rounding to whole numbers at exact halves",
+   "name": "Rounding to whole numbers at exact halves (half rounds up)",
    "input": {
     "unit": "hot",
     "months": [
@@ -111,10 +108,44 @@
     ]
    },
    "expected": {
-    "bodyRowsIfHalfRoundsUp": "2020,1,hot,3,1,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,1,measured,\n2020,4,hot,0,0,0,measured,\n",
-    "bodyRowsIfHalfRoundsToEven": "2020,1,hot,2,0,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,0,measured,\n2020,4,hot,0,0,0,measured,\n"
+    "bodyRows": "2020,1,hot,3,1,4,measured,\n2020,2,hot,2,1,2,measured,\n2020,3,hot,0,0,1,measured,\n2020,4,hot,0,0,0,measured,\n"
+   }
+  },
+  {
+   "name": "Two and three flags in one field",
+   "input": {
+    "unit": "hot",
+    "months": [
+     {
+      "y": 2021,
+      "m": 6,
+      "value": 12.5,
+      "lo": 10.0,
+      "hi": 15.0,
+      "src": "provisional",
+      "flags": [
+       "example",
+       "partial_month"
+      ]
+     },
+     {
+      "y": 2021,
+      "m": 7,
+      "value": 3.0,
+      "lo": 3.0,
+      "hi": 3.0,
+      "src": "measured",
+      "flags": [
+       "partial_month",
+       "snpp_gap_filled",
+       "low_confidence"
+      ]
+     }
+    ]
    },
-   "ambiguity": "Section 8 says 'rounded to whole numbers' without a tie rule (JavaScript Math.round rounds halves up; Python round goes to even). Weighted values such as 2.5 occur. Both are given. Values like 0.4999 and 1.49 round the same either way."
+   "expected": {
+    "bodyRows": "2021,6,hot,13,10,15,provisional,example|partial_month\n2021,7,hot,3,3,3,measured,partial_month|snpp_gap_filled|low_confidence\n"
+   }
   },
   {
    "name": "Rules as checks",
@@ -198,6 +229,11 @@
       "row": "2000,12,hot,0,0,0,estimated_terra,"
      },
      {
+      "rule": "flags in one field are joined with a pipe",
+      "type": "rowEquals",
+      "row": "2012,2,hot,1234,1100,1300,measured,example|partial_month"
+     },
+     {
       "rule": "a field with a comma is quoted",
       "type": "csvFieldQuoted",
       "sample": "a,b",
@@ -235,7 +271,7 @@
     "header": "key,value",
     "bodyRows": "worst month,2024-07\n\"note, with comma\",x\n"
    },
-   "ambiguity": "The summary key names are not fixed by section 8 ('one row per figure'), so only the two column names and the quoting are pinned."
+   "note": "Section 8 does not fix the summary key names, so only the two column names and the quoting are pinned."
   }
  ]
 }

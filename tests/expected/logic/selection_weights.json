@@ -2390,8 +2390,7 @@
    "expected": {
     "ownCellAlwaysInSet": true,
     "probeCount": 18
-   },
-   "ambiguity": "docs/number-logic.md section 1 keeps the point's cell only under the small-selection rule; docs/data-contract.md section 11 says the cell holding the chosen point is always kept. On paper they differ; in the checked cases they give the same cells, because a circle of 14 km or more always covers some sub-cells of the cell holding its centre."
+   }
   }
  ]
 }

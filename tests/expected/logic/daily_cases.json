@@ -684,17 +684,13 @@
     },
     "current_x625": 0,
     "status": "too_early",
-    "unpinned": {
-     "reason": "the rules give only the status for too_early; the other fields are not stated",
-     "ifComputedAnyway": {
-      "median": 0.0,
-      "mean": 0.41888,
-      "ratioMedian": null,
-      "ratioMean": 0.0,
-      "higherThan": 0,
-      "status": "near"
-     }
-    }
+    "value": 0.0,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 25
    }
   },
   {
@@ -1296,70 +1292,51 @@
     },
     "current_x625": 0,
     "status": "too_early",
-    "unpinned": {
-     "reason": "the rules give only the status for too_early; the other fields are not stated",
-     "ifComputedAnyway": {
-      "median": 0.0,
-      "mean": 0.04,
-      "ratioMedian": null,
-      "ratioMean": 0.0,
-      "higherThan": 0,
-      "status": "near"
-     }
-    }
+    "value": 0.0,
+    "median": null,
+    "mean": null,
+    "ratioMedian": null,
+    "ratioMean": null,
+    "higherThan": 0,
+    "years": 25
    }
   },
   {
-   "name": "Window end 2024-02-29, 8 days: 29 Feb maps to 28 Feb in 2023",
+   "name": "Window end 2024-02-29, 8 days: 2023 has no 29 Feb, so the window ends 28 Feb",
    "input": {
     "end": "2024-02-29",
     "days": 8,
     "pastYear": 2023
    },
    "expected": {
-    "mappedDays": [
+    "label": 2023,
+    "start": "2023-02-21",
+    "end": "2023-02-28",
+    "days": [
+     "2023-02-21",
      "2023-02-22",
      "2023-02-23",
      "2023-02-24",
      "2023-02-25",
      "2023-02-26",
      "2023-02-27",
-     "2023-02-28",
-     "2023-02-28"
-    ]
-   },
-   "ambiguity": "Eight current days map onto 22 to 28 Feb in 2023, so 28 Feb appears twice. Whether it is counted twice (8 values summed) or once (7 days) is not stated. Both are given.",
-   "alt": {
-    "countedTwice": [
-     "2023-02-22",
-     "2023-02-23",
-     "2023-02-24",
-     "2023-02-25",
-     "2023-02-26",
-     "2023-02-27",
-     "2023-02-28",
      "2023-02-28"
     ],
-    "countedOnce": [
-     "2023-02-22",
-     "2023-02-23",
-     "2023-02-24",
-     "2023-02-25",
-     "2023-02-26",
-     "2023-02-27",
-     "2023-02-28"
-    ]
+    "estimated": false
    }
   },
   {
-   "name": "Window end 2024-02-29, 8 days: leap year 2020 keeps 29 Feb",
+   "name": "Window end 2024-02-29, 8 days: leap year 2020 ends on 29 Feb",
    "input": {
     "end": "2024-02-29",
     "days": 8,
     "pastYear": 2020
    },
    "expected": {
-    "mappedDays": [
+    "label": 2020,
+    "start": "2020-02-22",
+    "end": "2020-02-29",
+    "days": [
      "2020-02-22",
      "2020-02-23",
      "2020-02-24",
@@ -1368,18 +1345,107 @@
      "2020-02-27",
      "2020-02-28",
      "2020-02-29"
-    ]
+    ],
+    "estimated": false
    }
   },
   {
-   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020",
+   "name": "Window end 2024-02-29, 45 days: always exactly 45 days",
+   "input": {
+    "end": "2024-02-29",
+    "days": 45,
+    "pastYear": 2021
+   },
+   "expected": {
+    "label": 2021,
+    "start": "2021-01-15",
+    "end": "2021-02-28",
+    "days": [
+     "2021-01-15",
+     "2021-01-16",
+     "2021-01-17",
+     "2021-01-18",
+     "2021-01-19",
+     "2021-01-20",
+     "2021-01-21",
+     "2021-01-22",
+     "2021-01-23",
+     "2021-01-24",
+     "2021-01-25",
+     "2021-01-26",
+     "2021-01-27",
+     "2021-01-28",
+     "2021-01-29",
+     "2021-01-30",
+     "2021-01-31",
+     "2021-02-01",
+     "2021-02-02",
+     "2021-02-03",
+     "2021-02-04",
+     "2021-02-05",
+     "2021-02-06",
+     "2021-02-07",
+     "2021-02-08",
+     "2021-02-09",
+     "2021-02-10",
+     "2021-02-11",
+     "2021-02-12",
+     "2021-02-13",
+     "2021-02-14",
+     "2021-02-15",
+     "2021-02-16",
+     "2021-02-17",
+     "2021-02-18",
+     "2021-02-19",
+     "2021-02-20",
+     "2021-02-21",
+     "2021-02-22",
+     "2021-02-23",
+     "2021-02-24",
+     "2021-02-25",
+     "2021-02-26",
+     "2021-02-27",
+     "2021-02-28"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2024-03-02, 8 days: current window holds 29 Feb, past 2023 window does not",
+   "input": {
+    "end": "2024-03-02",
+    "days": 8,
+    "pastYear": 2023
+   },
+   "expected": {
+    "label": 2023,
+    "start": "2023-02-23",
+    "end": "2023-03-02",
+    "days": [
+     "2023-02-23",
+     "2023-02-24",
+     "2023-02-25",
+     "2023-02-26",
+     "2023-02-27",
+     "2023-02-28",
+     "2023-03-01",
+     "2023-03-02"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020 is labelled 2020",
    "input": {
     "end": "2025-01-04",
     "days": 8,
     "pastYear": 2020
    },
    "expected": {
-    "mappedDaysIfYearLabelIsTheEndYear": [
+    "label": 2020,
+    "start": "2019-12-28",
+    "end": "2020-01-04",
+    "days": [
      "2019-12-28",
      "2019-12-29",
      "2019-12-30",
@@ -1389,18 +1455,80 @@
      "2020-01-03",
      "2020-01-04"
     ],
-    "mappedDaysIfYearLabelIsTheStartYear": [
-     "2020-12-28",
-     "2020-12-29",
-     "2020-12-30",
-     "2020-12-31",
-     "2021-01-01",
-     "2021-01-02",
-     "2021-01-03",
-     "2021-01-04"
-    ]
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2011 is labelled 2011 and is estimated",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2011
    },
-   "ambiguity": "Section 6 says a window that crosses 1 Jan uses the two matching years, but not which of the two is the label of the row. docs/data-contract.md section 9 labels a year block by the year the window STARTS in. Both mappings are given; the row's `year` label and its `estimated` flag depend on the choice."
+   "expected": {
+    "label": 2011,
+    "start": "2010-12-28",
+    "end": "2011-01-04",
+    "days": [
+     "2010-12-28",
+     "2010-12-29",
+     "2010-12-30",
+     "2010-12-31",
+     "2011-01-01",
+     "2011-01-02",
+     "2011-01-03",
+     "2011-01-04"
+    ],
+    "estimated": true
+   }
+  },
+  {
+   "name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2012 is labelled 2012 and is not estimated",
+   "input": {
+    "end": "2025-01-04",
+    "days": 8,
+    "pastYear": 2012
+   },
+   "expected": {
+    "label": 2012,
+    "start": "2011-12-28",
+    "end": "2012-01-04",
+    "days": [
+     "2011-12-28",
+     "2011-12-29",
+     "2011-12-30",
+     "2011-12-31",
+     "2012-01-01",
+     "2012-01-02",
+     "2012-01-03",
+     "2012-01-04"
+    ],
+    "estimated": false
+   }
+  },
+  {
+   "name": "Window end 2025-12-31, 8 days: no year crossing",
+   "input": {
+    "end": "2025-12-31",
+    "days": 8,
+    "pastYear": 2019
+   },
+   "expected": {
+    "label": 2019,
+    "start": "2019-12-24",
+    "end": "2019-12-31",
+    "days": [
+     "2019-12-24",
+     "2019-12-25",
+     "2019-12-26",
+     "2019-12-27",
+     "2019-12-28",
+     "2019-12-29",
+     "2019-12-30",
+     "2019-12-31"
+    ],
+    "estimated": false
+   }
   }
  ]
 }

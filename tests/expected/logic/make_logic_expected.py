@@ -213,10 +213,7 @@ def make_weights():
     cases.append({
         "name": "The cell holding the point is in the weighted set whenever the total is 1 or more",
         "input": {"probes": [[la, lo] for la, lo in probes], "radiiKm": [14, 20, 50]},
-        "expected": {"ownCellAlwaysInSet": all(held), "probeCount": len(held)},
-        "ambiguity": "docs/number-logic.md section 1 keeps the point's cell only under the small-selection rule; docs/data-contract.md "
-                     "section 11 says the cell holding the chosen point is always kept. On paper they differ; in the checked cases "
-                     "they give the same cells, because a circle of 14 km or more always covers some sub-cells of the cell holding its centre."})
+        "expected": {"ownCellAlwaysInSet": all(held), "probeCount": len(held)}})
     return cases
 
 
@@ -338,18 +335,13 @@ def make_series():
             "lastMonth": META["last_month"],
             "weights": [{"id": c, "subcells": counts[c]} for c in sorted(counts)],
             "months": named,
-            "october_2000": {"inSeries": False,
-                             "note": "docs/number-logic.md section 2 starts the series at Nov 2000, so Oct 2000 has no entry. "
-                                     "The meta.json no-data period for it is global and ends 2000-10-31."},
+            "october_2000": {"inSeries": False},
             "sumOfAllMonths_x625": {u: sum(m["value_x625"] for m in ser[u]) for u in ("hot", "cd")},
             "monthsWithZeroValue": {u: sum(1 for m in ser[u] if m["value_x625"] == 0) for u in ("hot", "cd")},
             "noNullMonths": True,
         }
         cases.append({"name": name, "input": {"selection": sel},
-                      "expected": exp,
-                      "ambiguity": "Request asked for a null month before Nov 2000. The rules start the series in Nov 2000, so that month is absent, "
-                                   "not null. No month inside the series is null in the example files (every meta.json no-data period "
-                                   "that is global lies outside Nov 2000 to Dec 2025). Alternative reading: a lookup of Oct 2000 returns null."})
+                      "expected": exp})
     # country
     bgr = load_json("countries/BGR.json")
     cm = {}
@@ -483,9 +475,7 @@ def daily_block(sel, label):
                "pastYears": {str(y): r6(vals[y] / 625.0) for y in years if y != cy},
                "pastYears_x625": {str(y): vals[y] for y in years if y != cy}, "current_x625": vals[cy]}
         if D < 8:
-            exp["status"] = "too_early"
-            exp["unpinned"] = {"reason": "the rules give only the status for too_early; the other fields are not stated",
-                               "ifComputedAnyway": stats}
+            exp.update(no_history_fields(cur_v, res["years"], "too_early"))
         else:
             exp.update(stats)
             exp["years"] = res["years"]
@@ -500,41 +490,30 @@ def make_daily():
     rid = rich_daily_cell()
     lat, lon = cell_centre(rid)
     cases += daily_block({"kind": "point", "lat": lat, "lon": lon, "radiusKm": 10}, "Single busy cell %d (radius 10 km, small selection)" % rid)
-    # date mapping
-    def mapped(end_d, n, Y, label):
-        out = []
-        start_d = end_d - timedelta(days=n - 1)
-        crossing = start_d.year < end_d.year
-        for i in range(n):
-            t = start_d + timedelta(days=i)
-            yy = Y
-            if crossing:
-                if label == "end":
-                    yy = Y - 1 if t.year < end_d.year else Y
-                else:
-                    yy = Y if t.year < end_d.year else Y + 1
-            md = (t.month, t.day)
-            if md == (2, 29) and not (yy % 4 == 0 and (yy % 100 != 0 or yy % 400 == 0)):
-                md = (2, 28)
-            out.append("%04d-%02d-%02d" % (yy, md[0], md[1]))
-        return out
-    cases.append({"name": "Window end 2024-02-29, 8 days: 29 Feb maps to 28 Feb in 2023",
-                  "input": {"end": "2024-02-29", "days": 8, "pastYear": 2023},
-                  "expected": {"mappedDays": mapped(date(2024, 2, 29), 8, 2023, "end")},
-                  "ambiguity": "Eight current days map onto 22 to 28 Feb in 2023, so 28 Feb appears twice. Whether it is counted twice "
-                               "(8 values summed) or once (7 days) is not stated. Both are given.",
-                  "alt": {"countedTwice": mapped(date(2024, 2, 29), 8, 2023, "end"),
-                          "countedOnce": sorted(set(mapped(date(2024, 2, 29), 8, 2023, "end")))}})
-    cases.append({"name": "Window end 2024-02-29, 8 days: leap year 2020 keeps 29 Feb",
-                  "input": {"end": "2024-02-29", "days": 8, "pastYear": 2020},
-                  "expected": {"mappedDays": mapped(date(2024, 2, 29), 8, 2020, "end")}})
-    cases.append({"name": "Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020",
-                  "input": {"end": "2025-01-04", "days": 8, "pastYear": 2020},
-                  "expected": {"mappedDaysIfYearLabelIsTheEndYear": mapped(date(2025, 1, 4), 8, 2020, "end"),
-                               "mappedDaysIfYearLabelIsTheStartYear": mapped(date(2025, 1, 4), 8, 2020, "start")},
-                  "ambiguity": "Section 6 says a window that crosses 1 Jan uses the two matching years, but not which of the two is the "
-                               "label of the row. docs/data-contract.md section 9 labels a year block by the year the window STARTS in. "
-                               "Both mappings are given; the row's `year` label and its `estimated` flag depend on the choice."})
+    # past-year window: the `days` consecutive days ending on the current end's month and day (ruling 5);
+    # the row is labelled by the year of its last day (ruling 6)
+    def past_window(end_d, n, Y):
+        leap = Y % 4 == 0 and (Y % 100 != 0 or Y % 400 == 0)
+        md = (end_d.month, end_d.day)
+        if md == (2, 29) and not leap:
+            md = (2, 28)
+        e = date(Y, md[0], md[1])
+        st = e - timedelta(days=n - 1)
+        return {"label": Y, "start": st.isoformat(), "end": e.isoformat(),
+                "days": [(st + timedelta(days=i)).isoformat() for i in range(n)],
+                "estimated": Y < 2012}
+
+    for nm, end_d, n, Y in [
+            ("Window end 2024-02-29, 8 days: 2023 has no 29 Feb, so the window ends 28 Feb", date(2024, 2, 29), 8, 2023),
+            ("Window end 2024-02-29, 8 days: leap year 2020 ends on 29 Feb", date(2024, 2, 29), 8, 2020),
+            ("Window end 2024-02-29, 45 days: always exactly 45 days", date(2024, 2, 29), 45, 2021),
+            ("Window end 2024-03-02, 8 days: current window holds 29 Feb, past 2023 window does not", date(2024, 3, 2), 8, 2023),
+            ("Window end 2025-01-04, 8 days crosses 1 Jan; past year 2020 is labelled 2020", date(2025, 1, 4), 8, 2020),
+            ("Window end 2025-01-04, 8 days crosses 1 Jan; past year 2011 is labelled 2011 and is estimated", date(2025, 1, 4), 8, 2011),
+            ("Window end 2025-01-04, 8 days crosses 1 Jan; past year 2012 is labelled 2012 and is not estimated", date(2025, 1, 4), 8, 2012),
+            ("Window end 2025-12-31, 8 days: no year crossing", date(2025, 12, 31), 8, 2019)]:
+        cases.append({"name": nm, "input": {"end": end_d.isoformat(), "days": n, "pastYear": Y},
+                      "expected": past_window(end_d, n, Y)})
     return cases
 
 
@@ -560,48 +539,20 @@ def unusual_case(name, month, year, value, hist, note=None, distractors=True):
     res, stats = unusual_ref(value, h) if value is not None else ({"years": len(h)}, None)
     c = {"name": name, "input": {"series": series, "year": year, "month": month}, "expected": {}}
     exp = c["expected"]
-    if value is None:
-        exp["years"] = len(h)
-        exp["unpinned"] = {"reason": "the rules do not say what a null current value gives; status is not stated",
-                           "candidates": {"status": ["no_history", "near"], "value": None, "median_if_enough_history": r6(float(sorted(h)[len(h) // 2])) if h else None}}
-        c["ambiguity"] = "Null current value: the rules do not cover it. Not pinned."
-    elif len(h) < 3:
-        exp["status"] = "no_history"
-        exp["years"] = len(h)
-        exp["value"] = value
-        exp["unpinned"] = {"reason": "the rules give only the status for no_history; median, mean, ratios and higherThan are not stated",
-                           "ifComputedAnyway": stats}
-        c["ambiguity"] = "no_history: the other Unusual fields are not defined (null or computed?). Not pinned."
+    if value is None or len(h) < 3:
+        exp.update(no_history_fields(value, len(h)))
     else:
         exp.update({"status": stats["status"], "value": value, "median": stats["median"], "mean": stats["mean"],
                     "ratioMedian": stats["ratioMedian"], "ratioMean": stats["ratioMean"],
                     "higherThan": stats["higherThan"], "years": res["years"]})
-        if len(h) % 2 == 0:
-            vals = sorted(h)
-            lo_m, hi_m = vals[len(h) // 2 - 1], vals[len(h) // 2]
-            alts = {}
-            for lab, mm in (("lowerMiddle", lo_m), ("upperMiddle", hi_m)):
-                s2 = unusual_ref_with_median(value, h, mm)
-                alts[lab] = s2
-            c["ambiguity"] = "Even number of history years: the rules do not say how to take the median. Main answer averages the two middle values; alternatives are given."
-            c["alt"] = alts
     if note:
         c["note"] = note
     return c
 
 
-def unusual_ref_with_median(value, hist, med):
-    med = Fraction(str(med))
-    v = Fraction(str(value))
-    if med == 0:
-        st = "above" if v > 0 else "near"
-    elif v > Fraction(5, 4) * med:
-        st = "above"
-    elif v < Fraction(3, 4) * med:
-        st = "below"
-    else:
-        st = "near"
-    return {"median": r6(float(med)), "ratioMedian": None if med == 0 else r6(float(v / med)), "status": st}
+def no_history_fields(value, n_history, status="no_history"):
+    return {"status": status, "value": value, "median": None, "mean": None, "ratioMedian": None, "ratioMean": None,
+            "higherThan": 0, "years": n_history}
 
 
 def make_unusual():
@@ -622,7 +573,10 @@ def make_unusual():
         unusual_case("Null history years are left out", 8, 2020, 100,
                      {2012: None, 2013: None, 2014: 100, 2015: 100, 2016: 110, 2017: 90}),
         unusual_case("Even history size (4 years): median rule matters", 8, 2020, 140, {2016: 100, 2017: 120, 2018: 80, 2019: 110}),
-        unusual_case("Null current value", 8, 2020, None, base),
+        unusual_case("Null current value with 5 history years gives no_history", 8, 2020, None, base),
+        unusual_case("Null current value with no history at all", 8, 2020, None, {}),
+        unusual_case("No history: no past years", 8, 2020, 100, {}),
+        unusual_case("No history: one past year", 8, 2020, 100, {2019: 90}),
         unusual_case("Higher than: ties are not counted (strictly below)", 8, 2020, 100,
                      {2015: 100, 2016: 100, 2017: 50, 2018: 150, 2019: 100}),
         unusual_case("Values with decimals (weighted selections)", 3, 2021, 12.5, {2016: 10.4, 2017: 9.76, 2018: 11.2, 2019: 10.0}),
@@ -631,7 +585,7 @@ def make_unusual():
     for D, nm in ((5, "Day 5 of the month: too_early"), (7, "Day 7: too_early"), (8, "Day 8: allowed"), (9, "Day 9: allowed")):
         cases.append({"name": "Unfinished month, " + nm,
                       "input": {"dayOfMonth": D, "currentSum": 40, "historySums": [30, 35, 38, 45, 50]},
-                      "expected": ({"status": "too_early"} if D < 8 else
+                      "expected": (no_history_fields(40, 5, "too_early") if D < 8 else
                                    {"status": "near", "median": 38.0, "mean": 39.6, "ratioMedian": r6(40 / 38), "ratioMean": r6(40 / 39.6),
                                     "higherThan": 3, "years": 5})})
     return cases
@@ -656,23 +610,20 @@ def make_chance():
         return [{"y": y0 + i, "m": month, "value": v} for i, v in enumerate(vals)]
     cases = []
 
-    def add(name, series, month, year, note=None, ambiguity=None):
+    def add(name, series, month, year, note=None):
         c = {"name": name, "input": {"series": series, "month": month, "year": year},
              "expected": chance_ref(series, month, year)}
         if note:
             c["note"] = note
-        if ambiguity:
-            c["ambiguity"] = ambiguity
         cases.append(c)
 
     add("0 of 20 years", mk([0] * 20), 8, 2020)
     add("20 of 20 years", mk([5] * 20), 8, 2020)
     add("7 of 25 years", mk([3, 0, 0, 1, 0, 0, 9, 0, 0, 0, 2, 0, 0, 0, 0, 4, 0, 0, 0, 0, 7, 0, 0, 12, 0]), 8, 2025)
     add("1 of 3 years", mk([0, 4, 0]), 8, 2003)
-    add("No years (first year of the series)", mk([5]), 8, 2000,
-        ambiguity="With no past years p is null (stated). The rules do not say whether lo and hi are null; null is used here.")
-    add("No years: month never present", [{"y": 2010, "m": 3, "value": 5}], 8, 2020,
-        ambiguity="Same as the case above for lo and hi.")
+    add("No years (first year of the series)", mk([5]), 8, 2000)
+    add("No years: month never present", [{"y": 2010, "m": 3, "value": 5}], 8, 2020)
+    add("No years: every past year is null", mk([None, None, 5]), 8, 2002)
     add("Threshold: 0.49 does not count as a fire year", mk([0.49] * 10), 8, 2010)
     add("Threshold: 0.5 counts as a fire year", mk([0.5] * 10), 8, 2010)
     add("Threshold edge, mixed (0.49, 0.5, 0.51, 0.4999999, 1)", mk([0.49, 0.5, 0.51, 0.4999999, 1]), 8, 2005)
@@ -697,7 +648,7 @@ def make_window():
                          for y, h in past]}
     cases = []
 
-    def add(name, cur, past, note=None, ambiguity=None):
+    def add(name, cur, past, note=None):
         inp = mk(cur, past)
         ranked = [(y, h) for y, h in past if h is not None]
         rank = None if not ranked else 1 + sum(1 for _, h in ranked if h > cur)
@@ -708,8 +659,6 @@ def make_window():
             c["expected"]["rank"] = None
         if note:
             c["note"] = note
-        if ambiguity:
-            c["ambiguity"] = ambiguity
         cases.append(c)
 
     p = [(2008, 30), (2009, 12), (2010, 50), (2011, 7), (2012, 22), (2013, 40)]
@@ -775,17 +724,13 @@ def trend_ref(table):
 def make_trend():
     cases = []
 
-    def add(name, table, note=None, ambiguity=None, alt=None):
+    def add(name, table, note=None):
         tr, ex, comp = trend_ref(table)
         c = {"name": name,
              "input": {"years": {str(y): v for y, v in sorted(table.items())}},
              "expected": {"trend": tr, "extremes": ex, "completeYears": {str(y): t for y, t in sorted(comp.items())}}}
         if note:
             c["note"] = note
-        if ambiguity:
-            c["ambiguity"] = ambiguity
-        if alt:
-            c["alt"] = alt
         cases.append(c)
 
     rising = {2010 + i: [10 + 2 * i] * 12 for i in range(10)}
@@ -810,10 +755,8 @@ def make_trend():
     t4 = {2010 + i: [5] * 12 for i in range(5)}
     t4[2015] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, None]
     t4[2015][5] = 900
-    add("Worst month in an incomplete year", t4,
-        ambiguity="Section 7 says worstMonth is the month with the highest value without limiting it to complete years; "
-                  "yearly totals use complete years only. Main answer: all non-null months count. Alternative: complete years only.",
-        alt={"worstMonthCompleteYearsOnly": trend_ref({y: v for y, v in t4.items() if y != 2015})[1]["worstMonth"]})
+    add("Worst month in an incomplete year counts; worst year does not", t4,
+        note="2015 has a null month, so it is out of the worst year, but its 900 is the worst month.")
     add("All months null", {2010 + i: [None] * 12 for i in range(5)},
         note="Extremes are null; the trend has 0 years.")
     add("Single month present", {2010: [None] * 5 + [7] + [None] * 6})
@@ -844,51 +787,36 @@ def make_csv():
         {"y": 2022, "m": 7, "value": None, "lo": None, "hi": None, "src": None, "flags": []},
         {"y": 2025, "m": 12, "value": 7.0, "lo": 7.0, "hi": 7.0, "src": "measured", "flags": ["low_confidence"]},
     ]
-    sep = ";"
-
-    def row(r, flag_mode):
-        fl = r["flags"]
-        if flag_mode == "semicolon":
-            f = ";".join(fl)
-        elif flag_mode == "comma_quoted":
-            f = ",".join(fl)
-        else:
-            f = " ".join(fl)
+    def row(r):
         vals = [str(r["y"]), str(r["m"]), unit,
                 "" if r["value"] is None else str(round_half_up(r["value"])),
                 "" if r["lo"] is None else str(round_half_up(r["lo"])),
                 "" if r["hi"] is None else str(round_half_up(r["hi"])),
-                "" if r["src"] is None else r["src"], f]
+                "" if r["src"] is None else r["src"], "|".join(r["flags"])]
         return ",".join(csv_field(v) for v in vals)
 
-    flag_modes = {m: "\n".join(row(r, m) for r in months) + "\n" for m in ("semicolon", "comma_quoted", "space")}
-    # rounding case
+    body = "\n".join(row(r) for r in months) + "\n"
     rmonths = [
         {"y": 2020, "m": 1, "value": 2.5, "lo": 0.5, "hi": 3.5, "src": "measured", "flags": []},
         {"y": 2020, "m": 2, "value": 1.5, "lo": 1.49, "hi": 1.51, "src": "measured", "flags": []},
         {"y": 2020, "m": 3, "value": 0.4999, "lo": 0.0, "hi": 0.5, "src": "measured", "flags": []},
         {"y": 2020, "m": 4, "value": 0.0, "lo": 0.0, "hi": 0.0, "src": "measured", "flags": []},
     ]
-    half_up = "\n".join(row(r, "semicolon") for r in rmonths) + "\n"
-    half_even_vals = []
-    for r in rmonths:
-        rr = dict(r)
-        for k in ("value", "lo", "hi"):
-            rr[k] = float(round(rr[k]))
-        half_even_vals.append(rr)
-    half_even = "\n".join(row(r, "semicolon") for r in half_even_vals) + "\n"
+    half_up = "\n".join(row(r) for r in rmonths) + "\n"
+    two_flags = [{"y": 2021, "m": 6, "value": 12.5, "lo": 10.0, "hi": 15.0, "src": "provisional",
+                  "flags": ["example", "partial_month"]},
+                 {"y": 2021, "m": 7, "value": 3.0, "lo": 3.0, "hi": 3.0, "src": "measured",
+                  "flags": ["partial_month", "snpp_gap_filled", "low_confidence"]}]
     cases = [
-        {"name": "Tiny series, unit hot: body rows",
+        {"name": "Tiny series, unit hot: body rows (flags joined with a pipe, half rounds up)",
          "input": {"unit": unit, "months": months},
-         "expected": {"bodyRowsIfFlagsJoinedBySemicolon": flag_modes["semicolon"],
-                      "bodyRowsIfFlagsJoinedByCommaAndQuoted": flag_modes["comma_quoted"],
-                      "bodyRowsIfFlagsJoinedBySpace": flag_modes["space"]},
-         "ambiguity": "Section 8 does not say how several flags share one field. Three candidates are given. Single-flag and no-flag rows are identical in all three."},
-        {"name": "Rounding to whole numbers at exact halves",
+         "expected": {"bodyRows": body}},
+        {"name": "Rounding to whole numbers at exact halves (half rounds up)",
          "input": {"unit": unit, "months": rmonths},
-         "expected": {"bodyRowsIfHalfRoundsUp": half_up, "bodyRowsIfHalfRoundsToEven": half_even},
-         "ambiguity": "Section 8 says 'rounded to whole numbers' without a tie rule (JavaScript Math.round rounds halves up; Python round goes to even). "
-                      "Weighted values such as 2.5 occur. Both are given. Values like 0.4999 and 1.49 round the same either way."},
+         "expected": {"bodyRows": half_up}},
+        {"name": "Two and three flags in one field",
+         "input": {"unit": unit, "months": two_flags},
+         "expected": {"bodyRows": "\n".join(row(r) for r in two_flags) + "\n"}},
         {"name": "Rules as checks",
          "input": {"unit": unit, "months": months},
          "expected": {"checks": [
@@ -897,6 +825,7 @@ def make_csv():
              {"rule": "null value, low and high are empty fields", "type": "rowEquals",
               "row": "2022,7,hot,,,,,"},
              {"rule": "zero is the character 0", "type": "rowEquals", "row": "2000,12,hot,0,0,0,estimated_terra,"},
+             {"rule": "flags in one field are joined with a pipe", "type": "rowEquals", "row": "2012,2,hot,1234,1100,1300,measured,example|partial_month"},
              {"rule": "a field with a comma is quoted", "type": "csvFieldQuoted", "sample": "a,b", "quoted": "\"a,b\""},
              {"rule": "column count is 8 in every body row", "type": "fieldCount", "count": 8, "note": "except rows where a quoted field holds commas"},
              {"rule": "a fire value is never printed with a decimal point", "type": "doesNotMatch", "pattern": "\\.\\d"},
@@ -904,7 +833,7 @@ def make_csv():
         {"name": "Summary CSV: columns and quoting",
          "input": {"rows": [["worst month", "2024-07"], ["note, with comma", "x"]]},
          "expected": {"header": "key,value", "bodyRows": "worst month,2024-07\n\"note, with comma\",x\n"},
-         "ambiguity": "The summary key names are not fixed by section 8 ('one row per figure'), so only the two column names and the quoting are pinned."},
+         "note": "Section 8 does not fix the summary key names, so only the two column names and the quoting are pinned."},
     ]
     return cases
 
@@ -924,7 +853,7 @@ def main():
           "Sections 4 and 6 inputs from the example daily files: 8 day window totals per year, month to date with each past year, and window date mapping.",
           make_daily())
     write("unusual_cases.json",
-          "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. Fields listed under `unpinned` are not defined by the rules.",
+          "Sections 3 and 4. Status, median, mean, ratios, higherThan and years. Ratios to 6 decimals. For no_history and too_early the median, mean and ratios are null and higherThan is 0 (section 9, ruling 4).",
           make_unusual())
     write("chance_cases.json", "Section 5. Chance of fire. Jeffreys range from scipy.stats.beta.ppf at 0.05 and 0.95, 6 decimals.",
           make_chance())

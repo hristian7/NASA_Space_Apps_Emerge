@@ -424,8 +424,7 @@
     "hi": null,
     "fireYears": 0,
     "years": 0
-   },
-   "ambiguity": "With no past years p is null (stated). The rules do not say whether lo and hi are null; null is used here."
+   }
   },
   {
    "name": "No years: month never present",
@@ -446,8 +445,38 @@
     "hi": null,
     "fireYears": 0,
     "years": 0
+   }
+  },
+  {
+   "name": "No years: every past year is null",
+   "input": {
+    "series": [
+     {
+      "y": 2000,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2001,
+      "m": 8,
+      "value": null
+     },
+     {
+      "y": 2002,
+      "m": 8,
+      "value": 5
+     }
+    ],
+    "month": 8,
+    "year": 2002
    },
-   "ambiguity": "Same as the case above for lo and hi."
+   "expected": {
+    "p": null,
+    "lo": null,
+    "hi": null,
+    "fireYears": 0,
+    "years": 0
+   }
   },
   {
    "name": "Threshold: 0.49 does not count as a fire year",

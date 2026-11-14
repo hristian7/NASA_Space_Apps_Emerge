@@ -29,4 +29,4 @@ Written on 14 Nov 2026 from `docs/number-logic.md`, `web/src/types/ui.ts` and `d
 | `trend_extremes_cases.json` | 7 | Slope, share per decade, worst month, worst year |
 | `csv_cases.json` | 8 | Body rows of the monthly CSV, rounding, quoting, line ends |
 
-Numbers are rounded to 6 decimals; compare with a tolerance of 1e-6. A case key named `ambiguity` marks a place where the documents are silent or disagree; its `alt` keys (or alternative keys under `expected`) give the other reading. Fields under `unpinned` are not defined by the rules and must not be asserted.
+Numbers are rounded to 6 decimals; compare with a tolerance of 1e-6. Every case has exactly one expected answer; the points the rules left open were ruled in section 9 of `docs/number-logic.md` and are pinned to those rulings.

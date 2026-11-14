@@ -386,8 +386,7 @@
      }
     },
     "october_2000": {
-     "inSeries": false,
-     "note": "docs/number-logic.md section 2 starts the series at Nov 2000, so Oct 2000 has no entry. The meta.json no-data period for it is global and ends 2000-10-31."
+     "inSeries": false
     },
     "sumOfAllMonths_x625": {
      "hot": 3661645,
@@ -398,8 +397,7 @@
      "cd": 40
     },
     "noNullMonths": true
-   },
-   "ambiguity": "Request asked for a null month before Nov 2000. The rules start the series in Nov 2000, so that month is absent, not null. No month inside the series is null in the example files (every meta.json no-data period that is global lies outside Nov 2000 to Dec 2025). Alternative reading: a lookup of Oct 2000 returns null."
+   }
   },
   {
    "name": "Plovdiv, 50 km (two tiles)",
@@ -828,8 +826,7 @@
      }
     },
     "october_2000": {
-     "inSeries": false,
-     "note": "docs/number-logic.md section 2 starts the series at Nov 2000, so Oct 2000 has no entry. The meta.json no-data period for it is global and ends 2000-10-31."
+     "inSeries": false
     },
     "sumOfAllMonths_x625": {
      "hot": 7215573,
@@ -840,8 +837,7 @@
      "cd": 29
     },
     "noNullMonths": true
-   },
-   "ambiguity": "Request asked for a null month before Nov 2000. The rules start the series in Nov 2000, so that month is absent, not null. No month inside the series is null in the example files (every meta.json no-data period that is global lies outside Nov 2000 to Dec 2025). Alternative reading: a lookup of Oct 2000 returns null."
+   }
   },
   {
    "name": "Polygon 24.8 to 25.4 E, 42.2 to 42.7 N (two tiles)",
@@ -1187,8 +1183,7 @@
      }
     },
     "october_2000": {
-     "inSeries": false,
-     "note": "docs/number-logic.md section 2 starts the series at Nov 2000, so Oct 2000 has no entry. The meta.json no-data period for it is global and ends 2000-10-31."
+     "inSeries": false
     },
     "sumOfAllMonths_x625": {
      "hot": 1760400,
@@ -1199,8 +1194,7 @@
      "cd": 49
     },
     "noNullMonths": true
-   },
-   "ambiguity": "Request asked for a null month before Nov 2000. The rules start the series in Nov 2000, so that month is absent, not null. No month inside the series is null in the example files (every meta.json no-data period that is global lies outside Nov 2000 to Dec 2025). Alternative reading: a lookup of Oct 2000 returns null."
+   }
   },
   {
    "name": "Sofia, radius 0 (small selection, low confidence)",
@@ -1497,8 +1491,7 @@
      }
     },
     "october_2000": {
-     "inSeries": false,
-     "note": "docs/number-logic.md section 2 starts the series at Nov 2000, so Oct 2000 has no entry. The meta.json no-data period for it is global and ends 2000-10-31."
+     "inSeries": false
     },
     "sumOfAllMonths_x625": {
      "hot": 222500,
@@ -1509,8 +1502,7 @@
      "cd": 239
     },
     "noNullMonths": true
-   },
-   "ambiguity": "Request asked for a null month before Nov 2000. The rules start the series in Nov 2000, so that month is absent, not null. No month inside the series is null in the example files (every meta.json no-data period that is global lies outside Nov 2000 to Dec 2025). Alternative reading: a lookup of Oct 2000 returns null."
+   }
   },
   {
    "name": "Country series, Bulgaria (read as it is)",

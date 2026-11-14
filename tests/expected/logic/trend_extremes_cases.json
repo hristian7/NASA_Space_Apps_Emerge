@@ -1070,7 +1070,7 @@
    "note": "Months of 12 appear in 2010 (December) and 2011 (January): the earliest wins. Yearly totals 78 (2010), 78 (2011): 2010 wins."
   },
   {
-   "name": "Worst month in an incomplete year",
+   "name": "Worst month in an incomplete year counts; worst year does not",
    "input": {
     "years": {
      "2010": [
@@ -1184,14 +1184,7 @@
      "2014": 60
     }
    },
-   "ambiguity": "Section 7 says worstMonth is the month with the highest value without limiting it to complete years; yearly totals use complete years only. Main answer: all non-null months count. Alternative: complete years only.",
-   "alt": {
-    "worstMonthCompleteYearsOnly": {
-     "y": 2010,
-     "m": 1,
-     "value": 5
-    }
-   }
+   "note": "2015 has a null month, so it is out of the worst year, but its 900 is the worst month."
   },
   {
    "name": "All months null",
