@@ -154,6 +154,10 @@ Unit `cd`. Level (a) nRMSE of A2 and A3 for t1 and t2 in both countries. A3 is n
 
 A3 is not worse in 3 of 4 cases (needs 3): met. Coverage inside the range in 4 of 4 cases (needs 4): met.
 
+## World scope: the world fit on every country (information) [V]
+
+not available (no W predictions).
+
 ## Full tables [V]
 
 Columns: n = rows scored, nRMSE = root mean squared error over mean truth, MAE = mean absolute error, bias = (sum predicted - sum truth) / sum truth, r = Pearson r, slope = slope of truth on prediction, coverage = share of rows with lo <= truth <= hi, MAPE = on rows with truth above 0 (information only).
