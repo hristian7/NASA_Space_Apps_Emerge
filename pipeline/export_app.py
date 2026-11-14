@@ -694,14 +694,19 @@ def build_background(con: duckdb.DuckDBPyConnection, used: set[str], out: Path) 
 # The rows are first gathered into a table and only then read one tile at a
 # time. Sorting the whole world's autumn in one go does not fit in memory, and
 # a table on disk plus 800 small ordered reads is both bounded and quick.
+# Each slice is one band of latitude, so the grouping never holds the whole
+# world at once. One pass over everything died at the memory limit twice, and
+# whether it fitted depended on what else happened to be running.
+DAILY_SLICE_DEG = 15
+
 DAILY_TABLE_SQL = """
-CREATE OR REPLACE TABLE daily_rows AS
+SELECT_OR_INSERT
 WITH src AS (
   SELECT cy, cx, day, sat, detections, frp FROM read_parquet($cell_days)
-  WHERE WINDOW_FILTER
+  WHERE (WINDOW_FILTER) AND cy >= $cy_from AND cy < $cy_to
   UNION ALL
   SELECT cy, cx, day, sat, detections, frp FROM read_parquet($cell_days_2026)
-  WHERE WINDOW_FILTER
+  WHERE (WINDOW_FILTER) AND cy >= $cy_from AND cy < $cy_to
 )
 SELECT
   (cast(floor((90 - 0.25 * (((17999 - 2 * cy) // 50)) - 0.125) / 5) * 5 AS INT)) AS lat0,
@@ -804,10 +809,19 @@ def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path,
             parts.append(f"(month(day) > {start.month} AND month(day) < {end.month})")
         where = " OR ".join(parts)
 
-    con.execute(DAILY_TABLE_SQL.replace("WINDOW_FILTER", where), {
-        "cell_days": str(cell_days),
-        "cell_days_2026": str(cell_days_2026),
-    })
+    sql = DAILY_TABLE_SQL.replace("WINDOW_FILTER", where)
+    first = True
+    for low in range(-90, 90, DAILY_SLICE_DEG):
+        head = ("CREATE OR REPLACE TABLE daily_rows AS" if first
+                else "INSERT INTO daily_rows")
+        con.execute(sql.replace("SELECT_OR_INSERT", head), {
+            "cell_days": str(cell_days),
+            "cell_days_2026": str(cell_days_2026),
+            "cy_from": low * 100,
+            "cy_to": (low + DAILY_SLICE_DEG) * 100,
+        })
+        first = False
+        print(f"    latitude {low} to {low + DAILY_SLICE_DEG} done", flush=True)
     keys = con.execute(
         "SELECT DISTINCT lat0, lon0 FROM daily_rows ORDER BY lat0, lon0"
     ).fetchall()
@@ -1384,7 +1398,7 @@ def main() -> None:
     work = Path(tempfile.mkdtemp(prefix="emerge-export-")) / "work.duckdb"
     con = duckdb.connect(str(work))
     con.execute(f"PRAGMA threads={args.threads}")
-    con.execute("PRAGMA memory_limit='6GB'")
+    con.execute("PRAGMA memory_limit='4GB'")
     # The daily window sorts the whole world's autumn, which does not fit in
     # memory, so it is given somewhere to spill and the order of rows it does
     # not need to keep is let go.
