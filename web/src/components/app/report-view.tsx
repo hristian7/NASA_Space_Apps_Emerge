@@ -47,6 +47,7 @@ import { chance, extremes, rankWindow, trend, unusual, unusualToDate } from "@/l
 import { MAX_ROWS } from "@/lib/hotspots/query";
 import { encodeSelection } from "@/lib/ui/selection-url";
 import RiskHereCard from "@/components/risk/RiskHereCard";
+import SectionNav, { partId } from "@/components/report/SectionNav";
 import { useCountryName } from "./country-name";
 import { decodeView, defaultView, viewSearch, type ViewState } from "@/lib/ui/view-url";
 import {
@@ -260,6 +261,8 @@ function Report({
   calendarRef: React.RefObject<SVGSVGElement | null>;
   chartRef: React.RefObject<SVGSVGElement | null>;
 }) {
+  const reportText = useTranslations("report");
+  const partTitle = (part: "overview" | "charts" | "data" | "sources") => reportText(`parts.${part}`);
   const mode = view.unit;
   const full = mode === "hot" ? data.hotspots : data.fireDays;
   const months = useMemo(() => monthsOf(full), [full]);
@@ -440,14 +443,6 @@ function Report({
         disabled={selection.kind === "country" ? [] : ["sat"]}
       />
 
-      <p className={styles.monthLine} data-testid="data-line">
-        {t("dataLine", {
-          date: formatIsoDate(provenance(data.meta).date, locale),
-          sensors: provenance(data.meta).sensors,
-          model: provenance(data.meta).model,
-        })}
-      </p>
-
       {series.lowConfidence ? (
         <p className={styles.notice} data-testid="low-confidence">
           {t("lowConfidence")}
@@ -508,17 +503,10 @@ function Report({
         <span>{t("selectMonthHint")}</span>
       </p>
 
-      <DateRange
-        months={months}
-        from={from}
-        to={to}
-        locale={locale}
-        onChange={(nextFrom, nextTo) =>
-          onView({ ...view, from: nextFrom, to: nextTo })
-        }
-        onReset={() => onView({ ...view, from: null, to: null })}
-      />
+      <SectionNav />
 
+      <section className="rp-part" id={partId("overview")} aria-labelledby="overview-title">
+        <h2 className="rp-part-title" id="overview-title">{partTitle("overview")}</h2>
       <ExtremesSummary
         extremes={theExtremes}
         trend={theTrend}
@@ -588,24 +576,17 @@ function Report({
         ) : null}
       </div>
 
-      {theChance === null ? null : (
-        <p className={styles.notice} data-testid="chance-meaning">
-          {t("chanceMeaning")}
-        </p>
-      )}
-
       {selection.kind === "point" ? (
         <RiskHereCard point={{ lat: selection.lat, lon: selection.lon }} country={data.reported?.iso3 ?? ""} />
       ) : null}
 
-      {selection.kind === "country" ? (
-        <CountryTest iso3={selection.iso3} locale={locale} />
-      ) : null}
+      </section>
 
+      <section className="rp-part" id={partId("charts")} aria-labelledby="charts-title">
+        <h2 className="rp-part-title" id="charts-title">{partTitle("charts")}</h2>
       {comparison !== null ? (
         <WindowCard comparison={comparison} locale={locale} />
       ) : null}
-
       <CumulativeChart series={series} year={(selectedMonth ?? last).y} lastDataDay={data.meta.last_data_day} locale={locale} place={place} />
       <TrendChart
         years={yearTotals}
@@ -622,14 +603,19 @@ function Report({
         locale={locale}
         unitShortKey={unitShortKey}
       />
+      </section>
 
-      <OutsideLinks
-        selection={selection}
-        countryIso3={
-          selection.kind === "country" ? selection.iso3 : (data.reported?.iso3 ?? null)
+      <section className="rp-part" id={partId("data")} aria-labelledby="data-title">
+        <h2 className="rp-part-title" id="data-title">{partTitle("data")}</h2>
+      <DateRange
+        months={months}
+        from={from}
+        to={to}
+        locale={locale}
+        onChange={(nextFrom, nextTo) =>
+          onView({ ...view, from: nextFrom, to: nextTo })
         }
-        countryBox={data.countryBox}
-        year={Number(data.meta.last_data_day.slice(0, 4))}
+        onReset={() => onView({ ...view, from: null, to: null })}
       />
 
       {mode === "sat" || data.satellites === null ? null : (
@@ -670,8 +656,40 @@ function Report({
           {t("dataDate", { date: formatIsoDate(data.meta.last_data_day, locale) })}
         </p>
       </div>
+      </section>
+
+      <section className="rp-part" id={partId("sources")} aria-labelledby="sources-title">
+        <h2 className="rp-part-title" id="sources-title">{partTitle("sources")}</h2>
+      <p className={styles.monthLine} data-testid="data-line">
+        {t("dataLine", {
+          date: formatIsoDate(provenance(data.meta).date, locale),
+          sensors: provenance(data.meta).sensors,
+          model: provenance(data.meta).model,
+        })}
+      </p>
+
+      {theChance === null ? null : (
+        <p className={styles.notice} data-testid="chance-meaning">
+          {t("chanceMeaning")}
+        </p>
+      )}
+
+      {selection.kind === "country" ? (
+        <CountryTest iso3={selection.iso3} locale={locale} />
+      ) : null}
+
+      <OutsideLinks
+        selection={selection}
+        countryIso3={
+          selection.kind === "country" ? selection.iso3 : (data.reported?.iso3 ?? null)
+        }
+        countryBox={data.countryBox}
+        year={Number(data.meta.last_data_day.slice(0, 4))}
+      />
 
       <Glossary />
+      </section>
+
     </>
   );
 }
