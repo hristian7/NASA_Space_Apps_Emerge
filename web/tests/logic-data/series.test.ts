@@ -13,11 +13,12 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type { Selection } from '../../src/types/ui';
-import type { MetaFile } from '../../src/types/data';
-import { monthIndex } from '../../src/lib/data/cell';
-import { loadMeta } from '../../src/lib/data/loaders';
+import type { BackgroundFile, MetaFile, TileFile } from '../../src/types/data';
+import { cellId, monthIndex } from '../../src/lib/data/cell';
+import { globeCells, loadCountryIndex, loadGlobeYear, loadMeta } from '../../src/lib/data/loaders';
 import { getPerSatellite, getReported, getSeries, isNoDataMonth } from '../../src/lib/data/series';
 import { backgroundStatus } from '../../src/lib/data/background';
+import { selectionCells } from '../../src/lib/data/selection';
 import { REPO_ROOT, patchedSource, testSource } from './helpers';
 
 const source = testSource();
@@ -232,77 +233,132 @@ describe('the other two country answers', () => {
   });
 });
 
-describe('the background before February 2012', () => {
-  const group = 'g1';
-  const twelve = (value: number) => Array.from({ length: 12 }, () => value);
-  const background = {
-    schema: 'emerge-background-1',
-    example: true,
-    built: '2026-11-14',
-    groups: {
-      [group]: {
-        estimated_terra: { hot: twelve(40), hot_hi: twelve(120), cd: twelve(25), cd_hi: twelve(75) },
-        estimated_modis: { hot: twelve(60), hot_hi: twelve(180), cd: twelve(37), cd_hi: twelve(111) },
-      },
-    },
-  };
+describe('the background before February 2012 (ruling 10)', () => {
+  const ONE_CELL: Selection = { kind: 'point', lat: 42.7, lon: 23.32, radiusKm: 2 };
 
-  async function groupedTile() {
-    const tile = await source.json<{ cells: { id: number; mi: number[] }[] }>(
-      'tiles/40_20.json.gz',
+  it('gives an unlisted month before Feb 2012 the group background, read from the file', async () => {
+    const background = (await source.json<BackgroundFile>('background.json')) as BackgroundFile;
+    const tile = (await source.json<TileFile>('tiles/40_20.json.gz')) as TileFile;
+    const { cells } = selectionCells(ONE_CELL);
+    expect(cells).toHaveLength(1);
+    const cell = tile.cells.find((entry) => entry.id === cells[0].id);
+    expect(cell, 'the one cell should be in the tile').toBeDefined();
+    const group = background.groups[(cell as TileFile['cells'][number]).g];
+    expect(group, 'the cell group should be in background.json').toBeDefined();
+
+    for (const unit of ['hot', 'cd'] as const) {
+      const series = await getSeries(ONE_CELL, unit, source);
+      expect(backgroundStatus().loaded).toBe(true);
+      expect(backgroundStatus().cellsWithoutGroup).toBe(0);
+      const listed = new Set((cell as TileFile['cells'][number]).mi);
+
+      for (const [key, period] of [
+        ['2000-12', 'estimated_terra'],
+        ['2005-04', 'estimated_modis'],
+      ] as const) {
+        const [y, m] = key.split('-').map(Number);
+        expect(listed.has(monthIndex(y, m)), `${key} should not be listed by the cell`).toBe(false);
+        const point = series.months.find((entry) => entry.y === y && entry.m === m);
+        const values = group[period];
+        expect(point?.value).toBeCloseTo(values[unit][m - 1] / 100, 10);
+        expect(point?.lo).toBe(0);
+        expect(point?.hi).toBeCloseTo(
+          values[unit === 'hot' ? 'hot_hi' : 'cd_hi'][m - 1] / 100,
+          10,
+        );
+      }
+    }
+  });
+
+  it('gives an unlisted month from Feb 2012 a plain 0', async () => {
+    const tile = (await source.json<TileFile>('tiles/40_20.json.gz')) as TileFile;
+    const { cells } = selectionCells(ONE_CELL);
+    const cell = tile.cells.find((entry) => entry.id === cells[0].id) as TileFile['cells'][number];
+    const series = await getSeries(ONE_CELL, 'hot', source);
+    const measured = series.months.filter(
+      (point) =>
+        monthIndex(point.y, point.m) >= monthIndex(2012, 2) &&
+        !cell.mi.includes(monthIndex(point.y, point.m)),
     );
-    const copy = JSON.parse(JSON.stringify(tile)) as { cells: ({ g?: string } & { id: number })[] };
-    for (const cell of copy.cells) cell.g = group;
-    return copy;
-  }
-
-  it('gives an unlisted month before Feb 2012 the group background, and 0 from Feb 2012', async () => {
-    const tile = await groupedTile();
-    const patched = patchedSource({ 'background.json': background, 'tiles/40_20.json.gz': tile });
-    const one: Selection = { kind: 'point', lat: 44.125, lon: 22.375, radiusKm: 2 };
-    const series = await getSeries(one, 'cd', patched);
-    expect(backgroundStatus().loaded).toBe(true);
-    expect(backgroundStatus().cellsWithoutGroup).toBe(0);
-
-    const at = (y: number, m: number) =>
-      series.months.find((point) => point.y === y && point.m === m);
-    expect(at(2000, 12)?.value).toBeCloseTo(0.25, 10);
-    expect(at(2000, 12)?.lo).toBe(0);
-    expect(at(2000, 12)?.hi).toBeCloseTo(0.75, 10);
-    expect(at(2003, 4)?.value).toBeCloseTo(0.37, 10);
-    expect(at(2003, 4)?.hi).toBeCloseTo(1.11, 10);
-
-    const measuredEmpty = series.months.filter(
-      (point) => monthIndex(point.y, point.m) >= monthIndex(2012, 2) && point.value === 0,
-    );
-    expect(measuredEmpty.length).toBeGreaterThan(0);
+    expect(measured.length).toBeGreaterThan(0);
+    for (const point of measured) {
+      expect(point.value).toBe(0);
+      expect(point.lo).toBe(0);
+      expect(point.hi).toBe(0);
+    }
   });
 
   it('weighs the background like any other cell value', async () => {
-    const tile = await groupedTile();
-    const patched = patchedSource({ 'background.json': background, 'tiles/40_20.json.gz': tile });
-    const circle: Selection = { kind: 'point', lat: 44.0, lon: 22.3, radiusKm: 20 };
-    const series = await getSeries(circle, 'hot', patched);
-    const month = series.months.find((point) => point.y === 2005 && point.m === 3);
-    expect(month?.value).toBeGreaterThan(0);
+    const background = (await source.json<BackgroundFile>('background.json')) as BackgroundFile;
+    const circle: Selection = { kind: 'point', lat: 42.7, lon: 23.32, radiusKm: 50 };
+    const series = await getSeries(circle, 'hot', source);
+    const month = series.months.find((point) => point.y === 2000 && point.m === 11);
+    const perCell = background.groups.BGR_40.estimated_terra.hot[10] / 100;
+    expect(month?.value).toBeGreaterThan(perCell);
+    expect(Number.isInteger(month?.value)).toBe(false);
   });
 
   it('treats a missing background file as 0 and says it was not loaded', async () => {
-    const tile = await groupedTile();
-    const patched = patchedSource({ 'tiles/40_20.json.gz': tile });
-    const one: Selection = { kind: 'point', lat: 44.125, lon: 22.375, radiusKm: 2 };
-    const series = await getSeries(one, 'cd', patched);
+    const patched = patchedSource({ 'background.json': null });
+    const series = await getSeries(ONE_CELL, 'cd', patched);
     expect(backgroundStatus().loaded).toBe(false);
-    const unlisted = series.months.find((point) => point.y === 2000 && point.m === 12);
-    expect(unlisted?.value).toBe(0);
+    expect(series.months.find((point) => point.y === 2000 && point.m === 12)?.value).toBe(0);
   });
 
-  it('counts cells with no group and leaves their background at 0', async () => {
-    const patched = patchedSource({ 'background.json': background });
-    const one: Selection = { kind: 'point', lat: 44.125, lon: 22.375, radiusKm: 2 };
-    const series = await getSeries(one, 'cd', patched);
+  it('counts a cell with no group and leaves its background at 0', async () => {
+    const tile = JSON.parse(
+      JSON.stringify(await source.json<TileFile>('tiles/40_20.json.gz')),
+    ) as { cells: { g?: string }[] };
+    for (const cell of tile.cells) delete cell.g;
+    const patched = patchedSource({ 'tiles/40_20.json.gz': tile });
+    const series = await getSeries(ONE_CELL, 'cd', patched);
     expect(backgroundStatus().loaded).toBe(true);
     expect(backgroundStatus().cellsWithoutGroup).toBe(1);
     expect(series.months.find((point) => point.y === 2000 && point.m === 12)?.value).toBe(0);
+  });
+
+  it('names a group that background.json does not hold', async () => {
+    const tile = JSON.parse(
+      JSON.stringify(await source.json<TileFile>('tiles/40_20.json.gz')),
+    ) as { cells: { g: string }[] };
+    for (const cell of tile.cells) cell.g = 'NOT_A_GROUP';
+    const patched = patchedSource({ 'tiles/40_20.json.gz': tile });
+    await getSeries(ONE_CELL, 'cd', patched);
+    expect(backgroundStatus().groupsNotFound).toEqual(['NOT_A_GROUP']);
+  });
+});
+
+describe('the country index and the globe year', () => {
+  it('lists one entry per country file, with a box that may cross the 180 degree line', async () => {
+    const index = await loadCountryIndex(source);
+    const meta_ = await meta();
+    expect(index?.schema).toBe('emerge-country-index-1');
+    expect(index?.countries.map((entry) => entry.iso3)).toEqual(meta_.countries);
+    const usa = index?.countries.find((entry) => entry.iso3 === 'USA');
+    expect(usa?.bbox[0]).toBeGreaterThan(usa?.bbox[2] as number);
+    for (const entry of index?.countries ?? []) {
+      expect(entry.name.length).toBeGreaterThan(0);
+      expect(entry.bbox[1]).toBeLessThan(entry.bbox[3]);
+    }
+  });
+
+  it('reads a globe year from the gzipped slim file and works the point out from the id', async () => {
+    const meta_ = await meta();
+    const year = meta_.globe_years[0];
+    const file = await loadGlobeYear(year, source);
+    expect(file?.schema).toBe('emerge-globe-1');
+    expect(file?.point_from_id).toBe(true);
+    expect(file?.cols.id).toHaveLength(file?.n as number);
+    const cells = globeCells(file as NonNullable<typeof file>);
+    expect(cells).toHaveLength(file?.n as number);
+    for (const cell of cells.slice(0, 20)) {
+      expect(cellId(cell.lat, cell.lon)).toBe(cell.id);
+      expect(cell.precisionRadiusKm).toBeGreaterThan(0);
+      expect(cell.hot).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('answers null for a globe year with no file', async () => {
+    expect(await loadGlobeYear(1999, source)).toBeNull();
   });
 });

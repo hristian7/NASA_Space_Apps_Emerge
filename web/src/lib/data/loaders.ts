@@ -14,6 +14,7 @@
 
 import type {
   CountryFile,
+  CountryIndexFile,
   DailyFile,
   GlobeFile,
   MetaFile,
@@ -22,6 +23,7 @@ import type {
   ValidationFile,
 } from '../../types/data';
 
+import { cellCenter, precisionRadiusKm } from './cell';
 import { DataError, DataSource, dataSource } from './source';
 
 function source(given?: DataSource): DataSource {
@@ -66,9 +68,69 @@ export function loadDaily(key: string, src?: DataSource): Promise<DailyFile | nu
   return source(src).json<DailyFile>(`daily/${key}.json.gz`);
 }
 
-/** globe/<year>.json. null means that year has no globe file. */
+/**
+ * globe/<year>.json.gz, one year of totals per cell. null means that year has
+ * no globe file.
+ *
+ * The file is slim: the columns are id, hot, cd and frp only, and the point
+ * comes from the id (`point_from_id`), which is why the world layer fits in a
+ * static budget. globeCells below turns it into one record per cell with the
+ * centre and the precision worked out, for a layer that wants objects.
+ */
 export function loadGlobeYear(year: number, src?: DataSource): Promise<GlobeFile | null> {
-  return source(src).json<GlobeFile>(`globe/${year}.json`);
+  return source(src).json<GlobeFile>(`globe/${year}.json.gz`);
+}
+
+/** One cell of a globe year, with the point worked out from the id. */
+export interface GlobeCell {
+  /** Cell id: row * 1440 + col. */
+  id: number;
+  /** Cell centre latitude. */
+  lat: number;
+  /** Cell centre longitude. */
+  lon: number;
+  /** How far inside the cell a point can be from that centre, in km. */
+  precisionRadiusKm: number;
+  /** Hotspots that year. */
+  hot: number;
+  /** Fire days (fire cell-days) that year. */
+  cd: number;
+  /** Fire radiative power that year, in MW. */
+  frp: number;
+}
+
+/**
+ * The cells of a globe year as records. The centre and the precision are
+ * derived from the id with the frozen grid rule, because the file does not
+ * carry them.
+ */
+export function globeCells(file: GlobeFile): GlobeCell[] {
+  const { id, hot, cd, frp } = file.cols;
+  const out: GlobeCell[] = [];
+  for (let at = 0; at < id.length; at += 1) {
+    const centre = cellCenter(id[at]);
+    out.push({
+      id: id[at],
+      lat: centre.lat,
+      lon: centre.lon,
+      precisionRadiusKm: precisionRadiusKm(centre.lat),
+      hot: hot[at],
+      cd: cd[at],
+      frp: frp[at],
+    });
+  }
+  return out;
+}
+
+/**
+ * countries/index.json: one line per country file, for the country search
+ * box. null when the file is not there, so a caller can fall back to the
+ * plain list of codes in meta.json.
+ *
+ * A box with `west` greater than `east` crosses the 180 degree line.
+ */
+export function loadCountryIndex(src?: DataSource): Promise<CountryIndexFile | null> {
+  return source(src).json<CountryIndexFile>('countries/index.json');
 }
 
 /** Loads several tiles at once. Squares with no file are left out. */

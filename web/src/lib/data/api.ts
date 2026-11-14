@@ -11,7 +11,9 @@ export { DataError, DataSource, dataSource, setDataSource, httpFetcher, streamGu
 export type { Fetcher, Gunzip, DataSourceOptions } from './source';
 
 export {
+  globeCells,
   loadCountry,
+  loadCountryIndex,
   loadDaily,
   loadDailyTiles,
   loadGlobeYear,
@@ -21,6 +23,7 @@ export {
   loadTiles,
   loadValidation as getValidation,
 } from './loaders';
+export type { GlobeCell } from './loaders';
 
 export { getPerSatellite, getReported, getSeries, isNoDataMonth, srcForMonth } from './series';
 
@@ -28,12 +31,13 @@ export {
   backgroundPeriod,
   backgroundStatus,
   backgroundValue,
+  conversionFactor,
   loadBackground,
 } from './background';
 export type { BackgroundFile, BackgroundPeriod, BackgroundStatus } from './background';
 
-export { getMonthToDate, getWindowTotals, windowYears } from './daily';
-export type { MonthToDate, WindowTotals } from './daily';
+export { getMonthToDate, getWindowTotals, pastWindow, windowYears } from './daily';
+export type { MonthToDate, WindowDates, WindowTotals } from './daily';
 
 export {
   cellWeight,
