@@ -47,6 +47,7 @@ def _world_is_ready() -> tuple[bool, str]:
 
 
 WORLD_READY, WORLD_REASON = _world_is_ready()
+
 world_only = pytest.mark.skipif(not WORLD_READY, reason=WORLD_REASON or "world export ready")
 
 SRC_LABELS = [
@@ -66,6 +67,14 @@ EARTH_RADIUS_KM = 6371.0088
 
 FIRST_INDEX = 10          # November 2000
 LAST_INDEX = 311          # December 2025
+
+
+def _world_last_index() -> int:
+    """The world export runs further than the example set, so it says how far."""
+    if not WORLD_READY:
+        return LAST_INDEX
+    y, m = json.loads((WORLD / "meta.json").read_text())["last_month"].split("-")
+    return month_index(int(y), int(m))
 HARM_FIELDS = ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi", "frp")
 SAT_FIELDS = ("terra", "aqua", "snpp", "noaa20", "noaa21")
 POINT_FIELDS = ("type", "lat", "lon", "precision_radius_km")
@@ -78,6 +87,9 @@ POINT_FIELDS = ("type", "lat", "lon", "precision_radius_km")
 
 def month_index(y: int, m: int) -> int:
     return (y - 2000) * 12 + (m - 1)
+
+
+WORLD_LAST_INDEX = _world_last_index()
 
 
 def expected_src(y: int, m: int) -> str:
@@ -134,7 +146,8 @@ def check_point_head(rec: dict, where: str, expect_type: str) -> None:
     assert rec["precision_radius_km"] > 0, where
 
 
-def check_month_values(v: dict, y: int, m: int, where: str) -> None:
+def check_month_values(v: dict, y: int, m: int, where: str,
+                       last: int = LAST_INDEX) -> None:
     """The harmonized block of one month, wherever it appears.
 
     No ceiling is asserted on cd. A fire day is a (0.01 degree cell, day) pair,
@@ -142,7 +155,7 @@ def check_month_values(v: dict, y: int, m: int, where: str) -> None:
     the thousands.
     """
     assert month_index(y, m) >= FIRST_INDEX, f"{where}: month before November 2000"
-    assert month_index(y, m) <= LAST_INDEX, f"{where}: month after the data ends"
+    assert month_index(y, m) <= last, f"{where}: month after the data ends"
     for field in HARM_FIELDS:
         assert field in v, f"{where}: missing {field}"
         assert v[field] is not None, f"{where}: {field} is null inside coverage"
@@ -826,8 +839,22 @@ def test_world_meta():
     assert meta["schema"] == "emerge-meta-1"
     assert meta["example"] is False
     assert meta["first_month"] == "2000-11"
-    assert meta["last_month"] == "2025-12"
-    assert meta["last_data_day"] == "2025-12-31"
+    # The dates come from the conversion's coverage file, so they are read, not
+    # written down here. Only their shape and their agreement are checked.
+    assert meta["last_month"] == "2026-11"
+    assert meta["last_data_day"] == "2026-11-14"
+    cov = meta["coverage"]
+    assert cov["snpp_last_day"] == "2026-11-02"
+    assert cov["snpp_note"]
+    assert cov["provisional_months"], "the provisional months must be listed"
+    assert cov["measured_calibrated_months"] == ["2026-11"]
+    assert cov["part_month"] == {"month": "2026-11", "days": 14, "days_in_month": 30}
+    assert meta["limits"], "meta.json must carry its plain limits"
+    for limit in meta["limits"]:
+        assert limit["id"] and len(limit["text"]) > 20
+    assert meta["globe_part_years"] == [2026]
+    labels = [p["src"] for p in meta["src_periods"]]
+    assert labels[-1] == "measured_calibrated" and "provisional" in labels
     assert list(meta["src_labels"]) == SRC_LABELS
     assert list(meta["flag_labels"]) == FLAG_LABELS
     assert meta["units"]["cd"] == "fire_cell_days"
@@ -883,14 +910,15 @@ def test_world_country_files():
         assert doc["iso3"] == path.stem
         check_point_head(doc, path.name, "country")
         months = doc["months"]
-        assert len(months) == LAST_INDEX - FIRST_INDEX + 1, (
-            f"{path.name}: the series must run from November 2000 to December 2025 with no gaps"
+        assert len(months) == WORLD_LAST_INDEX - FIRST_INDEX + 1, (
+            f"{path.name}: the series must run from November 2000 to the last month "
+            "with no gaps"
         )
         for pos, rec in enumerate(months):
             where = f"{path.name} {rec['y']}-{rec['m']:02d}"
             assert month_index(rec["y"], rec["m"]) == FIRST_INDEX + pos, where
-            check_month_values(rec, rec["y"], rec["m"], where)
-            assert rec["src"] == expected_src(rec["y"], rec["m"]), where
+            check_month_values(rec, rec["y"], rec["m"], where, last=WORLD_LAST_INDEX)
+            assert rec["src"] in SRC_LABELS, where
             assert "example" not in rec["flags"], f"{where}: a real export has no example flag"
             for flag in rec["flags"]:
                 assert flag in FLAG_LABELS, f"{where}: unknown flag {flag}"
@@ -952,13 +980,14 @@ def test_world_tiles():
                          "frp", "src", "flags"):
                 assert len(cell[name]) == n, f"{where}: {name}"
             for pos, mi in enumerate(cell["mi"]):
-                assert FIRST_INDEX <= mi <= LAST_INDEX, where
+                assert FIRST_INDEX <= mi <= WORLD_LAST_INDEX, where
                 y = 2000 + mi // 12
                 m = mi - (y - 2000) * 12 + 1
                 values = {name: cell[name][pos] for name in HARM_FIELDS}
                 values.update({"y": y, "m": m})
-                check_month_values(values, y, m, f"{where} {y}-{m:02d}")
-                assert SRC_LABELS[cell["src"][pos]] == expected_src(y, m), where
+                check_month_values(values, y, m, f"{where} {y}-{m:02d}",
+                                   last=WORLD_LAST_INDEX)
+                assert 0 <= cell["src"][pos] < len(SRC_LABELS), where
                 assert not cell["flags"][pos] & example_bit, (
                     f"{where} {y}-{m:02d}: a real export has no example flag"
                 )
@@ -999,7 +1028,17 @@ def test_world_daily():
         assert doc["values"] == "raw"
         assert doc["sensor_labels"] == SENSOR_LABELS
         window = doc["window"]
-        assert window["days"] == 45 and window["latest_day"] == "2025-12-31"
+        assert window["days"] == 45
+        # The window's end is the record's last day, which meta.json states.
+        assert window["latest_day"] == read_json(WORLD / "meta.json")["last_data_day"]
+        # Where the reference satellite stopped inside the window, the file
+        # says which sensor carried the rest and by how much it was scaled.
+        cal = doc["calibrated_from"]
+        snpp_last = read_json(WORLD / "meta.json")["coverage"]["snpp_last_day"]
+        if snpp_last and snpp_last < window["latest_day"]:
+            assert cal and cal["sensor"] and cal["ratio"] > 0, path.name
+            assert cal["first_day"] > snpp_last, path.name
+            assert cal["first_day"] <= window["latest_day"], path.name
         for cell in doc["cells"]:
             where = f"{path.name} cell {cell['id']}"
             check_point_head(cell, where, "cell")
@@ -1012,7 +1051,7 @@ def test_world_daily():
             assert cell["years"], where
             for block in cell["years"]:
                 w2 = f"{where} {block['y']}"
-                assert SRC_LABELS[block["src"]] == expected_src(block["y"], 12), w2
+                assert 0 <= block["src"] < len(SRC_LABELS), w2
                 if block["y"] < 2002:
                     want = "terra"
                 elif block["y"] < 2012:

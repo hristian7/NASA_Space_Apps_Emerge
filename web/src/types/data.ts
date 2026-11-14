@@ -259,6 +259,10 @@ export interface GlobeFile {
   cell_deg: number;
   /** Always true: the point is derived from the cell id, not stored. */
   point_from_id: true;
+  /** True when the record stops inside this year, so it is not a whole year. */
+  part_year: boolean;
+  /** Last month of this year the record covers, 1 to 12. */
+  last_month: number;
   /** Number of cells, equal to the length of every array in cols. */
   n: number;
   cols: GlobeColumns;
@@ -318,6 +322,18 @@ export interface DailyFile {
   values: 'raw';
   /** Label for each index used in DailyYear.sensor. */
   sensor_labels: SensorLabel[];
+  /**
+   * Set when the reference satellite stopped inside the current year's window.
+   * From `first_day` the counts are the named sensor's own, multiplied by
+   * `ratio` and rounded, so the window stays one series. The FRP is that
+   * sensor's own and is not scaled.
+   */
+  calibrated_from: {
+    sensor: string;
+    first_day: string;
+    ratio: number;
+    note: string;
+  } | null;
   window: {
     /** Length of the window in days. */
     days: number;
@@ -396,6 +412,26 @@ export interface MetaFile {
   flag_labels: Record<FlagLabel, string>;
   /** Which src label applies to which period, in order. */
   src_periods: { from: string; to: string | null; src: SrcLabel }[];
+  /** What each satellite reached, and how the newest days were made. */
+  coverage: {
+    last_day_per_satellite: Record<string, string>;
+    /** Last day the reference satellite produced, or null while it still flies. */
+    snpp_last_day: string | null;
+    snpp_note: string;
+    calibration: Record<string, Record<string, number | string>>;
+    /** Months that come from near-real-time data, as "YYYY-MM". */
+    provisional_months: string[];
+    /** Months carried by a second satellite brought to the reference level. */
+    measured_calibrated_months: string[];
+    /** Months whose reference gap days were filled from a second satellite. */
+    snpp_gap_filled_months: string[];
+    /** Share of each month that is provisional, 0 to 1, keyed "YYYY-MM". */
+    provisional_share_by_month: Record<string, number>;
+    /** Set when the last month holds only part of its days. */
+    part_month: { month: string; days: number; days_in_month: number } | null;
+  };
+  /** Plain sentences about what this data set cannot do. */
+  limits: Limit[];
   no_data: NoDataPeriod[];
   daily_window: {
     days: number;
@@ -417,8 +453,10 @@ export interface MetaFile {
   tiles: string[];
   /** Tile keys with a daily/<key>.json.gz file. */
   daily: string[];
-  /** Years with a globe/<year>.json file. */
+  /** Years with a globe/<year>.json.gz file. */
   globe_years: number[];
+  /** Globe years the record stops inside, so not whole years. */
+  globe_part_years: number[];
   sources: SourceEntry[];
 }
 
@@ -431,10 +469,57 @@ export type ValidationScope =
   | 'circle_month_weighted'
   | 'cell_month_0p1';
 
+/**
+ * One row of the world scope: the model the app uses, fitted on every country
+ * and tested on years it had never seen. `group` is "all", "small", "medium",
+ * "large" or "pooled_world"; the percentile fields are across countries and
+ * the pooled fields are the world total added month by month, so a row has
+ * one set or the other.
+ */
+export interface WorldScopeRow {
+  test: string;
+  unit: 'hot' | 'cd';
+  group: string;
+  /** Countries in this group. */
+  n_countries: number | null;
+  /** Countries left out because they had too little fire to judge. */
+  too_little_fire: number | null;
+  nrmse_p50: number | null;
+  nrmse_p10: number | null;
+  nrmse_p90: number | null;
+  bias_p50: number | null;
+  bias_p10: number | null;
+  bias_p90: number | null;
+  /** Share of countries whose stated range held 80 to 97 per cent of values. */
+  coverage_in_range: number | null;
+  mean_truth_min: number | null;
+  mean_truth_max: number | null;
+  pooled_nrmse: number | null;
+  pooled_bias: number | null;
+  pooled_r: number | null;
+}
+
+/** One country's own result from the world test, for one test. */
+export interface CountryScore {
+  n: number | null;
+  nrmse: number | null;
+  bias_pct: number | null;
+  /** How often the stated range held, as a percentage. */
+  coverage_pct: number | null;
+  /** False where there was too little fire to judge. */
+  scorable: boolean;
+}
+
 /** One hold-out run of the conversion. null until the run exists. */
 export interface HoldoutResult {
   /** "forward" = learn early years, test later ones. "reverse" = the other way. */
   direction: 'forward' | 'reverse';
+  /** The scorer's name for this split, such as "t1". Read defensively. */
+  test?: string;
+  /** The country this row is about, in the provider's own name form. */
+  country?: string;
+  /** True for the split that runs into the years the older sensor drifts. */
+  drift_years?: boolean;
   unit: 'hot' | 'cd';
   /**
    * What each scored row is. The last two are reported for information:
@@ -533,8 +618,27 @@ export interface ValidationFile {
     pre_registered: boolean | null;
     /** How the split was checked for leakage, or null. */
     leakage_check: string | null;
+    /**
+     * The fields below are written by the exporter and read defensively by the
+     * app, so they are optional here: a screen must still work against a file
+     * that predates them.
+     */
+    model_note?: string;
+    /** Countries the method comparison was decided on. */
+    tested_countries?: string[];
+    tested_countries_note?: string;
+    /** How many countries the model the app uses was fitted on. */
+    world_fit_countries?: number;
+    /** The months the model was fitted on, as "YYYY-MM to YYYY-MM". */
+    fit_months?: string;
   };
   holdout: HoldoutResult[];
+  /** The world test: see WorldScopeRow. Absent before that test exists. */
+  world_scope?: WorldScopeRow[];
+  world_scope_note?: string;
+  /** One country's own result, by ISO3 code, then by test. */
+  countries?: Record<string, Record<string, CountryScore>>;
+  countries_note?: string;
   slices: SliceResult[];
   satellite_agreement: AgreementResult[];
   published_ratios: PublishedRatio[];

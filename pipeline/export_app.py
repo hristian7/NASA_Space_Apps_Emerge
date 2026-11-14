@@ -30,8 +30,10 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import json
 import math
 import sys
+import tempfile
 from pathlib import Path
 
 import duckdb
@@ -48,8 +50,6 @@ from export_examples import (  # noqa: E402  the shared, frozen rules
     FLAG_LABELS,
     GRID_COLS,
     GRID_ROWS,
-    LAST_DATA_DAY,
-    LAST_MONTH,
     MIN_COMPARE_DAYS,
     REPORTED,
     SCHEMA_VERSION,
@@ -64,7 +64,6 @@ from export_examples import (  # noqa: E402  the shared, frozen rules
     months_between,
     precision_radius_km,
     sensor_for,
-    src_for,
     tile_key,
     write_gzip_json,
     write_json,
@@ -73,6 +72,49 @@ from export_examples import (  # noqa: E402  the shared, frozen rules
 DATA_VERSION = "world-2026-11-14"
 BUILT = "2026-11-14"
 EXAMPLE_FLAG = False
+
+# The conversion states its own coverage in coverage.json, and these are set
+# from it at startup rather than written down here, so a later run that reaches
+# a new day needs no change to this script.
+LAST_DATA_DAY = dt.date(2026, 11, 14)
+LAST_MONTH = (2026, 11)
+COVERAGE: dict = {}
+
+
+def load_coverage(path: Path) -> dict:
+    """Read coverage.json and take the record's dates from it."""
+    global LAST_DATA_DAY, LAST_MONTH, COVERAGE
+    COVERAGE = json.loads(path.read_text())
+    LAST_DATA_DAY = dt.date.fromisoformat(COVERAGE["last_day_of_the_record"])
+    y, m = COVERAGE["last_month"].split("-")
+    LAST_MONTH = (int(y), int(m))
+    for period in COVERAGE["src_periods"]:
+        if period["src"] not in SRC_LABELS:
+            raise SystemExit(f"coverage.json names an unknown label: {period['src']}")
+    return COVERAGE
+
+
+def src_of_month(y: int, m: int) -> str:
+    """The label of a month, from coverage.json rather than a date rule."""
+    want = month_index(y, m)
+    for period in COVERAGE["src_periods"]:
+        fy, fm = (int(v) for v in period["from"].split("-"))
+        first = month_index(fy, fm)
+        last = first
+        if period.get("to"):
+            ty, tm = (int(v) for v in period["to"].split("-"))
+            last = month_index(ty, tm)
+        elif period is COVERAGE["src_periods"][-1]:
+            last = month_index(*LAST_MONTH)
+        if first <= want <= last:
+            return period["src"]
+    raise SystemExit(f"coverage.json covers no label for {y}-{m:02d}")
+
+
+def month_end(y: int, m: int) -> dt.date:
+    if m == 12:
+        return dt.date(y, 12, 31)
+    return dt.date(y, m + 1, 1) - dt.timedelta(days=1)
 
 # Sensor behind a raw daily value. The daily files are raw, not harmonized.
 from export_examples import SENSOR_LABELS  # noqa: E402
@@ -373,6 +415,9 @@ def build_globe(yearly: dict[int, dict], out: Path) -> list[int]:
                 "type": "cell",
                 "cell_deg": CELL_DEG,
                 "point_from_id": True,
+                # A year the record stops inside is not a whole year.
+                "part_year": year == LAST_MONTH[0] and LAST_MONTH[1] < 12,
+                "last_month": LAST_MONTH[1] if year == LAST_MONTH[0] else 12,
                 "n": len(cols["id"]),
                 "cols": cols,
             },
@@ -392,23 +437,32 @@ FROM countries_monthly ORDER BY country, year, month
 
 SAT_START = {
     "terra": (2000, 11), "aqua": (2002, 7), "snpp": (2012, 1),
-    "noaa20": (2018, 4), "noaa21": None,
+    "noaa20": (2018, 4),
+    # NOAA-21 reaches our files only with the 2026 table.
+    "noaa21": (2026, 1),
 }
 
 
 def build_countries(
-    con: duckdb.DuckDBPyConnection, cells_of: dict[str, list[int]], out: Path
-) -> tuple[list[str], list[str], dict[str, dict[str, int]]]:
+    con: duckdb.DuckDBPyConnection, cells_of: dict[str, list[int]], out: Path,
+    noaa21: dict[tuple[str, int, int], int],
+) -> tuple[list[str], list[str], dict[str, dict[str, int]], int]:
     rows = con.execute(COUNTRY_SQL).fetchall()
     by_country: dict[str, dict[tuple[int, int], tuple]] = {}
     for r in rows:
         by_country.setdefault(r[0], {})[(r[1], r[2])] = r[3:]
 
-    unmapped = sorted(c for c in by_country if c not in ISO3)
+    unmapped = sorted(c for c in by_country if c not in ISO3 and c != NO_COUNTRY)
     index = []
     totals: dict[str, dict[str, int]] = {}
+    # The conversion leaves partial_month off the last country-month although
+    # its cells carry it, so it is set here from the last data day.
+    last_is_partial = LAST_DATA_DAY < month_end(*LAST_MONTH)
+    corrected = 0
 
     for country in sorted(by_country):
+        if country == NO_COUNTRY:
+            continue
         iso3 = ISO3.get(country)
         if iso3 is None:
             continue
@@ -427,6 +481,7 @@ def build_countries(
         west, east = lon_box([p[1] for p in pts])
 
         months = []
+        month_was_corrected = False
         hot_sum = cd_sum = 0
         for (y, m) in months_between(FIRST_MONTH, LAST_MONTH):
             v = by_country[country].get((y, m))
@@ -434,7 +489,7 @@ def build_countries(
                 values = {k: 0 for k in ("hot", "hot_lo", "hot_hi", "cd",
                                          "cd_lo", "cd_hi", "frp")}
                 raw = {"terra": 0, "aqua": 0, "snpp": 0, "noaa20": 0, "noaa21": 0}
-                src, flags = src_for(y, m), 0
+                src, flags = src_of_month(y, m), 0
             else:
                 (hot, hot_lo, hot_hi, cd, cd_lo, cd_hi,
                  terra, aqua, snpp, noaa20, frp, src, flags) = v
@@ -444,7 +499,8 @@ def build_countries(
                     "frp": whole(frp),
                 }
                 raw = {"terra": whole(terra), "aqua": whole(aqua),
-                       "snpp": whole(snpp), "noaa20": whole(noaa20), "noaa21": 0}
+                       "snpp": whole(snpp), "noaa20": whole(noaa20),
+                       "noaa21": noaa21.get((country, y, m), 0)}
             values["hot_lo"] = min(values["hot_lo"], values["hot"])
             values["hot_hi"] = max(values["hot_hi"], values["hot"])
             values["cd_lo"] = min(values["cd_lo"], values["cd"])
@@ -461,8 +517,14 @@ def build_countries(
             rec["src"] = src
             rec["flags"] = [FLAG_LABELS[i] for i in range(len(FLAG_LABELS))
                             if int(flags or 0) & (1 << i)]
+            if (y, m) == LAST_MONTH and last_is_partial and "partial_month" not in rec["flags"]:
+                rec["flags"].append("partial_month")
+                rec["flags"].sort(key=FLAG_LABELS.index)
+                month_was_corrected = True
             months.append(rec)
 
+        if month_was_corrected:
+            corrected += 1
         totals[iso3] = {"hot": hot_sum, "cd": cd_sum}
         write_json(
             out / "countries" / f"{iso3}.json",
@@ -504,7 +566,7 @@ def build_countries(
             "countries": index,
         },
     )
-    return sorted(e["iso3"] for e in index), unmapped, totals
+    return sorted(e["iso3"] for e in index), unmapped, totals, corrected
 
 
 def build_reported(out: Path) -> list[str]:
@@ -538,7 +600,7 @@ def build_reported(out: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
+def build_background(con: duckdb.DuckDBPyConnection, used: set[str], out: Path) -> None:
     """background.json: the background values and the conversion factors.
 
     Background values are whole hundredths, factors whole thousandths. The
@@ -571,15 +633,30 @@ def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
     ).fetchall():
         if period not in BACKGROUND_PERIODS:
             raise SystemExit(f"a factor carries an unknown period: {period}")
-        if gid not in groups or period not in groups[gid]:
-            raise SystemExit(f"a factor names a group with no background: {gid} {period}")
-        groups[gid][period]["k_hot"][int(month) - 1] = whole((k_hot or 0) * 1000)
-        groups[gid][period]["k_cd"][int(month) - 1] = whole((k_cd or 0) * 1000)
+        # A group can have factors and no background: the cells with no
+        # country are such a group. Zero background is the honest value there,
+        # because none was computed, and the factors still let the app scale.
+        series = groups.setdefault(gid, {}).setdefault(
+            period, {unit: list(values) for unit, values in blank.items()}
+        )
+        series["k_hot"][int(month) - 1] = whole((k_hot or 0) * 1000)
+        series["k_cd"][int(month) - 1] = whole((k_cd or 0) * 1000)
 
+    # Only the groups some cell points at. The conversion carries a few that
+    # nothing uses, and a group nothing points at needs no factor.
+    extra = sorted(set(groups) - used)
+    for gid in extra:
+        del groups[gid]
+    missing = sorted(used - set(groups))
+    if missing:
+        raise SystemExit(
+            f"{len(missing)} groups that cells point at are in neither background nor "
+            f"factors, the first being {missing[0]}"
+        )
     for gid, periods in groups.items():
         for period in BACKGROUND_PERIODS:
             if period not in periods:
-                raise SystemExit(f"group {gid} has no {period} background")
+                raise SystemExit(f"group {gid} has no {period} entry at all")
             s = periods[period]
             for m in range(12):
                 s["hot_hi"][m] = max(s["hot_hi"][m], s["hot"][m])
@@ -610,22 +687,49 @@ def build_background(con: duckdb.DuckDBPyConnection, out: Path) -> None:
 # Daily window
 # ---------------------------------------------------------------------------
 
-DAILY_SQL = """
+# The window runs from one month and day to another. Past years come from the
+# main cell-day table and the current year from the 2026 one, read together so
+# a cell's days arrive in one stream.
+#
+# The rows are first gathered into a table and only then read one tile at a
+# time. Sorting the whole world's autumn in one go does not fit in memory, and
+# a table on disk plus 800 small ordered reads is both bounded and quick.
+# Each slice is one band of latitude, so the grouping never holds the whole
+# world at once. One pass over everything died at the memory limit twice, and
+# whether it fitted depended on what else happened to be running.
+DAILY_SLICE_DEG = 15
+
+DAILY_TABLE_SQL = """
+SELECT_OR_INSERT
+WITH src AS (
+  SELECT cy, cx, day, sat, detections, frp FROM read_parquet($cell_days)
+  WHERE (WINDOW_FILTER) AND cy >= $cy_from AND cy < $cy_to
+  UNION ALL
+  SELECT cy, cx, day, sat, detections, frp FROM read_parquet($cell_days_2026)
+  WHERE (WINDOW_FILTER) AND cy >= $cy_from AND cy < $cy_to
+)
 SELECT
+  (cast(floor((90 - 0.25 * (((17999 - 2 * cy) // 50)) - 0.125) / 5) * 5 AS INT)) AS lat0,
+  (cast(floor((-180 + 0.25 * (((2 * cx + 1 + 36000) // 50)) + 0.125) / 5) * 5 AS INT)) AS lon0,
   (((17999 - 2 * cy) // 50) * 1440 + ((2 * cx + 1 + 36000) // 50))::BIGINT AS cell,
   day,
-  sum(CASE WHEN sat = 'Terra' THEN detections ELSE 0 END)::BIGINT AS terra_n,
-  sum(CASE WHEN sat = 'Aqua'  THEN detections ELSE 0 END)::BIGINT AS aqua_n,
-  sum(CASE WHEN sat = 'SNPP'  THEN detections ELSE 0 END)::BIGINT AS snpp_n,
-  sum(CASE WHEN sat = 'Terra' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS terra_frp,
-  sum(CASE WHEN sat = 'Aqua'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS aqua_frp,
-  sum(CASE WHEN sat = 'SNPP'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp
-FROM read_parquet($cell_days)
-WHERE (month(day) = $start_month AND day(day) >= $start_day) OR month(day) = 12
-GROUP BY cell, day
-ORDER BY (cast(floor((90 - 0.25 * (cell // 1440) - 0.125) / 5) * 5 AS INT)),
-         (cast(floor((-180 + 0.25 * (cell % 1440) + 0.125) / 5) * 5 AS INT)),
-         cell, day
+  sum(CASE WHEN sat = 'Terra'  THEN detections ELSE 0 END)::BIGINT AS terra_n,
+  sum(CASE WHEN sat = 'Aqua'   THEN detections ELSE 0 END)::BIGINT AS aqua_n,
+  sum(CASE WHEN sat = 'SNPP'   THEN detections ELSE 0 END)::BIGINT AS snpp_n,
+  sum(CASE WHEN sat = 'NOAA20' THEN detections ELSE 0 END)::BIGINT AS noaa20_n,
+  sum(CASE WHEN sat = 'Terra'  THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS terra_frp,
+  sum(CASE WHEN sat = 'Aqua'   THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS aqua_frp,
+  sum(CASE WHEN sat = 'SNPP'   THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp,
+  sum(CASE WHEN sat = 'NOAA20' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS noaa20_frp
+FROM src
+GROUP BY lat0, lon0, cell, day
+"""
+
+DAILY_TILE_SQL = """
+SELECT cell, day, terra_n, aqua_n, snpp_n, noaa20_n,
+       terra_frp, aqua_frp, snpp_frp, noaa20_frp
+FROM daily_rows WHERE lat0 = ? AND lon0 = ?
+ORDER BY cell, day
 """
 
 
@@ -634,9 +738,34 @@ def daily_window() -> tuple[dt.date, dt.date, list[int]]:
     return start, LAST_DATA_DAY, list(range(FIRST_MONTH[0], LAST_MONTH[0] + 1))
 
 
+def snpp_gap_start() -> dt.date | None:
+    """First day of the current year with no S-NPP, or None while it still flies."""
+    last = COVERAGE.get("snpp_last_day")
+    if not last:
+        return None
+    day = dt.date.fromisoformat(last)
+    return day + dt.timedelta(days=1) if day < LAST_DATA_DAY else None
+
+
+def calibration_ratio(unit: str) -> float:
+    """How much of S-NPP one NOAA-20 count is worth, after S-NPP stopped."""
+    return float(COVERAGE["calibration"]["after_snpp_2026"][f"snpp_over_noaa20_{unit}"])
+
+
 def daily_file(key: str, cells: list[dict], start: dt.date, end: dt.date,
                years: list[int]) -> dict:
     lat0, lon0 = (int(p) for p in key.split("_"))
+    gap = snpp_gap_start()
+    calibrated = None
+    if gap is not None:
+        calibrated = {
+            "sensor": "noaa20",
+            "first_day": gap.isoformat(),
+            "ratio": calibration_ratio("hot"),
+            "note": "S-NPP stopped on " + COVERAGE["snpp_last_day"] + ", so from "
+                    "this day the count is NOAA-20 multiplied by the ratio and "
+                    "rounded. The FRP is NOAA-20's own and is not scaled.",
+        }
     return {
         "schema": f"emerge-daily-{SCHEMA_VERSION}",
         "example": False,
@@ -646,6 +775,7 @@ def daily_file(key: str, cells: list[dict], start: dt.date, end: dt.date,
         "cell_deg": CELL_DEG,
         "values": "raw",
         "sensor_labels": SENSOR_LABELS,
+        "calibrated_from": calibrated,
         "window": {
             "days": DAILY_WINDOW_DAYS,
             "latest_day": end.isoformat(),
@@ -661,73 +791,99 @@ def daily_file(key: str, cells: list[dict], start: dt.date, end: dt.date,
 
 
 def build_daily(con: duckdb.DuckDBPyConnection, cell_days: Path,
-                groups: dict[int, str], out: Path) -> list[str]:
+                cell_days_2026: Path, groups: dict[int, str], out: Path) -> list[str]:
     start, end, years = daily_window()
-    if (start.month, end.month) != (11, 12):
-        raise SystemExit("the daily query assumes a window inside November and December")
-    con.execute(DAILY_SQL, {"cell_days": str(cell_days),
-                            "start_month": start.month, "start_day": start.day})
+    if start.year != end.year:
+        raise SystemExit("the daily query assumes a window inside one calendar year")
+    gap = snpp_gap_start()
+    ratio = calibration_ratio("hot") if gap else 1.0
+
+    # Written out month by month so the parquet reader can skip row groups.
+    if start.month == end.month:
+        where = (f"month(day) = {start.month} AND day(day) >= {start.day} "
+                 f"AND day(day) <= {end.day}")
+    else:
+        parts = [f"(month(day) = {start.month} AND day(day) >= {start.day})",
+                 f"(month(day) = {end.month} AND day(day) <= {end.day})"]
+        if end.month - start.month > 1:
+            parts.append(f"(month(day) > {start.month} AND month(day) < {end.month})")
+        where = " OR ".join(parts)
+
+    sql = DAILY_TABLE_SQL.replace("WINDOW_FILTER", where)
+    first = True
+    for low in range(-90, 90, DAILY_SLICE_DEG):
+        head = ("CREATE OR REPLACE TABLE daily_rows AS" if first
+                else "INSERT INTO daily_rows")
+        con.execute(sql.replace("SELECT_OR_INSERT", head), {
+            "cell_days": str(cell_days),
+            "cell_days_2026": str(cell_days_2026),
+            "cy_from": low * 100,
+            "cy_to": (low + DAILY_SLICE_DEG) * 100,
+        })
+        first = False
+        print(f"    latitude {low} to {low + DAILY_SLICE_DEG} done", flush=True)
+    keys = con.execute(
+        "SELECT DISTINCT lat0, lon0 FROM daily_rows ORDER BY lat0, lon0"
+    ).fetchall()
+    print(f"  {len(keys)} tiles with fire in the window", flush=True)
 
     written: list[str] = []
-    key = None
-    cells: list[dict] = []
-    cell = None
-    per_year: dict[int, list[tuple[int, int, int]]] = {}
+    for lat0, lon0 in keys:
+        key = f"{int(lat0)}_{int(lon0)}"
+        cells: list[dict] = []
+        state: dict = {"cell": None, "per_year": {}}
 
-    def close_cell() -> None:
-        if cell is None or not per_year:
-            return
-        rec = cell_head(cell)
-        rec["g"] = groups.get(cell, "")
-        rec["years"] = [
-            {
-                "y": y,
-                "src": SRC_LABELS.index(src_for(y, 12)),
-                "flags": flag_bits([]),
-                "sensor": SENSOR_LABELS.index(sensor_for(y, 12)),
-                "d": [d[0] for d in sorted(per_year[y])],
-                "hot": [d[1] for d in sorted(per_year[y])],
-                "frp": [d[2] for d in sorted(per_year[y])],
-            }
-            for y in sorted(per_year)
-        ]
-        cells.append(rec)
+        def close_cell() -> None:
+            cell = state["cell"]
+            per_year = state["per_year"]
+            if cell is None or not per_year:
+                return
+            rec = cell_head(cell)
+            rec["g"] = groups.get(cell, "")
+            rec["years"] = [
+                {
+                    "y": y,
+                    "src": SRC_LABELS.index(src_of_month(y, end.month)),
+                    "flags": flag_bits([]),
+                    "sensor": SENSOR_LABELS.index(sensor_for(y, end.month)),
+                    "d": [d[0] for d in sorted(per_year[y])],
+                    "hot": [d[1] for d in sorted(per_year[y])],
+                    "frp": [d[2] for d in sorted(per_year[y])],
+                }
+                for y in sorted(per_year)
+            ]
+            cells.append(rec)
 
-    def close_tile() -> None:
-        if key is None or not cells:
-            return
-        write_gzip_json(out / "daily" / f"{key}.json.gz",
-                        daily_file(key, cells, start, end, years))
-        written.append(key)
-
-    while True:
-        chunk = con.fetchmany(CHUNK)
-        if not chunk:
-            break
-        for (c, day, terra_n, aqua_n, snpp_n,
-             terra_frp, aqua_frp, snpp_frp) in chunk:
-            tkey = tile_of(c)
-            if tkey != key:
+        for row in con.execute(DAILY_TILE_SQL, [lat0, lon0]).fetchall():
+            (c, day, terra_n, aqua_n, snpp_n, noaa20_n,
+             terra_frp, aqua_frp, snpp_frp, noaa20_frp) = row
+            if c != state["cell"]:
                 close_cell()
-                close_tile()
-                key, cells, cell, per_year = tkey, [], None, {}
-            if c != cell:
-                close_cell()
-                cell, per_year = c, {}
-            # Raw, from the one sensor the year's block names (ruling 11).
-            counts = {"terra": (terra_n, terra_frp), "aqua": (aqua_n, aqua_frp),
-                      "snpp": (snpp_n, snpp_frp)}
-            hot, frp = (int(v) for v in counts[sensor_for(day.year, day.month)])
+                state["cell"], state["per_year"] = c, {}
+            if gap is not None and day >= gap:
+                # S-NPP has stopped. NOAA-20's count is brought to S-NPP level
+                # so the window stays one series; its FRP is left alone.
+                hot = whole(int(noaa20_n) * ratio)
+                frp = int(noaa20_frp)
+            else:
+                # Raw, from the one sensor the year's block names (ruling 11).
+                counts = {"terra": (terra_n, terra_frp), "aqua": (aqua_n, aqua_frp),
+                          "snpp": (snpp_n, snpp_frp)}
+                hot, frp = (int(v) for v in counts[sensor_for(day.year, day.month)])
             if hot <= 0:
                 continue
             offset = (day - dt.date(day.year, start.month, start.day)).days
             if 0 <= offset < DAILY_WINDOW_DAYS:
-                per_year.setdefault(day.year, []).append(
+                state["per_year"].setdefault(day.year, []).append(
                     (offset, hot, whole(frp / 1000))
                 )
+        close_cell()
 
-    close_cell()
-    close_tile()
+        if cells:
+            write_gzip_json(out / "daily" / f"{key}.json.gz",
+                            daily_file(key, cells, start, end, years))
+            written.append(key)
+
     return sorted(written)
 
 
@@ -745,6 +901,11 @@ TEST_YEARS = {
     "t2": ((2016, 2022), (2012, 2015)),
     "t3": ((2012, 2018), (2023, 2025)),
 }
+
+# Rows the provider could not place in a country. They have cells and tiles
+# but no country file.
+NO_COUNTRY = "Unassigned"
+
 WINNER = "A3"
 MODEL_LABEL = "A3"
 FIT_YEARS = [2012, 2022]
@@ -754,12 +915,22 @@ LIMITS = [
     {"id": "cell-size",
      "text": "Harmonized numbers exist per 0.25 degree cell, about 28 km across. A smaller "
              "area still reports the whole cell, so it is labelled low confidence."},
-    {"id": "tested-on-two-countries",
-     "text": "The independent test covered Bulgaria and the United States, and it fitted the "
-             "conversion on those two countries alone. Every score on this page comes from "
-             "that test. The numbers in the app come from the same model fitted on all 235 "
-             "countries, and its own test is still being run, so treat the scores here as "
-             "evidence about the method rather than about every country."},
+    {"id": "what-was-tested",
+     "text": "The model the app uses was fitted on all 235 countries and then tested on years "
+             "it had never seen, for every country. Those results are the world scope on this "
+             "page, and each country's own result is there too. Separately, the choice between "
+             "two conversion methods was decided on Bulgaria and the United States, because "
+             "that comparison needed hand-checked truth."},
+    {"id": "provisional-2026",
+     "text": "The 2026 months are provisional. They come from near-real-time data and can "
+             "still change as the full records are published."},
+    {"id": "part-month",
+     "text": "November 2026 holds 14 days, not a whole month, so it must not be compared with "
+             "a full month. It carries the flag partial_month."},
+    {"id": "unassigned-cells",
+     "text": "A country total for the newest months is slightly low. Some detections have no "
+             "country assigned yet, so they appear in the map cells but in no country file. It "
+             "was about 1.5 per cent of the 2026 cell-days."},
     {"id": "small-countries-wide-ranges",
      "text": "A small country has a wide range. Across Bulgaria's estimated months the upper "
              "end sits about 3.8 times the value, while for the United States it is about "
@@ -842,9 +1013,63 @@ def md_table(text: str, heading_starts: str) -> list[list[str]]:
     return out
 
 
+def read_world_scope(scores_dir: Path) -> tuple[list[dict], dict[str, dict]]:
+    """The world scope: the scorer's own table, unchanged in meaning.
+
+    world_scores.csv holds one row per test, unit and group of countries;
+    world_country_scores.csv holds one row per country. Nothing is recomputed
+    here: the numbers are carried across and named.
+    """
+    scope: list[dict] = []
+    path = scores_dir / "world_scores.csv"
+    if path.is_file():
+        with path.open() as fh:
+            for r in csv.DictReader(fh):
+                scope.append({
+                    "test": r["test"],
+                    "unit": r["unit"],
+                    "group": r["group"],
+                    "n_countries": int(r["n_countries"]) if r["n_countries"] else None,
+                    "too_little_fire": whole(number(r["too_little_fire"]))
+                    if number(r["too_little_fire"]) is not None else None,
+                    "nrmse_p50": number(r["nrmse_p50"]),
+                    "nrmse_p10": number(r["nrmse_p10"]),
+                    "nrmse_p90": number(r["nrmse_p90"]),
+                    "bias_p50": number(r["bias_p50"]),
+                    "bias_p10": number(r["bias_p10"]),
+                    "bias_p90": number(r["bias_p90"]),
+                    "coverage_in_range": number(r["coverage_in_range"]),
+                    "mean_truth_min": number(r["mean_truth_min"]),
+                    "mean_truth_max": number(r["mean_truth_max"]),
+                    "pooled_nrmse": number(r["pooled_nrmse"]),
+                    "pooled_bias": number(r["pooled_bias"]),
+                    "pooled_r": number(r["pooled_r"]),
+                })
+
+    countries: dict[str, dict] = {}
+    path = scores_dir / "world_country_scores.csv"
+    if path.is_file():
+        with path.open() as fh:
+            for r in csv.DictReader(fh):
+                iso3 = ISO3.get(r["country"])
+                if iso3 is None or r["unit"] != "cd":
+                    continue
+                countries.setdefault(iso3, {})[r["test"]] = {
+                    "n": int(r["n"]) if r["n"] else None,
+                    "nrmse": number(r["nrmse"]),
+                    "bias_pct": None if number(r["bias"]) is None
+                    else round(number(r["bias"]) * 100, 4),
+                    "coverage_pct": None if number(r["coverage"]) is None
+                    else round(number(r["coverage"]) * 100, 4),
+                    "scorable": r.get("scorable", "").strip().lower() == "true",
+                }
+    return scope, {k: countries[k] for k in sorted(countries)}
+
+
 def build_validation(scores_csv: Path, results_md: Path, out: Path) -> None:
     rows = [r for r in read_scores(scores_csv) if r["pipeline"] == WINNER]
     text = results_md.read_text()
+    world_scope, world_countries = read_world_scope(scores_csv.parent)
 
     holdout = []
     for r in sorted(rows, key=lambda r: (r["test"], r["unit"], r["level"], r["country"])):
@@ -929,6 +1154,19 @@ def build_validation(scores_csv: Path, results_md: Path, out: Path) -> None:
                 "fit_months": "2012-02 to 2022-12",
             },
             "holdout": holdout,
+            "world_scope": world_scope,
+            "world_scope_note": "The model the app uses, fitted on every country and tested "
+                                "on years it had never seen. Percentiles run across the "
+                                "countries with enough fire to score; the groups are equal "
+                                "thirds of those countries by how much they burn. "
+                                "coverage_in_range is the share of countries whose stated "
+                                "range really held 80 to 97 per cent of the test values. The "
+                                "pooled row adds every country together month by month.",
+            "countries": world_countries,
+            "countries_note": "One country's own result from the same test, by its code. "
+                              "nrmse and bias_pct describe its months; coverage_pct is how "
+                              "often the stated range held. scorable is false where there was "
+                              "too little fire to judge.",
             "slices": slices,
             "contests": contests,
             "world_gate": gate,
@@ -966,6 +1204,24 @@ def build_validation(scores_csv: Path, results_md: Path, out: Path) -> None:
 # ---------------------------------------------------------------------------
 # meta.json
 # ---------------------------------------------------------------------------
+
+# Plain sentences about what this data set cannot do, for any screen that
+# shows a number from it. The proof page has the longer list.
+META_LIMITS = [
+    {"id": "unassigned-cells",
+     "text": "Some detections have no country yet. They are in the cells and the tiles but "
+             "in no country file, so a country total for the newest months is slightly low. "
+             "It was about 1.5 per cent of the 2026 cell-days."},
+    {"id": "provisional-2026",
+     "text": "The 2026 months are provisional: they come from near-real-time data and can "
+             "still change."},
+    {"id": "part-month",
+     "text": "The last month holds only part of its days, so it cannot be compared with a "
+             "whole month. It carries the flag partial_month."},
+    {"id": "snpp-ended",
+     "text": "The reference satellite stopped on 2 November 2026. Later days rest on a "
+             "second satellite brought to its level, which is a small extra step."},
+]
 
 SOURCES = [
     {"id": "modis-terra", "name": "MODIS hotspots, Terra",
@@ -1030,11 +1286,24 @@ def build_meta(out: Path, countries: list[str], reported: list[str],
                 "snpp_gap_filled": "S-NPP gap days filled from NOAA-20",
                 "low_confidence": "Below the grid's reliable size",
             },
-            "src_periods": [
-                {"from": "2000-11", "to": "2002-06", "src": "estimated_terra"},
-                {"from": "2002-07", "to": "2012-01", "src": "estimated_modis"},
-                {"from": "2012-02", "to": None, "src": "measured"},
-            ],
+            "src_periods": COVERAGE["src_periods"],
+            "coverage": {
+                "last_day_per_satellite": COVERAGE["last_day_per_satellite"],
+                "snpp_last_day": COVERAGE["snpp_last_day"],
+                "snpp_note": "S-NPP stopped on " + COVERAGE["snpp_last_day"]
+                             + ". Later days rest on NOAA-20 brought to S-NPP level.",
+                "calibration": COVERAGE["calibration"],
+                "provisional_months": COVERAGE["month_labels"]["provisional"],
+                "measured_calibrated_months": COVERAGE["month_labels"]["measured_calibrated"],
+                "snpp_gap_filled_months": COVERAGE["month_labels"]["snpp_gap_filled"],
+                "provisional_share_by_month": COVERAGE["provisional_share_by_month"],
+                "part_month": {
+                    "month": "%04d-%02d" % LAST_MONTH,
+                    "days": LAST_DATA_DAY.day,
+                    "days_in_month": month_end(*LAST_MONTH).day,
+                } if LAST_DATA_DAY < month_end(*LAST_MONTH) else None,
+            },
+            "limits": META_LIMITS,
             "no_data": [
                 {"scope": "global", "sat": None, "from": None, "to": "2000-10-31",
                  "days": None,
@@ -1068,6 +1337,8 @@ def build_meta(out: Path, countries: list[str], reported: list[str],
             "tiles": tiles,
             "daily": daily,
             "globe_years": globe_years,
+            "globe_part_years": [y for y in globe_years
+                                 if y == LAST_MONTH[0] and LAST_MONTH[1] < 12],
             "sources": SOURCES,
         },
     )
@@ -1089,6 +1360,9 @@ def main() -> None:
                          "<data>/derived/world/harmonized")
     ap.add_argument("--cell-days", default=None,
                     help="the raw cell-day table; defaults to cell_days.parquet one level above --in")
+    ap.add_argument("--cell-days-2026", default=None,
+                    help="the 2026 cell-day table; defaults to cell_days_2026.parquet "
+                         "beside --cell-days")
     ap.add_argument("--scores", default=None,
                     help="defaults to <data>/derived/bakeoff/scores.csv")
     ap.add_argument("--results", default=str(here / "docs" / "research" / "bakeoff-results.md"))
@@ -1100,11 +1374,13 @@ def main() -> None:
     inp = Path(args.inp) if args.inp else data / "derived" / "world" / "harmonized"
     scores = Path(args.scores) if args.scores else data / "derived" / "bakeoff" / "scores.csv"
     cell_days = Path(args.cell_days) if args.cell_days else inp.parent / "cell_days.parquet"
+    cell_days_2026 = (Path(args.cell_days_2026) if args.cell_days_2026
+                      else cell_days.parent / "cell_days_2026.parquet")
     out = Path(args.out)
     for path in (inp / "cells_monthly.parquet", inp / "countries_monthly.parquet",
                  inp / "cell_groups.parquet", inp / "background.parquet",
-                 inp / "factors.parquet", cell_days,
-                 scores, Path(args.results)):
+                 inp / "factors.parquet", inp / "coverage.json",
+                 cell_days, cell_days_2026, scores, Path(args.results)):
         if not path.is_file():
             raise SystemExit(
                 f"input not found: {path}\n"
@@ -1113,9 +1389,21 @@ def main() -> None:
                 "background.parquet and factors.parquet."
             )
 
-    con = duckdb.connect()
+    load_coverage(inp / "coverage.json")
+    print(f"coverage to {LAST_DATA_DAY.isoformat()}, last month "
+          f"{LAST_MONTH[0]}-{LAST_MONTH[1]:02d}", flush=True)
+
+    # A database file, not an in-memory one: the daily window gathers its rows
+    # into a table first, and only a file-backed table can spill to disk.
+    work = Path(tempfile.mkdtemp(prefix="emerge-export-")) / "work.duckdb"
+    con = duckdb.connect(str(work))
     con.execute(f"PRAGMA threads={args.threads}")
-    con.execute("PRAGMA memory_limit='6GB'")
+    con.execute("PRAGMA memory_limit='4GB'")
+    # The daily window sorts the whole world's autumn, which does not fit in
+    # memory, so it is given somewhere to spill and the order of rows it does
+    # not need to keep is let go.
+    con.execute(f"PRAGMA temp_directory='{tempfile.gettempdir()}'")
+    con.execute("PRAGMA preserve_insertion_order=false")
     for name in ("cells_monthly", "countries_monthly", "cell_groups",
                  "background", "factors"):
         # A CREATE VIEW cannot carry a parameter, so the path goes in as a
@@ -1135,7 +1423,7 @@ def main() -> None:
     print(f"  {len(groups)} fire cells", flush=True)
 
     print("background ...", flush=True)
-    build_background(con, out)
+    build_background(con, set(groups.values()), out)
 
     # Every 0.25 degree cell where a country has any detection. A cell that two
     # countries share belongs to only one group, but both countries need it for
@@ -1154,9 +1442,26 @@ def main() -> None:
     ).fetchall():
         cells_of.setdefault(country, []).append(int(cell))
 
+    print("NOAA-21 counts for 2026 ...", flush=True)
+    noaa21 = {
+        (country, int(y), int(m)): whole(n)
+        for country, y, m, n in con.execute(
+            """
+            SELECT country, year(day)::INT, month(day)::INT, sum(detections)::BIGINT
+            FROM read_parquet($p) WHERE sat = 'NOAA21'
+            GROUP BY 1, 2, 3
+            """,
+            {"p": str(cell_days_2026)},
+        ).fetchall()
+    }
+    print(f"  {len(noaa21)} country-months", flush=True)
+
     print("countries ...", flush=True)
-    countries, unmapped, country_totals = build_countries(con, cells_of, out)
-    print(f"  {len(countries)} country files", flush=True)
+    countries, unmapped, country_totals, corrected = build_countries(
+        con, cells_of, out, noaa21)
+    print(f"  {len(countries)} country files; "
+          f"{corrected} given the missing partial_month on their last month",
+          flush=True)
     if unmapped:
         print("  COULD NOT MAP THESE COUNTRY NAMES TO A CODE, so they have no "
               "country file:", flush=True)
@@ -1175,7 +1480,7 @@ def main() -> None:
     print(f"  {len(globe_years)} years", flush=True)
 
     print("daily window ...", flush=True)
-    daily = build_daily(con, cell_days, groups, out)
+    daily = build_daily(con, cell_days, cell_days_2026, groups, out)
     print(f"  {len(daily)} tiles", flush=True)
 
     print("validation ...", flush=True)

@@ -128,13 +128,15 @@ The interface may call this "fire days", which reads better than "cell-days" for
 
 ### `src`: how the value was produced
 
-| Label | Period | Meaning |
+| Label | Period in the world export | Meaning |
 |---|---|---|
 | `estimated_terra` | Nov 2000 to Jun 2002 | converted from Terra alone, the only sensor flying |
 | `estimated_modis` | Jul 2002 to Jan 2012 | converted from Terra and Aqua together |
-| `measured` | Feb 2012 onward | measured by VIIRS on S-NPP, no conversion |
-| `measured_calibrated` | not used in the example set | measured by a second VIIRS sensor, calibrated to S-NPP |
-| `provisional` | not used in the example set | from near-real-time data, may be revised |
+| `measured` | Feb 2012 to Apr 2026 | measured by VIIRS on S-NPP, no conversion |
+| `provisional` | May 2026 to Oct 2026 | from near-real-time data, may be revised |
+| `measured_calibrated` | Nov 2026 | S-NPP stopped on 2 Nov 2026, so this month rests on NOAA-20 brought to S-NPP level |
+
+**The periods are not hard-coded.** They come from `src_periods` in `meta.json`, which the exporter copies from the conversion's own `coverage.json`. The example set still ends in December 2025 and uses only the first three labels.
 
 S-NPP started on 20 Jan 2012 `[V]`, so January 2012 is only part covered and stays `estimated_modis`; the measured record starts in February 2012. This closes conflict 22 in the build plan, which asked for one answer on January 2012.
 
@@ -162,7 +164,10 @@ Read first. It tells the app which files exist, what the labels mean and where t
 | `data_version` | string | version of the data, not of the format |
 | `built` | `"YYYY-MM-DD"` | when the files were written |
 | `last_data_day` | `"YYYY-MM-DD"` | last day of satellite data in the set |
-| `conversion` | object | which conversion produced the numbers: `model` (its label, `A3` in the first world export), `run` (the date it was run), `fit_years` and `fit_months` (February 2012 to December 2022), `reference`, and `cells_without_a_group` |
+| `conversion` | object | which conversion produced the numbers: `model` (its label, `A3`), `run` (the date it was run), `fit_years` and `fit_months` (February 2012 to December 2022), `reference`, and `cells_without_a_group` |
+| `coverage` | object | what each satellite reached and how the newest days were made: `last_day_per_satellite`, `snpp_last_day` and `snpp_note`, `calibration`, the `provisional_months`, `measured_calibrated_months` and `snpp_gap_filled_months` lists, `provisional_share_by_month`, and `part_month` when the last month holds only part of its days. The exporter copies this from the conversion's own `coverage.json` rather than deciding it |
+| `limits` | list | `{id, text}`, one plain sentence each, for any screen that shows a number. The longer list is on the proof page |
+| `globe_part_years` | list of numbers | globe years the record stops inside, so not whole years |
 | `first_month`, `last_month` | `"YYYY-MM"` | range of the monthly files |
 | `grid` | object | `cell_deg`, `rows`, `cols`, `tile_deg`, `month_epoch` |
 | `units` | object | unit name per measurement field |
@@ -329,6 +334,8 @@ Before February 2012 the old sensors often saw nothing where the newer one would
 
 **A group** is one country and one 5 degree latitude band. A tile cell names its group in `g`. **The group id is opaque**: the app looks it up and never takes it apart, because the pipeline owns its shape. In the world export it is a number written as a string, in the example set it reads `BGR_40`; neither shape means anything to the app.
 
+**Detections with no country.** The provider cannot place every detection in a country. Those rows are in the cells and the tiles but in **no country file**, so a country total for the newest months is slightly low. It was about 1.5 per cent of the 2026 cell-days `[V]`, and `meta.json` carries it as a limit. Their cells do share one group, which has conversion factors but no background, so their background counts as 0.
+
 **A cell can have no group.** The conversion does not reach every cell, and such a cell carries `g` as the **empty string**, which is never a key in `background.json`. It then has no background, so an unlisted month before February 2012 counts as **0** rather than a background value, and its daily values before February 2012 cannot be scaled. The app reports both cases rather than hiding them. In the first world export 11,614 of 188,029 cells had no group `[V]`.
 
 | Field | Type | Notes |
@@ -390,6 +397,8 @@ Layout: **columnar and slim**. One `cols` object of equal-length arrays sharing 
 | `type` | `"cell"` | |
 | `cell_deg` | number | 0.25 |
 | `point_from_id` | `true` | see below |
+| `part_year` | boolean | true when the record stops inside this year, so it is not a whole year |
+| `last_month` | number | the last month of this year the record covers, 1 to 12 |
 | `n` | number | number of cells, equal to every array's length |
 | `cols` | object | `id`, `hot`, `cd`, `frp` |
 
@@ -421,6 +430,8 @@ The window is stated once in the file and once in `meta.json`: `days` (45), `lat
 | `cells` | list | sorted by `id` ascending |
 
 One cell: `type`, `id`, `lat`, `lon`, `precision_radius_km`, `g` (the group id, for the conversion factor), `years`. One year block: `y`, `src` (index), `flags` (bit set), `sensor` (index into `sensor_labels`), then the parallel arrays `d` (day offsets from the window start, 0 to `days - 1`, ascending), `hot` and `frp`.
+
+**When the reference satellite stops.** The current year's window can run past the last day S-NPP produced. From that day the count in the file is the **NOAA-20 count multiplied by the ratio in `calibrated_from.ratio` and rounded**, so the window stays one series and the app needs no special case. `calibrated_from` names the `sensor`, the `first_day` and the `ratio`, and is `null` while S-NPP still flies. The FRP is NOAA-20's own and is **not** scaled, which matches the monthly files. In the first export to 14 November 2026 the ratio was 0.95456 and the first such day was 3 November 2026 `[V]`.
 
 **The daily values are raw, and the app scales them (ruling 11).** `hot` and `frp` are what **one named sensor** actually counted, and `sensor` on the year block says which: **Terra before July 2002, Aqua from July 2002 to January 2012, S-NPP from February 2012**. They are not converted here, for two reasons. The method refuses to publish daily harmonized values at all, because a count over fewer than about eight days is strongly biased by the orbit `[V]`; and the conversion publishes a monthly factor, not a daily one, so turning one into the other here would be a modelling step nobody has tested.
 
@@ -472,9 +483,16 @@ Everything the "How we know it's right" page shows (M6). The page renders this f
 | `range_coverage` | `{level_pct, unit, scope, n, observed_pct}`: does a 90 per cent range really hold about 90 per cent of values |
 | `chance_of_fire` | `{brier, reliability}`, with ten reliability bins `{bin, predicted, observed, n}` |
 | `control_totals` | `{check, passed, detail}` per check, where `passed` is `true`, `false` or `null` for not run |
+| `world_scope` | the model the app uses, fitted on every country and tested on years it had never seen. One row per test, unit and group of countries (`all`, `small`, `medium`, `large`, `pooled_world`), carrying `n_countries`, `too_little_fire`, the median and 10th to 90th percentile of `nrmse` and `bias` across countries, `coverage_in_range` (the share of countries whose stated range really held 80 to 97 per cent of the test values), the size band `mean_truth_min` and `mean_truth_max`, and for the pooled row `pooled_nrmse`, `pooled_bias` and `pooled_r`. A row carries either the percentile set or the pooled set, not both |
+| `world_scope_note`, `countries_note` | one plain sentence each, so a screen can explain the numbers without the reader opening this page |
+| `countries` | one country's own result from the same test, keyed by ISO3 code and then by test: `n`, `nrmse`, `bias_pct`, `coverage_pct`, and `scorable`, which is false where there was too little fire to judge |
 | `limits` | `{id, text}`, one plain sentence each, written now and not left `null` |
 
 `train_years` and `test_years` are `[first, last]` or `null`. Years are numbers, never strings.
+
+**What was tested, stated accurately.** Two different things were measured, and the proof page must not blur them. The model the app uses was **fitted on all 235 countries and tested on held-out years for every country**: that is `world_scope` and `countries`. Separately, the **choice between two conversion methods** was decided on Bulgaria and the United States, because that comparison needed hand-checked truth: that is `holdout`, `slices` and `contests`. `method.tested_countries` names the two, and `method.world_fit_countries` says how many the app's own model was fitted on.
+
+**Fields the app reads defensively.** `method.model_note`, `method.tested_countries`, `method.tested_countries_note`, `method.world_fit_countries`, `method.fit_months`, the `country`, `test` and `drift_years` fields on a `holdout` row, and `world_scope`, `world_scope_note`, `countries` and `countries_note` are all written by the exporter but **optional in the types**, so a screen still works against a file written before they existed.
 
 ```json
 {"schema":"emerge-validation-1","example":true,"built":"2026-11-14",
