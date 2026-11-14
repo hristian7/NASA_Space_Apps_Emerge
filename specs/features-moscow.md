@@ -149,6 +149,7 @@ M36–M39, S16 and S17 come from the competitor research ([`../docs/research/fea
 ## Build order and cuts `[U]`
 
 - **Before building:** freeze the data contract and run four short risk tests (see [`specification.md`](specification.md), sections 7 and 8).
+- **Plan 2 order and cuts:** [`plan-2-fire-risk/specification.md`](plan-2-fire-risk/specification.md), section 11. The report fixes (M36–M39, S16, S17) need no new data and can start at once.
 - **First, the core:** M2, M14, M18–M20 (data model), M25–M26 (room for more maps and layers), then M1, M3–M6, M11, M13, M27, M28 and the rest of the Musts.
 - **Then the Shoulds, in this order:** S6 → S1 → S5 → S3 → S10 → S9 → S8.
 - **Scope check:** suggestion 2 and the challenge-page items add about 15–22 hours of work (less about 11–18 h after the 16:50 removals) `[U]`, spread across six parallel streams ([`specification.md`](specification.md), section 7).

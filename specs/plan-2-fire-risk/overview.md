@@ -42,7 +42,7 @@ Tested on fire seasons the engine never saw. We say "more accurate" only where w
 
 ## How we build it fast
 
-Develop on a coarse grid, then ship on the fine one. Score the simple baselines first, then the model. Reuse plan 1's data, screens and proof page. Build every screen on example files first.
+Develop on a coarse grid, then ship on the fine one. Score the simple baselines first, then the model. One satellite (NOAA-20) throughout. Reuse plan 1's data and screens. Build every screen on example files first.
 
 A research prototype, not an official warning service.
 
