@@ -271,7 +271,7 @@ export default function MapView({
             const date = rasters.current[definition.id];
             const tiles = date && layerUrl(definition.source, date);
             if (!tiles || definition.source.kind !== "tile_template") continue;
-            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit });
+            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.kind === "tile_template" && definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
             instance.addLayer({ id: layer, type: "raster", source, paint: { "raster-opacity": 0.42 } }, instance.getLayer(fillLayer) ? fillLayer : undefined);
           }
         };
