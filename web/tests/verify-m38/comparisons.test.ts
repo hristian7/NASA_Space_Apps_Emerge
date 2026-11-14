@@ -50,6 +50,14 @@ describe("comparison years follow the numbers used", () => {
 
 describe("sentences immediately around the normal median", () => {
   it.each([
+    [125.01, "Higher than usual for this month."],
+    [74.99, "Lower than usual for this month."],
+  ])("uses the correct directional headline for %s against a median of 100", (value, headline) => {
+    const result = unusualFromHistory(value, [100, 100, 100]);
+    expect(unusualText(result, 8, english).headline).toBe(headline);
+  });
+
+  it.each([
     [100.1, "About the usual level for this month.", 3],
     [100, "About the usual level for this month.", 0],
     [99.9, "About the usual level for this month.", 0],
