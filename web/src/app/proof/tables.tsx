@@ -16,7 +16,7 @@ import type {
   RangeCoverage,
   SliceResult,
   ValidationFile,
-} from "@/types/data";
+} from "../../types/data";
 
 export type Translate = (
   key: string,

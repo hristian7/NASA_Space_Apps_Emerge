@@ -20,6 +20,18 @@ export function messageFiles(): { file: string; namespace: string; locale: strin
     .sort((a, b) => a.file.localeCompare(b.file));
 }
 
+/**
+ * A file may name its own namespace inside itself, as `report.en.json` does
+ * with a single `report` key holding everything. Both shapes are accepted and
+ * both end up under the file's namespace, so neither side has to change when
+ * one part of the team writes a self-naming file and another writes a flat one.
+ */
+function unwrap(namespace: string, parsed: Record<string, unknown>): unknown {
+  const keys = Object.keys(parsed);
+  const only = keys.length === 1 && keys[0] === namespace ? parsed[namespace] : null;
+  return only !== null && typeof only === "object" && !Array.isArray(only) ? only : parsed;
+}
+
 const cache = new Map<string, Record<string, unknown>>();
 
 export function loadMessages(locale: Locale): Record<string, unknown> {
@@ -31,7 +43,10 @@ export function loadMessages(locale: Locale): Record<string, unknown> {
   for (const entry of messageFiles()) {
     if (entry.locale !== locale) continue;
     const text = readFileSync(join(messagesDir, entry.file), "utf8");
-    merged[entry.namespace] = JSON.parse(text);
+    merged[entry.namespace] = unwrap(
+      entry.namespace,
+      JSON.parse(text) as Record<string, unknown>,
+    );
   }
 
   cache.set(locale, merged);

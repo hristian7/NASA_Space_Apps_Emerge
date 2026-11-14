@@ -11,8 +11,8 @@
  * falls back to its default, as a hand-edited link should.
  */
 
-import type { MonthKey, UnitMode } from "@/components/report/types";
-import { DEFAULT_UNIT_MODE, UNIT_MODES } from "@/components/report/lib/constants";
+import type { MonthKey, UnitMode } from "../../components/report/types";
+import { DEFAULT_UNIT_MODE, UNIT_MODES } from "../../components/report/lib/constants";
 import { removeQueryParam, setQueryParam } from "./query";
 
 export const unitParam = "u";

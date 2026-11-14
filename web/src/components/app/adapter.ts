@@ -10,12 +10,12 @@
  * selection in words for a CSV comment line.
  */
 
-import type { MonthPoint, Selection, Series } from "@/types/ui";
-import type { AnomalyPoint, MonthKey, Scope } from "@/components/report/types";
-import { unusual } from "@/lib/stats";
-import { haversineKm } from "@/lib/data/api";
-import { MAX_DAYS, MAX_RADIUS_KM, FIRST_DAY } from "@/lib/hotspots/query";
-import { bboxAround, type Bbox } from "@/lib/hotspots/geo";
+import type { MonthPoint, Selection, Series } from "../../types/ui";
+import type { AnomalyPoint, MonthKey, Scope } from "../report/types";
+import { unusual } from "../../lib/stats";
+import { haversineKm } from "../../lib/data/api";
+import { MAX_DAYS, MAX_RADIUS_KM, FIRST_DAY } from "../../lib/hotspots/query";
+import { bboxAround, type Bbox } from "../../lib/hotspots/geo";
 
 /** Above this width a chance of fire is near certain, so M13 asks for days instead. */
 export const LARGE_AREA_KM = 50;

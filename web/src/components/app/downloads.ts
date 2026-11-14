@@ -7,10 +7,10 @@
  * source appears in every file without a change here.
  */
 
-import type { MetaFile } from "@/types/data";
-import type { Chance, Extremes, Selection, Series, Trend, Unusual } from "@/types/ui";
-import type { MonthKey } from "@/components/report/types";
-import { monthlyCsv, summaryCsv, type CsvHeader } from "@/lib/csv";
+import type { MetaFile } from "../../types/data";
+import type { Chance, Extremes, Selection, Series, Trend, Unusual } from "../../types/ui";
+import type { MonthKey } from "../report/types";
+import { monthlyCsv, summaryCsv, type CsvHeader } from "../../lib/csv";
 import { rangeForCsv, selectionForCsv } from "./adapter";
 import countryNamesEn from "../../../messages/country.en.json";
 
