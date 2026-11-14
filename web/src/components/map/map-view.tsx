@@ -8,12 +8,15 @@ import type { Selection } from "@/types/ui";
 import { basemaps, defaultBasemapId, getBasemap } from "@/config/basemaps";
 import { layer as layerById, layerUrl } from "@/config/layers";
 import {
+  countryBounds,
   emptyFeatures,
   ringBounds,
   selectionCentre,
   selectionFeatures,
   zoomForRadius,
 } from "@/lib/ui/geo";
+import { useCountryBoxes } from "@/lib/ui/use-countries";
+import type { CountryIndexEntry } from "@/types/data";
 import {
   historyRampTokens,
 } from "@/lib/layers/history";
@@ -75,31 +78,51 @@ function rasterStyle(id: string): StyleSpecification | string {
   } satisfies StyleSpecification;
 }
 
-/** Moves the camera so the chosen place, and its search circle, are in view. */
-function frameSelection(instance: MapLibreMap, selection: Selection | null): void {
-  const centre = selectionCentre(selection);
-  if (centre === null || selection === null) return;
+/**
+ * Moves the camera so the chosen place is in view: a point with its search
+ * circle, a drawn area, or a country's box. The map's own padding, set from
+ * the report panel and the phone sheet, is kept by fitBounds and easeTo, so
+ * the place lands in the part of the map that is not covered.
+ */
+function frameSelection(
+  instance: MapLibreMap,
+  selection: Selection | null,
+  countryBoxes: Map<string, CountryIndexEntry>,
+): void {
+  if (selection === null) return;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const duration = reduced ? 0 : 650;
   const box = instance.getContainer().getBoundingClientRect();
   const smallest = Math.min(box.width, box.height);
+  const inset = Math.round(Math.min(90, smallest / 6));
+
+  if (selection.kind === "country") {
+    const entry = countryBoxes.get(selection.iso3);
+    if (entry === undefined) return;
+    instance.fitBounds(countryBounds(entry.bbox), {
+      padding: inset,
+      maxZoom: 7,
+      duration,
+    });
+    return;
+  }
 
   if (selection.kind === "polygon") {
     instance.fitBounds(ringBounds(selection.ring), {
-      padding: Math.round(Math.min(90, smallest / 6)),
+      padding: inset,
       maxZoom: 8,
       duration,
     });
     return;
   }
 
-  if (selection.kind === "point") {
-    instance.easeTo({
-      center: centre,
-      zoom: zoomForRadius(selection.lat, selection.radiusKm, smallest),
-      duration,
-    });
-  }
+  const centre = selectionCentre(selection);
+  if (centre === null) return;
+  instance.easeTo({
+    center: centre,
+    zoom: zoomForRadius(selection.lat, selection.radiusKm, smallest),
+    duration,
+  });
 }
 
 /** The tile source for one day of fire danger, or nothing when it is off. */
@@ -130,6 +153,9 @@ export default function MapView({
   const map = useRef<MapLibreMap | null>(null);
   const draw = useRef<TerraDraw | null>(null);
   const cleanUp = useRef<(() => void) | null>(null);
+  const countryBoxes = useCountryBoxes();
+  const boxes = useRef(countryBoxes);
+  boxes.current = countryBoxes;
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const overlay = useRef<{ setProps: (props: { layers: unknown[] }) => void } | null>(null);
@@ -281,10 +307,11 @@ export default function MapView({
           const panel = document.getElementById("report");
           const box = panel?.getBoundingClientRect();
           const narrow = window.innerWidth < 768;
+          const topBar = document.querySelector(".top")?.getBoundingClientRect();
           instance.setPadding(
             narrow
               ? {
-                  top: 104,
+                  top: Math.round((topBar?.bottom ?? 96) + 8),
                   right: 8,
                   bottom: box ? Math.max(0, window.innerHeight - box.top) : 0,
                   left: 8,
@@ -298,23 +325,60 @@ export default function MapView({
           );
         };
 
-        const panel = document.getElementById("report");
-        const observer = panel === null ? null : new ResizeObserver(() => applyPadding());
-        if (panel !== null && observer !== null) observer.observe(panel);
-        window.addEventListener("resize", applyPadding);
-        cleanUp.current = () => {
-          observer?.disconnect();
-          window.removeEventListener("resize", applyPadding);
+        /**
+         * On a phone the credit line, the layer bar and the zoom buttons
+         * share the strip above the report sheet. Their real heights are
+         * published as custom properties so each one can sit clear of the
+         * others however the credit wraps or the top bar folds.
+         */
+        const publishHeights = () => {
+          const root = document.documentElement;
+          const credit = document.querySelector(".maplibregl-ctrl-bottom-right");
+          const creditHeight = credit?.getBoundingClientRect().height ?? 0;
+          root.style.setProperty("--credit-h", `${Math.round(creditHeight)}px`);
+          const topBar = document.querySelector(".top")?.getBoundingClientRect();
+          root.style.setProperty("--top-bar-h", `${Math.round(topBar?.height ?? 96)}px`);
         };
 
+        const measure = () => {
+          publishHeights();
+          applyPadding();
+        };
+
+        const watched = [
+          document.getElementById("report"),
+          document.querySelector(".top"),
+          document.querySelector(".maplibregl-ctrl-bottom-right"),
+        ].filter((node): node is HTMLElement => node !== null);
+        const observer = new ResizeObserver(() => measure());
+        for (const node of watched) observer.observe(node);
+        window.addEventListener("resize", measure);
+        measure();
+        cleanUp.current = () => {
+          observer.disconnect();
+          window.removeEventListener("resize", measure);
+          document.documentElement.style.removeProperty("--credit-h");
+          document.documentElement.style.removeProperty("--top-bar-h");
+        };
+
+        // Where the camera is, written onto the container, so the view can be
+        // read from the page itself rather than guessed from the picture.
+        const publishCamera = () => {
+          const centre = instance.getCenter();
+          node.dataset.centre = `${centre.lng.toFixed(4)},${centre.lat.toFixed(4)}`;
+          node.dataset.zoom = instance.getZoom().toFixed(2);
+        };
+        instance.on("moveend", publishCamera);
+
         instance.on("load", () => {
+          publishCamera();
           instance.getCanvas().setAttribute("aria-label", label.current);
           instance.setProjection({ type: projection });
-          applyPadding();
+          measure();
           paintSelection();
           paintDanger();
           // A selection read from the address bar is already set by now.
-          frameSelection(instance, current.current);
+          frameSelection(instance, current.current, boxes.current);
           setReady(true);
         });
 
@@ -367,8 +431,10 @@ export default function MapView({
     if (instance === null) return;
     const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
     source?.setData(selectionFeatures(selection));
-    frameSelection(instance, selection);
-  }, [selection]);
+    // The country boxes arrive with their file, which can be after a link
+    // naming a country has already been read, so this runs again then.
+    frameSelection(instance, selection, countryBoxes);
+  }, [selection, countryBoxes]);
 
   // Fire danger: the day changed, so the old tiles go and the new ones come.
   useEffect(() => {

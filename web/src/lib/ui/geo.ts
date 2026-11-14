@@ -124,6 +124,23 @@ export function zoomForRadius(lat: number, radiusKm: number, smallestSidePx: num
   return Math.min(8, Math.max(1.2, zoom));
 }
 
+/**
+ * A country's box, as MapLibre wants it: south west, then north east.
+ * A box whose west edge is east of its east edge crosses the 180 degree line,
+ * as the United States does, so the east edge is carried past 180 instead of
+ * wrapping the camera the long way around the world.
+ */
+export function countryBounds(
+  bbox: [west: number, south: number, east: number, north: number],
+): [[number, number], [number, number]] {
+  const [west, south, east, north] = bbox;
+  const eastward = east < west ? east + 360 : east;
+  return [
+    [west, Math.min(south, north)],
+    [eastward, Math.max(south, north)],
+  ];
+}
+
 /** Corner box of a ring, as MapLibre wants it: south west, then north east. */
 export function ringBounds(
   ring: [lon: number, lat: number][],
