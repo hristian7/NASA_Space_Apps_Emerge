@@ -20,6 +20,8 @@ Created Sat 14 Nov 2026. The team decided to do this research later; nothing bel
 
 ## 1. Data sources (interview C2, D1)
 
+**First pass done:** [`../docs/research/data-sources-fire.md`](../docs/research/data-sources-fire.md) (14 Nov).
+
 Find fire data that extends or cross-checks the MODIS/VIIRS record. For each source, give: years, coverage, resolution, access (login?), format, size, licence.
 - **Before 2000:** for example AVHRR fire products, and ESA's ATSR World Fire Atlas.
 - **After 2025:** VIIRS on NOAA-20 and NOAA-21, MODIS near-real-time, and how quickly each updates.
