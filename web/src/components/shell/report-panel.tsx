@@ -14,15 +14,18 @@ type Props = {
   view: AppView;
   day: "today" | "tomorrow";
   onPickPoint: (lat: number, lon: number) => void;
+  /** The country a clicked point lies in, offered as a whole-country report. */
+  pointCountry: string | null;
+  onWholeCountry: (iso3: string) => void;
   onClose: () => void;
   onCycleHeight: () => void;
 };
 
 /** A side panel on wide screens, a bottom sheet on phones. Shown only once a place is chosen. */
-export default function ReportPanel({ selection, view, day, onPickPoint, onClose, onCycleHeight }: Props) {
+export default function ReportPanel({ selection, view, day, onPickPoint, pointCountry, onWholeCountry, onClose, onCycleHeight }: Props) {
   const t = useTranslations("shell");
   const s = useTranslations("selection");
-  const countryName = useCountryName(selection.kind === "country" ? selection.iso3 : null);
+  const countryName = useCountryName(selection.kind === "country" ? selection.iso3 : pointCountry);
   const degrees = (value: number) => value.toFixed(3);
 
   const title =
@@ -48,6 +51,11 @@ export default function ReportPanel({ selection, view, day, onPickPoint, onClose
           <div>
             <h1>{title}</h1>
             <p className="report-kind">{sub}</p>
+            {pointCountry !== null && selection.kind === "point" ? (
+              <button type="button" className="whole-country" onClick={() => onWholeCountry(pointCountry)}>
+                {t("wholeCountry", { name: countryName })}
+              </button>
+            ) : null}
           </div>
           <button type="button" className="layers-close" aria-label={t("clearPlace")} onClick={onClose}>
             <svg viewBox="0 0 20 20" aria-hidden="true">

@@ -31,6 +31,9 @@ export default function AppShell() {
   const [radiusTool, setRadiusTool] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [view, setView] = useState<AppView>("history");
+  // The country a clicked point lies in, for its outline and the
+  // "whole country" button. Unknown for a point read from a link.
+  const [pointCountry, setPointCountry] = useState<string | null>(null);
 
   // The address bar is the source of truth on arrival, so a copied link opens
   // the same place and view. Read here rather than through the router's hooks,
@@ -46,6 +49,7 @@ export default function AppShell() {
 
   const apply = useCallback((next: Selection | null) => {
     setSelection(next);
+    if (next?.kind !== "point") setPointCountry(null);
     replaceSearch(selectionSearch(window.location.search, next));
     if (next !== null && window.innerWidth < 768) {
       document.documentElement.setAttribute("data-sheet", "half");
@@ -118,9 +122,9 @@ export default function AppShell() {
         historyCells={history ? layers.historyCells : []}
         recentPoints={layers.recentPoints}
         rasterDates={rasterDates}
-        pickMode={radiusTool ? "point" : "country"}
+        outlineIso3={selection?.kind === "country" ? selection.iso3 : selection?.kind === "point" ? pointCountry : null}
         onPickPoint={pickPoint}
-        onPickCountry={(iso3) => apply({ kind: "country", iso3 })}
+        onPointCountry={setPointCountry}
         onPickRecent={pickRecent}
         onDrawArea={(ring) => apply({ kind: "polygon", ring: closeRing(ring) })}
         onDrawingEnd={() => setDrawing(false)}
@@ -130,7 +134,10 @@ export default function AppShell() {
         view={view}
         onView={changeView}
         onCountry={(iso3) => apply({ kind: "country", iso3 })}
-        onPoint={pickPoint}
+        onPoint={(lat, lon) => {
+          setPointCountry(null);
+          pickPoint(lat, lon);
+        }}
       />
 
       <MapTools
@@ -188,6 +195,8 @@ export default function AppShell() {
           view={view}
           day={layers.state.dangerDay === 0 ? "today" : "tomorrow"}
           onPickPoint={pickPoint}
+          pointCountry={selection.kind === "point" ? pointCountry : null}
+          onWholeCountry={(iso3) => apply({ kind: "country", iso3 })}
           onClose={() => apply(null)}
           onCycleHeight={cycleSheet}
         />

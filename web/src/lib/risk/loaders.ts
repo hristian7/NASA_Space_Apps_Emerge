@@ -9,6 +9,9 @@ export function riskRoot(example: boolean): string {
 /** Only absent files become empty states. Broken JSON/network/server errors stay errors. */
 async function read<T>(path: string, fetcher: typeof fetch): Promise<T | null> {
   const response = await fetcher(path, { cache: "no-store" });
+  // An unread error body keeps the request open, and a missing file is
+  // answered with a streamed page, so it is cancelled before returning.
+  if (!response.ok) void response.body?.cancel().catch(() => {});
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Risk data: ${response.status}`);
   return response.json() as Promise<T>;

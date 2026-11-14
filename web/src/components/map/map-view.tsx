@@ -35,10 +35,11 @@ type Props = {
   /** Recent detections. Empty when the layer is off. */
   recentPoints: RecentPoint[];
   rasterDates: Record<string, string>;
-  /** What a plain click on the map chooses. */
-  pickMode: "country" | "point";
+  /** The country drawn with an outline: the chosen country, or the one a chosen point lies in. */
+  outlineIso3: string | null;
   onPickPoint: (lat: number, lon: number) => void;
-  onPickCountry: (iso3: string) => void;
+  /** The country under a clicked point, or null at sea. */
+  onPointCountry: (iso3: string | null) => void;
   onPickRecent: (lat: number, lon: number) => void;
   onDrawArea: (ring: [lon: number, lat: number][]) => void;
   onDrawingEnd: () => void;
@@ -178,9 +179,9 @@ export default function MapView({
   historyCells,
   recentPoints,
   rasterDates,
-  pickMode,
+  outlineIso3,
   onPickPoint,
-  onPickCountry,
+  onPointCountry,
   onPickRecent,
   onDrawArea,
   onDrawingEnd,
@@ -214,10 +215,10 @@ export default function MapView({
 
   // Latest values the map's own listeners need, without rebuilding the map.
   const pick = useRef(onPickPoint);
-  const pickCountry = useRef(onPickCountry);
-  pickCountry.current = onPickCountry;
-  const mode = useRef(pickMode);
-  mode.current = pickMode;
+  const pointCountry = useRef(onPointCountry);
+  pointCountry.current = onPointCountry;
+  const outline = useRef(outlineIso3);
+  outline.current = outlineIso3;
   const area = useRef(onDrawArea);
   const drawEnd = useRef(onDrawingEnd);
   const isDrawing = useRef(drawing);
@@ -331,7 +332,7 @@ export default function MapView({
           }
           const stroke = tokenColor("--outline");
           const accent = tokenColor("--accent");
-          const chosen = current.current?.kind === "country" ? current.current.iso3 : "";
+          const chosen = outline.current ?? "";
           const before = instance.getLayer(fillLayer) ? fillLayer : undefined;
           if (instance.getLayer(countryHitLayer) === undefined) {
             // Invisible, but it is what a click is tested against.
@@ -583,27 +584,15 @@ export default function MapView({
             pickRecent.current(lat, lon);
             return;
           }
-          if (mode.current === "point") {
-            pick.current(event.lngLat.lat, event.lngLat.lng);
-            return;
-          }
           const hit = instance.getLayer(countryHitLayer)
             ? instance.queryRenderedFeatures(event.point, { layers: [countryHitLayer] })
             : [];
           const iso3 = hit[0]?.properties?.iso3;
-          if (typeof iso3 === "string" && iso3 !== "") pickCountry.current(iso3);
+          pick.current(event.lngLat.lat, event.lngLat.lng);
+          pointCountry.current(typeof iso3 === "string" && iso3 !== "" ? iso3 : null);
         });
 
-        instance.on("mousemove", (event) => {
-          if (mode.current !== "country" || isDrawing.current) {
-            instance.getCanvas().style.cursor = "";
-            return;
-          }
-          const over = instance.getLayer(countryHitLayer)
-            ? instance.queryRenderedFeatures(event.point, { layers: [countryHitLayer] }).length > 0
-            : false;
-          instance.getCanvas().style.cursor = over ? "pointer" : "";
-        });
+        instance.getCanvas().style.cursor = "crosshair";
       } catch (error) {
         console.warn("map", error);
         if (!cancelled) setFailed(true);
@@ -642,7 +631,7 @@ export default function MapView({
     if (instance === null) return;
     const source = instance.getSource(selectionSource) as GeoJSONSource | undefined;
     source?.setData(selectionFeatures(selection));
-    const chosen = selection?.kind === "country" ? selection.iso3 : "";
+    const chosen = outlineIso3 ?? "";
     for (const layer of [countryChosenFill, countryChosenLine]) {
       if (instance.getLayer(layer)) instance.setFilter(layer, ["==", ["get", "iso3"], chosen]);
     }
@@ -652,7 +641,7 @@ export default function MapView({
     // The country boxes arrive with their file, which can be after a link
     // naming a country has already been read, so this runs again then.
     frameSelection(instance, selection, countryBoxes);
-  }, [selection, countryBoxes]);
+  }, [selection, countryBoxes, outlineIso3]);
 
   // Fire danger: the day changed, so the old tiles go and the new ones come.
   useEffect(() => {

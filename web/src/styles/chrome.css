@@ -572,3 +572,18 @@
   font-size: 12px;
   color: var(--ink-3);
 }
+
+.whole-country {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.whole-country:hover {
+  color: var(--ink);
+  border-color: color-mix(in oklch, var(--accent) 50%, var(--line));
+}

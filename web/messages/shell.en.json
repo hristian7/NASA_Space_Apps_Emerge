@@ -31,9 +31,9 @@
   "toolDraw": "Draw an area",
   "toolDrawStop": "Stop drawing",
   "toolDrawHint": "Click the corners, then the first corner again to close the area.",
-  "toolRadius": "Pick a point with a search distance",
+  "toolRadius": "Search distance for a clicked point",
   "toolRadiusHint": "Click the map to pick a point. Fires within this distance count.",
-  "toolRadiusOff": "Back to picking countries",
+  "toolRadiusOff": "Close the search distance",
   "zoomIn": "Zoom in",
   "zoomOut": "Zoom out",
   "layersTool": "Layers and legend",
@@ -49,5 +49,6 @@
   "historyTime": "Fire history year",
   "forecastTime": "Forecast day",
   "clearPlace": "Close the report",
-  "countryHint": "Click a country, or search above."
+  "countryHint": "Click the map to pick a point, or search for a country above.",
+  "wholeCountry": "Show all of {name}"
 }
