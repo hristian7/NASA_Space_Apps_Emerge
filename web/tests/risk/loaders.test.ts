@@ -11,6 +11,14 @@ describe("risk static contract", () => {
     expect(result.map(s => s.p)).toEqual([0, null]);
     expect(records[0].rank).toBe(2);
   });
+  it("selects all vegetation separately and handles older files", () => {
+    const forest = [{ rank: 1 }] as RiskSpot[];
+    const farmland = [{ rank: 1, fire_type: "farmland" }] as RiskSpot[];
+    const file: RiskCountry = { country: "BGR", days: ["d"], regions: { r: { d: forest } }, all_vegetation: { r: { d: farmland } } };
+    expect(regionSpots(file, "r", "d")).toEqual(forest);
+    expect(regionSpots(file, "r", "d", "all")).toEqual(farmland);
+    expect(regionSpots({ ...file, all_vegetation: undefined }, "r", "d", "all")).toEqual([]);
+  });
   it("labels an absent country and returns no records", async () => {
     expect(await loadRiskCountry("USA", false, fetch404)).toEqual({ status: "missing", file: { country: "USA", days: [], regions: {} } });
   });

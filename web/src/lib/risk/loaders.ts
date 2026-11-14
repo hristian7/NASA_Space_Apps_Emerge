@@ -25,8 +25,9 @@ export async function loadRiskCountry(country: string, example: boolean, fetcher
   const file = await read<RiskCountry>(`${riskRoot(example)}/latest/${country}.json`, fetcher);
   return file ? { status: "ready", file } : { status: "missing", file: { country, days: [], regions: {} } };
 }
-export function regionSpots(file: RiskCountry | null, region: string, day: string): RiskSpot[] {
-  return [...(file?.regions[region]?.[day] ?? [])].sort((a, b) => a.rank - b.rank).slice(0, 10);
+export function regionSpots(file: RiskCountry | null, region: string, day: string, selection: "forest" | "all" = "forest"): RiskSpot[] {
+  const regions = selection === "all" ? file?.all_vegetation : file?.regions;
+  return [...(regions?.[region]?.[day] ?? [])].sort((a, b) => a.rank - b.rank).slice(0, 10);
 }
 export function showForecast(meta: RiskMeta | null, example: boolean): boolean {
   return meta !== null && (example || (meta.engine_ready && !meta.example));
