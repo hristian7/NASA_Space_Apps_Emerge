@@ -55,7 +55,7 @@
   "creditsHeading": "Данни и източници",
   "creditBasemap": "Изображения на основната карта: NASA Global Imagery Browse Services (GIBS), част от NASA ESDIS",
   "creditDrivers": "Влажност на почвата, зеленина на растенията, вид на земята и температура на въздуха: NASA SMAP, VIIRS, MODIS и AIRS чрез NASA GIBS; индекс на пожарното време на NASA: NASA GEOS-5 чрез Copernicus GWIS",
-  "creditForecastWeather": "Времето за точка в панела с прогнозата: Open-Meteo.com",
+  "creditForecastWeather": "Времето за точка в панела с прогнозата: прогноза Open-Meteo.com; 30-дневни линии: проект NASA POWER, изследователски център NASA Langley",
   "creditSearch": "Търсене на места: Photon, с данни от сътрудниците на OpenStreetMap (ODbL)",
   "creditBorders": "Граници на държавите: Natural Earth",
   "menu": "Меню",

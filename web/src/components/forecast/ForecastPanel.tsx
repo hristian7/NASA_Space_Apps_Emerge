@@ -7,6 +7,8 @@ import type { RiskIndex, RiskSpot } from "@/types/risk";
 import { exampleMode, loadRiskCountry, loadRiskIndex, showForecast } from "@/lib/risk/loaders";
 import { distanceKm } from "@/lib/risk/geo";
 import { pointScore, type PointSpot } from "@/lib/risk/here";
+import { fetchPower, type PowerData, type PowerParameter } from "@/lib/forecast/power";
+import Sparkline from "./Sparkline";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
 import {
   blowsToward,
@@ -176,6 +178,23 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       });
     return () => controller.abort();
   }, [placeKey]);
+
+  // Thirty days of NASA POWER model estimates for the same place, as trend lines.
+  const [power, setPower] = useState<{ key: string; data: PowerData | null } | null>(null);
+  useEffect(() => {
+    if (placeKey === null) return;
+    const [lat, lon] = placeKey.split(",").map(Number);
+    const controller = new AbortController();
+    fetchPower(lat, lon, controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) setPower({ key: placeKey, data });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPower({ key: placeKey, data: null });
+      });
+    return () => controller.abort();
+  }, [placeKey]);
+  const powerData = placeKey !== null && power?.key === placeKey ? power.data : null;
 
   const currentScore = score?.key === scoreKey ? score : null;
   const currentWeather = placeKey !== null && weather?.key === placeKey ? weather : null;
@@ -362,6 +381,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     source: string;
     wide?: boolean;
     extra?: ReactNode;
+    trend?: PowerParameter;
   }) => (
     <div className={`${styles.card}${props.wide ? " fc-tileWide" : ""}`}>
       <p className="fc-tileLabel">
@@ -380,6 +400,14 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       </p>
       {props.extra}
       <p className="fc-tileSource">{props.source}</p>
+      {props.trend && powerData && powerData.series[props.trend].some((entry) => entry.value !== null) ? (
+        <div className="fc-trend">
+          <Sparkline bare label={props.label} values={powerData.series[props.trend]} unit={powerData.units[props.trend]} />
+          <p className="fc-tileSource">
+            {t("trendNote", { date: powerData.lastDate ? dateText(powerData.lastDate) : "" })}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -400,8 +428,8 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       <>
         <p className="fc-muted">{where}</p>
         <div className="fc-tiles">
-          {tile({ icon: "temp", label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), source: forecastSource })}
-          {tile({ icon: "humidity", label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), source: forecastSource })}
+          {tile({ icon: "temp", label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), source: forecastSource, trend: "T2M_MAX" })}
+          {tile({ icon: "humidity", label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), source: forecastSource, trend: "RH2M" })}
           {tile({
             icon: "wind",
             label: t("tWind"),
@@ -409,6 +437,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
             unit: t("unitKmh"),
             source: forecastSource,
             wide: true,
+            trend: "WS10M",
             extra: (
               <p className="fc-tileLine">
                 <span>{w.gustMax === null ? t("gustsNone") : t("gusts", { value: number(w.gustMax, 0) })}</span>
@@ -430,7 +459,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               </p>
             ),
           })}
-          {tile({ icon: "rain", label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), source: forecastSource })}
+          {tile({ icon: "rain", label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), source: forecastSource, trend: "PRECTOTCORR" })}
           {tile({ icon: "rain", label: t("tRain7"), value: show(w.rain7, 1), unit: t("unitMm"), source: t("sourcePast") })}
           {tile({
             icon: "dry",
@@ -439,7 +468,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
             unit: dry === null ? "" : t("unitDays", { n: dry.days }),
             source: `${t("sourcePast")}. ${t("tDryNote")}`,
           })}
-          {tile({ icon: "soil", label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), source: t("sourceSoil") })}
+          {tile({ icon: "soil", label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), source: t("sourceSoil"), trend: "GWETTOP" })}
         </div>
       </>
     );

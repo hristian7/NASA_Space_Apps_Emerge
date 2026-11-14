@@ -258,3 +258,16 @@ button.fc-topRow:focus-visible {
   flex: none;
   color: var(--accent);
 }
+
+.fc-trend {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 2px;
+}
+
+.fc-trend svg {
+  height: 28px;
+  display: block;
+}
