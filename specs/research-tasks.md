@@ -1,6 +1,6 @@
 # Open research tasks (for whoever picks them up)
 
-Created Sat 14 Nov 2026. The team decided to do this research later; nothing below has been started except task 4.
+Created Sat 14 Nov 2026. **All four tasks have a first pass (14 Nov afternoon)**; results are linked under each task.
 
 **Read first:**
 - [`interview-answers.md`](interview-answers.md): what the team decided.
@@ -20,7 +20,7 @@ Created Sat 14 Nov 2026. The team decided to do this research later; nothing bel
 
 ## 1. Data sources (interview C2, D1)
 
-**First pass done:** [`../docs/research/data-sources-fire.md`](../docs/research/data-sources-fire.md) (14 Nov).
+**First pass done:** [`../docs/research/data-sources-fire.md`](../docs/research/data-sources-fire.md) (14 Nov). Gaps (before 2000, 2026 data, other satellites, country statistics): [`../docs/research/data-sources-satellites.md`](../docs/research/data-sources-satellites.md).
 
 Find fire data that extends or cross-checks the MODIS/VIIRS record. For each source, give: years, coverage, resolution, access (login?), format, size, licence.
 - **Before 2000:** for example AVHRR fire products, and ESA's ATSR World Fire Atlas.
@@ -31,6 +31,8 @@ Find fire data that extends or cross-checks the MODIS/VIIRS record. For each sou
 - **Country-specific:** EFFIS for Bulgaria; NIFC and MTBS for the USA.
 
 ## 2. Storage options (interview D5), after task 1
+
+**Done 14 Nov:** [`../docs/research/storage-options.md`](../docs/research/storage-options.md).
 
 Rank **15** storage and format options from best to worst for:
 - worldwide hot-spot points (hundreds of millions of rows);
@@ -45,6 +47,8 @@ Rank **15** storage and format options from best to worst for:
 
 ## 3. Tech stack (interview H1)
 
+**Done 14 Nov:** [`../docs/research/stack-options.md`](../docs/research/stack-options.md).
+
 Rank **20** stack options from best to worst. Score each 1–5 on: polish and wow, 3D globe, large point data, speed of building with AI agents, mobile and PWA, hosting fit (VM/Vercel), licence and cost.
 
 **Candidates:**
@@ -58,6 +62,8 @@ Rank **20** stack options from best to worst. Score each 1–5 on: polish and wo
 - **Starter repos:** list open-source repos we could start from.
 
 ## 4. Forecasting: done, needs verification
+
+**Checked 14 Nov afternoon:** see "Not verified" in [`../docs/research/forecast-options.md`](../docs/research/forecast-options.md). Push-alert design (S11): [`../docs/research/push-alerts.md`](../docs/research/push-alerts.md).
 
 A first pass exists: [`../docs/research/forecast-options.md`](../docs/research/forecast-options.md).
 - **Recommendation:** show official forecasts (Copernicus GWIS/EFFIS for 1–9 days; the NIFC 4-month outlook for the USA). Add our own "historical chance of fire this month", checked on held-out years. Label it "Risk outlook (unofficial)".

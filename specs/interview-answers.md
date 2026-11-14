@@ -104,7 +104,7 @@ This is from facts already checked; no new research.
 
 ### Open: research later (team decision, 14 Nov)
 
-The team chose to do these later; no research has been started:
+Researched on 14 Nov afternoon; results are linked in [`research-tasks.md`](research-tasks.md):
 - **C2 and D1:** extra data sources (before 2000, after 2025, more satellites).
 - **D5:** storage options, ranked (after the data sources are known).
 - **H1:** stack options, ranked.

@@ -8,7 +8,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 
 - **Interview answered:** decisions are in [`specs/interview-answers.md`](specs/interview-answers.md).
 - **Features chosen (14 Nov evening):** [`specs/features-moscow.md`](specs/features-moscow.md): all Musts and Shoulds, plus push alerts. Hosting on Vercel.
-- **Research open:** data sources, storage and tech stack → [`specs/research-tasks.md`](specs/research-tasks.md). A first forecasting note is done: [`docs/research/forecast-options.md`](docs/research/forecast-options.md).
+- **Research done (14 Nov):** data sources, storage, tech stack, forecasting checks and push alerts → [`specs/research-tasks.md`](specs/research-tasks.md).
 - **Code:** data pipeline started (download and fire cell-days, [`docs/research/first-run-bulgaria-usa.md`](docs/research/first-run-bulgaria-usa.md)); app not started.
 
 ## Read first
@@ -29,6 +29,10 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`specs/features-moscow.md`](specs/features-moscow.md) | All features in priority order (MoSCoW), 2–3 sentences each |
 | [`specs/research-tasks.md`](specs/research-tasks.md) | Open research tasks with briefs, and what's still waiting on the team |
 | [`docs/research/forecast-options.md`](docs/research/forecast-options.md) | First pass on fire-risk forecasting options |
+| [`docs/research/storage-options.md`](docs/research/storage-options.md) | 15 storage options ranked, and the pick for Vercel |
+| [`docs/research/stack-options.md`](docs/research/stack-options.md) | 20 stack options ranked, and the recommended stack |
+| [`docs/research/data-sources-satellites.md`](docs/research/data-sources-satellites.md) | Data before 2000, 2026 data, other satellites, country statistics |
+| [`docs/research/push-alerts.md`](docs/research/push-alerts.md) | Push-alert design on Vercel (S11) |
 
 ## Key deadlines (Sofia time)
 
