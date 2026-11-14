@@ -1,4 +1,5 @@
 import Link from "next/link";
+import homeEn from "../../../messages/home.en.json";
 import { getTranslations } from "next-intl/server";
 import Disclaimer from "@/components/shell/disclaimer";
 import { dataCredits, officialServices, softwareCredits, type Credit } from "@/lib/ui/credits";
@@ -7,10 +8,12 @@ function CreditTable({
   rows,
   resource,
   licence,
+  translate,
 }: {
   rows: Credit[];
   resource: string;
   licence: string;
+  translate: (key: string) => string;
 }) {
   return (
     <table>
@@ -25,10 +28,10 @@ function CreditTable({
           <tr key={row.name}>
             <td>
               <a href={row.url} target="_blank" rel="noreferrer noopener">
-                {row.name}
+                {creditText(row.name, homeEn.creditNames, "creditNames", translate)}
               </a>
             </td>
-            <td>{row.licence}</td>
+            <td>{creditText(row.licence, homeEn.creditLicences, "creditLicences", translate)}</td>
           </tr>
         ))}
       </tbody>
@@ -87,12 +90,14 @@ export default async function AboutPage() {
         <p>{home("aboutCreditsBody")}</p>
         <h3 className="label">{home("aboutDataHeading")}</h3>
         <CreditTable
+          translate={home}
           rows={dataCredits}
           resource={home("columnResource")}
           licence={home("columnLicence")}
         />
         <h3 className="label">{home("aboutSoftwareHeading")}</h3>
         <CreditTable
+          translate={home}
           rows={softwareCredits}
           resource={home("columnResource")}
           licence={home("columnLicence")}
@@ -100,4 +105,9 @@ export default async function AboutPage() {
       </section>
     </main>
   );
+}
+
+function creditText(value: string, sources: Record<string, string>, prefix: string, translate: (key: string) => string): string {
+  const match = Object.entries(sources).find(([, source]) => source === value);
+  return match ? translate(`${prefix}.${match[0]}`) : value;
 }
