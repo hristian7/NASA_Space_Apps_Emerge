@@ -4,7 +4,7 @@ Short risk tests run before building on a technique (spec section 8, shortcut 3)
 
 | Spike | Question | Answer |
 |---|---|---|
-| (a) Query function | Can a serverless function query the raw hotspots by area and date? | Pending |
+| (a) Query function | Can a serverless function query the raw hotspots by area and date? | **Yes, with a different engine** (below) |
 | (b) Drawing on the globe | Can a user draw an area on the 3D globe? | **Yes** (below) |
 | (c) Layers on the globe | Do NASA, OpenStreetMap and fire-danger layers show on the globe? | **Yes, all four** (below) |
 | (d) Charts as PNG | Can the calendar and charts be saved as images in the browser? | **Yes, with rules** (below) |
@@ -68,3 +68,30 @@ Every layer returned images, allowed use from another site (CORS), and showed on
 | Points on top (deck.gl 9.4) | `MapboxOverlay`, not interleaved | Four test points landed in the right places `[V]` |
 
 **Not checked:** the exact credit wording NASA GIBS asks for; the GWIS reuse terms (its service description says no fees and no access limits `[V]`, the data policy was not read, so D-4 stays open); points on the far side of the globe; speed on a real phone.
+
+## (a) Query function for raw hotspots: works, but not with the planned engine
+
+Tested locally on "Bulgaria, August 2024" against the public firms-catalog files. Not deployed, so the points under "Not checked" stay open.
+
+| | Planned: DuckDB in the function | Tested alternative: a TypeScript route with a small Parquet reader (hyparquet) |
+|---|---|---|
+| Time | 35 s on many cores; over 270 s on one core, stopped `[V]` | 12.7 s `[V]` |
+| Data downloaded | 579 MB `[V]` | 9 MB `[V]` |
+| Memory | 660 MB `[V]` | 460 MB `[V]` |
+| Rows returned | 5,510 `[V]` | 5,510, identical `[V]` |
+| Size of the code package | about 200 MB `[V]` | under 1 MB `[V]` |
+
+**Why:** each year is one 1.2 GB file `[V]`. The file records which part of the world each block covers, and only 4 of its 690 blocks touch Bulgaria `[V]`. The small reader uses that and skips the rest; DuckDB does not, and downloads almost half the file. The free hosting plan gives one processor core, where DuckDB took over 4.5 minutes.
+
+**Decision for the build:** the hotspots download is a TypeScript route in `web/src/app/api/`, not a Python function. This also settles conflict 17 in the build plan.
+
+Rules for the route:
+- Read the file's block list first, keep only blocks whose area overlaps the selection, then read those blocks.
+- Dates do not narrow the search (every block spans the whole year `[V]`); filter rows by date after reading.
+- One file per year: name each year's address directly.
+- Send the CSV as a stream. A plain response is capped at 4.5 MB on the hosting plan and a 100,000 row CSV is about 8 MB `[D]`.
+- Latitude and longitude come from the geometry column; the file has no separate columns for them `[V]`.
+
+**Licences `[V]`:** the data is CC0-1.0 (NASA's data), the catalogue's code is Apache-2.0. This closes conflict 8 in the build plan.
+
+**Not checked (needs a deployment):** speed on the hosting plan's single core; the worst case (one year, 200 km, up to 100,000 rows); a stream larger than 4.5 MB; caching. **Fallback** if it fails there: a small static points file for Bulgaria and the USA, as the spec says.
