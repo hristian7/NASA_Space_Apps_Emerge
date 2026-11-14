@@ -21,6 +21,7 @@ def main():
         parser.error('only the 0.25 degree grid is implemented')
     OUT.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect()
+    con.execute('INSTALL spatial')
     con.execute('LOAD spatial')
     con.execute('SET threads=6')
     geo = str(RAW / 'naturalearth/ne_10m_admin_1_states_provinces.geojson')
