@@ -23,7 +23,11 @@ test('example outlook supports days, regions, map picks, probability and history
  await expect(page.getByText('Example data',{exact:false})).toBeVisible();
  await expect(page.getByRole('button',{name:'Tomorrow',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.risk-list > li')).toHaveCount(10);
- await expect(page.getByRole('button',{name:'Week (coming)'})).toBeDisabled();
+ await expect(page.getByRole('button',{name:'Week',exact:true})).toBeEnabled();
+ await page.getByRole('button',{name:'Week',exact:true}).click();
+ await expect(page.getByText('Fire weather only, less certain, not scored yet.')).toBeVisible();
+ await expect(page.locator('.risk-list > li').first()).toBeVisible();
+ await page.getByRole('button',{name:'Tomorrow',exact:true}).click();
  await page.getByLabel('Region',{exact:true}).selectOption('BG-02');
  await expect(page.getByRole('heading',{name:'Burgas',exact:true})).toBeVisible();
  await expect(page.locator('.risk-list > li').first()).toContainText('42.05, 27.45');

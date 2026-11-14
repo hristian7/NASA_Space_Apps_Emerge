@@ -1,4 +1,7 @@
 {
+  "weekTitle": "Week",
+  "weekNotice": "Fire weather only, less certain, not scored yet.",
+  "weekFwi": "NASA fire-weather index: {value}",
   "_review": "English source text. Forecast values are estimates [U].",
   "title": "Risk outlook (unofficial)",
   "back": "History map",
