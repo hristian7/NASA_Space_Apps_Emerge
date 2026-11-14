@@ -485,9 +485,71 @@ function groupWord(group: string, t: Translate): string {
   return group.replace(/_/g, " ");
 }
 
+
+/** A share as a whole percentage, from a 0 to 1 figure in the file. */
+function asPercent(value: number | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  return String(Math.round(value * 100));
+}
+
+/**
+ * The verdict, in plain words, built from the file's own rows: how close the
+ * world total came, how the spread looks for the largest and the smallest
+ * countries, and how often the stated ranges held. Every number here is read,
+ * never typed.
+ */
+function Verdict({ validation, t }: ProofTablesProps) {
+  const rows = ((validation as unknown as { world_scope?: WorldScopeRow[] })
+    .world_scope ?? []) as WorldScopeRow[];
+  if (rows.length === 0) return null;
+
+  const pooled = rows.filter((row) => row.pooled_nrmse !== null);
+  const all = rows.filter((row) => row.group === "all");
+  const large = rows.filter((row) => row.group === "large");
+  const small = rows.filter((row) => row.group === "small");
+  if (pooled.length === 0 || all.length === 0) return null;
+
+  const worldErrors = pooled
+    .map((row) => asPercent(row.pooled_nrmse))
+    .filter((text): text is string => text !== null);
+  const largeError = asPercent(large[0]?.nrmse_p50);
+  const smallError = asPercent(small[0]?.nrmse_p50);
+  const coverage = asPercent(all[0]?.coverage_in_range);
+  const scored = all[0]?.n_countries;
+  const thin = all[0]?.too_little_fire;
+
+  return (
+    <section data-testid="proof-verdict">
+      <h2>{t("verdict.heading")}</h2>
+      <ul>
+        <li>{t("verdict.world", { errors: worldErrors.join(" and "), tests: pooled.length })}</li>
+        {largeError === null ? null : (
+          <li>{t("verdict.large", { error: largeError })}</li>
+        )}
+        {smallError === null ? null : (
+          <li>{t("verdict.small", { error: smallError })}</li>
+        )}
+        {coverage === null ? null : (
+          <li>{t("verdict.coverage", { share: coverage })}</li>
+        )}
+        {scored === null || scored === undefined ? null : (
+          <li>
+            {t("verdict.counted", {
+              scored,
+              thin: thin === null || thin === undefined ? 0 : thin,
+            })}
+          </li>
+        )}
+      </ul>
+      <p>{t("verdict.readAs")}</p>
+    </section>
+  );
+}
+
 export default function ProofTables({ validation, t }: ProofTablesProps) {
   return (
     <>
+      <Verdict validation={validation} t={t} />
       <Method validation={validation} t={t} />
       <WorldScope validation={validation} t={t} />
       <Holdout rows={validation.holdout} t={t} />
