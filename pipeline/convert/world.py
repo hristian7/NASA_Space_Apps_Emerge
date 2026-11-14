@@ -655,7 +655,7 @@ def check_factors(
             row = cells[(cells["cell"] == r["cell"])
                         & (cells["year"] * 12 + cells["month"] - 1 == r["ym"])]
             f = factors[(factors["group"] == g) & (factors["period"] == period)
-                        & (factors["moy"] == (r["ym"] % 12) + 1)]
+                        & (factors["month"] == (r["ym"] % 12) + 1)]
             if row.empty or f.empty:
                 continue
             got = {u: float(row.iloc[0][u]) for u in M.UNITS}
