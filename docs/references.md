@@ -17,6 +17,13 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
 | OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
+| NASA GFWED GEOS-5 fire-weather forecasts | Planned fire-weather input for next-day risk | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
+| Natural Earth admin-1 regions | Planned regional boundaries for next-day risk | https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/ | Public domain; accessed 14 Nov 2026 |
+| NASA MODIS MCD12C1 v061 | Planned land-cover shares for next-day risk | https://doi.org/10.5067/MODIS/MCD12C1.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
+| NASA MODIS MOD13C2 v061 | Planned monthly vegetation index for next-day risk | https://doi.org/10.5067/MODIS/MOD13C2.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
+| MODIS MCD12Q1 500 m global mosaic, Zenodo record 8367523 | Backup land-cover input | https://zenodo.org/records/8367523 | CC BY-SA 4.0; accessed 14 Nov 2026 |
+| GFED4.1s basis regions; van der Werf et al. (2017), Earth System Science Data 9, 697 | Regional groups for the conversion | https://doi.org/10.5194/essd-9-697-2017; [data](https://daac.ornl.gov/VEGETATION/guides/fire_emissions_v4.html) | Paper CC BY 3.0; data terms not stated in the reference; accessed 14 Nov 2026 |
+| Open-Meteo | Planned regional weather forecast | https://open-meteo.com/en/terms | Free for non-commercial use, subject to terms; accessed 14 Nov 2026 |
 | NASA challenge page | Challenge text | https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/ | Public |
 
 ## Software
