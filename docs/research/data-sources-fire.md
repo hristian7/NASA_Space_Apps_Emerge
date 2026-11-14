@@ -6,7 +6,7 @@ Tags: `[V]` checked at the original source on 14 Nov · `[D]` from official page
 
 ## Summary
 
-- **Avoid downloading tens of GB.** Two small, ready-made global grids exist: **GFED5 burned area** (0.25°, monthly, 1997 to 2020) and the **SeasFire cube** (0.25°, 8-day, 2001 to 2021, 59 variables including MODIS fire and ocean indices). Both CC BY 4.0.
+- **The core needs the full FIRMS hot spot files** (about 53 GB worldwide). Small ready-made global grids exist, **GFED5 burned area** (0.25°, monthly, 1997 to 2020) and the **SeasFire cube** (0.25°, 8-day, 2001 to 2021), both CC BY 4.0, but they measure burned area, blend the sensors and stop in 2020 or 2021, so they cannot drive the harmonization. Use them only as outside checks or for model training.
 - **Best second source of truth (method M41):** **MODIS MCD64A1 burned area** (500 m, monthly, Nov 2000 to now, no restrictions). It is a different product from the hot spots (burned area, not active fire), so agreement in season and year-to-year pattern is a real outside check.
 - **Fire danger history and forecasts:** the Copernicus fire weather index (FWI) reanalysis goes back to **1940**, and the seasonal fire danger forecast reaches about 7 months. Copernicus data has been **CC BY 4.0 since 2 July 2025** `[V]`, which answers the open GWIS licence question in the forecast note (credit required).
 - **Watch out for:** EM-DAT (paid for commercial use), WWLLN lightning (non-commercial), Berkeley Earth temperatures (non-commercial), Google Earth Engine as a platform for anything commercial.
@@ -99,7 +99,7 @@ All NOAA files below are small text files, need no account, and are US governmen
 ## Recommendations for Emerge
 
 1. **Keep FIRMS hot spots as the core** (the challenge asks for them). Add **MCD64A1 burned area** as the independent check for M41: compare season timing and year ranking per region.
-2. **For worldwide coverage without huge downloads:** precompute from the yearly FIRMS files on a server, or show the 0.25° grids (GFED5, SeasFire) for the world view and full-resolution hot spots only for Bulgaria and the USA.
+2. **For worldwide coverage:** download the global yearly FIRMS files once and precompute small cell totals (as in [`../harmonization-plan.md`](../harmonization-plan.md), step 6). Do not use the 0.25° burned-area grids for the world view: they are a different measurement, so the globe would mix two kinds of numbers. *(Corrected 14 Nov; the first version suggested them.)*
 3. **For the risk outlook:** the CEMS historical FWI (1940 onwards) lets us show "fire weather compared with normal for this date", and the seasonal forecast gives an official months-ahead view. Credit Copernicus (CC BY 4.0).
 4. **Check the MODIS orbit drift** before relying on the 2019 to 2025 test years.
 
