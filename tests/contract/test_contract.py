@@ -7,7 +7,7 @@ director's approval before this file moves.
 
 from __future__ import annotations
 
-import calendar
+import csv
 import glob
 import gzip
 import json
@@ -99,8 +99,13 @@ def check_point_head(rec: dict, where: str, expect_type: str) -> None:
     assert rec["precision_radius_km"] > 0, where
 
 
-def check_month_values(v: dict, y: int, m: int, where: str, cd_cap: int) -> None:
-    """The harmonized block of one month, wherever it appears."""
+def check_month_values(v: dict, y: int, m: int, where: str) -> None:
+    """The harmonized block of one month, wherever it appears.
+
+    No ceiling is asserted on cd. A fire day is a (0.01 degree cell, day) pair,
+    and a 0.25 degree cell holds 625 small cells, so a monthly cd can run into
+    the thousands.
+    """
     assert month_index(y, m) >= FIRST_INDEX, f"{where}: month before November 2000"
     assert month_index(y, m) <= LAST_INDEX, f"{where}: month after the data ends"
     for field in HARM_FIELDS:
@@ -110,7 +115,6 @@ def check_month_values(v: dict, y: int, m: int, where: str, cd_cap: int) -> None
         assert v[field] >= 0, f"{where}: {field} is negative"
     assert v["hot_lo"] <= v["hot"] <= v["hot_hi"], f"{where}: hotspot range is wrong"
     assert v["cd_lo"] <= v["cd"] <= v["cd_hi"], f"{where}: fire-day range is wrong"
-    assert v["cd_hi"] <= cd_cap, f"{where}: fire days exceed the days in the period"
 
 
 # ---------------------------------------------------------------------------
@@ -195,11 +199,7 @@ def test_country_file(path: Path):
     for pos, rec in enumerate(months):
         where = f"{path.name} {rec['y']}-{rec['m']:02d}"
         assert month_index(rec["y"], rec["m"]) == FIRST_INDEX + pos, f"{where}: out of order"
-        cap = calendar.monthrange(rec["y"], rec["m"])[1]
-        # A country spans many cells, so its fire days may exceed the month's
-        # days. The contract caps it at days x fire cells, which is at least
-        # the measured value, so only the per-cell shape is checked here.
-        check_month_values(rec, rec["y"], rec["m"], where, cd_cap=cap * 10 ** 5)
+        check_month_values(rec, rec["y"], rec["m"], where)
 
         assert rec["src"] in SRC_LABELS, where
         assert rec["src"] == expected_src(rec["y"], rec["m"]), f"{where}: wrong src label"
@@ -314,10 +314,9 @@ def test_tile_file(path: Path):
             assert FIRST_INDEX <= mi <= LAST_INDEX, f"{where}: month index {mi} outside the record"
             y = 2000 + mi // 12
             m = mi - (y - 2000) * 12 + 1
-            cap = calendar.monthrange(y, m)[1]
             values = {name: cell[name][pos] for name in HARM_FIELDS}
             values.update({"y": y, "m": m})
-            check_month_values(values, y, m, f"{where} {y}-{m:02d}", cd_cap=cap)
+            check_month_values(values, y, m, f"{where} {y}-{m:02d}")
 
             src_i = cell["src"][pos]
             assert 0 <= src_i < len(SRC_LABELS), where
@@ -362,7 +361,6 @@ def test_globe_file(path: Path):
     for name, values in cols.items():
         assert len(values) == n, f"{path.name}: column {name} has the wrong length"
     assert cols["id"] == sorted(cols["id"])
-    cap = 366 if calendar.isleap(doc["year"]) else 365
 
     for i in range(n):
         where = f"{path.name} cell {cols['id'][i]}"
@@ -377,7 +375,6 @@ def test_globe_file(path: Path):
             assert is_whole(v) and v >= 0, f"{where}: {field} must be a whole number, 0 or more"
         assert cols["hot_lo"][i] <= cols["hot"][i] <= cols["hot_hi"][i], where
         assert cols["cd_lo"][i] <= cols["cd"][i] <= cols["cd_hi"][i], where
-        assert cols["cd_hi"][i] <= cap, f"{where}: fire days exceed the days in the year"
         assert 0 <= cols["src"][i] < len(SRC_LABELS), where
         assert 0 <= cols["flags"][i] < (1 << len(FLAG_LABELS)), where
 
@@ -556,3 +553,79 @@ def test_raw_satellite_counts_match_a_direct_count():
                     f"BGR {y}-{m:02d} {sat}: the file says no measurement, "
                     f"the source has {want.get(sat)}"
                 )
+
+
+# ---------------------------------------------------------------------------
+# Control totals against the independent expected answers
+# ---------------------------------------------------------------------------
+
+EXPECTED = REPO / "tests" / "expected"
+GAP_DAYS_CSV = REPO / "pipeline" / "bakeoff" / "snpp_gap_days.csv"
+ISO3_OF = {"Bulgaria": "BGR", "United_States": "USA", "United States": "USA"}
+
+
+def gap_months() -> set[tuple[int, int]]:
+    """Months holding an S-NPP gap day, which the expected answers drop."""
+    with GAP_DAYS_CSV.open() as fh:
+        return {
+            (int(row["day"][:4]), int(row["day"][5:7]))
+            for row in csv.DictReader(fh)
+        }
+
+
+def truth_samples() -> list[dict]:
+    doc = read_json(EXPECTED / "bakeoff" / "truth_samples.json")
+    assert doc["gap_days_count"] == 34
+    return doc["samples"]
+
+
+@pytest.mark.parametrize(
+    "sample",
+    truth_samples(),
+    ids=lambda s: f"{ISO3_OF[s['country']]}-{s['year']}-{s['month']:02d}",
+)
+def test_country_totals_match_the_independent_answers(sample: dict):
+    """The measured series must equal an answer computed from the raw files.
+
+    The expected answers were written by a separate agent from the raw CSV
+    files, with no dataframe library and without the cell-day table, and they
+    drop the S-NPP gap days. Our measured months agree with them on every
+    sample, gap months included, so the two paths also agree on the gap rule.
+    Nothing here is adjusted to match: a difference is a failure.
+    """
+    iso3 = ISO3_OF[sample["country"]]
+    y, m = sample["year"], sample["month"]
+    doc = read_json(DATA / "countries" / f"{iso3}.json")
+    rec = {(r["y"], r["m"]): r for r in doc["months"]}[(y, m)]
+
+    assert rec["src"] == "measured", (
+        f"{iso3} {y}-{m:02d} is not a measured month, so it cannot be compared "
+        "with a measured S-NPP answer"
+    )
+    assert rec["cd"] == sample["total_cd"], (
+        f"{iso3} {y}-{m:02d} fire days: file has {rec['cd']}, "
+        f"the expected answer has {sample['total_cd']}"
+        + ("  (this month holds an S-NPP gap day)" if (y, m) in gap_months() else "")
+    )
+    assert rec["hot"] == sample["total_hot"], (
+        f"{iso3} {y}-{m:02d} hotspots: file has {rec['hot']}, "
+        f"the expected answer has {sample['total_hot']}"
+        + ("  (this month holds an S-NPP gap day)" if (y, m) in gap_months() else "")
+    )
+    assert rec["snpp"] == sample["total_hot"], (
+        f"{iso3} {y}-{m:02d}: the raw S-NPP series does not match either"
+    )
+
+
+def test_fire_days_are_not_capped_at_the_days_in_a_month():
+    """cd counts 0.01 degree cell-days, so it has no 31-day ceiling."""
+    doc = read_gzip_json(DATA / "tiles" / "35_-120.json.gz")
+    big = [v for cell in doc["cells"] for v in cell["cd"] if v > 31]
+    assert big, "no cell-month above 31 fire days: the old cap may be back"
+    assert max(big) > 100
+
+    # Section 3.1 of the contract cites this cell-month as its worked example.
+    cell = next(c for c in doc["cells"] if c["id"] == 302642)
+    pos = cell["mi"].index(248)  # September 2020
+    assert cell["cd"][pos] == 2448
+    assert cell["hot"][pos] == 10382

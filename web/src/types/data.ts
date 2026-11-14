@@ -49,7 +49,12 @@ export interface MonthValues {
   hot_lo: number | null;
   /** Upper end of the hotspot range. */
   hot_hi: number | null;
-  /** Harmonized fire days (0.25 degree cell-days), at VIIRS level. */
+  /**
+   * Harmonized fire days, at VIIRS level: the number of (0.01 degree cell,
+   * day) pairs with fire, added up over this record's area. Not a count of
+   * days, so it has no 31-day ceiling and is never capped. See section 3.1 of
+   * docs/data-contract.md. The interface may label it "fire days".
+   */
   cd: number | null;
   /** Lower end of the fire-day range. */
   cd_lo: number | null;
@@ -300,7 +305,7 @@ export interface MetaFile {
   };
   units: {
     hot: 'hotspots';
-    cd: 'cell_days';
+    cd: 'fire_cell_days';
     frp: 'MW';
     precision_radius_km: 'km';
   };

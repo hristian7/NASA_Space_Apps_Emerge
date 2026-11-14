@@ -103,14 +103,26 @@ These fields mean the same thing in every file.
 | `precision_radius_km` | number, 3 decimals | km | never null |
 | `hot` | whole number, 0 or more | hotspots, harmonized to VIIRS level | `null` only where there is no measurement |
 | `hot_lo`, `hot_hi` | whole numbers | hotspots | same as `hot`; always `hot_lo <= hot <= hot_hi` |
-| `cd` | whole number, 0 or more | fire days, that is 0.25 degree cell-days, harmonized to VIIRS level | same as `hot` |
-| `cd_lo`, `cd_hi` | whole numbers | fire days | always `cd_lo <= cd <= cd_hi` |
+| `cd` | whole number, 0 or more | fire cell-days on the **0.01 degree** grid, added up over the record's area, harmonized to VIIRS level | same as `hot` |
+| `cd_lo`, `cd_hi` | whole numbers | the same unit as `cd` | always `cd_lo <= cd <= cd_hi` |
 | `frp` | whole number, 0 or more | MW (fire radiative power) | same as `hot`. **Not harmonized**: it is the reference sensor's own total, so it steps at the sensor change |
 | `terra`, `aqua`, `snpp`, `noaa20`, `noaa21` | whole number or `null` | raw hotspots that satellite itself counted | `null` before that satellite started, or in a gap that was not filled |
 | `src` | one of five labels | - | never null |
 | `flags` | list of labels, or a bit set in the packed files | - | never null; may be empty or 0 |
 
 Harmonized values and their ranges are **always whole numbers**. `frp` is rounded to whole MW at the last step, after being accumulated in whole thousandths of a MW: floating-point addition is not associative, so a parallel sum of decimals can land on a different last bit from one run to the next, and the files would stop being byte-identical. Only `lat`, `lon` and `precision_radius_km` carry decimals.
+
+### 3.1 What a fire day (`cd`) is
+
+A **fire cell-day** is one 0.01 degree cell (about 1 km) that had fire on one day. `cd` is the number of those (small cell, day) pairs inside the record's area, added up. It is **not** a count of days, and **not** a count of 0.25 degree cell-days, so it has no 31-day ceiling and is never capped.
+
+This is the unit the conversion method uses ([`conversion-plan.md`](conversion-plan.md) section 2: the harmonized value is the sum of fire cell-days in one 0.25 degree cell for one month, counted on 0.01 degree cells) and the unit the bake-off scores ([`../pipeline/bakeoff/PROTOCOL.md`](../pipeline/bakeoff/PROTOCOL.md) section 2, where `cd` is the number of rows of the cell-day table and one row is one satellite seeing fire in one 0.01 degree cell on one day). The small cell is `cy = floor(lat * 100)`, `cx = floor(lon * 100)`.
+
+A cell-day belongs to one satellite stream, so when two satellites see the same small cell on the same day that is two cell-days. The measured series is S-NPP alone. For the estimated years the MODIS input is Terra plus Aqua counted separately, which is what the protocol's row count gives.
+
+**Worked example.** One 0.25 degree cell is 25 by 25 small cells, so it holds 625 of them. If 40 small cells inside it burn on 3 days each in one month, that cell's `cd` for the month is 120. Cell 302642 in `tiles/35_-120.json.gz` has `cd` 2448 for month index 248 (September 2020) `[V]`: a large fire covering many small cells over many days.
+
+The interface may call this "fire days", which reads better than "cell-days" for a firefighter. The number behind the label is the one defined here. A cell's `cd` and its `hot` answer different questions: `hot` counts detections, so one small cell seen twice in a day counts twice; `cd` counts the small cell once that day.
 
 ### `src`: how the value was produced
 
@@ -199,14 +211,14 @@ One file per country, keyed by its three-letter code. The country is a single po
 
 Each month holds, in this order: `y`, `m`, the seven harmonized fields, the five raw satellite fields, `src`, `flags`.
 
-**How the harmonized country numbers are built.** `cd` is the number of 0.25 degree cell-days, so a country total is the sum over its cells. From Feb 2012 `hot`, `cd` and `frp` are the measured S-NPP totals for the country and the ranges collapse onto the value. Before that they are the MODIS total multiplied by the example ratio, with a plus or minus 30 per cent range, and `cd` is capped at `days in month x fire cells in the country`. Country totals use the data provider's own country for each detection, so cells on a border can differ slightly from a drawn outline (stated in the app).
+**How the harmonized country numbers are built.** `cd` adds up the fire cell-days inside the country, so a country total is the sum over its 0.25 degree cells (section 3.1). From Feb 2012 `hot`, `cd` and `frp` are the measured S-NPP totals for the country and the ranges collapse onto the value. Before that they are the MODIS total multiplied by the example ratio, with a plus or minus 30 per cent range. Country totals use the data provider's own country for each detection, so cells on a border can differ slightly from a drawn outline (stated in the app).
 
 ```json
 {"schema":"emerge-country-1","example":true,"built":"2026-11-14","iso3":"BGR",
  "name_key":"country.BGR","type":"country","lat":42.7886,"lon":25.2032,
  "precision_radius_km":292.486,"first_month":"2000-11","last_month":"2025-12",
- "months":[{"y":2024,"m":7,"hot":742,"hot_lo":742,"hot_hi":742,"cd":144,"cd_lo":144,
-            "cd_hi":144,"frp":9107,"terra":196,"aqua":246,"snpp":742,"noaa20":1377,
+ "months":[{"y":2024,"m":7,"hot":742,"hot_lo":742,"hot_hi":742,"cd":399,"cd_lo":399,
+            "cd_hi":399,"frp":9107,"terra":196,"aqua":246,"snpp":742,"noaa20":1377,
             "noaa21":null,"src":"measured","flags":[]}]}
 ```
 
@@ -265,8 +277,6 @@ One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius
 
 **Fire months only.** A month is listed when at least one satellite saw at least one detection in that cell. A month inside the coverage period that is not listed means 0. A listed month can still hold `hot: 0` and `cd: 0`: that happens from Feb 2012 when MODIS or NOAA-20 saw fire in the cell but the reference sensor, S-NPP, did not. Zero is the honest harmonized answer there.
 
-`cd` on a cell is capped at the number of days in the month, and `cd_hi` with it, because a cell cannot burn on more days than the month has.
-
 **The raw per-satellite series are not in tiles.** They live in the country files only, where the "measured per satellite" view needs them. Keeping them out of tiles is what holds the world export inside a static-file budget (decision D-9).
 
 ```json
@@ -278,11 +288,11 @@ One cell: `type` (`"cell"`), `id` (the cell id), `lat`, `lon`, `precision_radius
  "cells":[{"type":"cell","id":264329,"lat":44.125,"lon":22.375,
            "precision_radius_km":17.11,
            "mi":[25,55],"hot":[3,11],"hot_lo":[2,8],"hot_hi":[4,14],
-           "cd":[3,3],"cd_lo":[2,2],"cd_hi":[4,4],"frp":[12,515],
+           "cd":[3,11],"cd_lo":[2,8],"cd_hi":[4,14],"frp":[12,515],
            "src":[0,1],"flags":[1,1]}]}
 ```
 
-Read as: cell 264329, month index 25 (February 2002) had 3 harmonized hotspots in a range of 2 to 4, 3 fire days, 12 MW, produced by `src_labels[0]` (`estimated_terra`) and flagged bit 1 (`example`).
+Read as: cell 264329, month index 25 (February 2002) had 3 harmonized hotspots in a range of 2 to 4, 3 fire cell-days, 12 MW, produced by `src_labels[0]` (`estimated_terra`) and flagged bit 1 (`example`).
 
 ---
 
@@ -304,14 +314,14 @@ Layout: **columnar**. One `cols` object of equal-length arrays sharing one index
 | `n` | number | number of cells, equal to every array's length |
 | `cols` | object | `id`, `lat`, `lon`, `precision_radius_km`, `hot`, `hot_lo`, `hot_hi`, `cd`, `cd_lo`, `cd_hi`, `frp`, `src`, `flags` |
 
-Cells are sorted by `id` ascending. Only cells with at least one detection that year are present; a cell that is absent saw no fire. Yearly `hot` and `frp` are the sum of that year's months. Yearly `cd` is the sum capped at the days in the year. Yearly `src` is the **lowest index in `src_labels`** among the year's months, so a year that mixes estimated and measured months reports the earlier label rather than claiming to be measured. Yearly `flags` is the bitwise OR of the months' flags.
+Cells are sorted by `id` ascending. Only cells with at least one detection that year are present; a cell that is absent saw no fire. Yearly `hot`, `cd` and `frp` are the sum of that year's months, with no ceiling on `cd` (section 3.1). Yearly `src` is the **lowest index in `src_labels`** among the year's months, so a year that mixes estimated and measured months reports the earlier label rather than claiming to be measured. Yearly `flags` is the bitwise OR of the months' flags.
 
 ```json
 {"schema":"emerge-globe-1","example":true,"built":"2026-11-14","year":2024,
  "type":"cell","cell_deg":0.25,"n":2,
  "cols":{"id":[236420,236426],"lat":[48.875,48.875],"lon":[-114.875,-113.375],
          "precision_radius_km":[16.636,16.636],"hot":[8,0],"hot_lo":[8,0],
-         "hot_hi":[8,0],"cd":[2,0],"cd_lo":[2,0],"cd_hi":[2,0],"frp":[100,0],
+         "hot_hi":[8,0],"cd":[4,0],"cd_lo":[4,0],"cd_hi":[4,0],"frp":[100,0],
          "src":[2,2],"flags":[0,0]}}
 ```
 
@@ -418,7 +428,7 @@ Non-blocking points found while reading the spec and the build plan, and how eac
 5. **A country is not a cell, but M29 needs a point.** A country file is one point record with many months. Its `lat` and `lon` are the mean of its fire cells and its `precision_radius_km` reaches the furthest of them, so the circle honestly covers the data in the file. It is not a claim about borders. For the USA that radius is large, which is correct for a national total.
 6. **Country files keep every month; cell files keep fire entries only.** The calendar needs a full grid and a country file is small. A cell file would grow by a large factor if it carried empty months, so there the absence of a month means 0, per rule 1.
 7. **A listed cell-month can be all zeros.** From February 2012 a cell can have a month where another satellite saw fire but the reference sensor did not. Dropping the month would be wrong, because the harmonized answer is a measured zero.
-8. **`cd` needs a cap.** Fire days cannot be more than the days in the period, so the cell-level value and its upper end are capped at the days in the month, and the yearly globe value at the days in the year.
+8. **`cd` must not be capped, and is not a count of 0.25 degree cell-days.** An earlier draft of this contract defined `cd` on the 0.25 degree grid and capped it at the days in the month. That was wrong: the conversion method, the bake-off protocol and the conversion plan all count a fire cell-day on the 0.01 degree grid. Section 3.1 now carries the real definition, and no ceiling is applied at any level.
 9. **Daily values exist although the method refuses daily harmonized numbers.** The spec's method rejects daily output, yet 4.3 requires the daily window table, and M27 needs it. Resolved as a usage rule: the file stores days, nothing shorter than 8 days may be summed and compared, and `min_compare_days` carries that in `meta.json`.
 10. **The pre-2012 example numbers.** They are the MODIS value times 2.7 with a plus or minus 30 per cent range. 2.7 is our measured worldwide S-NPP to MODIS fire-cell-day ratio `[V]`, used here only to give the app numbers of a believable size. It is **not** a conversion: the real conversion varies by region, month and unit, and hotspot ratios vary more than fire-day ratios `[V]`. Every such record carries the `example` flag and every file carries `"example": true`.
 11. **NOAA-21 is null everywhere.** The source files hold no NOAA-21 at all, so every `noaa21` field is `null`, not 0, and `meta.json` lists it as a no-data period. This is the clearest live test of rule 1 in the app.
@@ -434,8 +444,15 @@ python pipeline/export_examples.py --data <data dir> --out web/public/data
 
 `--data` defaults to `data` beside the repo root and must hold `derived/bg_us/cell_days.parquet`. `--out` defaults to `web/public/data`. The output is deterministic: JSON with no spaces and a fixed field order, and gzip written with no timestamp, so two runs give byte-identical files.
 
-`tests/contract/test_contract.py` checks the generated files against this page: required fields on every record, `src` inside the five labels and matching the date rule, `hot_lo <= hot <= hot_hi` and the same for `cd`, whole numbers where this page says whole numbers, no negative values, no month before November 2000, each cell id consistent with its own `lat` and `lon`, `precision_radius_km` within 1 per cent of half the cell diagonal, every `.gz` file valid gzip, and a control total: for three months the raw per-satellite numbers in `countries/BGR.json` equal a direct count from the source table.
+`tests/contract/test_contract.py` checks the generated files against this page: required fields on every record, `src` inside the five labels and matching the date rule, `hot_lo <= hot <= hot_hi` and the same for `cd`, whole numbers where this page says whole numbers, no negative values, no month before November 2000, each cell id consistent with its own `lat` and `lon`, `precision_radius_km` within 1 per cent of half the cell diagonal, every `.gz` file valid gzip, and that `cd` is not capped at the days in a month.
+
+Three control totals sit on top of that, each against something this stream did not write:
+
+1. For three months the raw per-satellite numbers in `countries/BGR.json` equal a direct count from the source table, and nowhere in the series does a `null` hide a real count.
+2. For all five country-months in `tests/expected/bakeoff/truth_samples.json` the measured `cd` and `hot` in the country file equal the independently computed totals. Those answers were written by a separate agent from the raw files, with no dataframe library and without the cell-day table, and they drop the 34 S-NPP gap days. Our files agree on all five, including the two months that hold gap days (Bulgaria Jul 2022 and the USA Aug 2022), so the two paths agree on the gap rule as well.
+3. `web/tests/cell.test.ts` runs all 34 cases of `tests/expected/cell_id.json` through `cellId` and `cellCenter`. It sits under `web/tests/` rather than beside `cell.ts` because the test config only collects `tests/**/*.test.ts` and another stream owns that config.
 
 ```bash
 python -m pytest tests/contract -q
+cd web && npm test
 ```

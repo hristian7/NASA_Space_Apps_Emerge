@@ -18,7 +18,6 @@ Output is deterministic: running it twice gives byte-identical files.
 from __future__ import annotations
 
 import argparse
-import calendar
 import datetime as dt
 import gzip
 import json
@@ -177,21 +176,26 @@ def frp_mw(milli_mw: int) -> int:
 
 def harmonize(
     y: int, m: int, snpp_n: int, snpp_cd: int, snpp_frp: int,
-    modis_n: int, modis_cd: int, modis_frp: int, cd_cap: int,
+    modis_n: int, modis_cd: int, modis_frp: int,
 ) -> dict:
-    """Harmonized hotspots, fire days, ranges and FRP for one place-month."""
+    """Harmonized hotspots, fire days, ranges and FRP for one place-month.
+
+    "cd" is a count of fire cell-days on the 0.01 degree grid, added up over
+    the place. A 0.25 degree cell holds 625 of those small cells, so a monthly
+    cd has no 31-day ceiling and is never capped.
+    """
     if is_measured(y, m):
         hot, cd, frp = snpp_n, snpp_cd, snpp_frp
         hot_lo = hot_hi = hot
         cd_lo = cd_hi = cd
     else:
         hot = round(EXAMPLE_RATIO * modis_n)
-        cd = min(round(EXAMPLE_RATIO * modis_cd), cd_cap)
+        cd = round(EXAMPLE_RATIO * modis_cd)
         frp = modis_frp
         hot_lo = round(hot * (1 - EXAMPLE_BAND))
         hot_hi = round(hot * (1 + EXAMPLE_BAND))
         cd_lo = round(cd * (1 - EXAMPLE_BAND))
-        cd_hi = min(round(cd * (1 + EXAMPLE_BAND)), cd_cap)
+        cd_hi = round(cd * (1 + EXAMPLE_BAND))
     return {
         "hot": int(hot), "hot_lo": int(hot_lo), "hot_hi": int(hot_hi),
         "cd": int(cd), "cd_lo": int(cd_lo), "cd_hi": int(cd_hi),
@@ -226,12 +230,12 @@ def write_gzip_json(path: Path, obj: object) -> None:
 # Reading the cell-day table
 # ---------------------------------------------------------------------------
 
-CELL_DAY_SQL = """
-CREATE OR REPLACE TABLE cell_day AS
+SMALL_CELL_DAY_SQL = """
+CREATE OR REPLACE TABLE small_cell_day AS
 SELECT
+  cy, cx, day,
   ((17999 - 2 * cy) // 50)::INT AS crow,
   ((2 * cx + 1 + 36000) // 50)::INT AS ccol,
-  day,
   min(country) AS country,
   count(DISTINCT country) AS n_country,
   sum(CASE WHEN sat = 'Terra'  THEN detections ELSE 0 END)::BIGINT AS terra_n,
@@ -239,15 +243,17 @@ SELECT
   sum(CASE WHEN sat = 'SNPP'   THEN detections ELSE 0 END)::BIGINT AS snpp_n,
   sum(CASE WHEN sat = 'NOAA20' THEN detections ELSE 0 END)::BIGINT AS noaa20_n,
   sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN detections ELSE 0 END)::BIGINT AS modis_n,
-  max(CASE WHEN sat = 'Terra'  THEN 1 ELSE 0 END)::INT AS terra_seen,
-  max(CASE WHEN sat = 'Aqua'   THEN 1 ELSE 0 END)::INT AS aqua_seen,
-  max(CASE WHEN sat = 'SNPP'   THEN 1 ELSE 0 END)::INT AS snpp_seen,
-  max(CASE WHEN sat = 'NOAA20' THEN 1 ELSE 0 END)::INT AS noaa20_seen,
-  max(CASE WHEN sat IN ('Terra', 'Aqua') THEN 1 ELSE 0 END)::INT AS modis_seen,
+  -- One fire cell-day: this 0.01 degree cell had fire on this day, as seen by
+  -- one satellite stream. These are the units "cd" counts; they are added up,
+  -- never deduplicated to the 0.25 degree cell. MODIS is Terra plus Aqua, one
+  -- cell-day each, because a cell-day belongs to a satellite stream.
+  max(CASE WHEN sat = 'SNPP' THEN 1 ELSE 0 END)::INT AS snpp_cd,
+  (max(CASE WHEN sat = 'Terra' THEN 1 ELSE 0 END)
+   + max(CASE WHEN sat = 'Aqua' THEN 1 ELSE 0 END))::INT AS modis_cd,
   sum(CASE WHEN sat = 'SNPP' THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS snpp_frp,
   sum(CASE WHEN sat IN ('Terra', 'Aqua') THEN cast(round(frp * 1000) AS BIGINT) ELSE 0 END)::BIGINT AS modis_frp
 FROM read_parquet($parquet)
-GROUP BY crow, ccol, day
+GROUP BY cy, cx, day
 """
 
 CELL_MONTH_SQL = """
@@ -262,11 +268,11 @@ SELECT
   sum(snpp_n)::BIGINT   AS snpp_n,
   sum(noaa20_n)::BIGINT AS noaa20_n,
   sum(modis_n)::BIGINT  AS modis_n,
-  sum(snpp_seen)::INT  AS snpp_cd,
-  sum(modis_seen)::INT AS modis_cd,
+  sum(snpp_cd)::BIGINT  AS snpp_cd,
+  sum(modis_cd)::BIGINT AS modis_cd,
   sum(snpp_frp)::BIGINT  AS snpp_frp,
   sum(modis_frp)::BIGINT AS modis_frp
-FROM cell_day
+FROM small_cell_day
 GROUP BY cell_id, y, m
 ORDER BY cell_id, y, m
 """
@@ -275,17 +281,21 @@ DAILY_SQL = """
 SELECT
   crow * 1440 + ccol AS cell_id,
   day,
-  snpp_n, modis_n, snpp_frp, modis_frp
-FROM cell_day
+  sum(snpp_n)::BIGINT    AS snpp_n,
+  sum(modis_n)::BIGINT   AS modis_n,
+  sum(snpp_frp)::BIGINT  AS snpp_frp,
+  sum(modis_frp)::BIGINT AS modis_frp
+FROM small_cell_day
 WHERE (month(day) = 11 AND day(day) >= $start_day) OR month(day) = 12
+GROUP BY cell_id, day
 ORDER BY cell_id, day
 """
 
 
 def load(parquet: Path) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
-    con.execute(CELL_DAY_SQL, {"parquet": str(parquet)})
-    mixed = con.execute("SELECT count(*) FROM cell_day WHERE n_country > 1").fetchone()[0]
+    con.execute(SMALL_CELL_DAY_SQL, {"parquet": str(parquet)})
+    mixed = con.execute("SELECT count(*) FROM small_cell_day WHERE n_country > 1").fetchone()[0]
     if mixed:
         raise SystemExit(f"{mixed} cell-days span two countries; the country rule needs a decision")
     con.execute(CELL_MONTH_SQL)
@@ -331,11 +341,10 @@ def build_country_files(con: duckdb.DuckDBPyConnection, out: Path) -> None:
             terra_n, aqua_n, snpp_n, noaa20_n, modis_n, snpp_cd, modis_cd, snpp_frp, modis_frp = (
                 v if v else (0, 0, 0, 0, 0, 0, 0, 0.0, 0.0)
             )
-            cap = calendar.monthrange(y, m)[1] * len(pts)
             rec = {"y": y, "m": m}
             rec.update(
                 harmonize(y, m, int(snpp_n), int(snpp_cd), int(snpp_frp),
-                          int(modis_n), int(modis_cd), int(modis_frp), cap)
+                          int(modis_n), int(modis_cd), int(modis_frp))
             )
             raw = {"terra": int(terra_n), "aqua": int(aqua_n), "snpp": int(snpp_n),
                    "noaa20": int(noaa20_n), "noaa21": 0}
@@ -441,9 +450,8 @@ def build_tiles(rows: list[tuple], out: Path) -> dict[int, dict]:
         key = tile_key(lat, lon)
         if key not in wanted:
             continue
-        cap = calendar.monthrange(y, m)[1]
         h = harmonize(y, m, int(snpp_n), int(snpp_cd), int(snpp_frp),
-                      int(modis_n), int(modis_cd), int(modis_frp), cap)
+                      int(modis_n), int(modis_cd), int(modis_frp))
         h["mi"] = month_index(y, m)
         h["src"] = SRC_LABELS.index(src_for(y, m))
         h["flags"] = flag_bits(flags_for(y, m))
@@ -500,7 +508,6 @@ def build_tiles(rows: list[tuple], out: Path) -> dict[int, dict]:
 def build_globe(yearly: dict[int, dict], out: Path) -> None:
     for year in GLOBE_YEARS:
         ids = sorted(yearly[year])
-        cap = 366 if calendar.isleap(year) else 365
         cols: dict[str, list] = {k: [] for k in (
             "id", "lat", "lon", "precision_radius_km", "hot", "hot_lo", "hot_hi",
             "cd", "cd_lo", "cd_hi", "frp", "src", "flags")}
@@ -511,10 +518,8 @@ def build_globe(yearly: dict[int, dict], out: Path) -> None:
             cols["lat"].append(round(lat, 4))
             cols["lon"].append(round(lon, 4))
             cols["precision_radius_km"].append(round(precision_radius_km(lat), 3))
-            for field in ("hot", "hot_lo", "hot_hi"):
+            for field in ("hot", "hot_lo", "hot_hi", "cd", "cd_lo", "cd_hi"):
                 cols[field].append(acc[field])
-            for field in ("cd", "cd_lo", "cd_hi"):
-                cols[field].append(min(acc[field], cap))
             cols["frp"].append(acc["frp"])
             cols["src"].append(acc["src"])
             cols["flags"].append(acc["flags"])
@@ -763,7 +768,7 @@ def build_meta(out: Path) -> None:
             },
             "units": {
                 "hot": "hotspots",
-                "cd": "cell_days",
+                "cd": "fire_cell_days",
                 "frp": "MW",
                 "precision_radius_km": "km",
             },
