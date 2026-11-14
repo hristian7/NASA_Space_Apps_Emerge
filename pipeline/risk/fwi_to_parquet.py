@@ -20,7 +20,7 @@ FIELDS = ('fwi', 'ffmc', 'dmc', 'dc', 'isi', 'bui', 'dsr')
 def nearest(sorted_values, values):
     right = np.clip(np.searchsorted(sorted_values, values), 0, len(sorted_values)-1)
     left = np.maximum(right-1, 0)
-    return np.where(np.abs(values-sorted_values[left]) <= np.abs(sorted_values[right]-values), left, right)
+    return np.where(np.abs(values-sorted_values[left]) < np.abs(sorted_values[right]-values), left, right)
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
         folder = args.out / f'month={day:%Y-%m}'
         dest = folder / f'{day.isoformat()}.parquet'
         stat = source.stat()
-        fingerprint = f'{source.name}:{stat.st_size}:{stat.st_mtime_ns}:{grid_hash}'
+        fingerprint = f'nearest-north-east-v1:{source.name}:{stat.st_size}:{stat.st_mtime_ns}:{grid_hash}'
         if dest.exists():
             metadata = pq.read_metadata(dest).metadata or {}
             if metadata.get(b'input_fingerprint', b'').decode() == fingerprint:
