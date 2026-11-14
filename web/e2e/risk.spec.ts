@@ -91,6 +91,7 @@ test('Bulgarian outlook and placeholder keep the same controls and fit a phone',
  await expect(page.getByRole('heading',{name:'Бургас',exact:true})).toBeVisible();
  await expect(page.locator('.risk-list > li')).toHaveCount(10);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+ await expect(page.getByRole('button',{name:'Място 1, Ниво 4',exact:true})).toBeVisible();
  await page.screenshot({path:testInfo.outputPath('risk-bg-375.png'),fullPage:true});
  await page.goto('/risk');
  await expect(page.getByRole('heading',{name:'Рискът от пожар утре: в процес на разработка и проверка. Ето какво ще показва.'})).toBeVisible();

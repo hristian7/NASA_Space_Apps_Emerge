@@ -45,7 +45,7 @@
 .risk-here { display: grid; gap: 12px; min-width: 0; }
 .risk-here .risk-placeholder { padding: 0; }
 .risk-here .risk-placeholder h2 { font-size: 18px; }
-.risk-here .risk-example { padding: 6px 8px; }
+.risk-here .risk-example { padding: 6px 8px; color: var(--space); }
 @media (min-width: 768px) {
  .risk-header { display: flex; justify-content: space-between; align-items: center; }
  .risk-controls label { flex: 0 1 210px; }
