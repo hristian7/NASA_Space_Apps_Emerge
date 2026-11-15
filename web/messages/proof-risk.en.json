@@ -60,5 +60,9 @@
   "dailyModel": "Model caught",
   "dailyIndex": "Index caught",
   "dailyRegions": "Regions scored",
-  "dailyCounts": "Counts [U]"
+  "dailyCounts": "Counts [U]",
+  "weekTitle": "Week outlook",
+  "weekExplanation": "2025 worldwide, forest and wildland. Share of new fires in the top five spots per region and day [V].",
+  "weekLead": "Days ahead",
+  "weekDays": "Forecast days [V]"
 }

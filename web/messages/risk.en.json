@@ -1,6 +1,6 @@
 {
   "weekTitle": "Week",
-  "weekNotice": "Fire weather only, less certain, not scored yet.",
+  "weekNotice": "Fire weather only. This lead has not been scored yet.",
   "weekFwi": "NASA fire-weather index: {value}",
   "_review": "English source text. Forecast values are estimates [U].",
   "title": "Risk outlook (unofficial)",
@@ -91,5 +91,6 @@
   "weatherVeryStrong": "fire weather very strong",
   "weatherIndex": "NASA fire-weather index (experimental): {value}",
   "levelMeaningTitle": "What a level means",
-  "levelMeaning": "The level is the chance that satellites detect a new vegetation fire in this roughly 28 km square on that day, including field burning. It is not a danger rating."
+  "levelMeaning": "The level is the chance that satellites detect a new vegetation fire in this roughly 28 km square on that day, including field burning. It is not a danger rating.",
+  "weekScored": "Day {lead} ahead: the fire-weather ranking caught {fwi} of new fires in 2025; history alone {history}, worldwide, forest and wildland [V]."
 }
