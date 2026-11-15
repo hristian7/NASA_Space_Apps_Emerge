@@ -1,6 +1,8 @@
 # Emerge: submission draft for team editing
 
-**Editorial status:** First draft. The historical calendar is live; next-day risk has no model results available for this draft. Keep that distinction when editing. `[V]`
+**Editorial status:** The historical calendar and an unofficial next-day risk outlook are available, with published test results and limitations. `[V]`
+
+**Before pasting into NASA's form, remove the `[V]`, `[D]` and `[U]` evidence tags.**
 
 Tags: `[V]` verified in a primary project artifact or observed public page; `[D]` directional evidence; `[U]` proposed use, inference or untested plan. A project result tagged `[V]` is not independent scientific certification. Numbers in identifiers and source URLs are identifiers, not measurements.
 
@@ -26,7 +28,7 @@ The [rules summary](../rules-and-judging.md) names required content but does not
 |---|---|
 | Impact | Intended users and impact: a concrete planning use, with benefits described as unmeasured |
 | Creativity | What is distinctive: a comparable record with uncertainty and visible weak spots |
-| Validity | How it works; What was tested; Limitations; unfinished risk results |
+| Validity | How it works; What was tested; Limitations; risk results |
 | Relevance | Challenge; Project summary: satellite harmonization and the burning activity calendar are the core |
 | Presentation | Short summary; demo description: problem, selection, calendar, evidence, limitations |
 
@@ -48,7 +50,7 @@ A change in satellite instruments can look like a change in fire activity. MODIS
 
 Emerge addresses the challenge's call for a harmonized burning activity calendar. It combines the extensive historical series of MODIS with the continuity and greater detail of VIIRS. The current record runs from November 2000 to 14 November 2026 `[V]`. Users can select a country, a point with a search distance, or a drawn area, then explore the monthly record. Estimated values carry uncertainty ranges, and missing observations are distinguished from measured zero activity. `[V]`
 
-The conversion was tested on years excluded from fitting, across every country in the exported model. Results are stronger for world totals than for small areas, and the proof page reports those differences. Emerge is a research prototype for exploring fire history. Next-day risk remains an unfinished extension, with no accuracy claim in this draft. `[V]`
+The conversion was tested on years excluded from fitting, across every country in the exported model. Results are stronger for world totals than for small areas, and the proof page reports those differences. Emerge is a research prototype for exploring fire history and an unofficial next-day risk outlook, with results and limitations shown on the proof page. `[V]`
 
 ## Detailed project description
 
@@ -100,29 +102,28 @@ The validation file records that hand-computed truth samples match raw files and
 - **Recent coverage:** recent data is provisional. The final month contains only 14 days `[V]`, so it must not be compared as if it were complete. Some newest detections have no country assignment and are absent from country totals.
 - **Different quantities:** hotspots, fire cell-days, reported incidents and burned area are not interchangeable. Displaying national reports beside satellite estimates is not proof that they agree.
 - **Unscored probability:** the historical chance-of-fire measure has no completed probability score. It must not be presented as a validated forecast.
-- **Outstanding review:** the build plan still records independent checking of reported-fire rows and follow-up checks on live-layer dates and comparison-year cases. This draft does not assert that those checks passed.
+- **Risk limits:** the week outlook has not been scored, the daily log is only starting, and plant greenness is displayed but was not used by the model. Some city squares are overstated: Sofia is about 4 times its own history `[V]`.
 
-These limitations are documented in the [data contract](../data-contract.md), [validation file](../../web/public/data/validation.json) and [build plan](build-plan.md). `[V]`
+Historical limitations are documented in the [data contract](../data-contract.md) and [validation file](../../web/public/data/validation.json); risk test limitations are in the [protocol](../../pipeline/risk/PROTOCOL.md). `[V]`
 
 ### Next-day extension: Risk outlook (unofficial)
 
-The planned extension ranks locations for next-day fire risk using earlier fire history, fire-weather inputs, vegetation and land cover. The intended default is forest and wildland fire risk. This is a development plan, not an available tested result in this draft. `[U]`
+The unofficial next-day outlook ranks forest and wildland locations using fire weather, earlier fire history and majority land class. Plant greenness was not an input. The app publishes static predictions for 14 and 15 November 2026 `[V]`; a daily log is only starting. The separate week outlook uses fire weather and has not been scored. `[V]`
 
-The planned scorecard compares the model separately with the NASA fire-weather index, history alone and random ranking. Its main measure is capture rate: the share of new satellite-detected fires inside the highest-ranked locations. A better capture rate would show better ranking under that test, not prove safer deployment of crews. `[U]`
+The test ranks the top 5 spots per region and day `[V]`. Pooled capture is the share of eligible new satellite-detected fires in those spots, not a measure of crew safety. The shipped grid is 0.25 degrees `[V]`; a 0.1 degree run was not made `[V]`. The 2025 test spans 1 January to 31 December with weather available on 361 days `[V]`. The Europe test covers 10,374 fire-positive region-days and the world test 106,994 `[V]`. Missing scores and weather limit coverage; eligible fires on forecast days remain in the denominator even when a spot has no score. `[V]`
 
-**FILL-FROM-SCORECARD: Scope and readiness**
-Insert the tested geography, shipped grid size, test dates, number of eligible region-days and the recorded readiness verdict.
+LightGBM version 2 was chosen by world forest and wildland capture on 2024 validation data `[V]`. Version 1, a logistic model, had also been scored on 2025 before version 2 was selected `[V]`, so the hold-out was not used only once as the protocol intended. The published metadata marks the engine ready `[V]`; this is a research prototype, not an operational certification. `[U]`
 
-**FILL-FROM-SCORECARD: Model and baseline capture rates**
-Insert the model, fire-weather-index, history-only and random capture rates, all at the shipped grid and identical ranking size.
+| 2025 forest and wildland, top 5 pooled capture | Model | Earlier-years history | NASA fire-weather index | Random |
+|---|---|---|---|---|
+| Europe | 53.8% `[V]` | 51.0% `[V]` | 41.1% `[V]` | 39.4% `[V]` |
+| World | 20.4% `[V]` | 16.7% `[V]` | 11.2% `[V]` | 10.5% `[V]` |
 
-**FILL-FROM-SCORECARD: Comparison uncertainty**
-Insert the resampled uncertainty interval for the model's difference from each baseline, stating separately whether each comparison supports a claim of improvement.
+In Europe the model exceeded the NASA index by 12.679 percentage points, with a 95% interval of 11.191 to 14.192 points `[V]`; it exceeded history by 2.840 points, with an interval of 2.243 to 3.475 points `[V]`. The intervals use 2,000 non-overlapping weekly block bootstrap draws `[V]`, a resampling method for estimating uncertainty. The scorecard's claim rule is met for both comparisons in Europe and worldwide `[V]`. These results describe this ranking test, not every place or future season. `[U]`
 
-**FILL-FROM-SCORECARD: Probability quality and weak groups**
-Insert hit rate, probability skill against history, reliability results and the weakest tested regions or land types; preserve “not measured” wherever a value is absent.
+The model captured at least one new fire on 60.9% of fire-positive region-days in Europe and 42.5% worldwide `[V]`. On scored spots in fire-positive region-days, Brier skill against history was 0.593 in Europe and 0.940 worldwide `[V]`; positive values mean a lower average squared probability error than history in that test. Reliability is imperfect: in Europe's lowest probability bin, the average prediction was 0.51% and the observed rate was 4.13% `[V]`. The supplementary all-scored-day probability results include days without fires and answer a different question. `[V]`
 
-Until those results exist, the submission says: **“Next-day risk is under development. No improvement over fire-weather or historical baselines has been demonstrated.”** Do not convert a baseline-only scorecard into a model-success claim. The demo plan uses static prediction files; a daily scoring service is not a completed feature. `[V]`
+Performance varies by land type and place. In Europe, forest-only capture was 42.0% for the model versus 41.2% for history `[V]`. The model overstates some city squares: Sofia is about 4 times its own history `[V]`. Majority land classes are not fuel shares, and the aggregated detection grid has a latitude-boundary ambiguity `[V]`. The independent oracle and scorer still disagree on probability-day scope and seeded tie handling `[V]`; further review is needed. `[U]`
 
 Any released list must be titled **“Risk outlook (unofficial)”**. Retain the specified safety text: **“Research prototype. Not an official warning. Follow local authorities (112).”** `[V]` If crew advice is added, use “consider” and end with “Decisions rest with the fire service.” Do not use official warning classes or imply dispatch authority.
 
@@ -139,13 +140,13 @@ Any released list must be titled **“Risk outlook (unofficial)”**. Retain the
 
 Suggested description: “See why satellite fire counts need harmonization, select an area in Emerge, read its burning activity calendar, and inspect the evidence and limitations behind the estimates.” `[U]`
 
-The video should show the historical calendar first, then a measured result on the proof page. Keep estimated and provisional labels visible. Show next-day risk only with the status supported by its scorecard. Use a video no longer than 30 seconds `[V]`, in English or with English subtitles. A slide alternative may contain no more than 7 slides `[V]`, including the title. The [production plan](2026-11-15-video-and-pitch.md) supplies the shot sequence, but its older numerical claims must be checked against this draft's sources before recording.
+The video should show the historical calendar first, then a measured result on the proof page. Keep estimated and provisional labels visible. Show next-day risk with the status supported by its scorecard. Use a video no longer than 30 seconds `[V]`, in English or with English subtitles. A slide alternative may contain no more than 7 slides `[V]`, including the title. The [production plan](2026-11-15-video-and-pitch.md) supplies the shot sequence, but its older numerical claims must be checked against this draft's sources before recording.
 
 ## References
 
 Suggested field text:
 
-“Emerge uses NASA active-fire observations as its core data. The complete external-resource register lists the data, software, imagery, source links, uses and recorded licence terms. Research references are listed separately from deployed inputs. Planned inputs are labelled planned; their inclusion is not a claim that the running model uses them.”
+“Emerge uses NASA active-fire observations as its core data. The complete external-resource register lists the data, software, imagery, source links, uses and recorded licence terms. Research references are listed separately from deployed inputs. Display layers and model inputs are identified separately; their inclusion is not a claim that the model uses every layer.”
 
 Include these linked registers with the field text, and expand their entries if the portal requires an inline list:
 
@@ -154,7 +155,7 @@ Include these linked registers with the field text, and expand their entries if 
 | Historical and recent satellite detections; public archive mirror | [Data register](../references.md#data), historical country files, active-fire files and archive-mirror entries |
 | Fire-weather maps; satellite estimates; national reported statistics and reports | [Data register](../references.md#data), weather-service, country-estimate and national-report entries |
 | Street maps, country boundaries and satellite background imagery | [Data and software registers](../references.md), map-data, boundaries and imagery entries |
-| Planned next-day inputs and backup sources | [Data register](../references.md#data), forecast archive, regional boundaries, land cover, vegetation, backup mosaic, regional grouping and regional weather entries |
+| Next-day inputs, display layers and backup sources | [Data register](../references.md#data), forecast archive, regional boundaries, land cover, vegetation, backup mosaic, regional grouping and regional weather entries |
 | Pipeline, application, mapping, geometry, charts, downloads, translation and test software | [Complete software register](../references.md#software), every entry |
 | Scientific papers, sensor user guides, statistical methods, research code and agency background | [Conversion research sources](../conversion-plan.md#10-sources), every entry; these are research references, not evidence that every proposed technique was implemented |
 | Fonts used by the live site | [About page credits](https://emerge-beta-ten.vercel.app/about), font entry and its recorded licence; this entry supplements the repository register |
@@ -173,7 +174,7 @@ The [AI-use record](../si-usage.md) describes the completed work and its checks.
 
 ## Submission checks for the team
 
-- Compare every portal field and length limit with this document. Replace editorial markers only with verified links or scorecard results; remove unfilled next-day result slots from public text and keep the explicit unfinished-status sentence.
+- Compare every portal field and length limit with this document. Replace editorial link markers only with verified links; remove evidence tags before pasting into the form.
 - Confirm event registration, eligibility and team-page membership outside this public draft. Do not add personal details here.
 - Check project, demo, source and reference links without login. Confirm English text or subtitles and the demo length limit above.
 - Review all media rights and the age restriction above. Record external media, earlier code and further AI use in the submission inventories.
@@ -192,7 +193,7 @@ The rows below cover the factual claim groups in the field text. Proposed benefi
 | Deployed conversion groups and background estimate | [Validation](../../web/public/data/validation.json): `method.model_note` | `[V]` |
 | Fire cell-day definition; monthly conversion; raw daily values and unconverted heat output | [Data contract](../data-contract.md#31-what-a-fire-day-cd-is); validation `limits` | `[V]` |
 | Calendar comparisons and downloads | [Overview](../../specs/overview.md); [build plan](build-plan.md#81-where-we-stand) | `[V]` for documented status, not a fresh end-to-end feature test |
-| Reports and satellite estimates have separate labels; row review remains owed | [Build plan](build-plan.md#81-where-we-stand) | `[V]` |
+| Reports and satellite estimates have separate labels | [Build plan](build-plan.md#81-where-we-stand) | `[V]` |
 | Worldwide fit and hold-out testing differ from method selection in Bulgaria and the United States | [Data contract](../data-contract.md#10-validationjson), “What was tested, stated accurately”; validation `world_scope`, `countries`, `limits` | `[V]` |
 | All reported historical test scores, country counts and test periods | Validation `world_scope`, `holdout`, `world_gate`; [live proof](https://emerge-beta-ten.vercel.app/proof) | `[V]` |
 | Truth-sample and export checks passed; daily-to-monthly scorer check not computed | Validation `control_totals`, `world_gate` | `[V]` |
@@ -200,8 +201,8 @@ The rows below cover the factual claim groups in the field text. Proposed benefi
 | Historical probability remains unscored | Validation `chance_of_fire`; [build plan](build-plan.md#81-where-we-stand) | `[V]` |
 | Firefighter interview informed next-day scope | [Risk overview](../../specs/plan-2-fire-risk/overview.md); [AI-use record](../si-usage.md) | `[V]` for documented design input, not general evidence about all services |
 | Intended planning benefits and distinctive combination | [Project overview](../../specs/overview.md); team interpretation in this draft | `[U]` |
-| Planned risk inputs, rankings, baselines, score definitions and improvement rule | [Risk specification](../../specs/plan-2-fire-risk/specification.md), engine and proof sections | `[U]` for planned performance; no model result claimed |
-| Static demo output, rather than a completed daily service | [Build plan](build-plan.md#83-where-this-night-builds-differently-from-spec-section-11) | `[V]` for documented plan |
+| Risk inputs, selection, hold-out results, coverage and probability checks | [Risk scorecard](../../web/public/data/risk/scorecard.json); [risk metadata](../../web/public/data/risk/meta.json); [test protocol](../../pipeline/risk/PROTOCOL.md) | `[V]` for recorded results; protocol deviations remain open |
+| Static demo output and an unscored week outlook | [Build plan](build-plan.md#83-where-this-night-builds-differently-from-spec-section-11) | `[V]` for documented plan |
 | Risk title, safety text and crew-advice wording | [Risk wording rules](../../specs/plan-2-fire-risk/specification.md#10-wording-and-safety) | `[V]` |
 | Resource uses, credits and unresolved terms | [References](../references.md); [live About credits](https://emerge-beta-ten.vercel.app/about) | `[V]` for recorded terms; unresolved permissions are not verified |
 | AI activities and checks | [AI-use record](../si-usage.md); this draft's preparation record | `[V]` |
