@@ -88,7 +88,24 @@ Award text paraphrased from the [2026 guide](https://www.spaceappschallenge.org/
 | 9 | Art & Technology | Technical and creative skill combined | 1 | Not our angle |
 | 10 | Best Mission Concept | Most plausible mission design | 1 | We have no mission or hardware concept |
 
-**Past-winner patterns** (2024–25 lists from NASA's announcements: [2025](https://www.nasa.gov/learning-resources/stem-engagement-at-nasa/nasa-announces-2025-international-space-apps-challenge-global-winners/), [2024](https://www.nasa.gov/learning-resources/stem-engagement-at-nasa/nasa-international-space-apps-challenge-announces-2024-global-winners/)):
+**Past global winners** (team or project names only; ✅ = used Earth data). Sources: NASA's announcements for [2025](https://www.nasa.gov/learning-resources/stem-engagement-at-nasa/nasa-announces-2025-international-space-apps-challenge-global-winners/) and [2024](https://www.nasa.gov/learning-resources/stem-engagement-at-nasa/nasa-international-space-apps-challenge-announces-2024-global-winners/) `[V]`.
+
+| Award | 2025 | 2024 |
+|---|---|---|
+| Best Use of Data | Resonant Exoplanets: AI scanning telescope data | ✅ Waterwise: drought and water tool for farmers |
+| Local Impact | ✅ QUEÑARIS: forest restoration in Peru with satellite data | ✅ G.R.O.W. (Team I.O.): plain-language wildfire info site |
+| Best Use of Science | SpaceGenes+: space-biology dashboard | WMPGang: near-Earth-object web app |
+| Galactic Impact | Astro Sweepers: space-debris risk scores | ✅ 2plant: soil-moisture planting-risk app |
+| Best Use of Technology | ✅ Twisters: hyperlocal weather app | 42 QuakeHeroes: seismic AI |
+| Best Storytelling | HerCode Space: children's space-weather story | ✅ TerraTales: climate stories |
+| Art & Technology | ✅ Zumorroda-X: farm-climate games | ✅ Connected Earth Museum |
+| Most Inspirational | Photonics Odyssey: broadband for remote India | ✅ Eco-Metropolis: city game with environmental data |
+| Global Connection | Gaia+LEO: orbital data centres | Asteroid Destroyer: exoplanet map |
+| Best Mission Concept | PureFlow: habitat design | ✅ Landsat Connect: satellite tracker |
+
+2023: Storm Prophet won Best Use of Data (space-weather prediction) `[D]`, from earlier notes, not re-checked.
+
+**Past-winner patterns:**
 - **Earth data is common among winners:** 7 of 10 winners used it in 2024 and 3 of 10 in 2025 `[D]`.
 - **Fire projects rarely win:** only one fire project won from 2019 to 2025, G.R.O.W. in 2024 (Local Impact). The 2020 "Spot That Fire" teams reached finalist at best `[D]`.
 - **Winners are working tools with a clear user** (farmers, residents, children), told in plain language `[U]`.
@@ -96,7 +113,7 @@ Award text paraphrased from the [2026 guide](https://www.spaceappschallenge.org/
 
 ## 4. What to build or fix next, ranked by score gain per hour
 
-Gains are `[U]` estimates on the 1–5 scale; hours are for one person with AI agents.
+Gains are `[U]` estimates on the 1–5 scale; hours are for one person with AI agents. **Updated list, sorted into Must, Should, Could and Won't, with human-fire data sources:** [`../plans/score-lift-features.md`](../plans/score-lift-features.md).
 
 | # | Action | Hours | Criterion gain | Gain per hour | When |
 |---|---|---|---|---|---|
