@@ -37,5 +37,5 @@ export async function loadSpotScore(country: string, day: string, lat: number, l
   if (!score || score[0] !== square.spot_id) return { status: 'not land' };
   if (score[1] === null) return { status: 'no forecast here', ...square, p: null, level: null };
   if (score[2] === null) throw new Error('Score is missing its level');
-  return { status: 'ready', ...square, p: score[1], level: score[2] };
+  return { status: 'ready', ...square, p: score[1], level: score[2], usual: score[3] ?? null, fwi: score[4] ?? null, context: file.context_corrections?.[day]?.[square.spot_id] };
 }

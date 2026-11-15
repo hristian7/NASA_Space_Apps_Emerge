@@ -1,4 +1,5 @@
 "use client";
+import RiskContext from '@/components/risk/RiskContext';
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -46,7 +47,7 @@ type ScoreResult =
       /** The closest ranked spot when the place itself is not one. */
       nearest: { spot: RiskSpot; km: number } | null;
       /** The place's own square, scored for every land square. */
-      square: { p: number; level: number } | null;
+      square: { p: number; level: number; usual: number | null; fwi: number | null; context?: [number | null, number | null] } | null;
       /** Past tomorrow our model has no score: that day's fire-weather value instead. */
       weekly: { fwi: number | null; date: string } | null;
       top: RiskSpot[] | null;
@@ -71,7 +72,7 @@ async function lookupOnDay(
   lon: number,
   day: string,
   example: boolean,
-): Promise<{ spot: PointSpot | null; nearest: { spot: RiskSpot; km: number } | null; square: { p: number; level: number } | null }> {
+): Promise<{ spot: PointSpot | null; nearest: { spot: RiskSpot; km: number } | null; square: { p: number; level: number; usual: number | null; fwi: number | null; context?: [number | null, number | null] } | null }> {
   if (!index.meta || !Number.isFinite(lat) || !Number.isFinite(lon)) return { spot: null, nearest: null, square: null };
   const reach = index.meta.grid_g * 112;
   const countries = [
@@ -92,7 +93,7 @@ async function lookupOnDay(
     const km = distanceKm(lat, lon, candidate.lat, candidate.lon);
     if (nearest === null || km < nearest.km) nearest = { spot: candidate, km };
   }
-  const square = point !== null && point.p !== null ? { p: point.p, level: point.level } : null;
+  const square = point !== null && point.p !== null ? { p: point.p, level: point.level, usual: point.usual ?? null, fwi: point.inputs?.fwi ?? null, context: point.context } : null;
   return { spot: null, nearest, square };
 }
 
@@ -323,6 +324,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                       ) : (
                         <div className="fc-topRow">{content}</div>
                       )}
+                      <RiskContext p={item.p} usual={item.usual} fwi={item.inputs.fwi} day={item.day}/>
                     </li>
                   );
                 })}
@@ -347,11 +349,12 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                   <span key={step} data-on={step <= spot.level} />
                 ))}
               </div>
-              <p className="fc-levelName">{t(`levelName${spot.level}`)}</p>
+              <p className="fc-levelName">{tr("level", {level: spot.level})}</p>
               <p className="fc-facts">
                 <span>{chance(spot.p)}</span>
                 <span>{fuel(spot.fire_type ?? "")}</span>
               </p>
+              <RiskContext p={spot.p} usual={spot.usual} fwi={spot.inputs?.fwi} day={spot.day}/>
               {(() => {
                 const why = spot.why.filter((key) => tr.has(`why.${key}`)).slice(0, 4);
                 return why.length > 0 ? (
@@ -376,16 +379,18 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                 <span key={step} data-on={step <= square.level} />
               ))}
             </div>
-            <p className="fc-levelName">{t(`levelName${square.level}`)}</p>
+            <p className="fc-levelName">{tr("level", {level: square.level})}</p>
             <p className="fc-facts">
               <span>{chance(square.p)}</span>
             </p>
+            <RiskContext p={square.p} usual={square.usual} fwi={square.fwi} day={index.meta && named !== null ? index.meta.days[named] : dangerDate(day)} context={square.context}/>
             <p className="fc-muted">{t("squareNote")}</p>
             {nearest !== null ? (
               <div className="fc-nearest">
                 <p className="fc-muted">
-                  {t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })}
+                  {t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })} {chance(nearest.spot.p)}
                 </p>
+                <RiskContext p={nearest.spot.p} usual={nearest.spot.usual} fwi={nearest.spot.inputs.fwi} day={nearest.spot.day}/>
                 {onPickPoint ? (
                   <button type="button" className="whole-country" onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}>
                     {t("goToSpot")}
@@ -407,6 +412,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                 })}{" "}
                 <span className="fc-muted">{chance(nearest.spot.p)}</span>
               </p>
+              <RiskContext p={nearest.spot.p} usual={nearest.spot.usual} fwi={nearest.spot.inputs.fwi} day={nearest.spot.day}/>
               {onPickPoint ? (
                 <button
                   type="button"

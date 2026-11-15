@@ -35,3 +35,7 @@ The original FIRMS point latitude is no longer available in the aggregated 0.01-
 The independent oracle's probability fixture includes no-fire region-days, while this scorer calculates Brier and reliability on fire-positive region-days [V]. The oracle's seeded tie example also uses a different seed and hash rule from the rule above [V]. These disagreements remain open for independent review [U].
 
 The scorecard additionally reports probability metrics over all scored days, including no-fire days, under `probability_all_scored_days` [U]. This is supplementary and does not replace the registered fire-positive-day result or change the claim rule [U]. Its Brier calculations match the independent oracle's pooled and three region fixtures [V].
+
+## Deviations, 2026-11-15
+
+After the test, the displayed levels were changed from validation-quantile cutoffs to fixed daily chance bands of 0.01, 0.02, 0.05 and 0.10 [U]. This is a presentation change only; probabilities, ranking and scorecard results are unchanged [V].

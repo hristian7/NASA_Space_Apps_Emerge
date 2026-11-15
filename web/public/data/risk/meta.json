@@ -2,8 +2,23 @@
   "engine_ready": true,
   "example": false,
   "model_version": "lightgbm-v2",
-  "made_at": "2026-11-14T22:32:59.869389Z",
+  "made_at": "2026-11-15T08:01:35.553703Z",
   "grid_g": 0.25,
+  "level_bands": [
+    0.01,
+    0.02,
+    0.05,
+    0.1
+  ],
+  "usual_bands": [
+    0.67,
+    1.5
+  ],
+  "fwi_words": [
+    11.2,
+    21.3,
+    38
+  ],
   "days": {
     "today": "2026-11-14",
     "tomorrow": "2026-11-15"

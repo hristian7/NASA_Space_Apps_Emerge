@@ -7,6 +7,7 @@ export interface RiskMeta {
   grid_g: number;
   days: { today: string; tomorrow: string };
   fire_weather_run: string;
+  level_bands?: number[]; usual_bands?: number[]; fwi_words?: number[];
   sources: { name: string; url: string; date: string }[];
 }
 export interface RiskRegion {
@@ -31,6 +32,8 @@ export interface RiskSpot {
   region_id: string; day: string; rank: number;
   p: number | null;
   level: 1 | 2 | 3 | 4 | 5;
+  usual?: number | null;
+  context?: [number | null, number | null];
   fire_type: "forest" | "farmland" | "grass_shrub";
   inputs: RiskInputs;
   why: string[];
@@ -45,10 +48,10 @@ export interface RiskIndex { meta: RiskMeta | null; regions: RiskRegion[] }
 export type CountryResult = { status: "ready" | "missing"; file: RiskCountry };
 
 /** Scores for every country-assigned land square, including unavailable forecasts. */
-export type RiskScore = [spot_id: number, p: number | null, level: 1 | 2 | 3 | 4 | 5 | null];
-export interface RiskScoresFile { grid_g: number; days: Record<string, RiskScore[]> }
+export type RiskScore = [spot_id: number, p: number | null, level: 1 | 2 | 3 | 4 | 5 | null, usual?: number | null, fwi?: number | null];
+export interface RiskScoresFile { grid_g: number; columns?: string[]; context_corrections?: Record<string, Record<string, [number | null, number | null]>>; days: Record<string, RiskScore[]> }
 export type RiskSquareResult =
-  | { status: "ready"; spot_id: number; lat: number; lon: number; p: number; level: 1 | 2 | 3 | 4 | 5 }
+  | { status: "ready"; spot_id: number; lat: number; lon: number; p: number; level: 1 | 2 | 3 | 4 | 5; usual: number | null; fwi: number | null; context?: [number | null, number | null] }
   | { status: "no forecast here"; spot_id: number; lat: number; lon: number; p: null; level: null }
   | { status: "not land" }
   | { status: "missing country" }

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / 'data/derived/risk'
 WEB = ROOT / 'web/public/data/risk'
 DAYS = ('2026-11-14', '2026-11-15')
+LEVEL_BANDS = [0.01, 0.02, 0.05, 0.10]
 WEATHER_URL = 'https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/{run}00/FWI.GEOS-5.Daily.Default.{run}00.{day}.nc'
 
 
@@ -22,6 +23,16 @@ def scalar(value):
     if pd.isna(value):
         return None
     return float(value)
+
+
+def usual_category(p, usual):
+    if p is None or usual is None:
+        return None
+    return 0 if p < 0.67 * usual else 1 if p <= 1.5 * usual else 2
+
+
+def fwi_category(fwi):
+    return None if fwi is None else int(np.searchsorted([11.2, 21.3, 38], fwi, side='right'))
 
 
 def explanations(row, mean, model):
@@ -68,8 +79,9 @@ def ranked_spots(rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--model', type=Path, default=DATA / 'model_v1.json')
-    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live.parquet')
+    ap.add_argument('--model', type=Path, default=DATA / 'model_v2.json')
+    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live_v2.parquet')
+    ap.add_argument('--usual', type=Path, required=True)
     ap.add_argument('--scorecard', type=Path, default=WEB / 'scorecard.json')
     ap.add_argument('--data', type=Path, default=DATA)
     ap.add_argument('--dest', type=Path, default=WEB)
@@ -96,16 +108,18 @@ def main():
             all_regions[country][region] = {day: [] for day in DAYS}
     total_null_country = 0
     scores = defaultdict(dict)
+    corrections = defaultdict(dict)
     for day in DAYS:
         weather = args.data / 'fwi_0.25' / f'month={day[:7]}' / f'{day}.parquet'
         history = args.data / 'history_0.25' / f'month={day[:7]}' / 'history.parquet'
         rows = con.execute(f'''SELECT g.spot_id,g.lat::DOUBLE AS lat,g.lon::DOUBLE AS lon,
-           g.precision_radius_km,g.region_id,g.country,g.fuel_class,f.day,p.p,
+           g.precision_radius_km,g.region_id,g.country,g.fuel_class,f.day,p.p,u.usual,
            hash(g.spot_id,f.day,20261114) AS tie_order,{feature_sql()}
            FROM read_parquet(?) f JOIN grid g USING(spot_id)
            JOIN read_parquet(?) h ON h.spot_id=f.spot_id AND h.day=f.day
            LEFT JOIN predictions p ON p.spot_id=f.spot_id AND p.day=f.day
-           WHERE f.day=?''', [str(weather), str(history), day]).fetchdf()
+           LEFT JOIN read_parquet(?) u ON u.spot_id=f.spot_id AND u.month=month(f.day)
+           WHERE f.day=?''', [str(weather), str(history), str(args.usual), day]).fetchdf()
         expected = con.execute('SELECT count(*) FROM grid').fetchone()[0]
         if len(rows) != expected:
             raise ValueError(f'{day}: expected {expected} inputs, got {len(rows)}')
@@ -114,11 +128,20 @@ def main():
             raise ValueError(f'{day}: predictions must contain exactly one row per land spot')
         for country, group in rows[rows.country.notna()].sort_values('spot_id').groupby('country', sort=False):
             records = []
-            for spot_id, probability in zip(group.spot_id, group.p):
+            fixes = {}
+            for spot_id, probability, usual, fwi in zip(group.spot_id, group.p, group.usual, group.fwi):
                 p = scalar(probability)
-                level = None if p is None else int(np.searchsorted(model['level_probability_limits'], p, side='right') + 1)
-                records.append([int(spot_id), None if p is None else round(p, 4), level])
+                level = None if p is None else int(np.searchsorted(LEVEL_BANDS, p, side='right') + 1)
+                usual, fwi = scalar(usual), scalar(fwi)
+                rounded_p = None if p is None else round(p, 4)
+                rounded_usual = None if usual is None else round(usual, 4)
+                rounded_fwi = None if fwi is None else round(fwi, 1)
+                records.append([int(spot_id), rounded_p, level, rounded_usual, rounded_fwi])
+                u, w = usual_category(p, usual), fwi_category(fwi)
+                if u != usual_category(rounded_p, rounded_usual) or w != fwi_category(rounded_fwi):
+                    fixes[str(int(spot_id))] = [u, w]
             scores[country][day] = records
+            corrections[country][day] = fixes
         if booster is not None:
             available = rows.p.notna().to_numpy()
             contributions = np.full((len(rows), len(FEATURES)), np.nan)
@@ -145,10 +168,10 @@ def main():
                 mean = means.loc[region].to_numpy(dtype=float)
                 for rank, (_, row) in enumerate(group.iterrows(), 1):
                     p = scalar(row.p)
-                    level = 1 if p is None else int(np.searchsorted(model['level_probability_limits'], p, side='right') + 1)
+                    level = 1 if p is None else int(np.searchsorted(LEVEL_BANDS, p, side='right') + 1)
                     record = {'type': 'fire_risk', 'spot_id': int(row.spot_id), 'lat': float(row.lat), 'lon': float(row.lon),
                               'precision_radius_km': float(row.precision_radius_km), 'region_id': region, 'day': day,
-                              'rank': rank, 'p': p, 'level': level,
+                              'rank': rank, 'p': p, 'level': level, 'usual': scalar(row.usual),
                               'fire_type': {'forest': 'forest', 'shrub_grass': 'grass_shrub', 'farmland': 'farmland'}[row.fuel_class],
                               'inputs': {'fwi': scalar(row.fwi), 'ffmc': scalar(row.ffmc), 'dmc': scalar(row.dmc), 'dc': scalar(row.dc),
                                          't_max_c': None, 'rh_min': None, 'wind_max_kmh': None, 'wind_dir_deg': None,
@@ -168,10 +191,11 @@ def main():
     scores_folder = args.dest / 'scores'
     scores_folder.mkdir(parents=True, exist_ok=True)
     for country, days in scores.items():
-        obj = {'grid_g': 0.25, 'days': days}
+        obj = {'grid_g': 0.25, 'columns': ['spot_id', 'p', 'level', 'usual', 'fwi'], 'days': days, 'context_corrections': corrections[country]}
         (scores_folder / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), allow_nan=False) + '\n')
     meta = {'engine_ready': ready, 'example': False, 'model_version': model['model_version'],
             'made_at': dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00', 'Z'), 'grid_g': 0.25,
+            'level_bands': LEVEL_BANDS, 'usual_bands': [0.67, 1.5], 'fwi_words': [11.2, 21.3, 38],
             'days': {'today': DAYS[0], 'tomorrow': DAYS[1]}, 'fire_weather_run': '2026-11-12',
             'sources': [
                 {'name': 'NASA GFWED lead +3 forecast for today', 'url': WEATHER_URL.format(run='20261111', day='20261114'), 'date': '2026-11-11'},

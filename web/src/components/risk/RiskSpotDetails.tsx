@@ -1,6 +1,7 @@
 'use client';
 import { useLocale, useTranslations } from 'next-intl';
 import type { PointSpot } from '@/lib/risk/here';
+import RiskContext from './RiskContext';
 import { historyHref } from '@/lib/risk/geo';
 export default function RiskSpotDetails({spot, crew = false, day = 'tomorrow'}: {spot: PointSpot; crew?: boolean; day?: 'today'|'tomorrow'}) {
  const t=useTranslations('risk');
@@ -15,6 +16,7 @@ export default function RiskSpotDetails({spot, crew = false, day = 'tomorrow'}: 
    <summary>{spot.p===0 ? t('zeroEstimate') : t('chance',{n:Math.max(1,Math.round(1/spot.p))})}</summary>
    <p>{t('probability',{p:new Intl.NumberFormat(locale,{style:'percent',maximumFractionDigits:2}).format(spot.p)})}</p>
   </details>}
+  {spot.p!==null && <RiskContext p={spot.p} usual={spot.usual} fwi={spot.inputs?.fwi} day={spot.day} context={spot.context}/>}
   {spot.p!==null && why.length>0 && <ul className="risk-why">{why.map(key=><li key={key}>{t(`why.${key}`)}</li>)}</ul>}
   <div className="risk-spot-line risk-muted"><span className="num">{spot.lat.toFixed(2)}, {spot.lon.toFixed(2)}</span><a href={historyHref(spot)}>{t('history')}</a></div>
   {crew && spot.p!==null && <p className="risk-crew">{t(day==='today'?'crewToday':'crew')}</p>}

@@ -28,9 +28,9 @@ export async function pointScore(index: RiskIndex, lat: number, lon: number, day
   if(!square||square.status==='missing country'||square.status==='missing day')continue;
   if(square.status!=='ready')return null;
   const listed=[...forest,...all].find(spot=>spot.spot_id===square.spot_id&&spot.p!==null);
-  if(listed)return {...listed,ranked:true};
+  if(listed)return {...listed,usual:listed.usual ?? square.usual,ranked:true};
   return {type:'fire_risk',spot_id:square.spot_id,lat:square.lat,lon:square.lon,precision_radius_km:index.meta.grid_g*111*0.62,
-   region_id:regionAt(index.regions,lat,lon)?.region_id??'',day,rank:0,p:square.p,level:square.level,fire_type:null,why:[],ranked:false};
+   region_id:regionAt(index.regions,lat,lon)?.region_id??'',day,rank:0,p:square.p,level:square.level,usual:square.usual,context:square.context,inputs:{fwi:square.fwi,ffmc:null,dmc:null,dc:null,t_max_c:null,rh_min:null,wind_max_kmh:null,wind_dir_deg:null,rain_3d_mm:null,ndvi_diff:null,forest:null,farm:null,grass_shrub:null,hist_p:null,fire_near_3d:null},fire_type:null,why:[],ranked:false};
  }
  return null;
 }
