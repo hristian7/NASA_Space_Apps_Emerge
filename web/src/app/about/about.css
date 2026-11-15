@@ -1,0 +1,286 @@
+/* About page. Every .css file in this app is global, so classes carry ab-. */
+
+.page.ab {
+  gap: 40px;
+}
+
+.ab section {
+  gap: 14px;
+}
+
+.ab-prose {
+  max-width: 68ch;
+  display: grid;
+  gap: 8px;
+}
+
+.ab-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.ab-toc a {
+  color: var(--ink-2);
+  text-decoration: none !important;
+}
+
+.ab-toc a:hover,
+.ab-toc a:focus-visible {
+  color: var(--accent);
+}
+
+/* Intro */
+
+.ab-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding: 4px 0 8px;
+}
+
+.ab-stats div {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.ab-stats strong {
+  font: 600 32px/1 var(--font-num);
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ab-what {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.ab-how {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: color-mix(in oklch, var(--accent) 7%, transparent);
+  text-decoration: none !important;
+}
+
+.ab-how strong {
+  font: 600 19px/1.25 var(--font-head);
+  color: var(--ink);
+}
+
+.ab-how span {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.ab-how:hover strong,
+.ab-how:focus-visible strong {
+  color: var(--accent);
+}
+
+/* Role tags */
+
+.ab-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-3) !important;
+}
+
+.ab-legend > span:first-child {
+  margin-right: 4px;
+}
+
+.ab-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ab-role {
+  --c: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--c) 45%, transparent);
+  color: var(--ink);
+  font: 500 11.5px/1.5 var(--font-ui);
+  white-space: nowrap;
+}
+
+.ab-role::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.ab-role[data-role="model"] {
+  --c: var(--accent);
+}
+.ab-role[data-role="record"] {
+  --c: var(--ramp-2);
+}
+.ab-role[data-role="map"] {
+  --c: var(--ramp-1);
+}
+.ab-role[data-role="app"] {
+  --c: var(--anom-1);
+}
+.ab-role[data-role="compare"] {
+  --c: var(--ink-2);
+}
+.ab-role[data-role="planned"],
+.ab-role[data-role="experimental"] {
+  --c: var(--ink-3);
+  border-style: dashed;
+}
+
+/* Source cards */
+
+.ab-group {
+  scroll-margin-top: 24px;
+}
+
+.ab-alias {
+  display: block;
+  height: 0;
+  scroll-margin-top: 24px;
+}
+
+.ab-timeline {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 16px 18px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
+.page.ab .ab-cards {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+}
+
+.page.ab .ab-cards[data-compact] {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+}
+
+.ab-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--panel);
+  min-width: 0;
+  animation: m-rise 400ms var(--ease-out) both;
+}
+
+.ab-card[data-compact] {
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.ab-provider {
+  font: 600 11px/1.3 var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+
+.page.ab a.ab-name {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-decoration-color: color-mix(in oklch, var(--ink) 30%, transparent);
+}
+
+.page.ab a.ab-name:hover {
+  text-decoration-color: var(--accent);
+}
+
+.page.ab .ab-use {
+  font-size: 13.5px;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.ab-card[data-compact] .ab-use {
+  font-size: 12.5px;
+  flex: 0;
+}
+
+.ab-licence {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.ab-card[data-compact] .ab-licence {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Project and official services */
+
+.ab-licences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.page.ab .ab-official {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+@media (max-width: 760px) {
+  .ab-stats,
+  .ab-what {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .ab-stats strong {
+    font-size: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-card {
+    animation: none;
+  }
+}
