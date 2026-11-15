@@ -20,6 +20,7 @@ import { useCountryBoxes } from "@/lib/ui/use-countries";
 import type { CountryIndexEntry } from "@/types/data";
 import { historyRampTokens } from "@/lib/layers/history";
 import { proxyTileUrl } from "@/lib/layers/tile-proxy";
+import { smokeScheme, smokeTile, smokeTileUrl } from "./smoke-tiles";
 import type { HistoryCell, RecentPoint } from "@/lib/layers/overlay";
 import { useWindLayer } from "./wind-layer";
 import { useTemperatureLayer } from "./temperature-field";
@@ -276,6 +277,7 @@ export default function MapView({
         if (cancelled) return;
         maplibregl.setWorkerUrl(workerPath);
         maplibregl.setMaxParallelImageRequests(parallelTileRequests);
+        maplibregl.addProtocol(smokeScheme, smokeTile);
 
         const instance = new maplibregl.Map({
           container: node,
@@ -481,7 +483,7 @@ export default function MapView({
           serial += 1;
           const source = `emerge-raster-${definition.id}-${serial}`;
           const layer = `${source}-tiles`;
-          instance.addSource(source, { type: "raster", tiles: [proxyTileUrl(url)], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
+          instance.addSource(source, { type: "raster", tiles: [definition.id === "smoke" ? smokeTileUrl(proxyTileUrl(url)) : proxyTileUrl(url)], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
           const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
           // Smooth resampling for every driver layer. Air temperature comes in
           // hard-edged satellite swaths, so it is also fainter and flatter.
@@ -503,7 +505,8 @@ export default function MapView({
           );
           return { source, layer, url };
         };
-        const fullOpacity = (id: string) => (id === "air-temperature" ? 0.3 : 0.42);
+        // Smoke tiles carry their own transparency, so they need less fading.
+        const fullOpacity = (id: string) => (id === "air-temperature" ? 0.3 : id === "smoke" ? 0.8 : 0.42);
         const promote = (id: string, slot: Slot) => {
           if (instance.getLayer(slot.layer)) instance.setPaintProperty(slot.layer, "raster-opacity", fullOpacity(id));
           const old = shown.get(id);

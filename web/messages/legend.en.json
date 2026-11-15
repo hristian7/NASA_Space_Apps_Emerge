@@ -1,6 +1,7 @@
 {
   "unitSoil": "Water in the topsoil, m³ per m³",
   "unitNdvi": "Plant greenness index (NDVI), 0 is bare, 1 is lush",
+  "unitAerosol": "Aerosol index; higher means thicker smoke or dust",
   "unitCelsius": "Air temperature near the ground, °C",
   "below": "below {value}",
   "range": "{from} to {to}",

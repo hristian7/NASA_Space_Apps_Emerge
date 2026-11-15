@@ -76,6 +76,9 @@
   "rainUnit": "Rain, mm per hour",
   "snowUnit": "Snow, water equivalent, mm per hour",
   "rainNoData": "Transparent areas mean less than 0.1 mm per hour or no data; they do not prove dry weather.",
+  "smoke": "Smoke and dust (NASA OMPS aerosol index)",
+  "smokeExplain": "Smoke and dust in the air, seen by the OMPS instrument on NOAA-20 once a day. Only an index of 1.5 or more is drawn, where plumes stand out from clean air. Smoke and desert dust look the same here. This observation does not follow the forecast day.",
+  "smokeTime": "Observation: {date}. NASA OMPS on NOAA-20.",
   "historyMonthTime": "Fire days, {month}, for the chosen place only. Click the month again, or move the year, to go back to the year.",
   "aboutLayer": "About {name}"
 }

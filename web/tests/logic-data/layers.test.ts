@@ -20,6 +20,7 @@ describe('the layer registry', () => {
       'air-temperature',
       'wind',
       'rain',
+      'smoke',
     ]);
     for (const entry of LAYERS) {
       expect(entry.nameKey.startsWith('layers.')).toBe(true);

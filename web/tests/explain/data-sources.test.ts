@@ -52,7 +52,7 @@ describe("data sources page", () => {
     const planned = new Set(rows.filter((row) => row.roles?.includes("planned")).map((row) => row.id));
     expect(planned.size).toBeGreaterThan(0);
     for (const id of nasa) expect(planned.has(id), id).toBe(false);
-    expect(nasa).toHaveLength(13);
+    expect(nasa).toHaveLength(14);
   });
 
   it("puts each row in one section only", () => {

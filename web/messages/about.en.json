@@ -32,6 +32,7 @@
     "nasaPower": "30-day trend lines in the point panel",
     "gibsBase": "Satellite background maps",
     "imerg": "Rain and snow rate layer",
+    "omps": "Smoke and dust layer on the map",
     "smap": "Soil moisture layer",
     "ndvi": "Plant greenness layer, not a model input",
     "landCoverGibs": "Land type layer",

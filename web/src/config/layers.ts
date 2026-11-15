@@ -245,6 +245,13 @@ export const LAYERS: readonly LayerDefinition[] = [
     credit: 'NASA GPM IMERG / NASA GIBS', loader: { status: 'none' }, verified: true,
     panel: { order: 10, explainKey: 'layers.rainExplain', timeKey: 'layers.rainTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'p' },
   },
+  {
+    id: 'smoke', nameKey: 'layers.smoke', kind: 'raster_tiles', units: [], timeStep: 'day',
+    // Latest complete day in the capabilities [V]; the next day's file was still partial when checked.
+    source: { kind: 'tile_template', urlTemplate: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/OMPS_NOAA20_NadirMapper_AerosolIndex_380/default/{date}/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png', tileSize: 256, firstDate: '2026-01-13', date: '2026-11-14', maxzoom: 6 },
+    credit: 'NASA OMPS (NOAA-20) / NASA GIBS', loader: { status: 'none' }, verified: true,
+    panel: { order: 11, explainKey: 'layers.smokeExplain', timeKey: 'layers.smokeTime', control: 'none', legend: { kind: 'classes' }, defaultOn: false, urlKey: 'k' },
+  },
 ];
 
 /** One layer by id, or undefined when nothing carries that id. */

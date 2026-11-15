@@ -110,6 +110,14 @@ export const sourceGroups: SourceGroup[] = [
         provider: "NASA GIBS",
         roles: ["map"],
       },
+      {
+        id: "omps", section: "nasa", linkText: "NASA OMPS aerosol index (smoke and dust) via GIBS",
+        name: "NASA OMPS Nadir Mapper aerosol index at 380 nm, NOAA-20, via NASA GIBS",
+        url: GIBS,
+        licence: NASA,
+        provider: "NASA GIBS",
+        roles: ["map"],
+      },
     ],
   },
   {

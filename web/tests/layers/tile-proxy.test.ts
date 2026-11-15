@@ -10,6 +10,7 @@ describe("GIBS tile route", () => {
     expect([...proxiedGibsLayers].sort()).toEqual([
       "IMERG_Precipitation_Rate",
       "MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual",
+      "OMPS_NOAA20_NadirMapper_AerosolIndex_380",
       "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture",
       "VIIRS_NOAA20_NDVI_8Day",
     ]);

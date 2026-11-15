@@ -40,7 +40,7 @@ type Props = {
 /** Which layers each view lists. Recent fires belong to both. */
 const viewLayers: Record<Props["view"], string[]> = {
   history: ["harmonized-history", "recent-fires"],
-  forecast: ["fire-danger", "nasa-fwi", "wind", "air-temperature", "rain", "soil-moisture", "greenness", "land-type", "recent-fires"],
+  forecast: ["fire-danger", "nasa-fwi", "wind", "air-temperature", "rain", "soil-moisture", "greenness", "land-type", "smoke", "recent-fires"],
 };
 
 /** Registry keys carry their namespace; `useTranslations` already has it. */

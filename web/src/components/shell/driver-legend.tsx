@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 /*
  * Keys for the driver layers, drawn in the app's own style instead of the
  * providers' legend pictures. The colours are read from those pictures (GIBS
- * legend files for soil moisture, NDVI, land cover and AIRS temperature; the
+ * legend files for soil moisture, NDVI, land cover, AIRS temperature and the OMPS aerosol index; the
  * GWIS legend for the NASA fire-weather index), so a colour here must match
  * the colour on the map tile. Change one only together with the tile source.
  */
@@ -37,6 +37,16 @@ const ramps: Record<string, Ramp> = {
       { at: 1, value: 1 },
     ],
     unitKey: "unitNdvi",
+    digits: 1,
+  },
+  smoke: {
+    // Only an index of 1.5 or more is drawn; the colours are NASA's from 1.5 to 5.
+    stops: ["#f6f61c", "#edeb00", "#cfcb00", "#e76800", "#f81100", "#d80500", "#b9000e", "#730019"],
+    ticks: [
+      { at: 0, value: 1.5 },
+      { at: 1, value: 5, edge: "above" },
+    ],
+    unitKey: "unitAerosol",
     digits: 1,
   },
   "air-temperature": {

@@ -10,6 +10,7 @@ const drivers = [
   { name: 'Soil moisture', address: 'SMAP_L3_Passive_Enhanced_Day_Soil_Moisture', date: '2026-11-11' },
   { name: 'Plant greenness (index, 8 days)', address: 'VIIRS_NOAA20_NDVI_8Day', date: '2026-11-13' },
   { name: 'Land type (2024)', address: 'MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual', date: '2024-01-01' },
+  { name: 'Smoke and dust (NASA OMPS aerosol index)', address: 'OMPS_NOAA20_NadirMapper_AerosolIndex_380', date: '2026-11-14' },
 ];
 
 test('each driver requests its own data and displays its date', async ({ page }) => {
