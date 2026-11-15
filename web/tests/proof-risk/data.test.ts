@@ -104,3 +104,15 @@ describe("remote risk files", () => {
     } finally { vi.unstubAllEnvs(); }
   });
 });
+
+
+describe("week scorecard contract", () => {
+  it("accepts legacy cards and validates the optional week structure", () => {
+    const old = fixture();
+    expect(parseScorecard(old)).not.toBeNull();
+    const real = JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8"));
+    expect(parseScorecard(real)?.week?.leads["4"]?.scopes.world.selections.forest_wildland.pooled.methods.fwi?.capture_rate).toBeTypeOf("number");
+    real.week.test_year = 2024;
+    expect(parseScorecard(real)).toBeNull();
+  });
+});

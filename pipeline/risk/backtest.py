@@ -36,9 +36,9 @@ def aggregate(rows, methods):
     return result
 
 
-def bootstrap(rows, year, methods):
+def bootstrap(rows, year, methods, primary='model'):
     """Resample calendar-week blocks, keeping all regions together."""
-    if 'model' not in methods or not rows:
+    if primary not in methods or not rows:
         return {}
     start = dt.date(year, 1, 1)
     blocks = (dt.date(year + 1, 1, 1) - start).days
@@ -53,9 +53,9 @@ def bootstrap(rows, year, methods):
     samples = rng.integers(0, count, size=(DRAWS, count))
     drawn = totals[samples].sum(axis=1)
     result = {}
-    model_index = methods.index('model') + 1
+    model_index = methods.index(primary) + 1
     for method in methods:
-        if method == 'model':
+        if method == primary:
             continue
         index = methods.index(method) + 1
         valid = drawn[:, 0] > 0
@@ -67,7 +67,7 @@ def bootstrap(rows, year, methods):
     return result
 
 
-def selection_scores(con, selection, year, has_model=False):
+def selection_scores(con, selection, year, has_model=False, bootstrap_primary='model'):
     """Input table candidates has one row per region, spot and available day."""
     classes = {'forest_wildland': "('forest','shrub_grass')",
                'all_vegetation': "('forest','shrub_grass','farmland')",
@@ -143,7 +143,7 @@ def selection_scores(con, selection, year, has_model=False):
               'region_days_without_scores': sum(r['n'] == 0 for r in rows),
               'regions_under_20': aggregate(small, methods), 'regions_20_or_more': aggregate(large, methods),
               'regions': regions, 'months': {k: aggregate(by_month[k], methods) for k in months},
-              'bootstrap': bootstrap(rows, year, methods)}
+              'bootstrap': bootstrap(rows, year, methods, bootstrap_primary)}
     # The same fire-positive region-days as the ranking are used for probability metrics.
     query = con.execute("""
       WITH active AS (SELECT region_id,day FROM eligible_days WHERE new>0),
@@ -193,8 +193,8 @@ def selection_scores(con, selection, year, has_model=False):
     return result
 
 
-def prepare_candidates(con, data, year, regions, predictions, world=False):
-    fwi = sorted((data / 'fwi_0.25').glob(f'month={year}-*/*.parquet'))
+def prepare_candidates(con, data, year, regions, predictions, world=False, fwi_folder='fwi_0.25', monthly_history=False):
+    fwi = sorted((data / fwi_folder).glob(f'month={year}-*/*.parquet'))
     if not fwi:
         return []
     history = sorted((data / 'history_0.25').glob(f'month={year}-*/history.parquet'))
@@ -203,7 +203,16 @@ def prepare_candidates(con, data, year, regions, predictions, world=False):
     days = [dt.date.fromisoformat(p.stem) for p in fwi]
     con.execute('CREATE OR REPLACE TEMP TABLE weather AS SELECT spot_id,day,fwi FROM read_parquet(?, hive_partitioning=false)', [[str(x) for x in fwi]])
     con.execute('CREATE OR REPLACE TEMP TABLE history AS SELECT spot_id,day,hist_p FROM read_parquet(?, hive_partitioning=false)', [[str(x) for x in history]])
-    missing = con.execute('SELECT count(*) FROM (SELECT DISTINCT day FROM weather EXCEPT SELECT DISTINCT day FROM history)').fetchone()[0]
+    if monthly_history:
+        # hist_p uses only earlier years and the calendar month, so it is
+        # constant within that month. Other history features are not reused.
+        con.execute("""CREATE OR REPLACE TEMP TABLE history AS
+                    SELECT spot_id, date_trunc('month',day)::DATE AS month, hist_p
+                    FROM history WHERE day IN
+                    (SELECT min(day) FROM history GROUP BY date_trunc('month',day))""")
+        missing = con.execute("SELECT count(*) FROM (SELECT DISTINCT date_trunc('month',day)::DATE FROM weather EXCEPT SELECT DISTINCT month FROM history)").fetchone()[0]
+    else:
+        missing = con.execute('SELECT count(*) FROM (SELECT DISTINCT day FROM weather EXCEPT SELECT DISTINCT day FROM history)').fetchone()[0]
     if missing:
         raise ValueError(f'{missing} weather days lack history; rerun build_history.py')
     con.execute('CREATE OR REPLACE TEMP TABLE grid AS SELECT spot_id,region_id,fuel_class,lat,lon FROM read_parquet(?)', [str(data / 'grid_0.25.parquet')])
@@ -225,12 +234,13 @@ def prepare_candidates(con, data, year, regions, predictions, world=False):
         model = 'p.p'
     else:
         join, model = '', 'NULL::DOUBLE AS p'
+    history_date = "h.month=date_trunc('month',f.day)::DATE" if monthly_history else 'h.day=f.day'
     con.execute(f"""
       CREATE OR REPLACE TEMP TABLE candidates AS
       SELECT g.region_id,g.spot_id,g.fuel_class,f.day,f.fwi,h.hist_p,
              coalesce(l.label,'none') AS label,{model}
       FROM grid g JOIN weather f USING (spot_id)
-      JOIN history h ON h.spot_id=f.spot_id AND h.day=f.day
+      JOIN history h ON h.spot_id=f.spot_id AND {history_date}
       LEFT JOIN read_parquet(?) l ON l.spot_id=f.spot_id AND l.day=f.day
       {join}
     """, [str(data / 'labels_0.25.parquet')])

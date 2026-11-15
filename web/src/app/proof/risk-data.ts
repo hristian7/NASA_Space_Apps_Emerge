@@ -48,6 +48,10 @@ export interface DailyLogRow {
   captured_by_index: number;
   regions_scored: number;
 }
+export interface WeekScore {
+  verdict: string;
+  scopes: Record<string, { weather_days: number; missing_weather_days: number; selections: Record<string, { coverage: Selection["coverage"]; pooled: Aggregate; region_days_without_scores: number; bootstrap: Partial<Record<Method, Bootstrap>> }> }>;
+}
 export interface RiskScorecard {
   schema: "emerge-risk-scorecard-1";
   example?: boolean;
@@ -55,6 +59,7 @@ export interface RiskScorecard {
   test_year: number;
   scopes: Record<string, Scope>;
   daily_log?: DailyLogRow[];
+  week?: { test_year: number; leads: Record<string, WeekScore> };
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -93,6 +98,18 @@ export function parseScorecard(value: unknown): RiskScorecard | null {
     (row.scope !== "world" && row.scope !== "europe") ||
     [row.new_fires, row.captured_by_us, row.captured_by_index, row.regions_scored].some(n =>
       typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)))) return null;
+  if (value.week !== undefined) {
+    if (!record(value.week) || value.week.test_year !== value.test_year || !record(value.week.leads)) return null;
+    for (const [lead, entry] of Object.entries(value.week.leads)) {
+      if (!/^[3-8]$/.test(lead) || !record(entry) || typeof entry.verdict !== "string" || !record(entry.scopes)) return null;
+      for (const scope of Object.values(entry.scopes)) {
+        if (!record(scope) || typeof scope.weather_days !== "number" || typeof scope.missing_weather_days !== "number" || !record(scope.selections)) return null;
+        for (const selection of Object.values(scope.selections)) {
+          if (!record(selection) || !record(selection.coverage) || !aggregate(selection.pooled) || !record(selection.bootstrap)) return null;
+        }
+      }
+    }
+  }
   for (const scope of Object.values(value.scopes)) {
     if (!record(scope) || typeof scope.grid_g !== "number" || !record(scope.years)) return null;
     const year = scope.years[String(value.test_year)];

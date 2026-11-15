@@ -60,5 +60,9 @@
   "dailyModel": "Модел улови",
   "dailyIndex": "Индекс улови",
   "dailyRegions": "Региони",
-  "dailyCounts": "Брой [U]"
+  "dailyCounts": "Брой [U]",
+  "weekTitle": "Седмична прогноза",
+  "weekExplanation": "2025 г., свят, гори и диви терени. Дял на новите пожари в първите пет места по район и ден [V].",
+  "weekLead": "Дни напред",
+  "weekDays": "Дни с прогноза [V]"
 }

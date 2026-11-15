@@ -141,3 +141,31 @@ def test_regions_without_fires_are_reported(candidates):
     assert result['regions']['D']['land_spots'] == 1
     assert result['regions']['D']['new_fires'] == 0
     assert result['regions']['D']['methods']['fwi']['capture_rate'] is None
+
+
+def test_fwi_bootstrap_uses_existing_ranking_fixture(candidates):
+    result = risk.selection_scores(candidates, 'forest_wildland', 2025, bootstrap_primary='fwi')
+    comparison = result['bootstrap']['history']
+    assert comparison['difference'] == pytest.approx(-0.5)
+    assert comparison['interval_95'] == pytest.approx([-0.5, -0.5])
+    assert comparison['bootstrap_passed'] is False
+
+
+def test_monthly_history_covers_forecast_dates_without_daily_history(tmp_path):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    weather = tmp_path / 'fwi_lead4_0.25' / 'month=2025-07'
+    history = tmp_path / 'history_0.25' / 'month=2025-07'
+    weather.mkdir(parents=True)
+    history.mkdir(parents=True)
+    day = dt.date(2025, 7, 2)
+    pq.write_table(pa.table({'spot_id': [1], 'region_id': ['A'], 'fuel_class': ['forest'], 'lat': [45.], 'lon': [20.]}), tmp_path / 'grid_0.25.parquet')
+    pq.write_table(pa.table({'spot_id': [1], 'day': [day], 'fwi': [5.]}), weather / f'{day}.parquet')
+    pq.write_table(pa.table({'spot_id': [1], 'day': [day - dt.timedelta(days=1)], 'hist_p': [0.25]}), history / 'history.parquet')
+    pq.write_table(pa.table({'spot_id': [1], 'day': [day], 'label': ['new']}), tmp_path / 'labels_0.25.parquet')
+    con = duckdb.connect()
+    with pytest.raises(ValueError, match='weather days lack history'):
+        risk.prepare_candidates(con, tmp_path, 2025, None, None, fwi_folder='fwi_lead4_0.25')
+    assert risk.prepare_candidates(con, tmp_path, 2025, None, None, fwi_folder='fwi_lead4_0.25', monthly_history=True) == [day]
+    assert con.execute('SELECT day, hist_p, label FROM candidates').fetchone() == (day, 0.25, 'new')

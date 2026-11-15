@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regrid downloaded lead-three GFWED files to the land grid, one file per day."""
+"""Regrid downloaded GFWED forecast files to the land grid, one file per day."""
 import argparse
 import datetime as dt
 import hashlib
@@ -28,7 +28,10 @@ def main():
     parser.add_argument('--raw', type=Path, default=DATA / 'raw/gfwed')
     parser.add_argument('--grid', type=Path, default=DATA / 'derived/risk/grid_0.25.parquet')
     parser.add_argument('--out', type=Path, default=DATA / 'derived/risk/fwi_0.25')
+    parser.add_argument('--lead', type=int, default=3, help='forecast lead in days')
     args = parser.parse_args()
+    if args.lead < 0:
+        parser.error('--lead must be non-negative')
     grid = pq.read_table(args.grid, columns=['spot_id', 'lat', 'lon'])
     # Only geometry influences regridding; region metadata changes do not.
     digest = hashlib.sha256()
@@ -45,12 +48,14 @@ def main():
             print('skip unrecognised name:', source.name, flush=True)
             continue
         run, day = (dt.datetime.strptime(x, '%Y%m%d').date() for x in match.groups())
-        if (day-run).days != 3:
-            print('skip non-lead-three file:', source.name, flush=True)
+        if (day-run).days != args.lead:
             continue
         folder = args.out / f'month={day:%Y-%m}'
         dest = folder / f'{day.isoformat()}.parquet'
         stat = source.stat()
+        if stat.st_size == 0:
+            print('empty forecast, unavailable:', source.name, flush=True)
+            continue
         fingerprint = f'nearest-north-east-v1:{source.name}:{stat.st_size}:{stat.st_mtime_ns}:{grid_hash}'
         if dest.exists():
             metadata = pq.read_metadata(dest).metadata or {}

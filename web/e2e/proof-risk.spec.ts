@@ -72,6 +72,8 @@ test("Bulgarian scorecard and absent state fit the phone", async ({ page, contex
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await section.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("bg-375.png") });
+  await page.goto("/proof");
+  await expect(page.getByTestId("risk-week-table")).toContainText("Седмична прогноза");
   await page.route("**/data/risk/scorecard.json", route => route.fulfill({ status: 404, body: "" }));
   await page.goto("/proof");
   await expect(section).toContainText("Все още не е проверено.");
@@ -81,4 +83,21 @@ test("read errors are not presented as an untested model", async ({ page }) => {
   await page.route("**/data/risk/scorecard.json", route => route.fulfill({ status: 503, body: "" }));
   await page.goto("/proof");
   await expect(page.getByTestId("proof-risk")).toContainText("could not be read");
+});
+
+test("week outlook displays the measured lead scores at phone and desktop widths", async ({ page }, testInfo) => {
+  const card: RiskScorecard = JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8"));
+  await page.goto("/proof");
+  const table = page.getByTestId("risk-week-table");
+  await expect(table.locator("tbody tr")).toHaveCount(6);
+  const first = card.week!.leads["3"].scopes.world.selections.forest_wildland.pooled.methods;
+  const percent = (n: number) => new Intl.NumberFormat("en", { style: "percent", maximumFractionDigits: 1 }).format(n);
+  await expect(table.locator("tbody tr").first()).toContainText(percent(first.fwi!.capture_rate!));
+  await expect(table.locator("tbody tr").first()).toContainText(percent(first.history!.capture_rate!));
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await table.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: testInfo.outputPath(`week-proof-${width}.png`) });
+  }
 });
