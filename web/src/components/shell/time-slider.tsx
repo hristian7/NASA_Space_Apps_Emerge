@@ -14,6 +14,8 @@ type Props = {
   onDay: (day: number) => void;
   /** Layers on screen that show their own latest date and ignore the slider. */
   fixedLayers: { nameKey: string; date: string }[];
+  /** Set while the map shows one calendar month: replaces the year label. */
+  monthLabel?: string | null;
   /** Monthly fire days drawn behind the year track: the chosen place's, or the world's. */
   activity: { first: string; values: (number | null)[]; place: string | null } | null;
 };
@@ -24,7 +26,7 @@ const stepMs = 1100;
  * One time control for both views: the fire history moves by year, the
  * forecast by day. Play steps forward and stops at the end.
  */
-export default function TimeSlider({ view, years, year, onYear, day, onDay, fixedLayers, activity }: Props) {
+export default function TimeSlider({ view, years, year, onYear, day, onDay, fixedLayers, activity, monthLabel = null }: Props) {
   const t = useTranslations("shell");
   const layerNames = useTranslations("layers");
   const locale = useLocale();
@@ -115,9 +117,11 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
         )}
       </button>
       <div className="timeline-now">
-        <span className="timeline-value num">{history ? value : dayLabel(value)}</span>
+        <span className="timeline-value num">{history ? (monthLabel ?? value) : dayLabel(value)}</span>
         <span className="timeline-kind">
-          {history
+          {history && monthLabel !== null
+            ? t("monthOnMap")
+            : history
             ? activity?.place
               ? t("activityPlace", { place: activity.place })
               : t("activityWorld")

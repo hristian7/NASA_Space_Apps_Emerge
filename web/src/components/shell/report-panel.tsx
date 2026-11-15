@@ -8,6 +8,7 @@ import { useCountryName } from "@/components/app/country-name";
 import ForecastPanel from "@/components/forecast/ForecastPanel";
 import Disclaimer from "./disclaimer";
 import ReportSlot from "./report-slot";
+import type { MapMonth } from "@/components/app/report-view";
 import type { AppView } from "./view-tabs";
 
 type Props = {
@@ -20,6 +21,8 @@ type Props = {
   pointCountry: string | null;
   onWholeCountry: (iso3: string) => void;
   onClose: () => void;
+  mapMonth: MapMonth;
+  onMapMonth: (month: MapMonth) => void;
   onCycleHeight: () => void;
 };
 
@@ -27,7 +30,7 @@ type Props = {
 /** Sheet heights a drag settles on, as shares of the window height. */
 const stops = { peek: 0.22, half: 0.52, full: 1 } as const;
 
-export default function ReportPanel({ selection, view, day, onPickPoint, pointCountry, onWholeCountry, onClose, onCycleHeight }: Props) {
+export default function ReportPanel({ selection, view, day, onPickPoint, pointCountry, onWholeCountry, onClose, onCycleHeight, mapMonth, onMapMonth }: Props) {
   const t = useTranslations("shell");
   const s = useTranslations("selection");
   const countryName = useCountryName(selection.kind === "country" ? selection.iso3 : pointCountry);
@@ -121,7 +124,7 @@ export default function ReportPanel({ selection, view, day, onPickPoint, pointCo
         </header>
         <div aria-live="polite" className="stack">
           {view === "history" ? (
-            <ReportSlot selection={selection} />
+            <ReportSlot selection={selection} mapMonth={mapMonth} onMapMonth={onMapMonth} />
           ) : (
             <ForecastPanel selection={selection} day={day} onPickPoint={onPickPoint} />
           )}

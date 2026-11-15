@@ -75,5 +75,6 @@
   "rainTime": "Observation: {date}. NASA GPM IMERG.",
   "rainUnit": "Rain, mm per hour",
   "snowUnit": "Snow, water equivalent, mm per hour",
-  "rainNoData": "Transparent areas mean less than 0.1 mm per hour or no data; they do not prove dry weather."
+  "rainNoData": "Transparent areas mean less than 0.1 mm per hour or no data; they do not prove dry weather.",
+  "historyMonthTime": "Fire days, {month}, for the chosen place only. Click the month again, or move the year, to go back to the year."
 }

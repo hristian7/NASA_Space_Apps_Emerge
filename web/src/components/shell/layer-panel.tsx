@@ -27,6 +27,8 @@ type Props = {
   recent: RecentPayload | null;
   onToggle: (id: string) => void;
   onWindow: (window: RecentWindow) => void;
+  /** Set while the map shows one calendar month for the chosen place. */
+  monthLabel?: string | null;
   /** Opened and closed from the map's tool column. */
   open: boolean;
   onClose: () => void;
@@ -56,6 +58,7 @@ export default function LayerPanel({
   open,
   onClose,
   view,
+  monthLabel = null,
 }: Props) {
   const t = useTranslations("layers");
   const locale = useLocale() as ReportLocale;
@@ -182,6 +185,7 @@ export default function LayerPanel({
   const timeLine = (definition: LayerDefinition) => {
     const key = short(definition.panel?.timeKey ?? "");
     if (definition.id === "harmonized-history") {
+      if (monthLabel !== null) return t("historyMonthTime", { month: monthLabel });
       if (historyStatus === "loading") return t("loading");
       if (historyStatus === "empty") return t("noYearData", { year: state.historyYear });
       if (historyStatus === "failed") return t("failed");

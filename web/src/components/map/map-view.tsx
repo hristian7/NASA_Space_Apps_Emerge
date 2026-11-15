@@ -33,6 +33,8 @@ type Props = {
   drawing: boolean;
   /** Cells of the chosen history year, already classed. Empty when the layer is off. */
   historyCells: HistoryCell[];
+  /** What the history layer shows: "year:2026" or "month:2007-07". */
+  historyKey?: string;
   /** Recent detections. Empty when the layer is off. */
   recentPoints: RecentPoint[];
   rasterDates: Record<string, string>;
@@ -197,6 +199,7 @@ export default function MapView({
   projection,
   drawing,
   historyCells,
+  historyKey,
   recentPoints,
   rasterDates,
   outlineIso3,
@@ -809,7 +812,7 @@ export default function MapView({
 
   return (
     <>
-      <div ref={container} className="map" />
+      <div ref={container} className="map" data-history={historyKey} />
       {failed ? (
         <p className="glass" style={{ position: "fixed", inset: "auto 16px 16px", padding: 12 }}>
           {t("failed")}

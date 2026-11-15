@@ -63,5 +63,6 @@
   "activityWorld": "Стълбове: дни с пожар по месеци, светът",
   "activityPlace": "Стълбове: дни с пожар по месеци, {place}",
   "activityPoint": "тази точка",
-  "activityArea": "тази област"
+  "activityArea": "тази област",
+  "monthOnMap": "Месец от календара на картата"
 }
