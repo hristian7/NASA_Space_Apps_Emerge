@@ -20,3 +20,18 @@ export function pickModelDay(
   const last = earlier[earlier.length - 1];
   return last === undefined ? null : { date: last, latest: true };
 }
+
+/** Message key for the History card's title. */
+export type HereTitle = "here" | "hereToday" | "hereLatest" | "hereDated";
+
+/**
+ * The History card's title, from the date its forecast is valid for: today's
+ * or tomorrow's by that date, the dated wording once it has passed (or while
+ * nothing is loaded yet), and the latest-forecast wording for a later date.
+ */
+export function hereTitle(validFor: string | null, today: string, tomorrow: string, stale: boolean): HereTitle {
+  if (validFor === null || stale) return "hereDated";
+  if (validFor === today) return "hereToday";
+  if (validFor === tomorrow) return "here";
+  return "hereLatest";
+}
