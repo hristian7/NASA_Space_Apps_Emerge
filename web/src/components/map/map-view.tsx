@@ -49,6 +49,12 @@ type Props = {
 };
 
 const workerPath = "/vendor/maplibre-worker";
+/**
+ * Raster tiles allowed in flight at once. With the library default of 16, a
+ * data layer's opening tiles wait behind the base map's 36; the tile hosts
+ * speak HTTP/2, so one connection carries them all at the same time.
+ */
+const parallelTileRequests = 96;
 const selectionSource = "emerge-selection";
 const fillLayer = "emerge-selection-fill";
 const lineLayer = "emerge-selection-line";
@@ -267,6 +273,7 @@ export default function MapView({
         const maplibregl = await import("maplibre-gl");
         if (cancelled) return;
         maplibregl.setWorkerUrl(workerPath);
+        maplibregl.setMaxParallelImageRequests(parallelTileRequests);
 
         const instance = new maplibregl.Map({
           container: node,

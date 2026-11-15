@@ -53,13 +53,14 @@ function registerProtocol() {
 }
 
 /** Static canvas images, no animation, below labels and selection outlines. */
-function paint(map: MapLibreMap, field: TemperatureField, values: number[], ids: string[]) {
+const fullOpacity = 0.64;
+function paint(map: MapLibreMap, field: TemperatureField, values: number[], opacity: number): string {
   const id = `${prefix}${++sequence}`;
   fields.set(id, { field, values });
-  ids.push(id);
   const before = map.getStyle().layers.find(layer => layer.type === 'symbol' || layer.id === 'emerge-countries-hit')?.id;
   map.addSource(id, { type: 'raster', tiles: [`emerge-temperature://${id}/{z}/{x}/{y}`], tileSize: 256, maxzoom: 8, attribution: 'Weather data by Open-Meteo.com' });
-  map.addLayer({ id, source: id, type: 'raster', paint: { 'raster-opacity': 0.64, 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, before);
+  map.addLayer({ id, source: id, type: 'raster', paint: { 'raster-opacity': opacity, 'raster-opacity-transition': { duration: 250, delay: 0 }, 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, before);
+  return id;
 }
 
 /** Layer state already lives in the URL, including Next's reactive replaceState updates. */
@@ -77,20 +78,45 @@ export function useTemperatureLayer(map: React.RefObject<MapLibreMap | null>, re
     if (!instance || !ready || !on) { publish(initial); return; }
     let alive = true, generation = 0;
     let previous: Bounds | null = null, at = 0, field: TemperatureField | null = null;
-    let ids: string[] = [];
+    // What is on screen stays until its replacement has drawn its tiles, then
+    // the two crossfade, so a new field or day never blanks the layer.
+    let shown: string[] = [];
+    let pending: string | null = null;
+    let promoteTimer = 0;
+    const remove = (list: string[]) => {
+      for (const id of list) { if (instance.getLayer(id)) instance.removeLayer(id); if (instance.getSource(id)) instance.removeSource(id); fields.delete(id); }
+    };
     const clear = () => {
-      for (const id of ids) { if (instance.getLayer(id)) instance.removeLayer(id); if (instance.getSource(id)) instance.removeSource(id); fields.delete(id); }
-      ids = [];
+      window.clearTimeout(promoteTimer);
+      remove(pending ? [...shown, pending] : shown);
+      shown = []; pending = null;
+    };
+    const promote = () => {
+      window.clearTimeout(promoteTimer);
+      if (!alive || pending === null) return;
+      const next = pending, old = shown;
+      pending = null; shown = [next];
+      if (instance.getLayer(next)) instance.setPaintProperty(next, 'raster-opacity', fullOpacity);
+      window.setTimeout(() => { if (alive && instance.getStyle()) remove(old); }, 300);
+    };
+    const loaded = (event: { sourceId?: string; isSourceLoaded?: boolean }) => {
+      if (pending !== null && event.sourceId === pending && instance.isSourceLoaded(pending)) promote();
     };
     const render = () => {
       if (!alive || !instance.getStyle()) return;
-      clear();
       const day = selected.current;
       const date = day < 0 ? '' : field?.dates[day] ?? '';
-      if (day < 0 || (field && !field.values[day])) { publish({ state: 'empty', date }); return; }
-      if (!field) return;
+      if (day < 0 || (field && !field.values[day])) { clear(); publish({ state: 'empty', date }); return; }
+      if (!field) { clear(); return; }
       try {
-        paint(instance, field, field.values[day]!, ids);
+        if (pending !== null) { remove([pending]); pending = null; }
+        const id = paint(instance, field, field.values[day]!, shown.length > 0 ? 0 : fullOpacity);
+        if (shown.length === 0) shown = [id];
+        else {
+          pending = id;
+          // A view with no tiles to draw never reports loaded.
+          promoteTimer = window.setTimeout(promote, 4000);
+        }
         publish({ state: 'ready', date });
       } catch { clear(); publish({ state: 'failed', date }); }
     };
@@ -113,18 +139,22 @@ export function useTemperatureLayer(map: React.RefObject<MapLibreMap | null>, re
         clear(); field = null; previous = null; publish({ state: 'failed', date: '' });
       }
     };
-    const style = () => { ids.forEach(id => fields.delete(id)); ids = []; render(); };
+    const style = () => {
+      window.clearTimeout(promoteTimer);
+      for (const id of pending ? [...shown, pending] : shown) fields.delete(id);
+      shown = []; pending = null; render();
+    };
     const error = (event: unknown) => {
       const id = (event as { sourceId?: string }).sourceId;
-      if (!alive || !id || !ids.includes(id)) return;
+      if (!alive || !id || !(shown.includes(id) || pending === id)) return;
       clear(); field = null; previous = null; publish({ state: 'failed', date: '' });
     };
-    instance.on('moveend', update); instance.on('style.load', style); instance.on('error', error);
+    instance.on('moveend', update); instance.on('style.load', style); instance.on('error', error); instance.on('sourcedata', loaded);
     const timer = window.setInterval(update, temperatureCacheMs);
     void update();
     return () => {
       alive = false; redraw.current = null; window.clearInterval(timer);
-      instance.off('moveend', update); instance.off('style.load', style); instance.off('error', error);
+      instance.off('moveend', update); instance.off('style.load', style); instance.off('error', error); instance.off('sourcedata', loaded);
       clear(); publish(initial);
     };
   }, [map, ready, on]);
