@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { locales } from "@/i18n/locales";
 import { setLocale } from "@/i18n/set-locale";
+import { motionMs, usePresence } from "@/lib/ui/motion";
 
 /** A small menu that closes on an outside click or Escape. */
 function useDropdown() {
@@ -25,7 +26,8 @@ function useDropdown() {
       window.removeEventListener("keydown", key);
     };
   }, [open]);
-  return { open, setOpen, root };
+  const presence = usePresence(open, motionMs.fast);
+  return { open, setOpen, root, shown: presence.mounted, state: presence.state };
 }
 
 const nativeName: Record<string, string> = { en: "English", bg: "Български" };
@@ -34,7 +36,7 @@ const nativeName: Record<string, string> = { en: "English", bg: "Българс�
 export function LanguageMenu() {
   const t = useTranslations("shell");
   const current = useLocale();
-  const { open, setOpen, root } = useDropdown();
+  const { open, setOpen, root, shown, state } = useDropdown();
   return (
     <div className="dropdown lang-menu" ref={root}>
       <button
@@ -51,8 +53,8 @@ export function LanguageMenu() {
         </svg>
         <span className="icon-btn-text">{current.toUpperCase()}</span>
       </button>
-      {open ? (
-        <form action={setLocale} className="dropdown-list glass" aria-label={t("languageMenu")} onSubmit={() => setOpen(false)}>
+      {shown ? (
+        <form action={setLocale} className="dropdown-list glass" data-state={state} inert={!open} aria-label={t("languageMenu")} onSubmit={() => setOpen(false)}>
           {locales.map((locale) => (
             <button
               key={locale}
@@ -112,7 +114,7 @@ function InfoLinks({ onPick }: { onPick: () => void }) {
 
 export function InfoMenu() {
   const t = useTranslations("shell");
-  const { open, setOpen, root } = useDropdown();
+  const { open, setOpen, root, shown, state } = useDropdown();
   return (
     <div className="dropdown info-menu" ref={root}>
       <button
@@ -129,8 +131,8 @@ export function InfoMenu() {
           <circle cx="10" cy="6.4" r="1" fill="currentColor" />
         </svg>
       </button>
-      {open ? (
-        <div className="dropdown-list info-list glass" role="dialog" aria-label={t("infoMenu")}>
+      {shown ? (
+        <div className="dropdown-list info-list glass" data-state={state} inert={!open} role="dialog" aria-label={t("infoMenu")}>
           <InfoLinks onPick={() => setOpen(false)} />
         </div>
       ) : null}
@@ -142,7 +144,7 @@ export function InfoMenu() {
 export function MobileMenu() {
   const t = useTranslations("shell");
   const current = useLocale();
-  const { open, setOpen, root } = useDropdown();
+  const { open, setOpen, root, shown, state } = useDropdown();
   return (
     <div className="dropdown mobile-menu" ref={root}>
       <button
@@ -157,8 +159,8 @@ export function MobileMenu() {
           <path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       </button>
-      {open ? (
-        <div className="dropdown-list info-list glass" role="dialog" aria-label={t("menu")}>
+      {shown ? (
+        <div className="dropdown-list info-list glass" data-state={state} inert={!open} role="dialog" aria-label={t("menu")}>
           <form action={setLocale} className="menu-langs" aria-label={t("languageMenu")} onSubmit={() => setOpen(false)}>
             {locales.map((locale) => (
               <button

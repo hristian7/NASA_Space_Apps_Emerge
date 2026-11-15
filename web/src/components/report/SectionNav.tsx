@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSlidingPill } from "@/lib/ui/motion";
 import { useTranslations } from "next-intl";
 
 export const reportParts = ["overview", "charts", "data", "sources"] as const;
@@ -33,8 +34,12 @@ export default function SectionNav() {
     return () => observer.disconnect();
   }, []);
 
+  const group = useRef<HTMLElement | null>(null);
+  useSlidingPill(group, '[aria-current="true"]', [current]);
+
   return (
-    <nav className="rp-jump" aria-label={t("parts.label")}>
+    <nav ref={group} className="rp-jump" aria-label={t("parts.label")}>
+      <span className="pill" aria-hidden="true" />
       {reportParts.map((part) => (
         <button
           key={part}

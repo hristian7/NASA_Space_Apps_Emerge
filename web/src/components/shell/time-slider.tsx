@@ -117,7 +117,7 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
         )}
       </button>
       <div className="timeline-now">
-        <span className="timeline-value num">{history ? (monthLabel ?? value) : dayLabel(value)}</span>
+        <span key={`${view}:${monthLabel ?? value}`} className="timeline-value num">{history ? (monthLabel ?? value) : dayLabel(value)}</span>
         <span className="timeline-kind">
           {history && monthLabel !== null
             ? t("monthOnMap")
@@ -160,6 +160,7 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
           max={values.length - 1}
           step={1}
           value={index}
+          style={{ "--fill": `${(index / Math.max(1, values.length - 1)) * 100}%` } as React.CSSProperties}
           aria-label={history ? t("historyTime") : t("forecastTime")}
           aria-valuetext={history ? String(value) : dayLabel(value)}
           onChange={(event) => {

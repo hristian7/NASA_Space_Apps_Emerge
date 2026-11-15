@@ -5,6 +5,7 @@ import type { Chance } from "@/types/ui";
 import { chanceText } from "./lib/sentences";
 import { formatCount, monthLong, type ReportLocale } from "./lib/format";
 import styles from "./styles";
+import Roll from "@/components/ui/roll";
 
 export interface ChanceCardProps {
   chance: Chance;
@@ -39,7 +40,7 @@ export default function ChanceCard({
       {showsExpected ? (
         <>
           <p className={styles.cardFigure}>
-            {formatCount(expectedFireDays, locale)}
+            <Roll value={formatCount(expectedFireDays, locale)} />
           </p>
           <p className={styles.cardLine}>
             {t("chance.expectedDetail", { month: monthLong(month, locale) })}
@@ -48,7 +49,7 @@ export default function ChanceCard({
       ) : (
         <>
           {text.figure === "" ? null : (
-            <p className={styles.cardFigure}>{text.figure}</p>
+            <p className={styles.cardFigure}><Roll value={text.figure} /></p>
           )}
           {text.range === "" ? null : (
             <p className={`${styles.cardLine} ${styles.num}`}>{text.range}</p>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, type Ref } from "react";
+import { useMemo, useRef, type Ref } from "react";
+import { assignRef, useChartDraw } from "@/lib/ui/motion";
 import { useTranslations } from "next-intl";
 import type { Trend } from "@/types/ui";
 import type { YearTotal } from "./types";
@@ -56,6 +57,9 @@ export default function TrendChart({
     return { firstYear, lastYear, top, x, y };
   }, [drawn]);
 
+  const chart = useRef<SVGSVGElement | null>(null);
+  useChartDraw(chart, drawn.length === 0 ? null : drawn.map((year) => `${year.y}:${year.value}`).join(","));
+
   if (geometry === null) {
     return (
       <section className={styles.section} aria-labelledby="report-trend-chart">
@@ -107,7 +111,10 @@ export default function TrendChart({
         {t("trend.heading")}
       </h2>
       <svg
-        ref={svgRef}
+        ref={(node) => {
+          chart.current = node;
+          assignRef(svgRef, node);
+        }}
         className={styles.chart}
         viewBox={`0 0 ${W} ${H}`}
         role="img"
