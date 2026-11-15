@@ -31,6 +31,8 @@ type Props = {
   monthLabel?: string | null;
   /** Opened and closed from the map's tool column. */
   open: boolean;
+  /** Always shown on a wide screen, collapsible to its title bar. */
+  docked?: boolean;
   onClose: () => void;
   view: "history" | "forecast";
 };
@@ -56,6 +58,7 @@ export default function LayerPanel({
   onToggle,
   onWindow,
   open,
+  docked = false,
   onClose,
   view,
   monthLabel = null,
@@ -73,6 +76,24 @@ export default function LayerPanel({
     return () => { cancelled = true; };
   }, []);
   const shell = useTranslations("shell");
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(dockKey) === "1");
+    } catch {
+      // Storage can be blocked; the dock then starts open.
+    }
+  }, []);
+  const collapse = (next: boolean) => {
+    setCollapsed(next);
+    try {
+      window.localStorage.setItem(dockKey, next ? "1" : "0");
+    } catch {
+      // Not remembered when storage is blocked.
+    }
+  };
+  const [about, setAbout] = useState<string[]>([]);
+  const shut = docked && collapsed;
   const keyText = useTranslations("legend");
   const [rasterErrors, setRasterErrors] = useState<string[]>([]);
   const [wind, setWind] = useState({ state: "loading", time: "" });
@@ -227,32 +248,68 @@ export default function LayerPanel({
   };
 
   return (
-    <section className="layers glass" id="layer-panel" aria-label={t("title")} hidden={!open}>
-      <div className="layers-head">
-        <h2>{t("title")}</h2>
-        <span className="layers-count num">{t("onCount", { count: onCount })}</span>
-        <button type="button" className="layers-close" aria-label={shell("closeMenu")} onClick={onClose}>
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
+    <section
+      className={docked ? "layers glass docked" : "layers glass"}
+      id="layer-panel"
+      aria-label={t("title")}
+      hidden={!docked && !open}
+      data-collapsed={shut ? "" : undefined}
+    >
+      {docked ? (
+        <h2 className="layers-dockHead">
+          <button type="button" className="layers-head" aria-expanded={!collapsed} aria-controls="layer-list" onClick={() => collapse(!collapsed)}>
+            <span>{t("title")}</span>
+            <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+          </button>
+        </h2>
+      ) : (
+        <div className="layers-head">
+          <h2>{t("title")}</h2>
+          <span className="layers-count num">{t("onCount", { count: onCount })}</span>
+          <button type="button" className="layers-close" aria-label={shell("closeMenu")} onClick={onClose}>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      )}
 
-      <div id="layer-list" className="layers-body">
+      <div id="layer-list" className="layers-body" hidden={shut}>
         {layers.map((definition) => {
           const on = state.on.includes(definition.id);
+          const name = t(short(definition.nameKey));
+          const aboutOpen = !docked || about.includes(definition.id);
+          const aboutId = `layer-about-${definition.id}`;
           return (
-            <div className="layer-row" key={definition.id}>
-              <label className="layer-switch">
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={on}
-                  onChange={() => { setRasterErrors((current) => current.filter((id) => id !== definition.id)); onToggle(definition.id); }}
-                />
-                <span>{t(short(definition.nameKey))}</span>
-              </label>
-              <p className="hint">{t(short(definition.panel?.explainKey ?? ""))}</p>
+            <div className="layer-row" key={definition.id} data-on={on}>
+              <div className="layer-line">
+                <label className="layer-switch">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    checked={on}
+                    onChange={() => { setRasterErrors((current) => current.filter((id) => id !== definition.id)); onToggle(definition.id); }}
+                  />
+                  <span>{name}</span>
+                </label>
+                {docked ? (
+                  <button
+                    type="button"
+                    className="layer-about"
+                    aria-expanded={aboutOpen}
+                    aria-controls={aboutId}
+                    aria-label={t("aboutLayer", { name })}
+                    onClick={() => setAbout((current) => (current.includes(definition.id) ? current.filter((id) => id !== definition.id) : [...current, definition.id]))}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+                      <path d="M10 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      <circle cx="10" cy="6.4" r="1" fill="currentColor" />
+                    </svg>
+                  </button>
+                ) : null}
+              </div>
+              <p className="hint" id={aboutId} hidden={!aboutOpen}>{t(short(definition.panel?.explainKey ?? ""))}</p>
 
               {on ? (
                 <div className="layer-open">
@@ -276,6 +333,8 @@ export default function LayerPanel({
     </section>
   );
 }
+
+const dockKey = "emerge-layer-dock-collapsed";
 
 /** Weather legends share the established ramp layout and typography. */
 function TemperatureLegend({ day }: { day: number }) {

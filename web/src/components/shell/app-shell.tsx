@@ -16,6 +16,7 @@ import { LAYERS } from "@/config/layers";
 import { useLayers } from "@/lib/layers/use-layers";
 import { removeQueryParam, setQueryParam } from "@/lib/ui/query";
 import { motionMs, useLastValue, usePresence } from "@/lib/ui/motion";
+import { useWide } from "@/lib/ui/use-wide";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
 import LayerPanel from "./layer-panel";
 import MapTools from "./map-tools";
@@ -83,6 +84,8 @@ export default function AppShell() {
   );
 
   const layers = useLayers();
+  // From 1024px the layers stay open as a dock; phones keep the button and sheet.
+  const docked = useWide();
 
   // Monthly fire days for the strip behind the timeline: the chosen place's
   // series (the report reads the same cached files), or the world's.
@@ -251,6 +254,7 @@ export default function AppShell() {
         radiusOn={radiusTool}
         radiusKm={radiusKm}
         layersOpen={layersOpen}
+        showLayers={!docked}
         onDraw={() => {
           setRadiusTool(false);
           setLayersOpen(false);
@@ -281,6 +285,7 @@ export default function AppShell() {
         recentStatus={layers.recentStatus}
         recent={layers.recent}
         open={layersOpen}
+        docked={docked}
         onClose={() => setLayersOpen(false)}
         view={view}
         onToggle={layers.toggle}
