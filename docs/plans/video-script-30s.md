@@ -1,107 +1,107 @@
-# 30-second video script, v2 (Sun 15 Nov, 13:10)
+# 30-second video script, v3 (Sun 15 Nov, 14:40)
 
-Builds on the team's [video and pitch plan](2026-11-15-video-and-pitch.md) and the finished v1 video ([`../video/emerge-demo-30s.mp4`](../video/emerge-demo-30s.mp4)). What v2 adds: the team name first (NASA's own outline starts with it), both differentiators in the first 5 s, a "why now" with verified numbers, and the firefighter's need. Every app shot below was checked on the live app at 13:00 on 15 Nov.
+Follows the owner's structure: who we are → the problem and why now → the firefighter → what we built. It builds on the team's [video and pitch plan](2026-11-15-video-and-pitch.md); v2 is in git history. App shots were checked on the live app on 15 Nov. Every number is tagged and sourced in the table at the end.
 
-**Time is short.** If v2 cannot be recorded, edited and uploaded by 13:30, send v1 to Sofia and use v2 for the NASA submission (due 23:59).
-
-## Structure
-
-| Part | Time | Goal |
-|---|---|---|
-| Who we are + differentiators | 0:00–0:05 | Team name; "one fair MODIS+VIIRS record since 2000, any place on Earth" |
-| Problem + why now | 0:05–0:15 | Fires are growing; a firefighter's top need is tomorrow's risk in one place |
-| Live app (OBS capture) | 0:15–0:28 | Calendar → tomorrow's risk spots → proof |
-| End card | 0:28–0:30 | Name, link, future vision |
-
-NASA's [submission guide](https://www.spaceappschallenge.org/resources/project-submission-guide/) suggests: team and name, the challenge, title and tagline, how it works with NASA data, future vision. This script covers all five in 30 s `[V]`.
+**Rules:** 29 s or less (a demo over 30 s is ineligible for global judging `[V]`), English subtitles, no one under 18 on screen or in audio.
 
 ## Shot-by-shot
 
-About 70 spoken words, read at a brisk 2.5 words per second. Every voice-over line is also a burned-in subtitle.
+79 spoken words, about 2.6 words per second: brisk but clear. Every voice-over line is also a burned-in subtitle.
 
 | Time | Screen | Voice-over | On-screen text |
 |---|---|---|---|
-| 0:00–0:05 | Two timeline bars, "MODIS 2000→" (orange) and "VIIRS 2012→" (yellow), slide together into one bar; the world fire-history glow fades in behind (live app home screen, S1) | "We're Emerge: one fair NASA fire record since 2000, anywhere on Earth." | **Team Emerge · Sofia** / MODIS + VIIRS → **one record, 2000 to today** |
-| 0:05–0:10 | Title cards on black, cut on the beat | "2025 was the EU's worst fire year on record." | **2025: EU's worst fire season on record. 1.08 million ha burned** / small: *Los Angeles, Jan 2025: 31 lives lost* |
-| 0:10–0:15 | The cycle strip **Prevent ▸ Prepare ▸ Respond ▸ Recover**; the first two light up. Then "10 websites" icons collapse into one Emerge icon | "A firefighter of 20 years told us: he checks ten websites, and needs tomorrow's risk most." | **We focus on prevention: one day ahead** / **10 websites → 1** |
-| 0:15–0:20 | **OBS, History:** Bulgaria's fire calendar (25 years × 12 months). Cursor runs down the striped rows (before 2012) | "Pick any place. Twenty-five years in one calendar; striped years are converted from MODIS." | **Fire calendar, Bulgaria, 2000 to 2026** / Striped = MODIS converted to VIIRS level |
-| 0:20–0:25 | **OBS, Risk outlook:** Australia → Northern Territory, numbered spots on the map; click spot 1, the card shows "Level 3 … Consider a standby team near here tomorrow" | "Then tomorrow's top risk spots, ranked, each with a reason." | **Tomorrow's top 5 spots per region** / *Unofficial research outlook* |
-| 0:25–0:28 | Editor bar chart: Emerge **20.4%** · history 16.7% · NASA fire-weather index **11.2%** · random 10.5% | "Tested on 2025: nearly twice the fires NASA's fire-weather index caught." | **Tested on 2025, a year it never saw** / small: *World, new forest and wildland fires, top 5 squares per region per day* |
-| 0:28–0:30 | End card: logo, link, data credits | "Emerge." | **emerge-beta-ten.vercel.app** / Next: a daily forecast, scored every day / *Data: NASA FIRMS, GFWED, GIBS* |
+| **0:00–0:04** Who we are | Logo over the world fire-history glow (live app home, after it draws) | "We're Emerge: five people from Sofia, on NASA's satellite fire challenge." | **Team Emerge · 5 people · Sofia, Bulgaria** / Challenge: *Harmonization of MODIS and VIIRS Hot Spots* / **One fair fire record since 2000, anywhere on Earth** |
+| **0:04–0:10** Problem + why now | Fast cards on black, about 1 s each, cut on the beat: France/Spain → EU → USA → Bulgaria | "Fires are growing. This July, over 300,000 people fled fires in France and Spain." | **July 2026: 300,000+ displaced in France and Spain** / **EU 2025: worst fire year on record, 1.08 M ha** / **USA 2026: 9.5 M acres burned, nearly 2× 2025** / **Bulgaria 2025: 546 forest fires** |
+| **0:10–0:18** The firefighter | The cycle strip **Prevention ▸ Preparedness ▸ Response ▸ Recovery**, with Prevention lit, then 10 website icons collapsing into one | "A 20-year firefighter told us: data sits on ten websites. His top need is prevention: tomorrow's fire spots, to place crews early." | **"Predict tomorrow, one day ahead": his top need** / **10 websites → 1 app** |
+| **0:18–0:21** Solution: the record | **OBS clip A:** Bulgaria's fire calendar; cursor down the striped rows (2000–2011) | "We merged two NASA satellite records into one," | **MODIS (2000→) + VIIRS (2012→) = one record** / Striped = MODIS converted to VIIRS level |
+| **0:21–0:24** Solution: one place | **OBS clip B:** Forecast tab, Sofia point card; slow scroll over risk level, wind, rain, soil moisture, history | "joined 22 data sources in one app," | **22 open data sources · 11 from NASA** |
+| **0:24–0:28** Solution: prediction | **OBS clip C:** Risk outlook, Australia → Northern Territory, numbered spots; click spot 1. Overlay bar chart: Emerge 20.4% · history 16.7% · NASA index 11.2% | "and our next-day forecast catches nearly twice the fires of NASA's index." | **82% more new fires caught than NASA's fire-weather index** / small: *Tested on 2025, a year it never saw. World, top 5 squares per region per day* |
+| **0:28–0:30** End | Logo, link | "Emerge." | **emerge-beta-ten.vercel.app** / *One place, not ten websites* / Data: NASA FIRMS, GFWED, GIBS, POWER |
 
-## OBS click path (15 s of capture, 3 short clips)
+## OBS click path (3 clips, about 3–4 s each)
 
-Record each clip separately (5–8 s each) and cut in the editor. Never record typing live.
+Record each clip on its own and cut them together in the editor. Never record typing live. Set language to EN first.
 
 | Clip | Before recording | Record |
 |---|---|---|
-| A, calendar | Open `https://emerge-beta-ten.vercel.app/?sel=c:BGR`, language EN, wait 5 s until the calendar draws | Slow cursor down the calendar's striped rows (2000–2011), then rest on the bright 2007 row |
-| B, risk | Open `https://emerge-beta-ten.vercel.app/risk`, choose **Country: Australia**, then **Region: Northern Territory**; wait until the numbered spots draw | Click spot **1** on the map; hold 2 s on the card ("Level 3", "Consider a standby team near here tomorrow") |
-| C, proof (optional) | Open `https://emerge-beta-ten.vercel.app/proof#next-day-risk` | 1 s scroll over "The model caught 20.4% …". Use the editor bar chart if this looks too text-heavy |
+| A, calendar | Open `https://emerge-beta-ten.vercel.app/?sel=c:BGR`; wait 5 s for the calendar | Slow cursor down the striped rows 2000–2011 |
+| B, one place | Open `https://emerge-beta-ten.vercel.app/?v=f&sel=p:42.6977,23.3219,25` (Sofia, Forecast tab) | Slow scroll down the card: risk level, wind, rain, soil moisture |
+| C, risk | Open `https://emerge-beta-ten.vercel.app/risk`; choose **Australia**, then **Northern Territory**; wait for the numbered spots | Click spot **1**; hold on the card ("Level 3", "Consider a standby team near here tomorrow") |
 
 **Don't film:**
-- The risk page as it first loads: it shows "Northern Cyprus, no spots" under a Bulgaria selector (seen 13:00, a bug).
-- Bulgaria's risk in November: every spot is Level 1, so it looks empty. Northern Territory is in its fire season and shows Level 3 spots.
-- Any placeholder, example label or blank map.
+- the risk page as it first loads (it shows "Northern Cyprus, no spots", a bug);
+- Bulgaria's risk in November (every spot is Level 1);
+- any blank map or placeholder.
 
 ## English subtitles (SRT)
 
 ```srt
 1
-00:00:00,000 --> 00:00:04,800
-We're Emerge: one fair NASA fire record
-since 2000, anywhere on Earth.
+00:00:00,000 --> 00:00:03,900
+We're Emerge: five people from Sofia,
+on NASA's satellite fire challenge.
 
 2
-00:00:05,000 --> 00:00:09,600
-2025 was the EU's worst fire year on record.
+00:00:04,000 --> 00:00:09,900
+Fires are growing. This July, over 300,000 people
+fled fires in France and Spain.
 
 3
-00:00:10,000 --> 00:00:14,800
-A firefighter of 20 years told us: he checks
-ten websites, and needs tomorrow's risk most.
+00:00:10,000 --> 00:00:13,400
+A 20-year firefighter told us:
+data sits on ten websites.
 
 4
-00:00:15,000 --> 00:00:19,800
-Pick any place. Twenty-five years in one calendar;
-striped years are converted from MODIS.
+00:00:13,500 --> 00:00:17,900
+His top need is prevention:
+tomorrow's fire spots, to place crews early.
 
 5
-00:00:20,000 --> 00:00:24,800
-Then tomorrow's top risk spots,
-ranked, each with a reason.
+00:00:18,000 --> 00:00:23,900
+We merged two NASA satellite records into one,
+joined 22 data sources in one app,
 
 6
-00:00:25,000 --> 00:00:27,800
-Tested on 2025: nearly twice the fires
-NASA's fire-weather index caught.
+00:00:24,000 --> 00:00:27,900
+and our next-day forecast catches
+nearly twice the fires of NASA's index.
 
 7
 00:00:28,000 --> 00:00:29,500
 Emerge.
 ```
 
-## What each claim rests on
+## What each number rests on
 
 | Claim | Number | Source | Tag |
 |---|---|---|---|
-| EU's worst fire season on record | 1,079,538 ha in 2025, highest since EFFIS records began in 2006 | [JRC, 31 Mar 2026](https://joint-research-centre.ec.europa.eu/jrc-news-and-updates/2025-was-eus-most-destructive-wildfire-season-record-2026-03-31_en) | `[V]` |
-| Los Angeles fires | 31 deaths, 16,246 structures destroyed, Jan 2025 | [PBS/AP citing Cal Fire](https://www.pbs.org/newshour/nation/a-year-after-the-la-wildfire-disaster-key-numbers-show-how-it-unfolded-and-the-toll-left-behind) | `[V]` |
-| Firefighter: 10 websites; tomorrow's risk is the top need | His words | [`../research/firefighter-interview.md`](../research/firefighter-interview.md) | `[U]` his figures |
-| "Of 20 years" | Service length | The team member who held the interview; not in the written notes | `[U]` |
-| Prevent, prepare, respond, recover | The emergency-management cycle; FEMA names the first phase "mitigation" | FEMA (page not reachable on 15 Nov; seen only on secondary sites) | `[D]` |
-| One record since 2000 | Record runs Nov 2000 to 14 Nov 2026 | [`../../README.md`](../../README.md), `web/public/data/meta.json` | `[V]` |
-| Striped = converted from MODIS | App legend: "Estimated from MODIS" | Live app, checked 13:00 | `[V]` |
-| Nearly twice NASA's index | 20.4% vs 11.2% (1.8×); history 16.7%, random 10.5% | `web/public/data/risk/scorecard.json`, [proof page](https://emerge-beta-ten.vercel.app/proof#next-day-risk) | `[V]` |
+| France and Spain, July 2026 | Over 300,000 displaced. France more than 250,000 (220,000 in Gironde); Spain 79,000 evacuated plus 30,000 confined. The EU called it "one of the biggest evacuation operations in Europe" | [AP via PBS](https://www.pbs.org/newshour/world/historic-wildfires-in-france-and-spain-have-forced-hundreds-of-thousands-of-people-to-evacuate-heres-what-to-know) | `[V]` |
+| EU 2025 | 1,079,538 ha, worst season on record (EFFIS records began in 2006) | [JRC, 31 Mar 2026](https://joint-research-centre.ec.europa.eu/jrc-news-and-updates/2025-was-eus-most-destructive-wildfire-season-record-2026-03-31_en) | `[V]` |
+| USA 2026 so far | 68,753 fires, 9,484,195 acres by 13 Nov, against 4,899,305 acres by the same date in 2025 (1.9×) | [NIFC](https://www.nifc.gov/fire-information/nfn) | `[V]` |
+| Bulgaria 2025 | 546 forest fires, 15,459 ha (national report) | [Forest Agency 2025 report](https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf), page 35, shown in the app | `[V]` |
+| Firefighter: 10 websites; prediction one day ahead is the top need | His words | [`../research/firefighter-interview.md`](../research/firefighter-interview.md) | `[U]` his figures |
+| "20-year firefighter" | Service length | The teammate who held the interview; not in the written notes | `[U]` |
+| Prevention, preparedness, response, recovery | The emergency-management cycle; FEMA calls the first phase "mitigation" | Secondary sites (the FEMA page didn't load) | `[D]` |
+| Five people, Sofia | Team size and event | Owner; public team page | `[U]` |
+| Two NASA satellite records merged | MODIS since Nov 2000 and VIIRS since 2012, converted to one scale | [`../../README.md`](../../README.md), `web/public/data/validation.json` | `[V]` |
+| 22 data sources, 11 from NASA | Rows in the Data table used by the live app or published model, not counting planned or experimental rows; Open-Meteo counted once; the NASA count includes two public mirrors of NASA data (firms-catalog, MCD12Q1 on Zenodo) | [`../references.md`](../references.md), counted 15 Nov | `[V]` |
+| Nearly twice / 82% more than NASA's index | 20.4% vs 11.2% of new fires caught (world, 2025 hold-out); history alone 16.7%; Europe 53.8% vs 41.1% (31% more) | `web/public/data/risk/scorecard.json`, [proof page](https://emerge-beta-ten.vercel.app/proof#next-day-risk) | `[V]` |
+
+**Other numbers, if a card needs swapping:**
+- **Canada 2023:** over 230,000 people evacuated, 14.6 M ha burned ([NRCan](https://natural-resources.canada.ca/forest-forestry/wildland-fires/forest-fires)) `[V]`.
+- **Los Angeles, Jan 2025:** 31 deaths and 16,246 structures destroyed ([PBS/AP citing Cal Fire](https://www.pbs.org/newshour/nation/a-year-after-the-la-wildfire-disaster-key-numbers-show-how-it-unfolded-and-the-toll-left-behind)) `[V]`.
+- **Smoke deaths:** about 1.53 M a year worldwide from landscape-fire smoke, 2000–19 (Lancet 2024) `[D]`.
+- **Extreme fires:** 2.2× more frequent over 2003–2023 (Nature Ecology & Evolution 2024) `[D]`.
+- **Bulgaria:** villages evacuated in the July 2024 and July 2025 fires `[D]` (BTA).
 
 **Don't say:**
-- "400,000 evacuated in France and Spain" (the firefighter's figure). No official source matches it. The nearest is one news report of about 325,000 evacuated in July 2026 `[D]`.
-- That the model uses greenness or soil moisture. It doesn't.
-- "Early warning" or "official". It is an unofficial research outlook.
-- "Twice as good as history." The gain over history is about 3.7 points worldwide `[V]`. "Nearly twice" applies only to NASA's index.
+- **"400,000 evacuated":** no source matches it; AP says "over 300,000".
+- **"Better than NASA's prediction model":** say "NASA's fire-weather index". GFWED is a fire-weather index, not a fire-prediction model.
+- **"Twice as good as history":** our gain over history is about 3.7 points worldwide.
+- **Greenness or soil moisture as model inputs:** they are map layers only.
 
 ## Production
 
-- **Voice:** an adult teammate, or the same AI voice as v1 (log it in [`../si-usage.md`](../si-usage.md)). No faces and no one under 18.
-- **Export:** MP4, 1080p, **29 s or less** (videos over 30 s are ineligible for global judging `[V]`).
-- **Upload:** YouTube Unlisted plus a public Drive backup. Test both links logged out.
+- **Voice:** an adult teammate, or the same AI voice as v1 (logged in [`../si-usage.md`](../si-usage.md)).
+- **Export:** MP4 1080p, ≤ 29 s.
+- **Upload:** YouTube Unlisted plus a Drive backup; test both links logged out.
