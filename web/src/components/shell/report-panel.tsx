@@ -13,6 +13,8 @@ import type { AppView } from "./view-tabs";
 
 type Props = {
   selection: Selection;
+  /** Set while the panel plays its exit, after the place was cleared. */
+  closing?: boolean;
   view: AppView;
   /** Forecast day offset on the timeline: 0 today, up to 9. */
   day: number;
@@ -30,7 +32,7 @@ type Props = {
 /** Sheet heights a drag settles on, as shares of the window height. */
 const stops = { peek: 0.22, half: 0.52, full: 1 } as const;
 
-export default function ReportPanel({ selection, view, day, onPickPoint, pointCountry, onWholeCountry, onClose, onCycleHeight, mapMonth, onMapMonth }: Props) {
+export default function ReportPanel({ selection, closing = false, view, day, onPickPoint, pointCountry, onWholeCountry, onClose, onCycleHeight, mapMonth, onMapMonth }: Props) {
   const t = useTranslations("shell");
   const s = useTranslations("selection");
   const countryName = useCountryName(selection.kind === "country" ? selection.iso3 : pointCountry);
@@ -91,7 +93,7 @@ export default function ReportPanel({ selection, view, day, onPickPoint, pointCo
         : s("kindArea");
 
   return (
-    <aside className="report glass" id="report" aria-label={title}>
+    <aside className="report glass" id="report" aria-label={title} data-state={closing ? "closing" : "open"} inert={closing}>
       <button
         type="button"
         className="handle"
@@ -123,11 +125,13 @@ export default function ReportPanel({ selection, view, day, onPickPoint, pointCo
           </button>
         </header>
         <div aria-live="polite" className="stack">
-          {view === "history" ? (
-            <ReportSlot selection={selection} mapMonth={mapMonth} onMapMonth={onMapMonth} />
-          ) : (
-            <ForecastPanel selection={selection} day={day} onPickPoint={onPickPoint} />
-          )}
+          <div key={view} className="view-swap">
+            {view === "history" ? (
+              <ReportSlot selection={selection} mapMonth={mapMonth} onMapMonth={onMapMonth} />
+            ) : (
+              <ForecastPanel selection={selection} day={day} onPickPoint={onPickPoint} />
+            )}
+          </div>
         </div>
         {/* At the end of the panel's own scroll, not pinned over it. */}
         <Disclaimer />

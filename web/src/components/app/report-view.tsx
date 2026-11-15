@@ -74,6 +74,7 @@ import { csvFilename, csvHeader, monthlyFile, saveText, summaryFile } from "./do
 import CountryTest from "./country-test";
 import DateRange from "./date-range";
 import styles from "./app-styles";
+import Roll from "@/components/ui/roll";
 
 /** Everything one selection needs, loaded once and kept until it changes. */
 interface Loaded {
@@ -574,7 +575,7 @@ function Report({
             </p>
             {partMonth && selectedPoint?.value != null ? (
               <p className={reportStyles.cardFigure}>
-                {formatCount(selectedPoint.value, locale)}
+                <Roll value={formatCount(selectedPoint.value, locale)} />
               </p>
             ) : null}
             <p className={reportStyles.cardLine}>

@@ -1,5 +1,6 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSlidingPill } from '@/lib/ui/motion';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CountryResult, RiskIndex } from '@/types/risk';
 import { loadRiskCountry, loadRiskIndex, regionSpots, showForecast, forecastIsStale } from '@/lib/risk/loaders';
@@ -18,6 +19,8 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
  const [countryData,setCountryData]=useState<CountryResult|null>(null); const [countryFailed,setCountryFailed]=useState(false);
  const [selection,setSelection]=useState<'forest'|'all'>('forest');
  const [stale,setStale]=useState(false);
+ const dayGroup=useRef<HTMLDivElement|null>(null); const vegetationGroup=useRef<HTMLDivElement|null>(null);
+ useSlidingPill(dayGroup,'button[aria-pressed="true"]',[day,stale,index]); useSlidingPill(vegetationGroup,'button[aria-pressed="true"]',[selection,day,index]);
  useEffect(()=>{const update=()=>setStale(!!index?.meta && forecastIsStale(index.meta.days.tomorrow)); update(); const timer=setInterval(update,60000); return ()=>clearInterval(timer);},[index]);
  useEffect(()=>{let live=true;loadRiskIndex(example).then(data=>{if(live){setIndex(data);setRegionId(data.regions[0]?.region_id??'');}},()=>{if(live)setFailed(true);});
  return ()=>{live=false;};},[example]);
@@ -37,12 +40,12 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
   {example&&<p className="risk-example" role="status">{t('example')} · {t('exampleNote')}</p>}
   {failed?<p className="risk-placeholder" role="alert">{t('failed')}</p>:!index?<p className="risk-placeholder" role="status">{t('loading')}</p>:!showForecast(index.meta,example)?<RiskPlaceholder/>:<>
    <div className="risk-controls">
-    <div className="risk-days" role="group" aria-label={t('day')}>{(['today','tomorrow'] as const).map(value=><button key={value} aria-pressed={day===value} onClick={()=>setDay(value)}>{stale?index.meta?.days[value]:t(value)}</button>)}<button aria-pressed={day==='week'} onClick={()=>setDay('week')}>{t('weekTitle')}</button></div>
-    {day!=='week'&&<div className="risk-days" role="group" aria-label={t('vegetation')}>{(['forest','all'] as const).map(value=><button key={value} aria-pressed={selection===value} onClick={()=>setSelection(value)}>{t(value==='forest'?'forestSelection':'allSelection')}</button>)}</div>}
+    <div ref={dayGroup} className="risk-days" role="group" aria-label={t('day')}><span className="pill" aria-hidden="true"/>{(['today','tomorrow'] as const).map(value=><button key={value} aria-pressed={day===value} onClick={()=>setDay(value)}>{stale?index.meta?.days[value]:t(value)}</button>)}<button aria-pressed={day==='week'} onClick={()=>setDay('week')}>{t('weekTitle')}</button></div>
+    {day!=='week'&&<div ref={vegetationGroup} className="risk-days" role="group" aria-label={t('vegetation')}><span className="pill" aria-hidden="true"/>{(['forest','all'] as const).map(value=><button key={value} aria-pressed={selection===value} onClick={()=>setSelection(value)}>{t(value==='forest'?'forestSelection':'allSelection')}</button>)}</div>}
     <label>{t('country')}<select aria-label={t('country')} value={country} onChange={e=>setRegionId(index.regions.find(r=>r.country===e.target.value)?.region_id??'')}>{countries.map(code=><option key={code} value={code}>{countryLabel(code)}</option>)}</select></label>
     <label>{t('region')}<select aria-label={t('region')} value={regionId} onChange={e=>setRegionId(e.target.value)}>{index.regions.filter(r=>r.country===country).map(r=><option key={r.region_id} value={r.region_id}>{locale==='bg'?r.name_local:r.name_en}</option>)}</select></label>
    </div>
-   {region?(day==='week'?<WeekOutlook region={region} example={example} staleDate={stale?index.meta?.days.tomorrow:undefined}/>:<div className="risk-workspace">
+   {region?<div key={day} className="view-swap">{day==='week'?<WeekOutlook region={region} example={example} staleDate={stale?index.meta?.days.tomorrow:undefined}/>:<div className="risk-workspace">
     <RiskMap regions={index.regions} region={region} spots={spots} onRegion={selectRegion} onSpot={selectSpot}/>
     <section className="risk-sheet" aria-label={t('title')}>
      <h2>{locale==='bg'?region.name_local:region.name_en}</h2>
@@ -50,7 +53,7 @@ export default function RiskScreen({example=false}:{example?:boolean}) {
      {stale&&<p role="status">{t('stale',{date:index.meta?.days.tomorrow??''})}</p>}
      {countryFailed?<p role="alert">{t('failed')}</p>:!countryData?<p role="status">{t('loading')}</p>:countryData.status==='missing'?<p role="status">{t('missingCountry')}</p>:spots.length===0?<div role="status"><p>{t(selection==='forest'?'emptyForest':'empty')}</p>{selection==='forest'&&<button className="risk-switch-link" onClick={()=>setSelection('all')}>{t('showAll')}</button>}</div>:<ol className="risk-list" aria-label={t('title')}>{spots.map(spot=><li key={spot.spot_id} id={`risk-spot-${spot.spot_id}`} tabIndex={-1}><span className="risk-rank">{spot.rank}</span><div className="risk-spot"><RiskSpotDetails spot={spot} crew={!stale&&spot.rank===1} day={day}/></div></li>)}</ol>}
     </section>
-   </div>):<p className="risk-placeholder">{t('noRegion')}</p>}
+   </div>}</div>:<p className="risk-placeholder">{t('noRegion')}</p>}
   </>}
   <footer className="risk-footer"><RiskLinks country={country}/><p>{t('disclaimer')}</p>{showForecast(index?.meta??null,example)&&<><p>{t('mapApproximate')}</p><div className="risk-links" aria-label={t('sources')}>{index?.meta?.sources.map(source=><a key={source.url} href={source.url}>{source.name} · {source.date}</a>)}</div></>}</footer>
  </main>;
