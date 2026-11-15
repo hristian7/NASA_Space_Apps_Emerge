@@ -53,6 +53,30 @@ def detection_spots(con, csv_path, mask, baseline):
     return first, newest
 
 
+def extend_detection_history(con, data, first, newest):
+    """Recover complete older spot-days retained by the daily refresh."""
+    state = data / 'daily_detections.parquet'
+    info = data / 'daily_detections.json'
+    if state.exists() != info.exists():
+        raise ValueError('Incomplete saved detection state')
+    if not state.exists():
+        return first
+    saved = json.loads(info.read_text())
+    start = dt.date.fromisoformat(saved['start'])
+    complete = dt.date.fromisoformat(saved['complete_through'])
+    if complete > newest - dt.timedelta(days=1):
+        raise ValueError('FIRMS file is older than the saved detection state')
+    if start >= first or complete < first - dt.timedelta(days=1):
+        return first
+    con.execute("""CREATE OR REPLACE TEMP TABLE detections AS
+        SELECT DISTINCT spot_id,day FROM (
+          SELECT spot_id,day FROM detections WHERE day < ? OR day >= ?
+          UNION ALL
+          SELECT spot_id,day FROM read_parquet(?) WHERE day >= ? AND day < ?
+        )""", [start, first, str(state), start, first])
+    return start
+
+
 def new_fires(con, day):
     """New spot-days have no detection in the surrounding grid on D-1 or D-2."""
     con.execute("""CREATE OR REPLACE TEMP TABLE new_fires AS
@@ -150,6 +174,7 @@ def main():
         con = duckdb.connect()
         con.execute('SET threads=4')
         first, newest = detection_spots(con, firms, args.world / 'static_mask.parquet', args.world / 'cell_days_2026.parquet')
+        first = extend_detection_history(con, args.data, first, newest)
         meta = json.loads((args.web / 'meta.json').read_text())
         published = {dt.date.fromisoformat(value): args.web for value in meta['days'].values()}
         for archive in (args.data / 'daily_archive').glob('*'):
@@ -166,7 +191,7 @@ def main():
         rows = []
         for day in days:
             if not first + dt.timedelta(days=2) <= day < newest:
-                print(f'{day}: detections incomplete or outside FIRMS window, skipped', flush=True)
+                print(f'{day}: detections incomplete or outside the saved coverage, skipped', flush=True)
                 continue
             new_fires(con, day)
             rows.extend(score_day(con, day, published[day], args.data))

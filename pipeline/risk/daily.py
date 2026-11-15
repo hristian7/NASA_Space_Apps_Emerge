@@ -173,6 +173,16 @@ def copy_inputs(data, stage, previous_day):
     shutil.copyfile(weather, dest)
 
 
+def validate_predictions(con, combined, grid, previous_day, day):
+    expected = con.execute('SELECT count(*) FROM read_parquet(?)', [str(grid)]).fetchone()[0]
+    counts = con.execute('SELECT day,count(*) FROM read_parquet(?) GROUP BY day ORDER BY day', [str(combined)]).fetchall()
+    if counts != [(previous_day, expected), (day, expected)]:
+        raise ValueError(f'Incomplete version 2 predictions: {counts}')
+    available = con.execute('SELECT count(p) FROM read_parquet(?) WHERE day=?', [str(combined), day]).fetchone()[0]
+    if not available:
+        raise ValueError(f'{day}: no version 2 forecast inputs are available')
+
+
 def publish_forecast(run, day, previous_day, first, data, web):
     """Stage the whole export; only publish after all inputs and output checks pass."""
     import export_risk
@@ -194,10 +204,7 @@ def publish_forecast(run, day, previous_day, first, data, web):
         con.execute('''COPY (SELECT * FROM read_parquet(?) WHERE day=? UNION ALL BY NAME
             SELECT * FROM read_parquet(?)) TO ? (FORMAT parquet, COMPRESSION zstd)''',
             [str(data / 'predictions_live_v2.parquet'), previous_day, str(predicted), str(combined)])
-        expected = con.execute('SELECT count(*) FROM read_parquet(?)', [str(stage / 'grid_0.25.parquet')]).fetchone()[0]
-        counts = con.execute('SELECT day,count(*) FROM read_parquet(?) GROUP BY day ORDER BY day', [str(combined)]).fetchall()
-        if counts != [(previous_day, expected), (day, expected)]:
-            raise ValueError(f'Incomplete version 2 predictions: {counts}')
+        validate_predictions(con, combined, stage / 'grid_0.25.parquet', previous_day, day)
         usual = data / 'usual_v2.parquet'
         if not usual.exists():
             usual = stage / 'usual_v2.parquet'

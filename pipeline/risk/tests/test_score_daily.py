@@ -92,3 +92,15 @@ def test_firms_labels_match_preregistered_independent_oracle(tmp_path):
         is_new = con.execute('SELECT count(*) FROM new_fires WHERE spot_id=?', [spot]).fetchone()[0]
         actual = ('new' if is_new else 'continuing') if seen else None
         assert actual == case['expected'], case['name']
+
+
+def test_saved_complete_days_extend_coverage_without_stale_catalog_rows(tmp_path):
+    import json
+    con = duckdb.connect()
+    con.execute("CREATE TABLE detections(spot_id INTEGER, day DATE)")
+    # Old catalog row should be replaced by the saved, refreshed observation.
+    con.execute("INSERT INTO detections VALUES (1, '2026-11-10'), (3, '2026-11-14')")
+    pq.write_table(pa.table({'spot_id': [2], 'day': [dt.date(2026, 11, 10)]}), tmp_path / 'daily_detections.parquet')
+    (tmp_path / 'daily_detections.json').write_text(json.dumps({'start': '2026-11-08', 'complete_through': '2026-11-13'}))
+    assert module.extend_detection_history(con, tmp_path, dt.date(2026, 11, 14), dt.date(2026, 11, 15)) == dt.date(2026, 11, 8)
+    assert con.execute('SELECT * FROM detections ORDER BY day').fetchall() == [(2, dt.date(2026, 11, 10)), (3, dt.date(2026, 11, 14))]

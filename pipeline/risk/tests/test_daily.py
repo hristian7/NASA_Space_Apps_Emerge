@@ -91,3 +91,21 @@ def test_blob_put_constructs_public_overwrite_request(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='same store'):
         daily.blob_put(base, 'meta.json', body, '_'.join(['vercel', 'blob', 'rw', 'other', 'test']))
     assert len(calls) == 1
+
+
+def test_missing_forecast_inputs_do_not_publish_a_day(tmp_path):
+    import duckdb
+    import pytest
+    grid = tmp_path / 'grid.parquet'
+    predictions = tmp_path / 'predictions.parquet'
+    previous, day = dt.date(2026, 11, 14), dt.date(2026, 11, 15)
+    pq.write_table(pa.table({'spot_id': [1, 2]}), grid)
+    def write(probabilities):
+        pq.write_table(pa.table({'spot_id': [1, 2, 1, 2], 'day': [previous, previous, day, day],
+                                 'p': pa.array(probabilities, type=pa.float64())}), predictions)
+    con = duckdb.connect()
+    write([0.1, None, None, None])
+    with pytest.raises(ValueError, match='no version 2 forecast inputs'):
+        daily.validate_predictions(con, predictions, grid, previous, day)
+    write([0.1, None, 0.2, None])
+    daily.validate_predictions(con, predictions, grid, previous, day)
