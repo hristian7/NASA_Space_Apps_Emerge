@@ -17,16 +17,25 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
 | OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
-| NASA GFWED GEOS-5 fire-weather forecasts | Planned fire-weather input for next-day risk | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
-| Natural Earth admin-1 regions | Planned regional boundaries for next-day risk | https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/ | Public domain; accessed 14 Nov 2026 |
+| NASA GFWED GEOS-5 fire-weather forecasts | Fire-weather input and baseline for next-day risk | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
+| Natural Earth admin-1 regions | Regional boundaries for next-day risk | https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/ | Public domain; accessed 14 Nov 2026 |
 | NASA MODIS MCD12C1 v061 | Planned land-cover shares for next-day risk | https://doi.org/10.5067/MODIS/MCD12C1.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
 | NASA MODIS MOD13C2 v061 | Planned monthly vegetation index for next-day risk | https://doi.org/10.5067/MODIS/MOD13C2.061 | NASA open data, LP DAAC; accessed 14 Nov 2026 |
-| MODIS MCD12Q1 500 m global mosaic, Zenodo record 8367523 | Backup land-cover input | https://zenodo.org/records/8367523 | CC BY-SA 4.0; accessed 14 Nov 2026 |
+| MODIS MCD12Q1 500 m global mosaic, Zenodo record 8367523 | Majority land-class input to the risk model | https://zenodo.org/records/8367523 | CC BY-SA 4.0; accessed 14 Nov 2026 |
 | GFED4.1s basis regions; Global fire emissions estimates (2017), Earth System Science Data 9, 697 | Regional groups for the conversion | https://doi.org/10.5194/essd-9-697-2017; [data](https://daac.ornl.gov/VEGETATION/guides/fire_emissions_v4.html) | Paper CC BY 3.0; data terms not stated in the reference; accessed 14 Nov 2026 |
 | NASA POWER daily point API | Historical daily meteorological estimates for point trends | https://power.larc.nasa.gov/docs/services/api/temporal/daily/ | Free data; cite POWER and the service version and access date as requested in its [referencing guide](https://power.larc.nasa.gov/docs/referencing/) |
-| Open-Meteo | Planned regional weather forecast | https://open-meteo.com/en/terms | Free for non-commercial use, subject to terms; accessed 14 Nov 2026 |
+| Open-Meteo | Weather forecast and wind for the point panel and map | https://open-meteo.com/en/terms | Free for non-commercial use, subject to terms; accessed 14 Nov 2026 |
 | NASA GPM IMERG precipitation rate via GIBS | Daily rain and snow rate map in mm/hour; latest observation 2026-11-13 [V] | https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml; https://gibs.earthdata.nasa.gov/colormaps/v1.3/GPM_Precipitation_Rate.xml | NASA open data |
-| Open-Meteo forecast temperature | Daily maximum air temperature, today and tomorrow, interpolated from a coarse view grid | https://open-meteo.com/en/docs; https://open-meteo.com/en/terms | Attribution required; free API for non-commercial use, subject to usage limits |
+| Open-Meteo forecast temperature | Daily maximum air temperature for forecast days, interpolated from a coarse view grid | https://open-meteo.com/en/docs; https://open-meteo.com/en/terms | Attribution required; free API for non-commercial use, subject to usage limits |
+| NASA SMAP soil moisture via GIBS | Soil moisture display layer | https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml | NASA open data |
+| NOAA-20 VIIRS NDVI via NASA GIBS | Plant greenness display layer, not a risk-model input | https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml | NASA open data |
+| NASA MODIS annual IGBP land cover via GIBS | Land-type display layer | https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml | NASA open data |
+| NASA Blue Marble via GIBS | Satellite background map | https://visibleearth.nasa.gov/collection/1484/blue-marble; https://nasa-gibs.github.io/gibs-api-docs/ | NASA open data |
+| ESA WorldCover | Land cover in a separate experimental engine, not the published risk model | https://esa-worldcover.org | CC BY 4.0; credit ESA WorldCover and modified Copernicus Sentinel data `[V]` |
+| Copernicus DEM | Terrain in a separate experimental engine | https://registry.opendata.aws/copernicus-dem/ | Free licence with attribution; see source terms |
+| geoBoundaries gbOpen | Bulgarian regional and municipal boundaries in a separate experimental engine | https://www.geoboundaries.org | CC BY 4.0 |
+| MET Norway Locationforecast | Weather in a separate experimental engine | https://api.met.no/weatherapi/locationforecast/2.0/documentation | CC BY 4.0 and NLOD 2.0, credit MET Norway |
+| NOAA climate indices | Climate inputs in a separate experimental engine | https://www.cpc.ncep.noaa.gov/; https://psl.noaa.gov/data/timeseries/month/; https://www.ncei.noaa.gov/ | US government data; check individual product terms |
 | NASA challenge page | Challenge text | https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/ | Public |
 
 ## Fire-danger map reuse (D-4)
@@ -44,6 +53,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 |---|---|---|---|
 | DuckDB | Pipeline: cleaning and counting | https://duckdb.org | MIT |
 | Python with pandas, NumPy, PyArrow, scikit-learn, LightGBM, SciPy, pytest | Pipeline: models, scoring, tests | https://www.python.org | BSD / MIT / Apache-2.0 / PSF |
+| xclim, XGBoost, PyTorch, rasterio, Shapely | Separate experimental prediction engines | https://xclim.readthedocs.io/; https://xgboost.ai/; https://pytorch.org/; https://rasterio.readthedocs.io/; https://shapely.readthedocs.io/ | Apache-2.0 or BSD-3-Clause, see each project |
 | Poppler `pdftotext` | Reading the two national tables out of the EFFIS annual report | https://poppler.freedesktop.org | GPL-2.0 |
 | MapLibre GL JS | Map and globe in the preview and the app | https://maplibre.org | BSD-3-Clause |
 | Next.js | The app in `web/`: App Router, TypeScript, build and hosting | https://nextjs.org | MIT |
