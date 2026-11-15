@@ -66,6 +66,6 @@
   "noModelDay": "Our model has no forecast for this day yet; fire weather only.",
   "sourcesNote": "Values: {forecast}. Past rain and days since rain: {past} ({dry}) Soil: {soil}. Lines: {trend}.",
   "listKey": "Arrow: versus usual for {month}. Dot: fire weather.",
-  "newFireNote": "Counts only new fires in this 25 km square; fires already burning nearby are shown above.",
-  "newFireNoteList": "Counts only new fires in each 25 km square, not fires already burning."
+  "newFireNote": "Counts only new fires in this 28 km square; fires already burning nearby are shown above.",
+  "newFireNoteList": "Counts only new fires in each 28 km square, not fires already burning."
 }

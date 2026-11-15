@@ -65,5 +65,5 @@ test("a place with no recent fire nearby keeps its score", async ({ page }) => {
   await expect(page.getByTestId("active-fire")).toHaveCount(0);
   // About 89 km away: outside the 50 km of "fire around here" too.
   await expect(page.getByTestId("fire-around").locator(".fire-verdict")).toHaveText("No fires detected nearby this week.");
-  await expect(page.locator(".fc-panel .fc-note").first()).toHaveText("Counts only new fires in this 25 km square; fires already burning nearby are shown above.");
+  await expect(page.locator(".fc-panel .fc-note").first()).toHaveText("Counts only new fires in this 28 km square; fires already burning nearby are shown above.");
 });
