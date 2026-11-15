@@ -576,3 +576,81 @@ button.fc-topRow:focus-visible {
 .risk-hereRow strong {
   font: 600 15px/1.3 var(--font-head);
 }
+
+/* Active fire: replaces the level where the area is already burning. */
+.fire-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid color-mix(in oklch, var(--accent) 55%, var(--line));
+  border-radius: var(--radius-s);
+  background: color-mix(in oklch, var(--accent) 7%, transparent);
+  min-width: 0;
+}
+
+.fire-card p {
+  margin: 0;
+}
+
+.fire-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 16px/1.25 var(--font-head);
+  color: var(--accent);
+}
+
+.fire-title svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.fire-counts {
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fire-note {
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fire-wind {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.fire-wind > .fc-muted,
+.fire-guide {
+  grid-column: 1 / -1;
+}
+
+.fire-arrow {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+}
+
+.fire-guide {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.fire-card {
+  animation: m-rise var(--dur-slow, 320ms) var(--ease-out, ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fire-card {
+    animation: none;
+  }
+}
