@@ -37,7 +37,7 @@ A free website, built for phones too, that turns 25 years of NASA fire data into
 | **Downloads** | Hotspots found (CSV), monthly numbers, a summary, charts as images |
 | **"How we know it's right"** | Test results, including weak spots; automatic tests on the main paths |
 | **Plain language, English and Bulgarian** | Every term explained |
-| **Works on phones, public link** | https://emerge-beta-ten.vercel.app |
+| **Works on phones, public link** | https://emergefire.app |
 | **Built to grow** | All data stored as points; one place can carry several data types; new maps and layers plug in without redesign |
 
 ### Should-haves (if the Musts are on track)

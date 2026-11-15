@@ -129,9 +129,9 @@ Any released list must be titled **“Risk outlook (unofficial)”**. Retain the
 
 ## Project links
 
-- Final project: [Emerge](https://emerge-beta-ten.vercel.app/).
-- Method, results and limitations: [How we know it is right](https://emerge-beta-ten.vercel.app/proof).
-- Project scope and credits: [About Emerge](https://emerge-beta-ten.vercel.app/about).
+- Final project: [Emerge](https://emergefire.app/).
+- Method, results and limitations: [How we know it is right](https://emergefire.app/proof).
+- Project scope and credits: [About Emerge](https://emergefire.app/about).
 - **FILL-PUBLIC-SOURCE-LINK:** insert the team's final public source link after checking access without login. Do not substitute an unpublished working copy.
 
 ## Demo link and description
@@ -158,7 +158,7 @@ Include these linked registers with the field text, and expand their entries if 
 | Next-day inputs, display layers and backup sources | [Data register](../references.md#data), forecast archive, regional boundaries, land cover, vegetation, backup mosaic, regional grouping and regional weather entries |
 | Pipeline, application, mapping, geometry, charts, downloads, translation and test software | [Complete software register](../references.md#software), every entry |
 | Scientific papers, sensor user guides, statistical methods, research code and agency background | [Conversion research sources](../conversion-plan.md#10-sources), every entry; these are research references, not evidence that every proposed technique was implemented |
-| Fonts used by the live site | [About page credits](https://emerge-beta-ten.vercel.app/about), font entry and its recorded licence; this entry supplements the repository register |
+| Fonts used by the live site | [About page credits](https://emergefire.app/about), font entry and its recorded licence; this entry supplements the repository register |
 | Challenge wording and submission requirements | [Challenge source](https://www.spaceappschallenge.org/2026/challenges/modis-and-viirs-hot-spots/); [submission guide](https://www.spaceappschallenge.org/resources/project-submission-guide/); [judging guide](https://www.spaceappschallenge.org/resources/judging-awards-guide/); [participant guidance](https://www.spaceappschallenge.org/resources/participant-faqs/); [terms](https://www.spaceappschallenge.org/legal/); [local event](https://www.spaceappschallenge.org/2026/local-events/sofia/) |
 | Project licence | [Licence register](../references.md#licence-text) and [repository licence](../../LICENSE) |
 
@@ -188,14 +188,14 @@ The rows below cover the factual claim groups in the field text. Proposed benefi
 | Claim | Traceable source | Tag |
 |---|---|---|
 | Instrument differences require harmonization; target users and challenge objectives | [Challenge brief](../challenge-brief.md) | `[V]` |
-| Live historical calendar, area selection, estimates, missing-data distinction | [Live About page](https://emerge-beta-ten.vercel.app/about); [overview](../../specs/overview.md) | `[V]` |
+| Live historical calendar, area selection, estimates, missing-data distinction | [Live About page](https://emergefire.app/about); [overview](../../specs/overview.md) | `[V]` |
 | Record start, last data day, partial month and provisional coverage | [Metadata](../../web/public/data/meta.json): `first_month`, `last_data_day`, `coverage`, `limits`; public metadata matched the committed file | `[V]` |
 | Deployed conversion groups and background estimate | [Validation](../../web/public/data/validation.json): `method.model_note` | `[V]` |
 | Fire cell-day definition; monthly conversion; raw daily values and unconverted heat output | [Data contract](../data-contract.md#31-what-a-fire-day-cd-is); validation `limits` | `[V]` |
 | Calendar comparisons and downloads | [Overview](../../specs/overview.md); [build plan](build-plan.md#81-where-we-stand) | `[V]` for documented status, not a fresh end-to-end feature test |
 | Reports and satellite estimates have separate labels | [Build plan](build-plan.md#81-where-we-stand) | `[V]` |
 | Worldwide fit and hold-out testing differ from method selection in Bulgaria and the United States | [Data contract](../data-contract.md#10-validationjson), “What was tested, stated accurately”; validation `world_scope`, `countries`, `limits` | `[V]` |
-| All reported historical test scores, country counts and test periods | Validation `world_scope`, `holdout`, `world_gate`; [live proof](https://emerge-beta-ten.vercel.app/proof) | `[V]` |
+| All reported historical test scores, country counts and test periods | Validation `world_scope`, `holdout`, `world_gate`; [live proof](https://emergefire.app/proof) | `[V]` |
 | Truth-sample and export checks passed; daily-to-monthly scorer check not computed | Validation `control_totals`, `world_gate` | `[V]` |
 | Grid, small-area error, estimated early values, country gaps, wide summed ranges | Validation `limits`; metadata `limits` | `[V]` |
 | Historical probability remains unscored | Validation `chance_of_fire`; [build plan](build-plan.md#81-where-we-stand) | `[V]` |
@@ -204,6 +204,6 @@ The rows below cover the factual claim groups in the field text. Proposed benefi
 | Risk inputs, selection, hold-out results, coverage and probability checks | [Risk scorecard](../../web/public/data/risk/scorecard.json); [risk metadata](../../web/public/data/risk/meta.json); [test protocol](../../pipeline/risk/PROTOCOL.md) | `[V]` for recorded results; protocol deviations remain open |
 | Static demo output and an unscored week outlook | [Build plan](build-plan.md#83-where-this-night-builds-differently-from-spec-section-11) | `[V]` for documented plan |
 | Risk title, safety text and crew-advice wording | [Risk wording rules](../../specs/plan-2-fire-risk/specification.md#10-wording-and-safety) | `[V]` |
-| Resource uses, credits and unresolved terms | [References](../references.md); [live About credits](https://emerge-beta-ten.vercel.app/about) | `[V]` for recorded terms; unresolved permissions are not verified |
+| Resource uses, credits and unresolved terms | [References](../references.md); [live About credits](https://emergefire.app/about) | `[V]` for recorded terms; unresolved permissions are not verified |
 | AI activities and checks | [AI-use record](../si-usage.md); this draft's preparation record | `[V]` |
 | Form requirements, demo restrictions, declarations, deadlines and judging criteria | [Rules and judging](../rules-and-judging.md) | `[V]` as recorded there; exact portal field names and limits still need checking |

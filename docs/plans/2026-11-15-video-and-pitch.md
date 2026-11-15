@@ -36,7 +36,7 @@ Built for energy: fast cuts on the beat of a driving royalty-free track, big typ
 | 0:08 to 0:12 | Bulgaria's calendar (S3), measured vs estimated legend; big type: **"235 countries. 2000 to today."** | "Emerge joins it into one fair record, for any place on Earth." | Creativity |
 | 0:12 to 0:19 | **Data montage**, one layer per beat, about 1 s each, its name huge on screen: Rain · Wind · Heat · Soil moisture · Greenness · Land type · Fire weather (S7 to S13) | "Then we stack it all on one map: rain, wind, heat, soil, greenness, land type." | Creativity, Impact |
 | 0:19 to 0:26 | Risk screen (S5) behind a bar race: **Emerge 20.4%** · NASA fire-weather index 11.2% · random 10.5%. Headline: **"Nearly 2× the new fires caught"**. Small caption: *"Model reads: NASA fire-weather forecast (rain, humidity, wind, heat), land type, 25 years of fire. Tested on 2025, top 5 squares per region."* Flash of the Europe line: 53.8% vs 41.1% | "On a year it never saw, our model caught nearly twice as many new fires as NASA's own fire-weather index." | Validity, Impact |
-| 0:26 to 0:30 | Logo, **emerge-beta-ten.vercel.app**, "Data: NASA FIRMS, GFWED, IMERG, SMAP" | "Emerge. Tomorrow's fire risk, ranked today." | Presentation |
+| 0:26 to 0:30 | Logo, **emergefire.app**, "Data: NASA FIRMS, GFWED, IMERG, SMAP" | "Emerge. Tomorrow's fire risk, ranked today." | Presentation |
 
 What the lines rest on:
 - "Almost three times": 2.7× more fire seen by VIIRS than MODIS, world, our pipeline `[V]` ([`../research/first-run-bulgaria-usa.md`](../research/first-run-bulgaria-usa.md)).
@@ -52,19 +52,19 @@ Set the language to **English** once in the top-right language menu before recor
 
 | Shot | Link | Checked |
 |---|---|---|
-| S1 World history | `https://emerge-beta-ten.vercel.app/` | Route answers `[V]` |
+| S1 World history | `https://emergefire.app/` | Route answers `[V]` |
 | S2 Cliff chart | Title card made in the editor from the 2.7× figure; the app has no single cliff chart | |
-| S3 Bulgaria calendar | `https://emerge-beta-ten.vercel.app/?sel=c:BGR` | Opens the calendar `[V]` |
-| S4 Sofia forecast card | `https://emerge-beta-ten.vercel.app/?v=f&sel=p:42.6977,23.3219,25` | Opens the Forecast card `[V]` |
-| S5 Risk screen | `https://emerge-beta-ten.vercel.app/risk` | Route answers `[V]` |
-| S6 Risk proof | `https://emerge-beta-ten.vercel.app/proof#next-day-risk` | Route answers `[V]` |
-| S7 Rain | `https://emerge-beta-ten.vercel.app/?v=f&lay=p` | Draws after one zoom-in `[V]` |
-| S8 Wind | `https://emerge-beta-ten.vercel.app/?v=f&lay=w` | Not seen at globe zoom; zoom closer and check |
-| S9 Heat | `https://emerge-beta-ten.vercel.app/?v=f&lay=t` | Not seen yet; check |
-| S10 Soil moisture | `https://emerge-beta-ten.vercel.app/?v=f&lay=s` | Not seen yet; check |
-| S11 Greenness | `https://emerge-beta-ten.vercel.app/?v=f&lay=g` | Draws after one zoom-in `[V]` |
-| S12 Land type | `https://emerge-beta-ten.vercel.app/?v=f&lay=l` | Not seen yet; check |
-| S13 Fire weather | `https://emerge-beta-ten.vercel.app/?v=f&lay=f` | Not seen yet; check |
+| S3 Bulgaria calendar | `https://emergefire.app/?sel=c:BGR` | Opens the calendar `[V]` |
+| S4 Sofia forecast card | `https://emergefire.app/?v=f&sel=p:42.6977,23.3219,25` | Opens the Forecast card `[V]` |
+| S5 Risk screen | `https://emergefire.app/risk` | Route answers `[V]` |
+| S6 Risk proof | `https://emergefire.app/proof#next-day-risk` | Route answers `[V]` |
+| S7 Rain | `https://emergefire.app/?v=f&lay=p` | Draws after one zoom-in `[V]` |
+| S8 Wind | `https://emergefire.app/?v=f&lay=w` | Not seen at globe zoom; zoom closer and check |
+| S9 Heat | `https://emergefire.app/?v=f&lay=t` | Not seen yet; check |
+| S10 Soil moisture | `https://emergefire.app/?v=f&lay=s` | Not seen yet; check |
+| S11 Greenness | `https://emergefire.app/?v=f&lay=g` | Draws after one zoom-in `[V]` |
+| S12 Land type | `https://emergefire.app/?v=f&lay=l` | Not seen yet; check |
+| S13 Fire weather | `https://emergefire.app/?v=f&lay=f` | Not seen yet; check |
 
 **Montage recipe:** open the link, zoom in once to the same view of Europe, wait until the layer has drawn (some take several seconds), then record 2 to 3 s. Layers only drew after a zoom in our check on a local copy; if one never appears, drop it from the montage and from the voice-over list rather than filming an empty globe.
 

@@ -16,7 +16,7 @@ Follows the owner's structure: who we are → the problem and why now → the fi
 | **0:18–0:21** Solution: the record | **OBS clip A:** Bulgaria's fire calendar; cursor down the striped rows (2000–2011) | "We merged two NASA satellite records into one," | **MODIS (2000→) + VIIRS (2012→) = one record** / Striped = MODIS converted to VIIRS level |
 | **0:21–0:24** Solution: one place | **OBS clip B:** Forecast tab, Sofia point card; slow scroll over risk level, wind, rain, soil moisture, history | "joined 22 data sources in one app," | **22 open data sources · 11 from NASA** |
 | **0:24–0:28** Solution: prediction | **OBS clip C:** Risk outlook, Australia → Northern Territory, numbered spots; click spot 1. Overlay bar chart: Emerge 20.4% · history 16.7% · NASA index 11.2% | "and our next-day forecast catches nearly twice the fires of NASA's index." | **82% more new fires caught than NASA's fire-weather index** / small: *Tested on 2025, a year it never saw. World, top 5 squares per region per day* |
-| **0:28–0:30** End | Logo, link | "Emerge." | **emerge-beta-ten.vercel.app** / *One place, not ten websites* / Data: NASA FIRMS, GFWED, GIBS, POWER |
+| **0:28–0:30** End | Logo, link | "Emerge." | **emergefire.app** / *One place, not ten websites* / Data: NASA FIRMS, GFWED, GIBS, POWER |
 
 ## OBS click path (3 clips, about 3–4 s each)
 
@@ -24,9 +24,9 @@ Record each clip on its own and cut them together in the editor. Never record ty
 
 | Clip | Before recording | Record |
 |---|---|---|
-| A, calendar | Open `https://emerge-beta-ten.vercel.app/?sel=c:BGR`; wait 5 s for the calendar | Slow cursor down the striped rows 2000–2011 |
-| B, one place | Open `https://emerge-beta-ten.vercel.app/?v=f&sel=p:42.6977,23.3219,25` (Sofia, Forecast tab) | Slow scroll down the card: risk level, wind, rain, soil moisture |
-| C, risk | Open `https://emerge-beta-ten.vercel.app/risk`; choose **Australia**, then **Northern Territory**; wait for the numbered spots | Click spot **1**; hold on the card ("Level 3", "Consider a standby team near here tomorrow") |
+| A, calendar | Open `https://emergefire.app/?sel=c:BGR`; wait 5 s for the calendar | Slow cursor down the striped rows 2000–2011 |
+| B, one place | Open `https://emergefire.app/?v=f&sel=p:42.6977,23.3219,25` (Sofia, Forecast tab) | Slow scroll down the card: risk level, wind, rain, soil moisture |
+| C, risk | Open `https://emergefire.app/risk`; choose **Australia**, then **Northern Territory**; wait for the numbered spots | Click spot **1**; hold on the card ("Level 3", "Consider a standby team near here tomorrow") |
 
 **Don't film:**
 - the risk page as it first loads (it shows "Northern Cyprus, no spots", a bug);
@@ -85,7 +85,7 @@ Emerge.
 | Five people, Sofia | Team size and event | Owner; public team page | `[U]` |
 | Two NASA satellite records merged | MODIS since Nov 2000 and VIIRS since 2012, converted to one scale | [`../../README.md`](../../README.md), `web/public/data/validation.json` | `[V]` |
 | 22 data sources, 11 from NASA | Rows in the Data table used by the live app or published model, not counting planned or experimental rows; Open-Meteo counted once; the NASA count includes two public mirrors of NASA data (firms-catalog, MCD12Q1 on Zenodo) | [`../references.md`](../references.md), counted 15 Nov | `[V]` |
-| Nearly twice / 82% more than NASA's index | 20.4% vs 11.2% of new fires caught (world, 2025 hold-out); history alone 16.7%; Europe 53.8% vs 41.1% (31% more) | `web/public/data/risk/scorecard.json`, [proof page](https://emerge-beta-ten.vercel.app/proof#next-day-risk) | `[V]` |
+| Nearly twice / 82% more than NASA's index | 20.4% vs 11.2% of new fires caught (world, 2025 hold-out); history alone 16.7%; Europe 53.8% vs 41.1% (31% more) | `web/public/data/risk/scorecard.json`, [proof page](https://emergefire.app/proof#next-day-risk) | `[V]` |
 
 **Other numbers, if a card needs swapping:**
 - **Canada 2023:** over 230,000 people evacuated, 14.6 M ha burned ([NRCan](https://natural-resources.canada.ca/forest-forestry/wildland-fires/forest-fires)) `[V]`.
