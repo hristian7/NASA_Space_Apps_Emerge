@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { brierSkill, claimAllowed, loadScorecard, methods, weakSlices, type Aggregate, type Metric, type RiskScorecard, type Selection } from "./risk-data";
+import { brierSkill, claimAllowed, dailyWindow, loadScorecard, methods, weakSlices, type Aggregate, type Metric, type RiskScorecard, type Selection } from "./risk-data";
 import styles from "./risk-scorecard.module.css";
 
 type Translate = ReturnType<typeof useTranslations>;
@@ -98,6 +98,26 @@ export default function RiskScorecardSection() {
         </section>;
       })}
     </>}
-    <p>{t("daily")}</p>
+    <section data-testid="risk-daily-log">
+      <h3>{t("dailyTitle")}</h3>
+      <p>{t("dailyExplanation")}</p>
+      {card ? ([7, 30] as const).map(days => {
+        const rows = dailyWindow(card.daily_log ?? [], days);
+        const count = new Set(rows.map(row => row.date)).size;
+        return <section key={days}>
+          <h4>{t("dailyWindow", { days })}</h4>
+          {count < days ? <p>{t("dailyShort", { count })}</p> : null}
+          {rows.length === 0 ? <p>{t("dailyEmpty")}</p> : <table className="dailyTable">
+            <caption>{t("dailyCounts")}</caption>
+            <thead><tr>{["dailyDate", "dailyScope", "dailyFires", "dailyModel", "dailyIndex", "dailyRegions"].map(key => <th scope="col" key={key}>{t(key)}</th>)}</tr></thead>
+            <tbody>{rows.map(row => <tr key={`${row.date}-${row.scope}`}>
+              <th scope="row">{row.date}</th><td>{t(row.scope)}</td>
+              <td>{number(row.new_fires)}</td><td>{number(row.captured_by_us)}</td>
+              <td>{number(row.captured_by_index)}</td><td>{number(row.regions_scored)}</td>
+            </tr>)}</tbody>
+          </table>}
+        </section>;
+      }) : null}
+    </section>
   </section>;
 }

@@ -1,3 +1,5 @@
+import { riskRoot } from "../../lib/risk/loaders";
+
 /** The nested export written by the risk scorecard builder. Missing scores stay null. */
 export const methods = ["model", "fwi", "history", "random"] as const;
 export type Method = (typeof methods)[number];
@@ -38,12 +40,21 @@ export interface Scope {
   grid_g: number;
   years: Record<string, { weather_days: number; first_day: string; last_day: string; selections: Record<string, Selection> }>;
 }
+export interface DailyLogRow {
+  date: string;
+  scope: "world" | "europe";
+  new_fires: number;
+  captured_by_us: number;
+  captured_by_index: number;
+  regions_scored: number;
+}
 export interface RiskScorecard {
   schema: "emerge-risk-scorecard-1";
   example?: boolean;
   grid_g: number;
   test_year: number;
   scopes: Record<string, Scope>;
+  daily_log?: DailyLogRow[];
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -77,6 +88,11 @@ function expandRegions(regions: Record<string, unknown>, fields: unknown): Recor
 export function parseScorecard(value: unknown): RiskScorecard | null {
   if (!record(value) || value.schema !== "emerge-risk-scorecard-1" ||
       typeof value.grid_g !== "number" || typeof value.test_year !== "number" || !record(value.scopes)) return null;
+  if (value.daily_log !== undefined && (!Array.isArray(value.daily_log) || value.daily_log.some(row =>
+    !record(row) || typeof row.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(row.date) ||
+    (row.scope !== "world" && row.scope !== "europe") ||
+    [row.new_fires, row.captured_by_us, row.captured_by_index, row.regions_scored].some(n =>
+      typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)))) return null;
   for (const scope of Object.values(value.scopes)) {
     if (!record(scope) || typeof scope.grid_g !== "number" || !record(scope.years)) return null;
     const year = scope.years[String(value.test_year)];
@@ -95,7 +111,7 @@ export function parseScorecard(value: unknown): RiskScorecard | null {
 }
 
 export async function loadScorecard(example = false, request: typeof fetch = fetch): Promise<RiskScorecard | null> {
-  const response = await request(`/data/risk/${example ? "example/" : ""}scorecard.json`);
+  const response = await request(`${riskRoot(example)}/scorecard.json`);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Scorecard request failed: ${response.status}`);
   const parsed = parseScorecard(await response.json());
@@ -134,4 +150,15 @@ export function weakSlices(selection: Selection): { kind: "regions" | "months"; 
       return typeof model === "number" && methods.some(method => method !== "model" &&
         typeof row.methods[method]?.capture_rate === "number" && model < row.methods[method]!.capture_rate!);
     }).map(([name, row]) => ({ kind, name, row })));
+}
+
+/** Use complete UTC calendar days, ending yesterday. */
+export function dailyWindow(rows: DailyLogRow[], days: number, now = new Date()): DailyLogRow[] {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const last = today - 86400000;
+  const first = last - (days - 1) * 86400000;
+  return rows.filter(row => {
+    const date = Date.parse(`${row.date}T00:00:00Z`);
+    return date >= first && date <= last;
+  }).sort((a, b) => b.date.localeCompare(a.date) || a.scope.localeCompare(b.scope));
 }

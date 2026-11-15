@@ -1,4 +1,5 @@
 import type { RiskScoresFile, RiskSquareResult } from '../../types/risk';
+import { riskRoot } from './loaders';
 
 /** Compute the containing square, wrapping longitude and clamping the poles. */
 export function riskSquare(lat: number, lon: number, grid: number) {
@@ -18,7 +19,7 @@ export function riskSquare(lat: number, lon: number, grid: number) {
 /** Fetch just one country; unavailable files and days are distinct from ocean. */
 export async function loadSpotScore(country: string, day: string, lat: number, lon: number, fetcher = fetch): Promise<RiskSquareResult> {
   if (!/^[A-Z]{3}$/.test(country)) throw new Error('Invalid country code');
-  const response = await fetcher(`/data/risk/scores/${country}.json`, { cache: 'no-store' });
+  const response = await fetcher(`${riskRoot(false)}/scores/${country}.json`, { cache: 'no-store' });
   // An unread error body keeps the request open.
   if (!response.ok) void response.body?.cancel().catch(() => {});
   if (response.status === 404) return { status: 'missing country' };
