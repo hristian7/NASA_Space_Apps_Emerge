@@ -99,11 +99,11 @@ export default function RiskScorecardSection() {
       })}
     </>}
     {card?.week ? <section data-testid="risk-week-table">
-      <h3>{t("weekTitle")}</h3><p>{t("weekExplanation")}</p>
-      <table><thead><tr><th scope="col">{t("weekLead")}</th><th scope="col">{t("fwi")}</th><th scope="col">{t("history")}</th><th scope="col">{t("random")}</th><th scope="col">{t("weekDays")}</th></tr></thead>
+      <h3>{t("weekTitle")}</h3><p>{t("weekExplanation")}</p><p>{t("weekSelectionCaveat")}</p>
+      <table><thead><tr><th scope="col">{t("weekLead")}</th><th scope="col">{t("model")}</th><th scope="col">{t("weekFwi")}</th><th scope="col">{t("weekHistory")}</th><th scope="col">{t("weekRandom")}</th><th scope="col">{t("weekDays")}</th></tr></thead>
         <tbody>{Object.entries(card.week.leads).map(([lead, entry]) => {
           const scope = entry.scopes.world; const row = scope?.selections.forest_wildland?.pooled;
-          return <tr key={lead}><th scope="row">{lead}</th>{(["fwi", "history", "random"] as const).map(method => <td key={method}>{number(row?.methods[method]?.capture_rate, true)}</td>)}<td>{number(scope?.weather_days)}</td></tr>;
+          return <tr key={lead}><th scope="row">{lead}</th>{(["model", "fwi", "history", "random"] as const).map(method => <td key={method}>{number(row?.methods[method]?.capture_rate, true)}</td>)}<td>{number(scope?.weather_days)}</td></tr>;
         })}</tbody>
       </table>
     </section> : null}
