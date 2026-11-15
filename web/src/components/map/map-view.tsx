@@ -23,6 +23,7 @@ import type { HistoryCell, RecentPoint } from "@/lib/layers/overlay";
 import { useWindLayer } from "./wind-layer";
 import { useTemperatureLayer } from "./temperature-field";
 import { tokenColor } from "@/lib/ui/token-color";
+import { attachDownwindMarker } from "@/components/shell/downwind-marker";
 
 export type Projection = "globe" | "mercator";
 
@@ -295,6 +296,7 @@ export default function MapView({
           else instance.zoomOut();
         };
         window.addEventListener("emerge-zoom", zoomBy);
+        const detachDownwind = attachDownwindMarker(instance, maplibregl.Marker);
 
         instance.on("error", (event) => {
           // A missing tile must not blank the page; the credit bar and the
@@ -631,6 +633,7 @@ export default function MapView({
         measure();
         cleanUp.current = () => {
           window.removeEventListener("emerge-zoom", zoomBy);
+          detachDownwind();
           observer.disconnect();
           window.removeEventListener("resize", measure);
           document.documentElement.style.removeProperty("--credit-h");

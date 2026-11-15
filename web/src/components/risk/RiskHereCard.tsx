@@ -63,7 +63,7 @@ export function RiskHereCard({point,example,country='',radiusKm=0}:RiskHereCardP
   {failed?<p role="alert">{t('failed')}</p>:!state?<p role="status">{t('loading')}</p>:<>
    {state.example&&<p className="risk-example">{t('example')} · {t('exampleNote')}</p>}
    {stale&&showForecast(state.index.meta,state.example)&&<p role="status">{t('stale',{date:state.index.meta?.days.tomorrow??''})}</p>}
-   {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:fireCheck?.status==='loading'?<p role="status" className="risk-muted">{t('aroundChecking')}</p>:burning&&fireCheck?.status==='ready'?<ActiveFireCard fire={fireCheck.fire} weather={weather}/>:state.spot?<>
+   {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:fireCheck?.status==='loading'?<p role="status" className="risk-muted">{t('aroundChecking')}</p>:burning&&fireCheck?.status==='ready'?<ActiveFireCard fire={fireCheck.fire} weather={weather} at={point}/>:state.spot?<>
     <RiskSpotDetails spot={state.spot} compact/>
     <p className="fc-note">{f('newFireNote')}</p>
    </>:<><p>{t('noForecast')}</p><p className="risk-muted">{t('coverage')}</p></>}

@@ -728,3 +728,57 @@
     margin: 8px -14px 0;
   }
 }
+
+/* Downwind arrow on the map for a place already burning: starts at the
+   point, points where the wind blows to. Only the drawn arrow takes the
+   pointer, so the map around it stays clickable. */
+.downwind-marker {
+  pointer-events: none;
+}
+
+.downwind-marker svg {
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  animation: m-fade-in var(--dur-slow, 320ms) var(--ease-out, ease-out) both;
+}
+
+.downwind-marker path {
+  pointer-events: visiblePainted;
+  cursor: help;
+  stroke: var(--space);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+
+.downwind-marker .downwind-outline {
+  fill: none;
+  stroke: var(--space);
+  stroke-width: 9px;
+}
+
+.downwind-marker .downwind-shaft {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4.5px;
+}
+
+.downwind-head {
+  fill: var(--accent);
+  stroke-width: 3px;
+}
+
+.downwind-marker svg:focus-visible {
+  outline: none;
+}
+
+.downwind-marker svg:focus-visible .downwind-head {
+  stroke: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .downwind-marker svg {
+    animation: none;
+  }
+}

@@ -123,5 +123,6 @@
   "verdictSome": "Some fires nearby this week.",
   "verdictMany": "Many fires nearby this week.",
   "aroundFailed": "Recent fires nearby could not be checked, so a fire already burning here may not be shown.",
-  "aroundChecking": "Checking recent fires nearby…"
+  "aroundChecking": "Checking recent fires nearby…",
+  "downwindLabel": "Downwind: guide from the wind forecast, not a tested spread forecast"
 }

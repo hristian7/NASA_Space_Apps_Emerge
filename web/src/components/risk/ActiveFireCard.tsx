@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { showDownwind } from '@/components/shell/downwind-marker';
 import { useLocale, useTranslations } from 'next-intl';
 import { fetchActiveFire, fireVerdict, type ActiveFire } from '@/lib/risk/active-fire';
 import Roll from '@/components/ui/roll';
@@ -35,13 +36,22 @@ export function useActiveFire(place: { lat: number; lon: number; radiusKm: numbe
 type Weather = Pick<DayWeather, 'windFrom' | 'windMax' | 'gustMax' | 'rhMin' | 'dryDays'>;
 
 /** Shown instead of a level where the area is already burning: the model scores new fires only. */
-export default function ActiveFireCard({ fire, weather }: { fire: ActiveFire; weather: Weather | null }) {
+export default function ActiveFireCard({ fire, weather, at }: { fire: ActiveFire; weather: Weather | null; /** The chosen point, where the map's downwind arrow starts. */ at?: { lat: number; lon: number } }) {
  const t = useTranslations('risk');
  const f = useTranslations('forecast');
  const locale = useLocale();
  const number = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
  const newest = fire.newest === null ? null : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'UTC' }).format(new Date(fire.newest));
  const toward = weather?.windFrom == null ? null : blowsToward(weather.windFrom);
+ const label = t('downwindLabel');
+ useEffect(() => {
+  if (at === undefined || toward === null) {
+   showDownwind(null);
+   return;
+  }
+  showDownwind({ lat: at.lat, lon: at.lon, toward, label });
+  return () => showDownwind(null);
+ }, [at?.lat, at?.lon, toward, label]);
  return <div className="fire-card" data-testid="active-fire">
   <p className="fire-title">
    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5c.6 2.6 3.9 4.4 3.9 8.4a3.9 3.9 0 0 1-7.8 0c0-1.9 1-3.2 2-4.2.1 1.4.8 2.3 1.6 2.6-.4-2.3-.3-4.6.3-6.8z" fill="currentColor"/></svg>

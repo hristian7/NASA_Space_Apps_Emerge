@@ -304,7 +304,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         return (
           <>
             {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
-            <ActiveFireCard fire={fireCheck.fire} weather={parsed} />
+            <ActiveFireCard fire={fireCheck.fire} weather={parsed} at={sel.kind === "point" ? { lat: sel.lat, lon: sel.lon } : undefined} />
           </>
         );
       }
