@@ -186,15 +186,16 @@ test.describe('animated wind field', () => {
 
 const date = (day: number) => new Date(Date.now() + day * 86400000).toISOString().slice(0, 10);
 
-test('forecast temperature uses one grid request and follows the day control', async ({ page }) => {
+test('forecast temperature uses one ten-day grid request and follows the day control', async ({ page }) => {
   let requests = 0;
   await page.route('https://api.open-meteo.com/v1/forecast**', async route => {
     requests++;
     const params = new URL(route.request().url()).searchParams;
     expect(params.get('daily')).toBe('temperature_2m_max');
-    expect(params.get('forecast_days')).toBe('2');
+    expect(params.get('forecast_days')).toBe('10');
     expect(params.get('latitude')?.split(',')).toHaveLength(64);
-    const result = params.get('latitude')!.split(',').map(lat => ({ daily_units: { temperature_2m_max: '°C' }, daily: { time: [date(0), date(1)], temperature_2m_max: [30 - Math.abs(Number(lat)), 33 - Math.abs(Number(lat))] } }));
+    // Day 3 is left without values, to check that a missing day reads as no data.
+    const result = params.get('latitude')!.split(',').map(lat => ({ daily_units: { temperature_2m_max: '°C' }, daily: { time: Array.from({ length: 10 }, (_, i) => date(i)), temperature_2m_max: Array.from({ length: 10 }, (_, i) => (i === 3 ? null : 30 + i - Math.abs(Number(lat)))) } }));
     await route.fulfill({ json: result });
   });
   const errors: string[] = [];
@@ -212,6 +213,9 @@ test('forecast temperature uses one grid request and follows the day control', a
   await expect(row.locator('[data-temperature-state]')).toHaveAttribute('data-temperature-state', 'ready');
   expect(requests).toBe(1);
   await page.getByRole('slider', { name: 'Forecast day' }).fill('2');
+  await expect(row).toContainText(date(2));
+  await expect(row.locator('[data-temperature-state]')).toHaveAttribute('data-temperature-state', 'ready');
+  await page.getByRole('slider', { name: 'Forecast day' }).fill('3');
   await expect(row).toContainText('No temperature data');
   await expect(row.locator('[data-temperature-state]')).toHaveAttribute('data-temperature-state', 'empty');
   await page.getByRole('slider', { name: 'Forecast day' }).fill('0');

@@ -54,5 +54,12 @@
   "nearestSpot": "Nearest scored spot: {km} km away, level {level} of 5.",
   "goToSpot": "Go to that spot",
   "squareNote": "Score for this 0.25 degree square. Reasons are listed for the highest-ranked spots only; the nearest one is below.",
-  "trendNote": "Last 30 days, NASA POWER model estimate, to {date}"
+  "trendNote": "Last 30 days, NASA POWER model estimate, to {date}",
+  "scoreTitleDay": "Fire weather for {date} (unofficial)",
+  "inputsTitleDay": "Weather and ground here, {date}",
+  "weekOnly": "Our model forecasts today and tomorrow; for this day, fire weather only.",
+  "weekFwi": "NASA fire-weather index here: {value}",
+  "weekFwiCountry": "Highest NASA fire-weather index among the listed spots: {value}",
+  "weekNoValue": "No fire-weather value for this place on this day.",
+  "weekNote": "Fire-weather index for {date}, from the NASA GEOS-5 forecast. It is not our model's score."
 }

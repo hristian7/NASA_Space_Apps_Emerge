@@ -67,7 +67,7 @@ export function useTemperatureLayer(map: React.RefObject<MapLibreMap | null>, re
   const search = useSearchParams();
   const on = search.get('v') === 'f' && (search.get('lay') ?? '').split(',').includes('t');
   const offset = Number(search.get('dd') ?? 0);
-  const day = Number.isInteger(offset) && offset >= 0 && offset <= 1 ? offset : -1;
+  const day = Number.isInteger(offset) && offset >= 0 && offset <= 9 ? offset : -1;
   const selected = useRef(day); selected.current = day;
   const redraw = useRef<(() => void) | null>(null);
   useEffect(() => { redraw.current?.(); }, [day]);

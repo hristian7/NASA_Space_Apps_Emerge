@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import type { RiskIndex, RiskSpot } from "@/types/risk";
-import { exampleMode, loadRiskCountry, loadRiskIndex, showForecast } from "@/lib/risk/loaders";
-import { distanceKm } from "@/lib/risk/geo";
+import { exampleMode, loadRiskCountry, loadRiskIndex, loadRiskWeek, showForecast } from "@/lib/risk/loaders";
+import { distanceKm, nearestSpot as nearestSpotOf } from "@/lib/risk/geo";
 import { pointScore, type PointSpot } from "@/lib/risk/here";
+import { riskSquare } from "@/lib/risk/spot-scores";
+import { dangerDate } from "@/lib/layers/danger";
 import { fetchPower, type PowerData, type PowerParameter } from "@/lib/forecast/power";
 import Sparkline from "./Sparkline";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
@@ -26,7 +28,8 @@ import "./forecast.css";
 
 type Props = {
   selection: Selection;
-  day: ForecastDay;
+  /** Day offset on the timeline: 0 today, 1 tomorrow, up to 9. */
+  day: number;
   onPickPoint?: (lat: number, lon: number) => void;
 };
 
@@ -44,6 +47,8 @@ type ScoreResult =
       nearest: { spot: RiskSpot; km: number } | null;
       /** The place's own square, scored for every land square. */
       square: { p: number; level: number } | null;
+      /** Past tomorrow our model has no score: that day's fire-weather value instead. */
+      weekly: { fwi: number | null; date: string } | null;
       top: RiskSpot[] | null;
       countryMissing: boolean;
       country: string;
@@ -123,6 +128,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const selectionKey = JSON.stringify(selection);
   const sel = useMemo(() => JSON.parse(selectionKey) as Selection, [selectionKey]);
   const scoreKey = `${selectionKey}|${day}`;
+  const named = day === 0 ? "today" : day === 1 ? "tomorrow" : null;
 
   const place = useMemo(() => selectionPoint(sel, boxes), [sel, boxes]);
   const placeKey = place ? `${roundedPlace(place.lat, place.lon).lat},${roundedPlace(place.lat, place.lon).lon}` : null;
@@ -138,11 +144,42 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     const example = exampleMode(search);
     (async (): Promise<ScoreResult> => {
       const index = await loadRiskIndex(example);
-      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, square: null, top: null, countryMissing: false };
+      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, square: null, weekly: null, top: null, countryMissing: false };
       if (!index.meta || !showForecast(index.meta, example)) {
         return { ...base, open: false, country: sel.kind === "country" ? sel.iso3 : "" };
       }
-      const dayKey = index.meta.days[day];
+      if (named === null) {
+        // Our model scores today and tomorrow only; later days carry the
+        // NASA fire-weather index from the week files, never a model score.
+        const date = dangerDate(day);
+        const at = selectionPoint(sel, boxes);
+        const countries =
+          sel.kind === "country"
+            ? [sel.iso3]
+            : at === null
+              ? []
+              : [...new Set(index.regions.filter(({ bbox: [w, s2, e, n] }) => at.lon >= w && at.lon <= e && at.lat >= s2 && at.lat <= n).map((region) => region.country))];
+        let fwi: number | null = null;
+        for (const country of countries) {
+          const { file } = await loadRiskWeek(country, example);
+          const spots = Object.values(file.regions).flatMap((days) => days[date] ?? []);
+          const values = (list: typeof spots) => list.map((spot) => spot.inputs?.fwi).filter((value): value is number => typeof value === "number");
+          if (sel.kind === "country") {
+            const all = values(spots);
+            if (all.length > 0) fwi = Math.max(fwi ?? 0, ...all);
+          } else if (at !== null) {
+            const square = riskSquare(at.lat, at.lon, index.meta.grid_g).spot_id;
+            const own = spots.find((spot) => spot.spot_id === square) ?? nearestSpotOf(spots, at.lat, at.lon);
+            const value = own ? values([own])[0] : undefined;
+            if (value !== undefined) {
+              fwi = value;
+              break;
+            }
+          }
+        }
+        return { ...base, open: true, weekly: { fwi, date }, country: sel.kind === "country" ? sel.iso3 : (countries[0] ?? "") };
+      }
+      const dayKey = index.meta.days[named];
       if (sel.kind === "country") {
         const { status, file } = await loadRiskCountry(sel.iso3, example);
         const spots = Object.values(file.regions).flatMap((days) => days[dayKey] ?? []);
@@ -163,6 +200,8 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     return () => {
       live = false;
     };
+    // `named` and `boxes` follow from `day` and the country file.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sel, day, scoreKey]);
 
   useEffect(() => {
@@ -225,8 +264,25 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const scoreSection = (): ReactNode => {
     if (!currentScore) return <p role="status" className="fc-muted">{tr("loading")}</p>;
     if (currentScore.status === "failed") return <p role="alert">{tr("failed")}</p>;
-    const { example, open, spot, nearest, square, top, countryMissing, index } = currentScore;
-    const validDate = index.meta ? dateText(index.meta.days[day]) : "";
+    const { example, open, spot, nearest, square, weekly, top, countryMissing, index } = currentScore;
+    const validDate = index.meta && named !== null ? dateText(index.meta.days[named]) : "";
+    if (weekly !== null) {
+      return (
+        <>
+          <p className="fc-levelName">{t("weekOnly")}</p>
+          {weekly.fwi === null ? (
+            <p className="fc-muted">{t("weekNoValue")}</p>
+          ) : (
+            <p className="fc-facts">
+              <span>
+                {t(sel.kind === "country" ? "weekFwiCountry" : "weekFwi", { value: number(weekly.fwi, 1) })}
+              </span>
+            </p>
+          )}
+          <p className="fc-muted">{t("weekNote", { date: dateText(weekly.date) })}</p>
+        </>
+      );
+    }
     return (
       <>
         {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
@@ -474,17 +530,23 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     );
   };
 
+  const dayDate = dateText(dangerDate(day));
+  const scoreTitle =
+    named === "today" ? t("scoreTitleToday") : named === "tomorrow" ? t("scoreTitleTomorrow") : t("scoreTitleDay", { date: dayDate });
+  const inputsTitle =
+    named === "today" ? t("inputsTitleToday") : named === "tomorrow" ? t("inputsTitleTomorrow") : t("inputsTitleDay", { date: dayDate });
+
   const ready = currentScore?.status === "ready" ? currentScore : null;
   const listHref = `/risk${ready?.search ?? ""}`;
 
   return (
     <div className={`${styles.report} fc-panel`}>
-      <section className={styles.section} aria-label={t(day === "today" ? "scoreTitleToday" : "scoreTitleTomorrow")}>
-        <h2 className={styles.heading}>{t(day === "today" ? "scoreTitleToday" : "scoreTitleTomorrow")}</h2>
+      <section className={styles.section} aria-label={scoreTitle}>
+        <h2 className={styles.heading}>{scoreTitle}</h2>
         {scoreSection()}
       </section>
-      <section className={styles.section} aria-label={t(day === "today" ? "inputsTitleToday" : "inputsTitleTomorrow")}>
-        <h2 className={styles.heading}>{t(day === "today" ? "inputsTitleToday" : "inputsTitleTomorrow")}</h2>
+      <section className={styles.section} aria-label={inputsTitle}>
+        <h2 className={styles.heading}>{inputsTitle}</h2>
         {weatherSection()}
       </section>
       <section className={`${styles.section} fc-links`}>

@@ -90,11 +90,11 @@ export async function fetchTemperature(view: Bounds, now = Date.now()): Promise<
   const grid = temperatureGrid(view), key = today + JSON.stringify(grid.bounds);
   if (pending?.key === key) return pending.result;
   const result = (async () => {
-    const params = new URLSearchParams({ latitude: grid.points.map(p => p.lat.toFixed(5)).join(','), longitude: grid.points.map(p => p.lon.toFixed(5)).join(','), daily: 'temperature_2m_max', forecast_days: '2', temperature_unit: 'celsius', timezone: 'UTC', cell_selection: 'nearest' });
+    const params = new URLSearchParams({ latitude: grid.points.map(p => p.lat.toFixed(5)).join(','), longitude: grid.points.map(p => p.lon.toFixed(5)).join(','), daily: 'temperature_2m_max', forecast_days: '10', temperature_unit: 'celsius', timezone: 'UTC', cell_selection: 'nearest' });
     const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: AbortSignal.timeout(20000) });
     if (!response.ok) throw new Error(`Temperature service: ${response.status}`);
     const data = await response.json();
-    const dates = [today, new Date(now + 86400000).toISOString().slice(0, 10)];
+    const dates = Array.from({ length: 10 }, (_, i) => new Date(now + i * 86400000).toISOString().slice(0, 10));
     if (!Array.isArray(data) || data.length !== grid.points.length || !data.every(p => p?.daily_units?.temperature_2m_max === '°C' && dates.every((date, i) => p?.daily?.time?.[i] === date))) throw new Error('Incomplete temperature data');
     const values = dates.map((_, day) => {
       const samples: unknown[] = data.map(p => p.daily.temperature_2m_max?.[day]);

@@ -165,7 +165,7 @@ describe("fetchWeather", () => {
       "precipitation_sum",
     ]);
     expect(url.searchParams.get("past_days")).toBe("7");
-    expect(url.searchParams.get("forecast_days")).toBe("2");
+    expect(url.searchParams.get("forecast_days")).toBe("10");
   });
 
   it("fails on a server error instead of caching it", async () => {
@@ -186,5 +186,41 @@ describe("selectionPoint", () => {
   it("averages a polygon's corners without counting the closing corner twice", () => {
     const ring: [number, number][] = [[0, 0], [10, 0], [10, 20], [0, 20], [0, 0]];
     expect(selectionPoint({ kind: "polygon", ring }, countries)).toEqual({ lat: 10, lon: 5 });
+  });
+});
+
+describe("parseWeather by day offset", () => {
+  // Seven past days, then today and nine more: each value names its own row.
+  const dates = Array.from({ length: 17 }, (_, i) => `2026-11-${String(8 + i).padStart(2, "0")}`);
+  const json = {
+    daily: {
+      time: dates,
+      temperature_2m_max: dates.map((_, i) => 100 + i),
+      relative_humidity_2m_min: dates.map((_, i) => 200 + i),
+      wind_speed_10m_max: dates.map((_, i) => 300 + i),
+      wind_gusts_10m_max: dates.map((_, i) => 400 + i),
+      wind_direction_10m_dominant: dates.map((_, i) => i * 10),
+      precipitation_sum: dates.map(() => 0),
+    },
+    hourly: { time: [], soil_moisture_0_to_1cm: [] },
+  };
+
+  it("reads today, tomorrow and five days ahead from their own rows", () => {
+    const today = parseWeather(json, 0);
+    const tomorrow = parseWeather(json, 1);
+    const fifth = parseWeather(json, 5);
+    expect(today?.date).toBe("2026-11-15");
+    expect(today?.tMax).toBe(107);
+    expect(tomorrow?.date).toBe("2026-11-16");
+    expect(tomorrow?.windMax).toBe(308);
+    expect(fifth?.date).toBe("2026-11-20");
+    expect(fifth?.tMax).toBe(112);
+    expect(fifth?.rhMin).toBe(212);
+  });
+
+  it("keeps the named days working and refuses a day past the data", () => {
+    expect(parseWeather(json, "tomorrow")?.date).toBe("2026-11-16");
+    expect(parseWeather(json, 10)).toBeNull();
+    expect(parseWeather(json, -1)).toBeNull();
   });
 });

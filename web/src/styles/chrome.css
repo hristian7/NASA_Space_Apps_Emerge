@@ -491,15 +491,7 @@
     bottom: calc(var(--gap) + var(--time-h) + 10px);
   }
 
-  .shell[data-has-report="true"] .tools {
-    bottom: calc(var(--sheet) + 10px);
-  }
 
-  /* A full sheet leaves no room for the tools between it and the top bar. */
-  [data-sheet="full"] .shell[data-has-report="true"] .tools,
-  [data-sheet="full"] .shell[data-has-report="true"] .layers {
-    display: none;
-  }
 
   .tool-tip {
     width: min(260px, calc(100vw - var(--tool) - 40px));
@@ -527,15 +519,40 @@
     max-height: calc(100dvh - var(--top-bar-h, 60px) - var(--time-h) - 50px);
   }
 
-  .shell[data-has-report="true"] .layers {
-    bottom: calc(var(--sheet) + 10px);
-    max-height: calc(100dvh - var(--top-bar-h, 60px) - var(--sheet) - 30px);
-  }
 
-  /* The sheet runs behind the floating timeline. */
+
+  /* The sheet opens over the map tools and runs behind the floating
+     timeline; its content scrolls clear of the timeline at the end. */
   .report {
     top: auto;
-    padding-bottom: calc(var(--time-h) + var(--gap) + 4px);
+    padding-bottom: 0;
+    touch-action: auto;
+  }
+
+  .report-scroll {
+    padding-bottom: calc(var(--time-h) + var(--gap) + 12px);
+  }
+
+  .report .handle {
+    touch-action: none;
+    height: 28px;
+    cursor: grab;
+  }
+
+  [data-sheet="peek"] {
+    --sheet: 22dvh;
+  }
+
+  [data-sheet="full"] {
+    --sheet: calc(100dvh - var(--top-bar-h, 60px) - 16px);
+  }
+
+  [data-sheet="drag"] {
+    --sheet: var(--sheet-drag, 52dvh);
+  }
+
+  [data-sheet="drag"] .report {
+    transition: none;
   }
 }
 
@@ -682,4 +699,17 @@
 .timeline-bars.days {
   top: 8px;
   height: 12px;
+}
+
+/* The safety line and official links end the panel's scroll. */
+.report-scroll .disclaim {
+  margin: 8px -18px -8px;
+  border-top: 1px solid var(--line);
+  background: none;
+}
+
+@media (max-width: 767px) {
+  .report-scroll .disclaim {
+    margin: 8px -14px 0;
+  }
 }
