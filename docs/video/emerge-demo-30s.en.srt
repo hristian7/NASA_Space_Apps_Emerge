@@ -1,0 +1,55 @@
+1
+00:00:00,080 --> 00:00:01,790
+Fire crews juggle about ten websites
+
+2
+00:00:01,840 --> 00:00:02,820
+to plan tomorrow.
+
+3
+00:00:03,220 --> 00:00:06,100
+NASA's 25-year fire record broke in 2012:
+
+4
+00:00:06,280 --> 00:00:07,310
+a sharper satellite saw
+
+5
+00:00:07,360 --> 00:00:09,020
+nearly three times more fire.
+
+6
+00:00:09,440 --> 00:00:11,350
+Emerge joins it into one fair record
+
+7
+00:00:11,400 --> 00:00:12,780
+for any point on Earth.
+
+8
+00:00:13,020 --> 00:00:14,420
+Then stacks it on one map:
+
+9
+00:00:14,560 --> 00:00:18,340
+rain, wind, heat, soil, greenness, land type.
+
+10
+00:00:18,740 --> 00:00:19,850
+On a year it never saw,
+
+11
+00:00:19,900 --> 00:00:21,090
+it caught nearly twice as many new fires
+
+12
+00:00:21,140 --> 00:00:22,660
+as NASA's fire-weather index.
+
+13
+00:00:22,780 --> 00:00:23,560
+Emerge.
+
+14
+00:00:23,720 --> 00:00:25,620
+Tomorrow's fire risk, ranked today.
