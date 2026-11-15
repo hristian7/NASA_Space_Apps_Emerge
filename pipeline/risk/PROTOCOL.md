@@ -39,3 +39,7 @@ The scorecard additionally reports probability metrics over all scored days, inc
 ## Deviations, 2026-11-15
 
 After the test, the displayed levels were changed from validation-quantile cutoffs to fixed daily chance bands of 0.01, 0.02, 0.05 and 0.10 [U]. This is a presentation change only; probabilities, ranking and scorecard results are unchanged [V].
+
+The week outlook method is selected after scoring on 2025 [V]. For each lead, the worldwide forest and wildland comparison chooses the model only when its capture exceeds history and the weekly bootstrap interval for model minus history is entirely above zero on the shipped grid; otherwise it chooses history [U]. Therefore 2025 is not an untouched test of this method selection, and an independent later period is needed to evaluate the resulting outlook [U].
+
+For this week experiment, forecasts at lead k use fire observations through the end of D-k, including the three-day nearby-fire window ending on that cutoff [U]. This is stricter than the D-2 cutoff registered above when k exceeds two. The model was trained with lead-three weather and D-2 history; applying it with the earlier cutoff and longer-lead weather is a post-registration experiment [V].
