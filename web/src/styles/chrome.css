@@ -415,8 +415,23 @@
 
 .report-kind {
   margin-top: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
   font-size: 12px;
   color: var(--ink-3);
+}
+
+.report-kind .whole-country.inline {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* Phones */
