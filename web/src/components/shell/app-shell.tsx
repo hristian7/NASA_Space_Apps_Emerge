@@ -14,7 +14,7 @@ import { defaultBasemapId } from "@/config/basemaps";
 import { historyYears } from "@/lib/layers/history";
 import { LAYERS } from "@/config/layers";
 import { useLayers } from "@/lib/layers/use-layers";
-import { removeQueryParam, setQueryParam } from "@/lib/ui/query";
+import { setQueryParam } from "@/lib/ui/query";
 import { motionMs, useLastValue, usePresence } from "@/lib/ui/motion";
 import { useWide } from "@/lib/ui/use-wide";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
@@ -23,7 +23,8 @@ import MapTools from "./map-tools";
 import ReportPanel from "./report-panel";
 import TimeSlider from "./time-slider";
 import TopBar from "./top-bar";
-import { type AppView, viewParam } from "./view-tabs";
+import { type AppView } from "./view-tabs";
+import { viewFromSearch, viewParam, viewValue } from "@/lib/ui/app-view";
 
 const sheetHeights = ["peek", "half", "full"] as const;
 const defaultRadiusKm = 50;
@@ -40,7 +41,7 @@ export default function AppShell() {
   const [drawing, setDrawing] = useState(false);
   const [radiusTool, setRadiusTool] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
-  const [view, setView] = useState<AppView>("history");
+  const [view, setView] = useState<AppView>("forecast");
   const [mapMonth, setMapMonth] = useState<MapMonth>(null);
   const locale = useLocale();
   const countryBoxes = useCountryBoxes();
@@ -53,7 +54,10 @@ export default function AppShell() {
   // which would turn this page into a client-only render.
   useEffect(() => {
     const search = window.location.search;
-    if (/(?:^|[?&])v=f(?:&|$)/.test(search)) setView("forecast");
+    const opened = viewFromSearch(search);
+    setView(opened);
+    // Written back explicitly, so a link copied later keeps its view.
+    replaceSearch(setQueryParam(search, viewParam, viewValue(opened)));
     const restored = selectionFromSearch(search);
     if (restored === null) return;
     setSelection(restored);
@@ -73,7 +77,7 @@ export default function AppShell() {
   const changeView = useCallback((next: AppView) => {
     setView(next);
     const search = window.location.search;
-    replaceSearch(next === "forecast" ? setQueryParam(search, viewParam, "f") : removeQueryParam(search, viewParam));
+    replaceSearch(setQueryParam(search, viewParam, viewValue(next)));
   }, []);
 
   const pickPoint = useCallback(

@@ -782,3 +782,23 @@
     animation: none;
   }
 }
+
+/* A soft shade from the top of the screen behind the top bar, so the name
+   and tabs stay readable over bright imagery. It ends a little below the
+   bar, takes no clicks, and leaves the map below the bar untouched. */
+.shell::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--gap, 16px) + var(--top-bar-h, 60px) + 28px);
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--space) 72%, transparent) 0%,
+    color-mix(in oklch, var(--space) 45%, transparent) 55%,
+    color-mix(in oklch, var(--space) 0%, transparent) 100%
+  );
+}

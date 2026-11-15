@@ -20,13 +20,17 @@ function historyCardTitle(): string {
 }
 
 /**
- * A plain click on the map picks a point with the current search distance,
- * never a whole country: the point's fire history and its next-day risk card
- * show on History, and the score and weather show on Forecast.
+ * The app opens on Forecast, the first tab. A plain click on the map picks a
+ * point with the current search distance, never a whole country: its score
+ * and weather show on Forecast, its fire history and next-day card on History.
  */
 test("a map click picks a point and shows its history and risk", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/?risk=example", { waitUntil: "domcontentloaded" });
+  const tabs = page.getByRole("group", { name: "History or forecast" });
+  await expect(tabs.getByRole("button")).toHaveText(["Forecast", "History"]);
+  await expect(tabs.getByRole("button", { name: "Forecast", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/[?&]v=f(&|$)/);
   // The map writes its camera onto its container once it has loaded.
   await page.waitForSelector(".map[data-zoom]");
 
@@ -34,12 +38,20 @@ test("a map click picks a point and shows its history and risk", async ({ page }
 
   await expect(page).toHaveURL(/[?&]sel=p:-?\d+(\.\d+)?,-?\d+(\.\d+)?,50(&|$)/);
   await expect(page).not.toHaveURL(/sel=c:/);
+  await expect(page).toHaveURL(/[?&]v=f(&|$)/);
   await expect(page.getByText(/^Point · 50 km$/)).toBeVisible();
+  await expect(page.getByText(/^Chance a new fire starts here (today|tomorrow) \(unofficial\)$/)).toBeVisible();
+
+  await tabs.getByRole("button", { name: "History", exact: true }).click();
+  await expect(page).toHaveURL(/[?&]v=h(&|$)/);
+  await expect(page).toHaveURL(/sel=p:/);
   await page.waitForSelector('svg[role="grid"]');
   await expect(page.getByRole("heading", { name: historyCardTitle(), exact: true })).toBeVisible();
+});
 
-  await page.getByRole("button", { name: "Forecast", exact: true }).click();
-  await expect(page).toHaveURL(/[?&]v=f(&|$)/);
-  await expect(page).toHaveURL(/sel=p:/);
-  await expect(page.getByText(/^Chance a new fire starts here (today|tomorrow) \(unofficial\)$/)).toBeVisible();
+test("an old place link without v still opens History and gains v=h", async ({ page }) => {
+  await page.goto("/?sel=c:BGR", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("group", { name: "History or forecast" }).getByRole("button", { name: "History", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/[?&]v=h(&|$)/);
+  await page.waitForSelector('svg[role="grid"]');
 });
