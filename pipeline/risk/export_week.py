@@ -169,8 +169,13 @@ def export(grid, forecasts, run, out):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--today', type=dt.date.fromisoformat, default=dt.datetime.now(dt.timezone.utc).date())
+    p.add_argument('--today', type=dt.date.fromisoformat, default=None)
     args = p.parse_args()
+    if args.today is None:
+        # The week must start right after the model's last published day, which can lag the calendar.
+        meta = ROOT / 'web/public/data/risk/meta.json'
+        args.today = (dt.date.fromisoformat(json.loads(meta.read_text())['days']['today']) if meta.exists()
+                      else dt.datetime.now(dt.timezone.utc).date())
     run, names = find_run(args.today)
     raw = ROOT / 'data/raw/gfwed-live'
     raw.mkdir(parents=True, exist_ok=True)
