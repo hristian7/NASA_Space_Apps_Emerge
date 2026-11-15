@@ -71,6 +71,9 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | hyparquet with hyparquet-compressors | Reading the public hotspot files by area in the download route | https://github.com/hyparam/hyparquet | MIT |
 | NASA GIBS imagery services | Base maps: Blue Marble and Black Marble | https://nasa-gibs.github.io/gibs-api-docs/ | NASA open data |
 | Syne Bold (Google Fonts) | The "emerge" wordmark in the logo, converted to outlines, so the app loads no font file for it | https://fonts.google.com/specimen/Syne | SIL Open Font License 1.1 |
+| Remotion | Building and rendering the 30 s demo video | https://www.remotion.dev | Remotion licence (free for individuals and small teams) |
+| ElevenLabs (voice "Charlie", Music) | AI voice-over and the music bed of the demo video | https://elevenlabs.io | ElevenLabs paid plan, commercial use allowed |
+| Familjen Grotesk and IBM Plex Mono (Google Fonts) | Type in the demo video | https://fonts.google.com | SIL Open Font License 1.1 |
 
 ## Licence text
 
