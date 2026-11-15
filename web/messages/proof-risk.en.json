@@ -48,5 +48,17 @@
   "sliceCoverage": "{missing} of {total} month and region slices have no model capture score [V].",
   "daily": "Daily comparisons are not tested here yet. This section reports the held-out year only.",
   "forest_only": "Forest only",
-  "other_vegetation": "Other vegetation"
+  "other_vegetation": "Other vegetation",
+  "dailyTitle": "Daily log",
+  "dailyExplanation": "New fire spots in forest and wildland, checked against NOAA-20 satellite detections. The model and NASA fire-weather index are each scored on their top 5 spots per region [U]. Eligible fires without scores remain in the total. The index uses the rounded values published with the forecast. Europe uses the same map bounds as the hold-out test.",
+  "dailyWindow": "Last {days} days",
+  "dailyShort": "Only {count, plural, one {# day} other {# days}} so far [V].",
+  "dailyEmpty": "No complete daily comparisons are available for this period.",
+  "dailyDate": "UTC date",
+  "dailyScope": "Area",
+  "dailyFires": "New fire spots",
+  "dailyModel": "Model caught",
+  "dailyIndex": "Index caught",
+  "dailyRegions": "Regions scored",
+  "dailyCounts": "Counts [U]"
 }

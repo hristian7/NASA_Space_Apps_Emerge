@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { brierSkill, claimAllowed, SHIPPED_GRID_G, loadScorecard, parseScorecard, weakSlices, type RiskScorecard } from "../../src/app/proof/risk-data";
 const fixture = (): RiskScorecard => JSON.parse(readFileSync("public/data/risk/example/scorecard.json", "utf8"));
@@ -68,5 +68,39 @@ describe("compact region rows", () => {
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) expect(row.methods).toBeTypeOf("object");
     expect(() => weakSlices(s)).not.toThrow();
+  });
+});
+
+describe("daily log", () => {
+  const row = { date: "2026-11-14", scope: "world" as const, new_fires: 752, captured_by_us: 156, captured_by_index: 99, regions_scored: 292 };
+  it("accepts older files without a log and rejects malformed rows", () => {
+    expect(parseScorecard(fixture())).not.toBeNull();
+    expect(parseScorecard({ ...fixture(), daily_log: [{ ...row, new_fires: -1 }] })).toBeNull();
+    expect(parseScorecard({ ...fixture(), daily_log: [row] })?.daily_log).toEqual([row]);
+  });
+  it("uses UTC calendar days and does not count future rows", async () => {
+    const { dailyWindow } = await import("../../src/app/proof/risk-data");
+    const rows = [row, { ...row, date: "2026-11-08" }, { ...row, date: "2026-10-20" }, { ...row, date: "2026-11-15" }, { ...row, date: "2026-11-07" }];
+    const now = new Date("2026-11-15T23:59:00Z");
+    expect(dailyWindow(rows, 7, now).map(item => item.date)).toEqual(["2026-11-14", "2026-11-08"]);
+    expect(dailyWindow(rows, 30, now).map(item => item.date)).toEqual(["2026-11-14", "2026-11-08", "2026-11-07", "2026-10-20"]);
+  });
+});
+
+describe("remote risk files", () => {
+  it("uses the configured root for live files and leaves examples local", async () => {
+    vi.stubEnv("NEXT_PUBLIC_RISK_DATA_URL", "https://risk.example/risk/");
+    try {
+      const urls: string[] = [];
+      const fetcher: typeof fetch = async input => { urls.push(String(input)); return new Response(JSON.stringify(fixture())); };
+      await loadScorecard(false, fetcher);
+      await loadScorecard(true, fetcher);
+      const { loadRiskCountry } = await import("../../src/lib/risk/loaders");
+      await loadRiskCountry("BGR", false, fetcher);
+      const { loadSpotScore } = await import("../../src/lib/risk/spot-scores");
+      await loadSpotScore("BGR", "2026-11-14", 42, 23, async input => { urls.push(String(input)); return new Response(null, { status: 404 }); });
+      expect(urls).toEqual(["https://risk.example/risk/scorecard.json", "/data/risk/example/scorecard.json",
+        "https://risk.example/risk/latest/BGR.json", "https://risk.example/risk/scores/BGR.json"]);
+    } finally { vi.unstubAllEnvs(); }
   });
 });

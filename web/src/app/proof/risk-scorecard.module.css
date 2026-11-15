@@ -18,3 +18,21 @@
   text-align: left;
   color: var(--ink-2);
 }
+
+section table.dailyTable {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.dailyTable th,
+.dailyTable td {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .dailyTable th,
+  .dailyTable td {
+    padding-inline-end: 3px;
+  }
+}

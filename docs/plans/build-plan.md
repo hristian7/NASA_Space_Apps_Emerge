@@ -298,3 +298,13 @@ Same rules as section 4: one owner per folder, separate working copies, only the
 | `web/messages/*` | Risk texts live in their own `risk.en.json` and `risk.bg.json` |
 
 **Full gate before every push** (handoff of 22:30): in `web/` `npm test`, `npx tsc --noEmit`, `npm run build`, `npx playwright test`; at the root `pytest tests/contract -q` and the scorer self-test; plus the new `tests/expected/risk/` checks; then the privacy scan of the diff.
+
+### 8.8 Switch on the daily risk job
+
+The job is off until `RISK_DAILY_ENABLED` is `true`. The saved inputs and model are not in Git, so first prepare the initial state on the build machine: run `python pipeline/risk/daily.py` and then `python pipeline/risk/daily.py --bundle risk-state.tar.gz` in the project environment. This builds the monthly usual values with `build_usual.py` and packages the inputs and published files `[V]`.
+
+Create a **public** Vercel Blob store named `emerge-data`, and upload that bundle at `risk/_state/bundle.tar.gz` without a random suffix. Add its read-write token as the GitHub Actions secret `BLOB_READ_WRITE_TOKEN`. Set the GitHub repository variable `NEXT_PUBLIC_RISK_DATA_URL` and the Vercel build environment value of the same name to the public store URL ending in `/risk`; rebuild the app after setting the Vercel value. After the workflow is on the default branch, set the GitHub variable `RISK_DAILY_ENABLED` to `true` and run the workflow once to upload the public files. Verify the workflow and proof page before relying on the schedule. The public URL and bundled input files must not contain secrets.
+
+The current app uses country files, so a new world forecast can upload roughly 400 files, more than the spec's estimated seven uploads `[V]`. Daily forecasts would use about 12,000 uploads a month `[U]`, exceeding the [Vercel Hobby allowance of 2,000 advanced operations](https://vercel.com/docs/vercel-blob/usage-and-pricing) `[V]`. Use a plan that covers the usage or consolidate the file contract before enabling. The bundle retains archived published forecasts and grows over time. If GitHub disables the scheduled workflow after 60 days without repository activity, re-enable it in Actions `[V]`.
+
+Resources: [NASA FIRMS NOAA-20 seven-day file](https://firms.modaps.eosdis.nasa.gov/data/active_fire/noaa-20-viirs-c2/csv/J1_VIIRS_C2_Global_7d.csv), [NASA GFWED forecasts](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/), [Vercel Blob](https://vercel.com/docs/vercel-blob), [Vercel Blob SDK upload protocol](https://github.com/vercel/storage/blob/main/packages/blob/src/put.ts), [GitHub scheduled workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows).

@@ -4,7 +4,8 @@ export function exampleMode(search = "", environment = process.env.NEXT_PUBLIC_R
   return new URLSearchParams(search).get("risk") === "example" || environment === "example";
 }
 export function riskRoot(example: boolean): string {
-  return `/data/risk${example ? "/example" : ""}`;
+  if (example) return "/data/risk/example";
+  return (process.env.NEXT_PUBLIC_RISK_DATA_URL || "/data/risk").replace(/\/$/, "");
 }
 /** Only absent files become empty states. Broken JSON/network/server errors stay errors. */
 async function read<T>(path: string, fetcher: typeof fetch): Promise<T | null> {
