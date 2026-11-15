@@ -111,12 +111,14 @@ export default function ReportPanel({ selection, closing = false, view, day, onP
         <header className="report-head">
           <div>
             <h1>{title}</h1>
-            <p className="report-kind">{sub}</p>
-            {pointCountry !== null && selection.kind === "point" ? (
-              <button type="button" className="whole-country" onClick={() => onWholeCountry(pointCountry)}>
-                {t("wholeCountry", { name: countryName })}
-              </button>
-            ) : null}
+            <p className="report-kind">
+              <span>{sub}</span>
+              {pointCountry !== null && selection.kind === "point" ? (
+                <button type="button" className="whole-country inline" onClick={() => onWholeCountry(pointCountry)}>
+                  {t("wholeCountry", { name: countryName })}
+                </button>
+              ) : null}
+            </p>
           </div>
           <button type="button" className="layers-close" aria-label={t("clearPlace")} onClick={onClose}>
             <svg viewBox="0 0 20 20" aria-hidden="true">

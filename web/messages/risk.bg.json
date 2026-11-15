@@ -95,5 +95,15 @@
   "weekModel": "Ден {lead} напред: подредено по модела. Той обхвана {score} от новите пожари през 2025 г. в света, за гори и диви терени [V].",
   "weekHistory": "Ден {lead} напред: подредено по историята на пожарите. Тя обхвана {score} от новите пожари през 2025 г. в света, за гори и диви терени [V].",
   "weekModelUnscored": "Ден {lead} напред: подредено по модела; оценката за 2025 г. не е налична [V].",
-  "weekHistoryUnscored": "Ден {lead} напред: подредено по историята на пожарите; оценката за 2025 г. не е налична [V]."
+  "weekHistoryUnscored": "Ден {lead} напред: подредено по историята на пожарите; оценката за 2025 г. не е налична [V].",
+  "usualLowerShort": "под обичайното за {month}",
+  "usualSameShort": "обичайно за {month}",
+  "usualHigherShort": "над обичайното за {month}",
+  "weatherShortLow": "слабо",
+  "weatherShortModerate": "умерено",
+  "weatherShortStrong": "силно",
+  "weatherShortVeryStrong": "много силно",
+  "weatherShortNone": "няма данни",
+  "hereToday": "Рискът тук днес",
+  "hereLatest": "Последна прогноза за риска тук, за {date}"
 }

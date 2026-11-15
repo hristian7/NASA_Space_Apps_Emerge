@@ -95,5 +95,15 @@
   "weekModel": "Day {lead} ahead: ranked by the model. It caught {score} of new fires in 2025 worldwide, forest and wildland [V].",
   "weekHistory": "Day {lead} ahead: ranked by fire history. It caught {score} of new fires in 2025 worldwide, forest and wildland [V].",
   "weekModelUnscored": "Day {lead} ahead: ranked by the model; its 2025 score is unavailable [V].",
-  "weekHistoryUnscored": "Day {lead} ahead: ranked by fire history; its 2025 score is unavailable [V]."
+  "weekHistoryUnscored": "Day {lead} ahead: ranked by fire history; its 2025 score is unavailable [V].",
+  "usualLowerShort": "below usual for {month}",
+  "usualSameShort": "usual for {month}",
+  "usualHigherShort": "above usual for {month}",
+  "weatherShortLow": "low",
+  "weatherShortModerate": "moderate",
+  "weatherShortStrong": "strong",
+  "weatherShortVeryStrong": "very strong",
+  "weatherShortNone": "no data",
+  "hereToday": "Today's risk here",
+  "hereLatest": "Latest risk forecast here, for {date}"
 }

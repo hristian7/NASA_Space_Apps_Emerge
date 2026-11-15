@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { monthCell, openReport } from "./helpers";
+import { monthCell, openLayers, openReport } from "./helpers";
 
 /**
  * Plan 1 gap M4: a month clicked in the fire calendar is drawn on the map for
@@ -15,7 +15,7 @@ test("a calendar month click shows that month on the map", async ({ page }) => {
   await monthCell(page, "July 2007").click();
   await expect(map).toHaveAttribute("data-history", "month:2007-07");
   await expect(page.locator(".timeline-value")).toHaveText("July 2007");
-  await page.getByRole("button", { name: "Layers and legend" }).click();
+  await openLayers(page);
   await expect(page.locator(".layer-row").first()).toContainText("Fire days, July 2007");
 
   await monthCell(page, "July 2007").click();

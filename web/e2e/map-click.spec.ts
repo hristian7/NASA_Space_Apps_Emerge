@@ -1,4 +1,23 @@
 import { expect, test } from "@playwright/test";
+import { readData } from "./data";
+
+/**
+ * The History card is titled by the date its example forecast is valid for,
+ * worked out here from the calendar: that date today, tomorrow, or past.
+ */
+function historyCardTitle(): string {
+  const validFor = readData<{ days: { tomorrow: string } }>("risk/example/meta.json").days.tomorrow;
+  const utc = (offset: number) => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + offset)).toISOString().slice(0, 10);
+  };
+  const now = new Date();
+  const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  if (localToday > validFor) return "Risk outlook here";
+  if (validFor === utc(0)) return "Today's risk here";
+  if (validFor === utc(1)) return "Tomorrow's risk here";
+  return `Latest risk forecast here, for ${validFor}`;
+}
 
 /**
  * A plain click on the map picks a point with the current search distance,
@@ -17,7 +36,7 @@ test("a map click picks a point and shows its history and risk", async ({ page }
   await expect(page).not.toHaveURL(/sel=c:/);
   await expect(page.getByText(/^Point · 50 km$/)).toBeVisible();
   await page.waitForSelector('svg[role="grid"]');
-  await expect(page.getByRole("heading", { name: "Tomorrow's risk here" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: historyCardTitle(), exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Forecast", exact: true }).click();
   await expect(page).toHaveURL(/[?&]v=f(&|$)/);

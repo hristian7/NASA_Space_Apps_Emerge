@@ -61,5 +61,9 @@
   "weekFwi": "NASA fire-weather index here: {value}",
   "weekFwiCountry": "Highest NASA fire-weather index among the listed spots: {value}",
   "weekNoValue": "No fire-weather value for this place on this day.",
-  "weekNote": "Fire-weather index for {date}, from the NASA GEOS-5 forecast. It is not our model's score."
+  "weekNote": "Fire-weather index for {date}, from the NASA GEOS-5 forecast. It is not our model's score.",
+  "scoreTitleLatest": "Latest forecast, for {date} (unofficial)",
+  "noModelDay": "Our model has no forecast for this day yet; fire weather only.",
+  "sourcesNote": "Values: {forecast}. Past rain and days since rain: {past} ({dry}) Soil: {soil}. Lines: {trend}.",
+  "listKey": "Arrow: versus usual for {month}. Dot: fire weather."
 }
