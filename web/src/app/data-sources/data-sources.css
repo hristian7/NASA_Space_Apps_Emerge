@@ -1,0 +1,93 @@
+/* Data sources page. Cards come from about.css; classes here carry ds-. */
+
+.ds-count {
+  font: 600 14px/1.4 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.ds-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.ds-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-copy .btn {
+  font-size: 13.5px;
+}
+
+.ds-copy .btn[data-state="copied"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ds-status:empty {
+  display: none;
+}
+
+.ds-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.ds-manual {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ds-manual textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--panel);
+  color: var(--ink);
+  font: 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  white-space: pre;
+}
+
+.ds-sub {
+  display: grid;
+  gap: 10px;
+}
+
+.ds-sub + .ds-sub {
+  margin-top: 12px;
+}
+
+.ds-sub h3 {
+  font: 600 15px/1.3 var(--font-head);
+  color: var(--ink);
+}
+
+.ds-url {
+  font: 11.5px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.page.ab.ds a.ab-name:focus-visible,
+.ds-full a:focus-visible,
+.ds-copy .btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ds-full {
+  font-size: 14px;
+}

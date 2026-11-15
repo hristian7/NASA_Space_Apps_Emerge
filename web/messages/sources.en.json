@@ -1,0 +1,22 @@
+{
+  "metaTitle": "Data sources · Emerge",
+  "metaDescription": "Every outside resource Emerge uses, NASA data first, split as on NASA's submission form, with a link to each.",
+  "title": "Data sources",
+  "lead": "Everything Emerge is built on. NASA data first, then partner agencies and other sources. All links are public.",
+  "count": "{n} NASA resources · {m} partner and other resources",
+  "nasaHeading": "NASA Data",
+  "nasaNote": "NASA data is the core of Emerge: the fire record, fire weather, rain, soil moisture, greenness, land cover and base maps.",
+  "otherHeading": "Space Agency Partner & Other Data",
+  "groups": {
+    "partner": "Partner agencies (Copernicus / ESA)",
+    "data": "Other data",
+    "software": "Software and code",
+    "tools": "Fonts, video and AI tools"
+  },
+  "copy": "Copy for the NASA form",
+  "copied": "Copied",
+  "copyFallback": "The clipboard is blocked. Select this text and copy it:",
+  "experimental": "experimental",
+  "opensNewTab": "opens in a new tab",
+  "fullList": "Full list with licences: docs/references.md on GitHub"
+}

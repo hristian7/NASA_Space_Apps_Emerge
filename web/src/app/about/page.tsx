@@ -20,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const record = metaJson as unknown as { first_month: string; last_month: string };
-const sourceCount = sourceGroups.reduce((sum, group) => sum + group.rows.length, 0);
+const aboutGroups = sourceGroups.map((group) => ({ ...group, rows: group.rows.filter((row) => !row.formOnly) }));
+const sourceCount = aboutGroups.reduce((sum, group) => sum + group.rows.length, 0);
 const compactGroups = new Set(["software", "fonts", "video"]);
 
 type T = (key: string, values?: Record<string, string | number>) => string;
@@ -52,8 +53,8 @@ export default async function AboutPage() {
   const home = await getTranslations("home");
   const shell = await getTranslations("shell");
 
-  const groups = sourceGroups.filter((group) => group.id !== "project");
-  const project = sourceGroups.find((group) => group.id === "project");
+  const groups = aboutGroups.filter((group) => group.id !== "project");
+  const project = aboutGroups.find((group) => group.id === "project");
   const sections = [
     { id: "what", title: home("aboutWhatHeading") },
     ...groups.map((group) => ({ id: group.id, title: t(`groups.${group.id}`) })),

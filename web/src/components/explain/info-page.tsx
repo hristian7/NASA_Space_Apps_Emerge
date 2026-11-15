@@ -5,15 +5,16 @@ import Disclaimer from "@/components/shell/disclaimer";
 import LanguageSwitch from "@/components/shell/language-switch";
 import "./info-page.css";
 
-export type InfoTab = "how" | "proof" | "about";
+export type InfoTab = "how" | "proof" | "about" | "sources";
 
 const tabs: { id: InfoTab; href: string; label: string }[] = [
   { id: "how", href: "/how-it-works", label: "howTab" },
   { id: "proof", href: "/proof", label: "proofTab" },
   { id: "about", href: "/about", label: "aboutTab" },
+  { id: "sources", href: "/data-sources", label: "sourcesTab" },
 ];
 
-/** The frame shared by the three information pages: one header, one tab row, one footer. */
+/** The frame shared by the information pages: one header, one tab row, one footer. */
 export default async function InfoPage({
   current,
   className = "",

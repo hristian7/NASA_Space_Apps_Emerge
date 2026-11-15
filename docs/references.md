@@ -75,6 +75,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | Remotion | Building and rendering the 30 s demo video | https://www.remotion.dev | Remotion licence (free for individuals and small teams) |
 | ElevenLabs (voice "Charlie", Music) | AI voice-over and the music bed of the demo video | https://elevenlabs.io | ElevenLabs paid plan, commercial use allowed |
 | Familjen Grotesk and IBM Plex Mono (Google Fonts) | Type in the demo video | https://fonts.google.com | SIL Open Font License 1.1 |
+| Claude Code (Anthropic) | AI coding assistant for writing and testing code; see [the AI-usage note](si-usage.md) | https://www.anthropic.com/claude-code | Anthropic terms of service |
 
 ## Licence text
 

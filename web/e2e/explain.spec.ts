@@ -55,15 +55,16 @@ test("both pages read in Bulgarian", async ({ page, context }) => {
   await expect(page.getByRole("heading", { name: "Сателитни данни за пожари" })).toBeVisible();
 });
 
-test("the three information pages share one header with the current tab marked", async ({ page }) => {
+test("the information pages share one header with the current tab marked", async ({ page }) => {
   for (const [path, tab] of [
     ["/how-it-works", "How it works"],
     ["/proof#next-day-risk", "Proof"],
     ["/about", "About and credits"],
+    ["/data-sources", "Data sources"],
   ] as const) {
     await page.goto(path, { waitUntil: "domcontentloaded" });
     const tabs = page.getByRole("navigation", { name: "Information pages" });
-    await expect(tabs.getByRole("link")).toHaveText(["How it works", "Proof", "About and credits"]);
+    await expect(tabs.getByRole("link")).toHaveText(["How it works", "Proof", "About and credits", "Data sources"]);
     await expect(tabs.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("link", { name: "Emerge, back to the map" })).toHaveAttribute("href", "/");
     await expect(page.getByRole("contentinfo").getByText(/Research prototype\. Not an official warning/)).toBeVisible();

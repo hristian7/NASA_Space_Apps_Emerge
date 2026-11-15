@@ -106,6 +106,9 @@ function InfoLinks({ onPick }: { onPick: () => void }) {
       <Link className="dropdown-item" href="/proof" onClick={onPick}>
         {t("howWeKnow")}
       </Link>
+      <Link className="dropdown-item" href="/data-sources" onClick={onPick}>
+        {t("dataSources")}
+      </Link>
       <h2 className="info-heading">{t("creditsHeading")}</h2>
       <ul className="info-credits">
         {credits.map((credit) => (

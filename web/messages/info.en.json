@@ -5,5 +5,6 @@
   "proofTab": "Proof",
   "aboutTab": "About and credits",
   "backToMap": "Back to the map",
-  "openSource": "Open source under the Apache License 2.0"
+  "openSource": "Open source under the Apache License 2.0",
+  "sourcesTab": "Data sources"
 }
