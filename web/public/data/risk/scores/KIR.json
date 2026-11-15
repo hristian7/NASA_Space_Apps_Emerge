@@ -1,1 +1,1 @@
-{"grid_g":0.25,"days":{"2026-11-14":[[506970,null,null],[550176,null,null]],"2026-11-15":[[506970,null,null],[550176,null,null]]}}
+{"grid_g":0.25,"columns":["spot_id","p","level","usual","fwi"],"days":{"2026-11-14":[[506970,null,null,null,null],[550176,null,null,null,null]],"2026-11-15":[[506970,null,null,null,null],[550176,null,null,null,null]]},"context_corrections":{"2026-11-14":{},"2026-11-15":{}}}

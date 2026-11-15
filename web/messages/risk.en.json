@@ -80,5 +80,16 @@
   "emptyForest": "No forest or wildland spots are available in this region for this date.",
   "showAll": "Show all vegetation fires",
   "stale": "Forecast made for {date}; not updated since",
-  "hereDated": "Risk outlook here"
+  "hereDated": "Risk outlook here",
+  "usualLower": "lower than usual for {month} here",
+  "usualSame": "usual for {month} here",
+  "usualHigher": "higher than usual for {month} here",
+  "weatherNone": "no fire-weather forecast",
+  "weatherLow": "fire weather low",
+  "weatherModerate": "fire weather moderate",
+  "weatherStrong": "fire weather strong",
+  "weatherVeryStrong": "fire weather very strong",
+  "weatherIndex": "NASA fire-weather index (experimental): {value}",
+  "levelMeaningTitle": "What a level means",
+  "levelMeaning": "The level is the chance that satellites detect a new vegetation fire in this roughly 28 km square on that day, including field burning. It is not a danger rating."
 }

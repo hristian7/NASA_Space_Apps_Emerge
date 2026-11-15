@@ -22,3 +22,11 @@ it('distinguishes a missing country and missing day from land coverage', async (
   expect(await loadSpotScore('BGR', day, rila.lat, rila.lon, missing)).toEqual({ status: 'missing country' });
   expect(await loadSpotScore('BGR', 'other', rila.lat, rila.lon, withScores([]))).toEqual({ status: 'missing day' });
 });
+it('reads five-column scores and keeps old three-column scores compatible', async () => {
+  expect(await loadSpotScore('BGR', day, rila.lat, rila.lon, withScores([[rila.spot_id, .0123, 2, .01, 11.2]]))).toMatchObject({ usual: .01, fwi: 11.2 });
+  expect(await loadSpotScore('BGR', day, rila.lat, rila.lon, withScores([[rila.spot_id, .0123, 2]]))).toMatchObject({ usual: null, fwi: null });
+});
+it('retains sparse category corrections for rounded values', async () => {
+  const fetcher = (async () => new Response(JSON.stringify({ grid_g: .25, days: { [day]: [[rila.spot_id, .0067, 1, .01, 11.2]] }, context_corrections: { [day]: { [rila.spot_id]: [0, 0] } } }))) as typeof fetch;
+  expect(await loadSpotScore('BGR', day, rila.lat, rila.lon, fetcher)).toMatchObject({ context: [0, 0] });
+});
