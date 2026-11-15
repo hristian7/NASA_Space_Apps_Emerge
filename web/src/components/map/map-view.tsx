@@ -19,6 +19,7 @@ import {
 import { useCountryBoxes } from "@/lib/ui/use-countries";
 import type { CountryIndexEntry } from "@/types/data";
 import { historyRampTokens } from "@/lib/layers/history";
+import { proxyTileUrl } from "@/lib/layers/tile-proxy";
 import type { HistoryCell, RecentPoint } from "@/lib/layers/overlay";
 import { useWindLayer } from "./wind-layer";
 import { useTemperatureLayer } from "./temperature-field";
@@ -478,7 +479,7 @@ export default function MapView({
           serial += 1;
           const source = `emerge-raster-${definition.id}-${serial}`;
           const layer = `${source}-tiles`;
-          instance.addSource(source, { type: "raster", tiles: [url], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
+          instance.addSource(source, { type: "raster", tiles: [proxyTileUrl(url)], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
           const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
           // Smooth resampling for every driver layer. Air temperature comes in
           // hard-edged satellite swaths, so it is also fainter and flatter.
