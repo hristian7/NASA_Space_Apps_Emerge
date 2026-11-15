@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import type { MapMonth } from "@/components/app/report-view";
+import { monthCells } from "@/lib/layers/month-cells";
+import type { HistoryCell } from "@/lib/layers/overlay";
+import { useCountryBoxes } from "@/lib/ui/use-countries";
 import { useCountryName } from "@/components/app/country-name";
 import { getSeries } from "@/lib/data/api";
 import type { Selection } from "@/types/ui";
@@ -35,6 +39,9 @@ export default function AppShell() {
   const [radiusTool, setRadiusTool] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [view, setView] = useState<AppView>("history");
+  const [mapMonth, setMapMonth] = useState<MapMonth>(null);
+  const locale = useLocale();
+  const countryBoxes = useCountryBoxes();
   // The country a clicked point lies in, for its outline and the
   // "whole country" button. Unknown for a point read from a link.
   const [pointCountry, setPointCountry] = useState<string | null>(null);
@@ -53,6 +60,7 @@ export default function AppShell() {
 
   const apply = useCallback((next: Selection | null) => {
     setSelection(next);
+    setMapMonth(null);
     if (next?.kind !== "point") setPointCountry(null);
     replaceSearch(selectionSearch(window.location.search, next));
     if (next !== null && window.innerWidth < 768) {
@@ -157,6 +165,52 @@ export default function AppShell() {
 
   // Each view draws only its own layers; the choices of the other are kept.
   const history = view === "history";
+
+  // A calendar month clicked in the report: the map shows that month's fire
+  // days for the chosen place instead of the history year.
+  const [monthHistory, setMonthHistory] = useState<{ key: string; cells: HistoryCell[] } | null>(null);
+  const monthKey = mapMonth === null ? null : `${mapMonth.y}-${String(mapMonth.m).padStart(2, "0")}`;
+  useEffect(() => {
+    if (mapMonth === null || selection === null) {
+      setMonthHistory(null);
+      return;
+    }
+    let live = true;
+    const box = selection.kind === "country" ? countryBoxes.get(selection.iso3)?.bbox : undefined;
+    monthCells(selection, mapMonth.y, mapMonth.m, box).then(
+      (cells) => {
+        if (!live) return;
+        if (cells === null) {
+          setMapMonth(null);
+          return;
+        }
+        setMonthHistory({ key: `${monthKey}|${JSON.stringify(selection)}`, cells });
+      },
+      () => {
+        if (live) setMapMonth(null);
+      },
+    );
+    return () => {
+      live = false;
+    };
+    // `monthKey` follows `mapMonth`; the boxes only matter once loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapMonth, selection, countryBoxes]);
+  const monthReady = monthHistory !== null && monthKey !== null && monthHistory.key === `${monthKey}|${JSON.stringify(selection)}`;
+  const monthLabel = mapMonth === null
+    ? null
+    : new Intl.DateTimeFormat(locale === "bg" ? "bg-BG" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+        new Date(Date.UTC(mapMonth.y, mapMonth.m - 1, 1)),
+      );
+  const showMonth = history && monthReady && monthLabel !== null;
+  const showMapMonth = useCallback(
+    (next: MapMonth) => {
+      setMapMonth(next);
+      // The month needs the history layer on to be seen.
+      if (next !== null && !layerState.on.includes("harmonized-history")) toggle("harmonized-history");
+    },
+    [layerState.on, toggle],
+  );
   const rasterDates = history ? {} : layers.rasterDates;
 
   return (
@@ -166,7 +220,8 @@ export default function AppShell() {
         basemapId={defaultBasemapId}
         projection="globe"
         drawing={drawing}
-        historyCells={history ? layers.historyCells : []}
+        historyCells={!history ? [] : showMonth && monthHistory ? monthHistory.cells : layers.historyCells}
+        historyKey={showMonth ? `month:${monthKey}` : `year:${layers.state.historyYear}`}
         recentPoints={layers.recentPoints}
         rasterDates={rasterDates}
         outlineIso3={selection?.kind === "country" ? selection.iso3 : selection?.kind === "point" ? pointCountry : null}
@@ -214,6 +269,7 @@ export default function AppShell() {
       />
 
       <LayerPanel
+        monthLabel={showMonth ? monthLabel : null}
         state={layers.state}
         lastMonth={layers.lastMonth}
         historyStatus={layers.historyStatus}
@@ -246,7 +302,11 @@ export default function AppShell() {
         }
         years={historyYears(layers.lastMonth)}
         year={layers.state.historyYear}
-        onYear={layers.setYear}
+        onYear={(year) => {
+          setMapMonth(null);
+          layers.setYear(year);
+        }}
+        monthLabel={showMonth ? monthLabel : null}
         day={layers.state.dangerDay}
         onDay={layers.setDay}
       />
@@ -260,6 +320,8 @@ export default function AppShell() {
           pointCountry={selection.kind === "point" ? pointCountry : null}
           onWholeCountry={(iso3) => apply({ kind: "country", iso3 })}
           onClose={() => apply(null)}
+          mapMonth={mapMonth}
+          onMapMonth={showMapMonth}
           onCycleHeight={cycleSheet}
         />
       ) : null}

@@ -63,5 +63,6 @@
   "activityWorld": "Bars: monthly fire days, world",
   "activityPlace": "Bars: monthly fire days, {place}",
   "activityPoint": "this point",
-  "activityArea": "this area"
+  "activityArea": "this area",
+  "monthOnMap": "Calendar month on the map"
 }

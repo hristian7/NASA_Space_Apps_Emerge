@@ -92,7 +92,18 @@ interface Loaded {
   backgroundMissing: boolean;
 }
 
-export default function ReportView({ selection }: { selection: Selection }) {
+/** A calendar month shown on the map, or null for the history year. */
+export type MapMonth = { y: number; m: number } | null;
+
+export default function ReportView({
+  selection,
+  mapMonth = null,
+  onMapMonth,
+}: {
+  selection: Selection;
+  mapMonth?: MapMonth;
+  onMapMonth?: (month: MapMonth) => void;
+}) {
   const t = useTranslations("app");
   const countryName = useCountryName(
     selection.kind === "country" ? selection.iso3 : null,
@@ -234,6 +245,8 @@ export default function ReportView({ selection }: { selection: Selection }) {
       countryName={countryName}
       calendarRef={calendarRef}
       chartRef={chartRef}
+      mapMonth={mapMonth}
+      onMapMonth={onMapMonth}
     />
   );
 }
@@ -250,7 +263,11 @@ function Report({
   countryName,
   calendarRef,
   chartRef,
+  mapMonth,
+  onMapMonth,
 }: {
+  mapMonth: MapMonth;
+  onMapMonth?: (month: MapMonth) => void;
   data: Loaded;
   selection: Selection;
   view: ViewState;
@@ -481,7 +498,13 @@ function Report({
           anomaly={anomaly}
           yearTotals={yearTotals}
           selected={selectedMonth}
-          onSelect={(month: MonthKey) => onView({ ...view, month })}
+          onSelect={(month: MonthKey) => {
+            onView({ ...view, month });
+            // A month click also shows that month on the map; the same month
+            // again goes back to the history year.
+            const same = mapMonth !== null && mapMonth.y === month.y && mapMonth.m === month.m;
+            onMapMonth?.(same ? null : { y: month.y, m: month.m });
+          }}
           svgRef={calendarRef}
         />
       )}
