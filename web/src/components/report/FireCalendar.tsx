@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useState, type Ref } from "react";
+import { useId, useMemo, useRef, useState, type Ref } from "react";
+import { useReplay } from "@/lib/ui/motion";
 import { useTranslations } from "next-intl";
 import type { MonthPoint, Series } from "@/types/ui";
 import type { AnomalyPoint, MonthKey, UnitMode, YearTotal } from "./types";
@@ -84,6 +85,9 @@ export default function FireCalendar({
   const [hover, setHover] = useState<HoverState | null>(null);
 
   const years = useMemo(() => yearsOf(series.months), [series.months]);
+  // Cells cascade in month by month on first show and when the data changes.
+  const wrap = useRef<HTMLDivElement | null>(null);
+  useReplay(wrap, series.months, "m-enter", 1000);
   const index = useMemo(() => monthIndex(series.months), [series.months]);
   const thresholds = useMemo(
     () => rampThresholds(series.months.map((month) => month.value)),
@@ -173,7 +177,7 @@ export default function FireCalendar({
     hover === null ? undefined : index.get(monthKey(hover.y, hover.m));
 
   return (
-    <div className={styles.calendarWrap}>
+    <div ref={wrap} className={styles.calendarWrap}>
       <svg
         ref={svgRef}
         className={styles.calendar}
@@ -258,7 +262,7 @@ export default function FireCalendar({
                     ? row === 0 && m === 1
                     : isSelected;
                 return (
-                  <g key={m}>
+                  <g key={m} className="m-cell" style={{ "--m": i, "--r": row } as React.CSSProperties}>
                     {fill === null ? (
                       <>
                         <rect
@@ -353,6 +357,7 @@ export default function FireCalendar({
                 height={CELL_H - 6}
               />
               <rect
+                style={{ "--r": row } as React.CSSProperties}
                 className={
                   selected !== null && selected.y === year
                     ? styles.totalSelected

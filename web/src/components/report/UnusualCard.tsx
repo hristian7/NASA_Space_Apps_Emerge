@@ -6,6 +6,7 @@ import { unusualFigure, unusualText } from "./lib/sentences";
 import { monthYearLong, type ReportLocale } from "./lib/format";
 import TermTip from "./TermTip";
 import styles from "./styles";
+import Roll from "@/components/ui/roll";
 
 export interface UnusualCardProps {
   unusual: Unusual;
@@ -46,7 +47,7 @@ export default function UnusualCard({
         <p
           className={`${styles.cardFigure} ${unusual.status === "above" ? styles.cardFigureUp : ""}`}
         >
-          {showsRatio ? t("unusual.timesShort", { ratio: figure }) : figure}
+          <Roll value={showsRatio ? t("unusual.timesShort", { ratio: figure }) : figure} />
         </p>
       )}
       <p className={styles.cardLine}>{text.headline}</p>

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
+import { useSlidingPill } from "@/lib/ui/motion";
 import { useTranslations } from "next-intl";
 
 export type AppView = "history" | "forecast";
@@ -21,9 +23,12 @@ export default function ViewTabs({
   onChange?: (view: AppView) => void;
 }) {
   const t = useTranslations("shell");
+  const group = useRef<HTMLDivElement | null>(null);
+  useSlidingPill(group, '[aria-pressed="true"], [aria-current="page"]', [current]);
 
   return (
-    <div className="chip-group glass view-tabs" role="group" aria-label={t("viewTabs")}>
+    <div ref={group} className="chip-group glass view-tabs" role="group" aria-label={t("viewTabs")}>
+      <span className="pill" aria-hidden="true" />
       {(["history", "forecast"] as const).map((view) => {
         const label = t(view === "history" ? "historyTab" : "forecastTab");
         if (onChange) {

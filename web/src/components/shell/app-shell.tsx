@@ -15,6 +15,7 @@ import { historyYears } from "@/lib/layers/history";
 import { LAYERS } from "@/config/layers";
 import { useLayers } from "@/lib/layers/use-layers";
 import { removeQueryParam, setQueryParam } from "@/lib/ui/query";
+import { motionMs, useLastValue, usePresence } from "@/lib/ui/motion";
 import { closeRing, selectionSearch, selectionFromSearch } from "@/lib/ui/selection-url";
 import LayerPanel from "./layer-panel";
 import MapTools from "./map-tools";
@@ -212,6 +213,9 @@ export default function AppShell() {
     [layerState.on, toggle],
   );
   const rasterDates = history ? {} : layers.rasterDates;
+  // The panel keeps its last place on screen while it slides out.
+  const shownSelection = useLastValue(selection);
+  const reportPresence = usePresence(selection !== null, motionMs.base);
 
   return (
     <div className="shell" data-view={view} data-has-report={selection !== null}>
@@ -311,13 +315,14 @@ export default function AppShell() {
         onDay={layers.setDay}
       />
 
-      {selection !== null ? (
+      {reportPresence.mounted && shownSelection !== null ? (
         <ReportPanel
-          selection={selection}
+          selection={shownSelection}
+          closing={selection === null}
           view={view}
           day={layers.state.dangerDay}
           onPickPoint={pickPoint}
-          pointCountry={selection.kind === "point" ? pointCountry : null}
+          pointCountry={shownSelection.kind === "point" ? pointCountry : null}
           onWholeCountry={(iso3) => apply({ kind: "country", iso3 })}
           onClose={() => apply(null)}
           mapMonth={mapMonth}

@@ -4,6 +4,7 @@
 @import "../styles/shell.css";
 @import "../styles/layers.css";
 @import "../styles/chrome.css";
+@import "../styles/motion.css";
 
 @theme {
   --color-ink: var(--ink);

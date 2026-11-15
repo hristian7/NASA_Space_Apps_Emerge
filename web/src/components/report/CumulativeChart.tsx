@@ -7,6 +7,7 @@ import { downloadSvgAsPng, pngFilename } from "@/lib/export/png";
 import { cumulativeSeason } from "./lib/aggregate";
 import { formatCount, monthShort, type ReportLocale } from "./lib/format";
 import styles from "./styles";
+import { useChartDraw } from "@/lib/ui/motion";
 
 export default function CumulativeChart({ series, year, lastDataDay, locale, place }: { series: Series; year: number; lastDataDay: string; locale: ReportLocale; place: string }) {
   const t = useTranslations("report");
@@ -18,6 +19,7 @@ export default function CumulativeChart({ series, year, lastDataDay, locale, pla
   const y = (value: number) => 8 + (1 - value / top) * 110;
   const unit = t(`unit.${series.unit}.short`);
   const summary = t("cumulative.summary", { year, unit });
+  useChartDraw(ref, `${year}:${points.map((p) => `${p.current}/${p.median}`).join(",")}`);
   async function save() {
     if (!ref.current) return;
     try {

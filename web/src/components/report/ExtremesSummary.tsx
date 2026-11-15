@@ -10,6 +10,7 @@ import {
   type ReportLocale,
 } from "./lib/format";
 import styles from "./styles";
+import Roll from "@/components/ui/roll";
 
 export interface ExtremesSummaryProps {
   extremes: Extremes;
@@ -39,7 +40,7 @@ export default function ExtremesSummary({
         ) : (
           <>
             <p className={styles.cardFigure}>
-              {formatCount(extremes.worstMonth.value, locale)}
+              <Roll value={formatCount(extremes.worstMonth.value, locale)} />
             </p>
             <p className={styles.cardLine}>
               {monthYearLong(
@@ -62,7 +63,7 @@ export default function ExtremesSummary({
         ) : (
           <>
             <p className={styles.cardFigure}>
-              {formatCount(extremes.worstYear.value, locale)}
+              <Roll value={formatCount(extremes.worstYear.value, locale)} />
             </p>
             <p className={styles.cardLine}>
               {extremes.worstYear.y}
@@ -85,9 +86,13 @@ export default function ExtremesSummary({
         ) : (
           <>
             <p className={styles.cardFigure}>
-              {trend.perDecadeShare === null
-                ? formatSigned(trend.slopePerYear, locale)
-                : formatPercent(trend.perDecadeShare, locale)}
+              <Roll
+                value={
+                  trend.perDecadeShare === null
+                    ? formatSigned(trend.slopePerYear, locale)
+                    : formatPercent(trend.perDecadeShare, locale)
+                }
+              />
             </p>
             <p className={styles.cardLine}>
               {trend.perDecadeShare === null

@@ -26,6 +26,7 @@ import styles from "@/components/report/styles";
 import { RiskLinks } from "@/components/risk/RiskLinks";
 import "@/components/risk/risk.css";
 import "./forecast.css";
+import Roll from "@/components/ui/roll";
 
 type Props = {
   selection: Selection;
@@ -304,10 +305,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                     <>
                       <span className="fc-topLevel" aria-label={t("levelAria", { level: item.level })}>
                         <span className="fc-swatch" data-level={item.level} aria-hidden="true" />
-                        <span className={`${styles.num} num`}>{item.level}</span>
+                        <span className={`${styles.num} num`}><Roll value={item.level} /></span>
                       </span>
                       <span className="fc-topName">{region}</span>
-                      <span className="fc-topChance">{chance(item.p)}</span>
+                      <span className="fc-topChance"><Roll value={chance(item.p)} /></span>
                     </>
                   );
                   return (
@@ -341,10 +342,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           ) : (
             <div className="fc-score">
               <p className="fc-level" aria-label={t("levelAria", { level: spot.level })}>
-                <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true">{spot.level}</span>
+                <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true"><Roll value={spot.level} ms={420} /></span>
                 <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
               </p>
-              <div className="fc-meter" aria-hidden="true">
+              <div className="fc-meter" aria-hidden="true" key={spot.level}>
                 {[1, 2, 3, 4, 5].map((step) => (
                   <span key={step} data-on={step <= spot.level} />
                 ))}
@@ -371,10 +372,10 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         ) : square !== null ? (
           <div className="fc-score">
             <p className="fc-level" aria-label={t("levelAria", { level: square.level })}>
-              <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true">{square.level}</span>
+              <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true"><Roll value={square.level} ms={420} /></span>
               <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
             </p>
-            <div className="fc-meter" aria-hidden="true">
+            <div className="fc-meter" aria-hidden="true" key={square.level}>
               {[1, 2, 3, 4, 5].map((step) => (
                 <span key={step} data-on={step <= square.level} />
               ))}
@@ -455,7 +456,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           <span className="fc-tileNoData">{t("noData")}</span>
         ) : (
           <>
-            <span className={`${styles.cardFigure} ${styles.num} num`}>{props.value}</span>
+            <span className={`${styles.cardFigure} ${styles.num} num`}><Roll value={props.value} /></span>
             <span className="fc-tileUnit">{props.unit}</span>
           </>
         )}

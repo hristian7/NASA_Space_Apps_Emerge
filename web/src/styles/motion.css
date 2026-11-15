@@ -1,0 +1,483 @@
+/* Motion. Only transform (and its translate/scale properties) and opacity
+   move, plus stroke-dashoffset for chart lines (in motion.ts). Every rule
+   here has an instant or opacity-only twin in the reduced-motion block at
+   the end; keep the two in step. */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-slow: 320ms;
+}
+
+@keyframes m-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes m-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes m-panel-in-x {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes m-panel-out-x {
+  to { opacity: 0; transform: translateX(28px); }
+}
+
+@keyframes m-panel-in-y {
+  from { opacity: 0; transform: translateY(48px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes m-panel-out-y {
+  to { opacity: 0; transform: translateY(48px); }
+}
+
+@keyframes m-drop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes m-drop-out {
+  to { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+@keyframes m-cell-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes m-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+
+@keyframes m-pop {
+  0% { opacity: 0; transform: scale(1.6); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes m-roll-in {
+  from { opacity: 0; transform: translateY(0.5em); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Report panel: slides in from the right on a wide screen, rises as a sheet
+   on a phone; leaves the same way. */
+.report {
+  animation: m-panel-in-x var(--dur-slow) var(--ease-out) both;
+}
+
+.report[data-state="closing"] {
+  animation: m-panel-out-x var(--dur-base) var(--ease-in) both;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .report {
+    animation-name: m-panel-in-y;
+    /* The one height transition: the visible part of the sheet must stay its
+       scroll area, or focus and scroll-into-view land below the screen. It
+       runs on a fixed box, so only the sheet's own content lays out. */
+    transition: height var(--dur-slow) var(--ease-out); /* impeccable-disable-line layout-transition */
+  }
+
+  .report[data-state="closing"] {
+    animation-name: m-panel-out-y;
+  }
+}
+
+/* A view or day change: the new content arrives with a short rise. */
+.view-swap {
+  animation: m-rise var(--dur-base) var(--ease-out) both;
+}
+
+/* Report sections and cards settle in as their data lands. */
+.rp-section,
+.fc-tiles > *,
+.rp-cards > * {
+  animation: m-rise var(--dur-slow) var(--ease-out) both;
+}
+
+.rp-section:nth-child(2),
+.fc-tiles > :nth-child(2),
+.rp-cards > :nth-child(2) { animation-delay: 30ms; }
+.rp-section:nth-child(3),
+.fc-tiles > :nth-child(3),
+.rp-cards > :nth-child(3) { animation-delay: 60ms; }
+.rp-section:nth-child(4),
+.fc-tiles > :nth-child(4),
+.rp-cards > :nth-child(4) { animation-delay: 90ms; }
+.rp-section:nth-child(n + 5),
+.fc-tiles > :nth-child(n + 5),
+.rp-cards > :nth-child(n + 5) { animation-delay: 120ms; }
+
+/* Menus from the top bar and the map tools. */
+.popover,
+.dropdown-list,
+.tool-tip,
+.timeline-note {
+  animation: m-drop-in var(--dur-base) var(--ease-out) both;
+}
+
+.popover[data-state="closing"],
+.dropdown-list[data-state="closing"] {
+  animation: m-drop-out var(--dur-fast) var(--ease-in) both;
+  pointer-events: none;
+}
+
+.tool-tip,
+.timeline-note {
+  animation-name: m-fade-in;
+}
+
+/* The layer panel stays mounted and toggles `hidden`: it fades and lifts on
+   open and plays the same in reverse on close. */
+.layers {
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    display var(--dur-base) allow-discrete;
+}
+
+.layers[hidden] {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transition-timing-function: var(--ease-in);
+  transition-duration: var(--dur-fast);
+}
+
+@starting-style {
+  .layers:not([hidden]) {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
+@media (max-width: 767px) {
+  .layers[hidden] {
+    transform: translateY(12px);
+  }
+
+  @starting-style {
+    .layers:not([hidden]) {
+      transform: translateY(12px);
+    }
+  }
+}
+
+.layers-body:not([hidden]) {
+  animation: m-fade-in var(--dur-base) var(--ease-out) both;
+}
+
+.layers-head::after {
+  transition: rotate var(--dur-base) var(--ease-out);
+}
+
+/* Sliding pill: one shared shape moves between the tabs of a group. */
+[data-pill] {
+  position: relative;
+  isolation: isolate;
+}
+
+.pill {
+  display: none;
+}
+
+[data-pill] > .pill {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: var(--radius-s);
+  background: var(--line);
+  pointer-events: none;
+}
+
+.rp-jump[data-pill] > .pill {
+  border-radius: calc(var(--radius-s) - 2px);
+}
+
+[data-pill] > .chip[aria-pressed="true"],
+[data-pill] > .chip[aria-current="page"],
+.rp-jump[data-pill] > button[aria-current="true"],
+.risk-days[data-pill] > button[aria-pressed="true"] {
+  background: none;
+}
+
+/* Press and hover feedback on every control: a small give under the
+   finger, a slight lift for map tools. */
+.chip,
+.chip-solo,
+.icon-btn,
+.btn,
+.tool,
+.rp-btn,
+.rp-jump button,
+.risk-days button,
+.whole-country,
+.layers-close,
+.dropdown-item,
+.fc-topRow,
+.layer-switch {
+  transition: scale var(--dur-fast) var(--ease-out);
+}
+
+.chip:active,
+.chip-solo:active,
+.icon-btn:active,
+.btn:active:not(:disabled),
+.tool:active,
+.rp-btn:active:not(:disabled),
+.rp-jump button:active,
+.risk-days button:active:not(:disabled),
+.whole-country:active,
+.layers-close:active,
+.dropdown-item:active,
+button.fc-topRow:active {
+  scale: 0.95;
+}
+
+.tool svg,
+.icon-btn svg {
+  transition: scale var(--dur-fast) var(--ease-out), rotate var(--dur-base) var(--ease-out);
+}
+
+.tool:hover svg {
+  scale: 1.1;
+}
+
+.tool[aria-pressed="true"] svg {
+  scale: 1.05;
+}
+
+/* Timeline: the thumb grows under the pointer and the year or day rolls in. */
+.timeline-track input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: none;
+  cursor: pointer;
+}
+
+.timeline-track input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) 0 var(--fill, 0%), var(--line) var(--fill, 0%) 100%);
+}
+
+.timeline-track input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.timeline-track input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.timeline-track input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 2px solid var(--space);
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.timeline-track input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--space);
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.timeline-track input[type="range"]:hover::-webkit-slider-thumb,
+.timeline-track input[type="range"]:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.timeline-track input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.35);
+}
+
+.timeline-track input[type="range"]:hover::-moz-range-thumb,
+.timeline-track input[type="range"]:focus-visible::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+.timeline-track input[type="range"]:active::-moz-range-thumb {
+  transform: scale(1.35);
+}
+
+.timeline-track input[type="range"]:focus-visible {
+  outline: none;
+}
+
+.timeline-track input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.timeline-value {
+  display: inline-block;
+  animation: m-roll-in var(--dur-base) var(--ease-out) both;
+}
+
+.timeline-bar {
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* Fire calendar: cells cascade in month by month, the year totals grow from
+   the left, the chosen month pops its outline. */
+.m-enter .m-cell {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: m-cell-in 300ms var(--ease-out) both;
+  animation-delay: calc(var(--m) * 24ms + var(--r) * 5ms);
+}
+
+.m-enter .rp-total,
+.m-enter .rp-totalSelected {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: m-grow-x 420ms var(--ease-out) both;
+  animation-delay: calc(240ms + var(--r) * 6ms);
+}
+
+.rp-cellSelected {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: m-pop var(--dur-base) var(--ease-out) both;
+}
+
+.rp-tip {
+  animation: m-fade-in var(--dur-fast) var(--ease-out) both;
+}
+
+/* Forecast level meter: the steps fill one after another. */
+.fc-meter span[data-on="true"] {
+  transform-origin: 0 50%;
+  animation: m-grow-x var(--dur-slow) var(--ease-out) both;
+}
+
+.fc-meter span:nth-child(2) { animation-delay: 50ms; }
+.fc-meter span:nth-child(3) { animation-delay: 100ms; }
+.fc-meter span:nth-child(4) { animation-delay: 150ms; }
+.fc-meter span:nth-child(5) { animation-delay: 200ms; }
+
+/* A counting figure: the real text keeps its place and is what readers and
+   copy see; the frames are painted over it from `data-roll`. */
+.roll {
+  position: relative;
+  display: inline-block;
+}
+
+.roll[data-roll] {
+  -webkit-text-fill-color: transparent;
+}
+
+.roll[data-roll]::after {
+  content: attr(data-roll);
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  -webkit-text-fill-color: currentColor;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report,
+  .report[data-state="closing"],
+  .popover,
+  .dropdown-list,
+  .view-swap,
+  .rp-section,
+  .fc-tiles > *,
+  .rp-cards > *,
+  .tool-tip,
+  .timeline-note,
+  .layers-body:not([hidden]) {
+    animation: m-fade-in 1ms linear both;
+  }
+
+  .report[data-state="closing"],
+  .popover[data-state="closing"],
+  .dropdown-list[data-state="closing"] {
+    animation: none;
+    opacity: 0;
+  }
+
+  .timeline-value,
+  .m-enter .m-cell,
+  .m-enter .rp-total,
+  .m-enter .rp-totalSelected,
+  .rp-cellSelected,
+  .rp-tip,
+  .fc-meter span[data-on="true"] {
+    animation: none;
+  }
+
+  .layers,
+  .layers[hidden] {
+    transition: none;
+    transform: none;
+  }
+
+  .report,
+  .layers-head::after,
+  .tool svg,
+  .icon-btn svg,
+  .timeline-bar,
+  .chip,
+  .chip-solo,
+  .icon-btn,
+  .btn,
+  .tool,
+  .rp-btn,
+  .rp-jump button,
+  .risk-days button,
+  .whole-country,
+  .layers-close,
+  .dropdown-item,
+  .fc-topRow,
+  .layer-switch,
+  .timeline-track input[type="range"]::-webkit-slider-thumb,
+  .timeline-track input[type="range"]::-moz-range-thumb {
+    transition: none;
+  }
+
+  .tool:hover svg,
+  .tool[aria-pressed="true"] svg {
+    scale: none;
+  }
+}
+
+/* The phone sheet's handle answers the finger. */
+.handle::after {
+  transition: scale var(--dur-fast) var(--ease-out);
+}
+
+.handle:active::after {
+  scale: 1.25 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handle::after {
+    transition: none;
+  }
+}

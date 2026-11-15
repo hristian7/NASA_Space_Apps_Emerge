@@ -1,4 +1,8 @@
+'use client';
+
+import { useRef } from 'react';
 import type { PowerDay } from '@/lib/forecast/power';
+import { useChartDraw } from '../../lib/ui/motion';
 
 export type SparklineProps = { label: string; values: PowerDay[]; unit: string; /** Only the drawing, for a tile that shows its own figures. */ bare?: boolean };
 
@@ -21,8 +25,10 @@ export function Sparkline({ label, values, unit, bare = false }: SparklineProps)
     } else current += `${current ? ' L' : 'M'}${x(index)},${y(point.value)}`;
   });
   if (current) paths.push(current);
+  const chart = useRef<SVGSVGElement | null>(null);
+  useChartDraw(chart, values.map(point => point.value).join(','));
   const description = `${label}: ${trend}${last ? `, latest ${Number(last.value.toFixed(2))} ${unit} on ${last.date}` : ''}`;
-  const drawing = <svg viewBox="0 0 100 40" width="100%" height="40" role="img" aria-label={description} preserveAspectRatio="none">
+  const drawing = <svg ref={chart} viewBox="0 0 100 40" width="100%" height="40" role="img" aria-label={description} preserveAspectRatio="none">
       {paths.map((path, index) => <path key={index} d={path} fill="none" stroke="var(--accent)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />)}
       {valid.map(point => <circle key={point.index} cx={x(point.index)} cy={y(point.value)} r="1.3" fill="var(--accent)" />)}
     </svg>;
