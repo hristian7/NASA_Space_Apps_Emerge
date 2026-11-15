@@ -1,0 +1,30 @@
+.anchor-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.anchor-link {
+  color: var(--ink-3);
+  text-decoration: none !important;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.anchor-heading:hover .anchor-link,
+.anchor-link:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .anchor-link {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor-link {
+    transition: none;
+  }
+}
