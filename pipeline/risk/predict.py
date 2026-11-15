@@ -37,9 +37,14 @@ def main():
     ap.add_argument('--model', type=Path, default=DATA / 'model_v1.json')
     ap.add_argument('--data', type=Path, default=DATA)
     ap.add_argument('--out', type=Path, required=True)
+    ap.add_argument('--lead', type=int, default=2, help='history cutoff D minus lead; use lead-specific weather for 4 to 8')
     args = ap.parse_args()
     if args.end < args.start:
         ap.error('end precedes start')
+    if args.lead not in range(2, 9):
+        ap.error('lead must be between 2 and 8')
+    weather_folder = 'fwi_0.25' if args.lead in (2, 3) else f'fwi_lead{args.lead}_0.25'
+    history_folder = 'history_0.25' if args.lead == 2 else f'history_lead{args.lead}_0.25'
     model = json.loads(args.model.read_text())
     if model['features'] != list(FEATURES):
         raise ValueError('model feature schema differs from pipeline')
@@ -59,8 +64,8 @@ def main():
     try:
         day = args.start
         while day <= args.end:
-            weather = args.data / 'fwi_0.25' / f'month={day:%Y-%m}' / f'{day}.parquet'
-            hist = args.data / 'history_0.25' / f'month={day:%Y-%m}' / 'history.parquet'
+            weather = args.data / weather_folder / f'month={day:%Y-%m}' / f'{day}.parquet'
+            hist = args.data / history_folder / f'month={day:%Y-%m}' / 'history.parquet'
             if weather.exists():
                 if not hist.exists():
                     raise ValueError(f'history missing for {day}')

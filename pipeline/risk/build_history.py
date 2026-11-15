@@ -16,11 +16,16 @@ def main():
     p.add_argument('--start', type=dt.date.fromisoformat, default=dt.date(2024, 1, 1))
     p.add_argument('--end', type=dt.date.fromisoformat, default=dt.date(2025, 12, 31))
     p.add_argument('--data', type=Path, default=DATA)
+    p.add_argument('--lead', type=int, default=2, help='latest permitted observation is D minus this many days')
     args = p.parse_args()
     if args.end < args.start:
         p.error('end precedes start')
+    if args.lead < 2:
+        p.error('lead must be at least 2')
+    weather_folder = 'fwi_0.25' if args.lead in (2, 3) else f'fwi_lead{args.lead}_0.25'
+    history_folder = 'history_0.25' if args.lead == 2 else f'history_lead{args.lead}_0.25'
     by_month = {}
-    for f in sorted((args.data / 'fwi_0.25').glob('month=*/*.parquet')):
+    for f in sorted((args.data / weather_folder).glob('month=*/*.parquet')):
         day = dt.date.fromisoformat(f.stem)
         if args.start <= day <= args.end:
             by_month.setdefault(day.strftime('%Y-%m'), []).append(day)
@@ -37,8 +42,8 @@ def main():
     for month, days in by_month.items():
         year, mon = map(int, month.split('-'))
         first, last = min(days), max(days)
-        first_cutoff = first - dt.timedelta(days=2)
-        last_cutoff = last - dt.timedelta(days=2)
+        first_cutoff = first - dt.timedelta(days=args.lead)
+        last_cutoff = last - dt.timedelta(days=args.lead)
         eligible_years = year - (2018 if mon >= 4 else 2019)
         if eligible_years < 0:
             eligible_years = 0
@@ -65,17 +70,17 @@ def main():
                           f.day + lag::INTEGER AS day
           FROM fire f
           CROSS JOIN range(-1,2) r(dr) CROSS JOIN range(-1,2) c(dc)
-          CROSS JOIN range(2,5) l(lag)
-          WHERE f.day BETWEEN ?::DATE - 4 AND ?::DATE - 2
+          CROSS JOIN range(?::INTEGER, ?::INTEGER) l(lag)
+          WHERE f.day BETWEEN ?::DATE - ?::INTEGER AND ?::DATE - ?::INTEGER
             AND floor(f.spot_id/1440)::INTEGER + dr BETWEEN 0 AND 719
-        """, [first, last])
-        folder = args.data / 'history_0.25' / f'month={month}'
+        """, [args.lead, args.lead + 3, first, args.lead + 2, last, args.lead])
+        folder = args.data / history_folder / f'month={month}'
         folder.mkdir(parents=True, exist_ok=True)
         temp = folder / 'history.parquet.tmp'
         con.execute("""
           COPY (
             WITH base AS (
-              SELECT g.spot_id,d.day,d.day-2 AS cutoff,
+              SELECT g.spot_id,d.day,d.day-?::INTEGER AS cutoff,
                      CASE WHEN ? = 0 THEN NULL ELSE coalesce(a.fire_years,0)::DOUBLE / ? END AS hist_p,
                      coalesce(a.last_year_same_month,FALSE) AS last_year_same_month
               FROM grid g CROSS JOIN days d LEFT JOIN annual a USING (spot_id)
@@ -89,7 +94,7 @@ def main():
             FROM recent_base b LEFT JOIN nearby n ON b.spot_id=n.spot_id AND b.day=n.day
             ORDER BY b.day,b.spot_id
           ) TO ? (FORMAT parquet, COMPRESSION zstd, KV_METADATA {grid_g: '0.25'})
-        """, [eligible_years, max(eligible_years, 1), str(temp)])
+        """, [args.lead, eligible_years, max(eligible_years, 1), str(temp)])
         temp.replace(folder / 'history.parquet')
         print('finished history', month, flush=True)
 
