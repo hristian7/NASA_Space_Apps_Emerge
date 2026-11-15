@@ -2,7 +2,7 @@
   "engine_ready": true,
   "example": false,
   "model_version": "lightgbm-v2",
-  "made_at": "2026-11-15T07:55:40.422872Z",
+  "made_at": "2026-11-15T08:01:35.553703Z",
   "grid_g": 0.25,
   "level_bands": [
     0.01,

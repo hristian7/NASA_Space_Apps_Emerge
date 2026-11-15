@@ -79,8 +79,8 @@ def ranked_spots(rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--model', type=Path, default=DATA / 'model_v1.json')
-    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live.parquet')
+    ap.add_argument('--model', type=Path, default=DATA / 'model_v2.json')
+    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live_v2.parquet')
     ap.add_argument('--usual', type=Path, required=True)
     ap.add_argument('--scorecard', type=Path, default=WEB / 'scorecard.json')
     ap.add_argument('--data', type=Path, default=DATA)

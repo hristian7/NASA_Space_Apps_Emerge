@@ -32,3 +32,14 @@ def test_context_categories_use_unrounded_inputs():
     assert usual_category(.015, .01) == 1
     assert usual_category(.01501, .01) == 2
     assert usual_category(None, .01) is None
+
+
+def test_export_defaults_follow_the_published_model_version():
+    import json, re
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[3]
+    source = (root / 'pipeline/risk/export_risk.py').read_text()
+    meta = json.loads((root / 'web/public/data/risk/meta.json').read_text())
+    version = re.search(r'v(\d+)$', meta['model_version']).group(1)
+    assert f"model_v{version}.json" in source
+    assert f"predictions_live_v{version}.parquet" in source
