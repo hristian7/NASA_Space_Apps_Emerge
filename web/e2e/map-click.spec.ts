@@ -13,10 +13,10 @@ function historyCardTitle(): string {
   };
   const now = new Date();
   const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  if (localToday > validFor) return "Risk outlook here";
-  if (validFor === utc(0)) return "Today's risk here";
-  if (validFor === utc(1)) return "Tomorrow's risk here";
-  return `Latest risk forecast here, for ${validFor}`;
+  if (localToday > validFor) return "Chance of a new fire here";
+  if (validFor === utc(0)) return "Chance of a new fire here today";
+  if (validFor === utc(1)) return "Chance of a new fire here tomorrow";
+  return `Chance of a new fire here, latest forecast for ${validFor}`;
 }
 
 /**
@@ -41,5 +41,5 @@ test("a map click picks a point and shows its history and risk", async ({ page }
   await page.getByRole("button", { name: "Forecast", exact: true }).click();
   await expect(page).toHaveURL(/[?&]v=f(&|$)/);
   await expect(page).toHaveURL(/sel=p:/);
-  await expect(page.getByText(/Our fire risk score for (today|tomorrow) \(unofficial\)/)).toBeVisible();
+  await expect(page.getByText(/^Chance a new fire starts here (today|tomorrow) \(unofficial\)$/)).toBeVisible();
 });

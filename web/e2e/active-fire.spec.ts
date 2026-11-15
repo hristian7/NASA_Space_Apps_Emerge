@@ -39,7 +39,10 @@ test("a place with a fire in its square shows the active-fire card and no level"
   const card = page.getByTestId("active-fire");
   await expect(card).toBeVisible();
   await expect(card).toContainText("Active fire nearby");
-  await expect(card).toContainText("1 detection in the last 24 hours, 2 in the last 72 hours, within 50 km.");
+  const around = page.locator(".fc-panel").getByTestId("fire-around");
+  await expect(around.locator(".fire-figures p").nth(0)).toHaveText("1in the last 24 hours");
+  await expect(around.locator(".fire-figures p").nth(1)).toHaveText("2in the last 7 days");
+  await expect(around.locator(".fire-verdict")).toHaveText("Some fires nearby this week.");
   await expect(card).toContainText("Our score covers new fires only; this area is already burning.");
   await expect(card).toContainText("Guide from the wind forecast, not a tested spread forecast.");
   await expect(page.locator(".fc-scoreRow")).toHaveCount(0);
@@ -60,4 +63,7 @@ test("a place with no recent fire nearby keeps its score", async ({ page }) => {
   await expect(page.locator(".fc-panel .fc-score").first()).toBeVisible();
   await expect(page.getByText("Checking for active fires nearby…")).toHaveCount(0);
   await expect(page.getByTestId("active-fire")).toHaveCount(0);
+  // About 89 km away: outside the 50 km of "fire around here" too.
+  await expect(page.getByTestId("fire-around").locator(".fire-verdict")).toHaveText("No fires detected nearby this week.");
+  await expect(page.locator(".fc-panel .fc-note").first()).toHaveText("Counts only new fires in this 25 km square; fires already burning nearby are shown above.");
 });

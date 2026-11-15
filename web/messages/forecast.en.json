@@ -1,6 +1,6 @@
 {
-  "scoreTitleToday": "Our fire risk score for today (unofficial)",
-  "scoreTitleTomorrow": "Our fire risk score for tomorrow (unofficial)",
+  "scoreTitleToday": "Chance a new fire starts here today (unofficial)",
+  "scoreTitleTomorrow": "Chance a new fire starts here tomorrow (unofficial)",
   "scoreBuilding": "Our score is being built and tested. The weather below is live.",
   "levelAria": "Level {level} of 5",
   "levelName1": "Low risk",
@@ -8,7 +8,7 @@
   "levelName3": "High risk",
   "levelName4": "Very high risk",
   "levelName5": "Extreme risk",
-  "topSpots": "Highest scored spots in {country}",
+  "topSpots": "Where a new fire is most likely in {country}",
   "pickSpot": "Show {region} on the map",
   "inputsTitleToday": "Weather and ground here, today",
   "inputsTitleTomorrow": "Weather and ground here, tomorrow",
@@ -62,8 +62,10 @@
   "weekFwiCountry": "Highest NASA fire-weather index among the listed spots: {value}",
   "weekNoValue": "No fire-weather value for this place on this day.",
   "weekNote": "Fire-weather index for {date}, from the NASA GEOS-5 forecast. It is not our model's score.",
-  "scoreTitleLatest": "Latest forecast, for {date} (unofficial)",
+  "scoreTitleLatest": "Chance a new fire starts here, latest forecast for {date} (unofficial)",
   "noModelDay": "Our model has no forecast for this day yet; fire weather only.",
   "sourcesNote": "Values: {forecast}. Past rain and days since rain: {past} ({dry}) Soil: {soil}. Lines: {trend}.",
-  "listKey": "Arrow: versus usual for {month}. Dot: fire weather."
+  "listKey": "Arrow: versus usual for {month}. Dot: fire weather.",
+  "newFireNote": "Counts only new fires in this 25 km square; fires already burning nearby are shown above.",
+  "newFireNoteList": "Counts only new fires in each 25 km square, not fires already burning."
 }

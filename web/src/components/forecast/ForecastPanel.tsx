@@ -28,7 +28,7 @@ import { RiskLinks } from "@/components/risk/RiskLinks";
 import "@/components/risk/risk.css";
 import "./forecast.css";
 import Roll from "@/components/ui/roll";
-import ActiveFireCard, { useActiveFire } from "@/components/risk/ActiveFireCard";
+import ActiveFireCard, { FireAround, useActiveFire } from "@/components/risk/ActiveFireCard";
 
 type Props = {
   selection: Selection;
@@ -299,12 +299,12 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     }
     const contextDay = modelDate ?? viewedDate;
     if (open && fireCheck !== null && top === null) {
-      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("fireChecking")}</p>;
+      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("aroundChecking")}</p>;
       if (fireCheck.status === "ready" && fireCheck.fire.active) {
         return (
           <>
             {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
-            <ActiveFireCard fire={fireCheck.fire} radiusKm={sel.kind === "point" ? sel.radiusKm : 0} weather={parsed} />
+            <ActiveFireCard fire={fireCheck.fire} weather={parsed} />
           </>
         );
       }
@@ -352,6 +352,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
                     ))}
                 </>
               }
+              after={<p className="fc-note">{t("newFireNote")}</p>}
             />
           )
         ) : square !== null ? (
@@ -366,6 +367,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
             }
             after={
               <>
+                <p className="fc-note">{t("newFireNote")}</p>
                 <p className="fc-muted">{t("squareNote")}</p>
                 {nearest !== null ? (
                   <NearestSpot nearest={nearest} text={`${t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })} ${chance(nearest.spot.p)}`} goLabel={t("goToSpot")} onPickPoint={onPickPoint} />
@@ -508,6 +510,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
 
   return (
     <div className={`${styles.report} fc-panel`}>
+      {fireCheck !== null ? <FireAround check={fireCheck} /> : null}
       <section className={styles.section} aria-label={scoreTitle}>
         <div className="fc-head">
           <h2 className={styles.heading}>{scoreTitle}</h2>
@@ -600,6 +603,7 @@ function TopSpots({ heading, spots, day, regionName, chance, onPickPoint }: {
         <p className="fc-muted">{t("listKey", { month })}</p>
         <LevelInfo />
       </div>
+      <p className="fc-note">{t("newFireNoteList")}</p>
     </>
   );
 }
