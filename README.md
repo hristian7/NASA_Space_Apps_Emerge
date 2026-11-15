@@ -6,9 +6,10 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 
 ## Status
 
-- **Live:** [Emerge](https://emerge-beta-ten.vercel.app), with real world fire data from Nov 2000 to 14 Nov 2026 `[V]`. The A3 conversion model was tested on held-out years for every country `[V]`; national reports and satellite estimates are labelled separately.
-- **In progress:** [plan 2](specs/plan-2-fire-risk/overview.md), next-day fire risk, started Sat 14 Nov at 23:00 Sofia time `[V]`.
-- **Freeze:** Sun 15 Nov at 08:00 Sofia time `[U]`.
+- **Live:** [Emerge](https://emerge-beta-ten.vercel.app), with the historical fire calendar, area selection, comparisons and proof page. The record runs from Nov 2000 to 14 Nov 2026 `[V]`; national reports and satellite estimates are labelled separately.
+- **Risk outlook:** unofficial next-day rankings and point scores use published static predictions for 14 and 15 Nov 2026 `[V]`. The proof page reports the 2025 hold-out against history, the NASA fire-weather index and random ranking `[V]`. The week outlook is fire-weather-only and unscored `[V]`; the daily log is only starting.
+- **Map and forecast:** fire history, rain, wind, temperature, soil moisture, greenness and land type layers, with point weather forecasts and NASA POWER trends `[V]`. Greenness is displayed, not used by the risk model `[V]`.
+- **Limits:** the risk grid is 0.25 degrees `[V]`, some city squares are overstated, and this research prototype is not an official warning. The historical chance-of-fire measure remains unscored `[V]`.
 
 ## Read first
 
