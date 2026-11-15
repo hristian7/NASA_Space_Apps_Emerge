@@ -109,3 +109,12 @@ def test_missing_forecast_inputs_do_not_publish_a_day(tmp_path):
         daily.validate_predictions(con, predictions, grid, previous, day)
     write([0.1, None, 0.2, None])
     daily.validate_predictions(con, predictions, grid, previous, day)
+
+
+def test_public_bundle_strips_owner_metadata():
+    import tarfile
+    info = tarfile.TarInfo('risk/file')
+    info.uid, info.gid = 42, 53
+    info.uname, info.gname = 'owner', 'group'
+    cleaned = daily.clean_tar_owner(info)
+    assert (cleaned.uid, cleaned.gid, cleaned.uname, cleaned.gname) == (0, 0, '', '')

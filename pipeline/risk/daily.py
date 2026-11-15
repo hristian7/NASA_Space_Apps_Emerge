@@ -255,6 +255,13 @@ def publish_forecast(run, day, previous_day, first, data, web):
     print(f'Published {previous_day} and {day} using model_v2', flush=True)
 
 
+def clean_tar_owner(info):
+    """Public state must not expose the build machine's user or group."""
+    info.uid = info.gid = 0
+    info.uname = info.gname = ''
+    return info
+
+
 def make_bundle(output, data, world, web):
     """Package only the inputs and published files needed by the next job."""
     usual = data / 'usual_v2.parquet'
@@ -270,26 +277,26 @@ def make_bundle(output, data, world, web):
             TO ? (FORMAT parquet, COMPRESSION zstd)""", [str(world / 'cell_days_2026.parquet'), str(trimmed)])
         output.parent.mkdir(parents=True, exist_ok=True)
         with tarfile.open(output, 'w:gz', compresslevel=4) as bundle:
-            bundle.add(trimmed, arcname='data/derived/world/cell_days_2026.parquet')
-            bundle.add(world / 'static_mask.parquet', arcname='data/derived/world/static_mask.parquet')
+            bundle.add(trimmed, arcname='data/derived/world/cell_days_2026.parquet', filter=clean_tar_owner)
+            bundle.add(world / 'static_mask.parquet', arcname='data/derived/world/static_mask.parquet', filter=clean_tar_owner)
             for name in ('grid_0.25.parquet', 'model_v2.json', 'model_v2.txt', 'labels_0.25.parquet',
                          'predictions_live_v2.parquet', 'usual_v2.parquet', 'daily_detections.parquet', 'daily_detections.json', '.blob_initialized'):
                 path = data / name
                 if path.exists():
-                    bundle.add(path, arcname=f'data/derived/risk/{name}')
+                    bundle.add(path, arcname=f'data/derived/risk/{name}', filter=clean_tar_owner)
             for day in days:
                 file = data / 'fwi_0.25' / f'month={day:%Y-%m}' / f'{day}.parquet'
-                bundle.add(file, arcname=f'data/derived/risk/{file.relative_to(data)}')
+                bundle.add(file, arcname=f'data/derived/risk/{file.relative_to(data)}', filter=clean_tar_owner)
             for file in sorted((data / 'history_0.25').glob('month=*/history.parquet')):
                 if int(file.parent.name[6:10]) >= first_year:
-                    bundle.add(file, arcname=f'data/derived/risk/{file.relative_to(data)}')
+                    bundle.add(file, arcname=f'data/derived/risk/{file.relative_to(data)}', filter=clean_tar_owner)
             archive = data / 'daily_archive'
             if archive.exists():
-                bundle.add(archive, arcname='data/derived/risk/daily_archive')
+                bundle.add(archive, arcname='data/derived/risk/daily_archive', filter=clean_tar_owner)
             for name in ('meta.json', 'scorecard.json', 'regions.json', 'scores', 'latest', 'week'):
                 path = web / name
                 if path.exists():
-                    bundle.add(path, arcname=f'web/public/data/risk/{name}')
+                    bundle.add(path, arcname=f'web/public/data/risk/{name}', filter=clean_tar_owner)
     print(f'Prepared daily state bundle: {output.stat().st_size} bytes', flush=True)
 
 
