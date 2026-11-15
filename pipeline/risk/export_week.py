@@ -158,6 +158,12 @@ def export(grid, forecasts, run, out):
             spots.append({'type':'fire_risk', 'spot_id':row['spot_id'], 'lat':float(row['lat']), 'lon':float(row['lon']), 'precision_radius_km':row['precision_radius_km'], 'region_id':region, 'day':day.isoformat(), 'rank':len(spots)+1, 'p':row['p'], 'level':1, 'fire_type':'forest' if row['fuel_class']=='forest' else 'grass_shrub', 'inputs':spot_inputs, 'why':[], 'lead_days':(day-run_day).days, 'run_date':run_day.isoformat()})
     if not countries:
         raise ValueError('No countries have available ranked spots')
+    land = {'spot_id': grid['spot_id'].to_pylist(), 'country': grid['country'].to_pylist()}
+    for day, values, _history, _predictions, _method in forecasts:
+        fwi = values.to_pylist() if hasattr(values, 'to_pylist') else list(values)
+        for spot_id, country, value in zip(land['spot_id'], land['country'], fwi):
+            if country in countries and value is not None and np.isfinite(value):
+                countries[country].setdefault('fwi', {}).setdefault(day.isoformat(), []).append([spot_id, round(float(value), 1)])
     out.mkdir(parents=True, exist_ok=True)
     for country, obj in countries.items():
         (out / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), allow_nan=False) + '\n')

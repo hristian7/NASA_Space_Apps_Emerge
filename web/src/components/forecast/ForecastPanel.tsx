@@ -180,7 +180,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           } else if (at !== null) {
             const square = riskSquare(at.lat, at.lon, index.meta.grid_g).spot_id;
             const own = spots.find((spot) => spot.spot_id === square) ?? nearestSpotOf(spots, at.lat, at.lon);
-            const value = own ? values([own])[0] : undefined;
+            const value = own ? values([own])[0] : file.fwi?.[date]?.find(([id]) => id === square)?.[1];
             if (value !== undefined) {
               fwi = value;
               break;
