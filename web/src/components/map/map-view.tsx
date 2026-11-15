@@ -103,6 +103,19 @@ function rasterStyle(id: string): StyleSpecification | string {
   return {
     version: 8,
     sources: {
+      // One shipped world image (NASA Blue Marble, stitched from GIBS level 3
+      // tiles) under the live tiles, so a part of the globe that has not
+      // loaded yet shows the Earth instead of an empty square.
+      world: {
+        type: "image",
+        url: "/geo/world-base.jpg",
+        coordinates: [
+          [-180, 85.0511],
+          [180, 85.0511],
+          [180, -85.0511],
+          [-180, -85.0511],
+        ],
+      },
       base: {
         type: "raster",
         tiles: basemap.tiles,
@@ -114,6 +127,12 @@ function rasterStyle(id: string): StyleSpecification | string {
     },
     layers: [
       { id: "space", type: "background", paint: { "background-color": "rgb(10,10,12)" } },
+      {
+        id: "world",
+        type: "raster",
+        source: "world",
+        paint: { "raster-saturation": -0.82, "raster-brightness-max": 0.62, "raster-contrast": 0.05, "raster-fade-duration": 0 },
+      },
       // Greyed and dimmed so the data layers carry the colour.
       {
         id: "base",
@@ -426,40 +445,111 @@ export default function MapView({
         };
         paintFireRef.current = paintFire;
 
-        // Only a layer whose tiles changed is rebuilt; the others keep their
-        // loaded tiles, so switching one layer does not flash the rest.
-        const shownTiles = new Map<string, string>();
+        // Each raster layer keeps what it shows until its replacement has
+        // loaded, then crossfades; a layer that follows the forecast day also
+        // loads the next day out of sight, so playing the days finds it ready.
+        type Slot = { source: string; layer: string; url: string };
+        const shown = new Map<string, Slot>();
+        const waiting = new Map<string, Slot>();
+        const ahead = new Map<string, Slot>();
+        let serial = 0;
+        const removeSlot = (slot: Slot | undefined) => {
+          if (slot === undefined) return;
+          if (instance.getLayer(slot.layer)) instance.removeLayer(slot.layer);
+          if (instance.getSource(slot.source)) instance.removeSource(slot.source);
+        };
+        const nextDate = (date: string) => {
+          const day = new Date(`${date}T00:00:00Z`);
+          day.setUTCDate(day.getUTCDate() + 1);
+          return day.toISOString().slice(0, 10);
+        };
+        const addSlot = (definition: (typeof LAYERS)[number], url: string, opacity: number): Slot | null => {
+          if (definition.source.kind !== "tile_template") return null;
+          serial += 1;
+          const source = `emerge-raster-${definition.id}-${serial}`;
+          const layer = `${source}-tiles`;
+          instance.addSource(source, { type: "raster", tiles: [url], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
+          const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
+          // Smooth resampling for every driver layer. Air temperature comes in
+          // hard-edged satellite swaths, so it is also fainter and flatter.
+          const soft = definition.id === "air-temperature";
+          instance.addLayer(
+            {
+              id: layer,
+              type: "raster",
+              source,
+              paint: {
+                "raster-opacity": opacity,
+                "raster-opacity-transition": { duration: 250, delay: 0 },
+                "raster-fade-duration": 0,
+                "raster-resampling": "linear",
+                ...(soft ? { "raster-contrast": -0.25, "raster-saturation": -0.15 } : {}),
+              },
+            },
+            below,
+          );
+          return { source, layer, url };
+        };
+        const fullOpacity = (id: string) => (id === "air-temperature" ? 0.3 : 0.42);
+        const promote = (id: string, slot: Slot) => {
+          if (instance.getLayer(slot.layer)) instance.setPaintProperty(slot.layer, "raster-opacity", fullOpacity(id));
+          const old = shown.get(id);
+          shown.set(id, slot);
+          // The old picture leaves after the crossfade.
+          window.setTimeout(() => removeSlot(old), 300);
+        };
+        instance.on("sourcedata", (event) => {
+          if (!event.isSourceLoaded) return;
+          for (const [id, slot] of waiting) {
+            if (event.sourceId === slot.source && instance.isSourceLoaded(slot.source)) {
+              waiting.delete(id);
+              promote(id, slot);
+            }
+          }
+        });
         const paintDanger = () => {
           for (const definition of LAYERS.filter((entry) => entry.kind === "raster_tiles")) {
-            const source = `emerge-raster-${definition.id}`;
-            const layer = `${source}-tiles`;
-            const date = rasters.current[definition.id];
-            const tiles = date && definition.source.kind === "tile_template" ? layerUrl(definition.source, date) : "";
-            const present = instance.getSource(source) !== undefined;
-            if (present && shownTiles.get(definition.id) === tiles) continue;
-            if (instance.getLayer(layer)) instance.removeLayer(layer);
-            if (present) instance.removeSource(source);
-            shownTiles.delete(definition.id);
-            if (!tiles || definition.source.kind !== "tile_template") continue;
-            instance.addSource(source, { type: "raster", tiles: [tiles], tileSize: definition.source.tileSize, attribution: definition.credit, ...(definition.source.kind === "tile_template" && definition.source.maxzoom !== undefined ? { maxzoom: definition.source.maxzoom } : {}) });
-            const below = instance.getLayer(countryHitLayer) ? countryHitLayer : instance.getLayer(fillLayer) ? fillLayer : undefined;
-            // Smooth resampling for every driver layer. Air temperature comes in
-            // hard-edged satellite swaths, so it is also fainter and flatter.
-            const soft = definition.id === "air-temperature";
-            instance.addLayer(
-              {
-                id: layer,
-                type: "raster",
-                source,
-                paint: {
-                  "raster-opacity": soft ? 0.3 : 0.42,
-                  "raster-resampling": "linear",
-                  ...(soft ? { "raster-contrast": -0.25, "raster-saturation": -0.15 } : {}),
-                },
-              },
-              below,
-            );
-            shownTiles.set(definition.id, tiles);
+            if (definition.source.kind !== "tile_template") continue;
+            const id = definition.id;
+            const date = rasters.current[id];
+            const url = date ? (layerUrl(definition.source, date) ?? "") : "";
+            if (!url) {
+              removeSlot(shown.get(id));
+              removeSlot(waiting.get(id));
+              removeSlot(ahead.get(id));
+              shown.delete(id);
+              waiting.delete(id);
+              ahead.delete(id);
+              continue;
+            }
+            const current = shown.get(id);
+            if (current?.url !== url && waiting.get(id)?.url !== url) {
+              removeSlot(waiting.get(id));
+              waiting.delete(id);
+              const ready = ahead.get(id);
+              if (ready?.url === url) {
+                ahead.delete(id);
+                promote(id, ready);
+              } else if (current === undefined) {
+                // Nothing on screen yet: show it at once and let it fill in.
+                const slot = addSlot(definition, url, fullOpacity(id));
+                if (slot) shown.set(id, slot);
+              } else {
+                const slot = addSlot(definition, url, 0);
+                if (slot) waiting.set(id, slot);
+              }
+            }
+            // Only a layer whose day follows the slider has a next day.
+            const follows = definition.source.date === undefined && date !== undefined;
+            const nextUrl = follows ? (layerUrl(definition.source, nextDate(date)) ?? "") : "";
+            if (ahead.get(id)?.url !== nextUrl) {
+              removeSlot(ahead.get(id));
+              ahead.delete(id);
+              if (nextUrl) {
+                const slot = addSlot(definition, nextUrl, 0);
+                if (slot) ahead.set(id, slot);
+              }
+            }
           }
         };
         paintDangerRef.current = paintDanger;
@@ -566,7 +656,9 @@ export default function MapView({
 
         // A new style drops every source and layer, so they are put back.
         instance.on("style.load", () => {
-          shownTiles.clear();
+          shown.clear();
+          waiting.clear();
+          ahead.clear();
           instance.setProjection({ type: projection });
           paintSelection();
           paintCountries();
