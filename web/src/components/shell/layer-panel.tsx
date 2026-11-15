@@ -288,7 +288,7 @@ function TemperatureLegend({ day }: { day: number }) {
       </div>
       <p className="ramp-unit">{t("temperatureUnit")}</p>
       <p className="hint" aria-live="polite">
-        {t("temperatureDate", { date })} {day > 1 || status.state === "empty" || status.state === "failed" ? t("temperatureNoData") : status.state === "ready" ? t("temperatureCredit") : t("loading")}
+        {t("temperatureDate", { date })} {day > 9 || status.state === "empty" || status.state === "failed" ? t("temperatureNoData") : status.state === "ready" ? t("temperatureCredit") : t("loading")}
       </p>
     </div>
   );

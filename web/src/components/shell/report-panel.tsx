@@ -13,7 +13,8 @@ import type { AppView } from "./view-tabs";
 type Props = {
   selection: Selection;
   view: AppView;
-  day: "today" | "tomorrow";
+  /** Forecast day offset on the timeline: 0 today, up to 9. */
+  day: number;
   onPickPoint: (lat: number, lon: number) => void;
   /** The country a clicked point lies in, offered as a whole-country report. */
   pointCountry: string | null;

@@ -255,7 +255,7 @@ export default function AppShell() {
         <ReportPanel
           selection={selection}
           view={view}
-          day={layers.state.dangerDay === 0 ? "today" : "tomorrow"}
+          day={layers.state.dangerDay}
           onPickPoint={pickPoint}
           pointCountry={selection.kind === "point" ? pointCountry : null}
           onWholeCountry={(iso3) => apply({ kind: "country", iso3 })}

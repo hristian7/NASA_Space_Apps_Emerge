@@ -2,7 +2,8 @@ import type { Selection } from "../../types/ui";
 
 /** Must match `past_days` in the request: the API lists past rows first. */
 export const PAST_DAYS = 7;
-const FORECAST_DAYS = 2;
+/** Today and the nine days after it, the same span as the timeline. */
+export const FORECAST_DAYS = 10;
 const RAIN_DAY_MM = 1;
 const CACHE_MS = 3600000;
 
@@ -74,13 +75,18 @@ function dailyMean(hourly: Record<string, unknown>, name: string, date: string):
   return round(found.reduce((sum, value) => sum + value, 0) / found.length, 3);
 }
 
-/** Today is the first row after the past days, tomorrow the one after it. */
-export function parseWeather(json: unknown, day: ForecastDay, pastDays = PAST_DAYS): DayWeather | null {
+/**
+ * Today is the first row after the past days; a day offset counts on from
+ * there (0 today, 1 tomorrow, up to 9).
+ */
+export function parseWeather(json: unknown, day: ForecastDay | number, pastDays = PAST_DAYS): DayWeather | null {
   if (json === null || typeof json !== "object") return null;
   const daily = (json as Record<string, unknown>).daily;
   if (daily === null || typeof daily !== "object") return null;
   const block = daily as Record<string, unknown>;
-  const index = pastDays + (day === "tomorrow" ? 1 : 0);
+  const offset = typeof day === "number" ? day : day === "tomorrow" ? 1 : 0;
+  if (!Number.isInteger(offset) || offset < 0) return null;
+  const index = pastDays + offset;
   const date = series(block, "time")[index];
   if (typeof date !== "string") return null;
   const rain = series(block, "precipitation_sum");

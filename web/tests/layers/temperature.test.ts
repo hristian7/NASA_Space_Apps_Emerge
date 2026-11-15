@@ -3,8 +3,8 @@ import { bilinear, temperatureColor, temperatureGrid, reusableView, fetchTempera
 
 const view = { west: 0, east: 20, south: 30, north: 50 };
 const now = Date.parse('2026-11-15T06:00:00Z');
-const dates = ['2026-11-15', '2026-11-16'];
-const payload = () => Array.from({ length: 64 }, () => ({ daily_units: { temperature_2m_max: '°C' }, daily: { time: dates, temperature_2m_max: [10, 20] } }));
+const dates = Array.from({ length: 10 }, (_, i) => `2026-11-${String(15 + i).padStart(2, '0')}`);
+const payload = () => Array.from({ length: 64 }, () => ({ daily_units: { temperature_2m_max: '°C' }, daily: { time: dates, temperature_2m_max: dates.map((_, i) => 10 + 10 * i) } }));
 afterEach(() => { vi.unstubAllGlobals(); clearTemperatureCache(); });
 
 describe('temperature field', () => {
@@ -53,13 +53,13 @@ describe('temperature field', () => {
     expect(reusableView(view, { ...view, west: 10.1, east: 30.1 })).toBe(false);
     expect(reusableView(view, { west: -30, east: 50, south: 0, north: 80 })).toBe(false);
   });
-  it('requests both daily maxima in Celsius in one request and caches for an hour', async () => {
+  it('requests ten daily maxima in Celsius in one request and caches for an hour', async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => payload() });
     vi.stubGlobal('fetch', fetcher);
     const result = await fetchTemperature(view, now);
     const url = new URL(fetcher.mock.calls[0][0]);
     expect(url.searchParams.get('daily')).toBe('temperature_2m_max');
-    expect(url.searchParams.get('forecast_days')).toBe('2');
+    expect(url.searchParams.get('forecast_days')).toBe('10');
     expect(url.searchParams.get('temperature_unit')).toBe('celsius');
     expect(url.searchParams.get('timezone')).toBe('UTC');
     expect(url.searchParams.get('latitude')?.split(',')).toHaveLength(64);
@@ -84,7 +84,7 @@ describe('temperature field', () => {
     expect(result.values[1]).toEqual(Array(64).fill(20));
   });
   it('rejects partial, wrong-date and wrong-unit responses', async () => {
-    for (const data of [payload().slice(1), payload().map(p => ({ ...p, daily: { ...p.daily, time: ['2020-01-01', '2020-01-02'] } })), payload().map(p => ({ ...p, daily_units: { temperature_2m_max: '°F' } }))]) {
+    for (const data of [payload().slice(1), payload().map(p => ({ ...p, daily: { ...p.daily, time: dates.map(() => '2020-01-01') } })), payload().map(p => ({ ...p, daily_units: { temperature_2m_max: '°F' } }))]) {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => data }));
       await expect(fetchTemperature(view, now)).rejects.toThrow();
       clearTemperatureCache();
