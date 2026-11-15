@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RiskIndex } from '@/types/risk';
 import { exampleMode, loadRiskIndex, showForecast, forecastIsStale } from '@/lib/risk/loaders';
+import { dangerDate } from '@/lib/layers/danger';
 import { loadRiskHere, type PointSpot } from '@/lib/risk/here';
 import styles from '@/components/report/styles';
 import RiskSpotDetails from './RiskSpotDetails';
@@ -34,14 +35,17 @@ export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
   })().catch(()=>{if(live)setFailed(true);});
   return ()=>{live=false;};
  },[point.lat,point.lon,example,country]);
- return <section className={`${styles.card} risk-here`} aria-label={t(stale?'hereDated':'here')}>
-  <h2 className={styles.heading}>{t(stale?'hereDated':'here')}</h2>
+ // Titled by the date the published forecast is valid for, which can lag the calendar.
+ const validFor=state?.index.meta?.days.tomorrow??'';
+ const title=stale?t('hereDated'):!validFor||validFor===dangerDate(1)?t('here'):validFor===dangerDate(0)?t('hereToday'):t('hereLatest',{date:validFor});
+ const showValid=!!state&&!failed&&showForecast(state.index.meta,state.example)&&!!state.spot;
+ return <section className={`${styles.card} risk-here`} aria-label={title}>
+  <div className="fc-head"><h2 className={styles.heading}>{title}</h2>{showValid&&<span className="fc-where">{t('valid',{date:validFor})}</span>}</div>
   {failed?<p role="alert">{t('failed')}</p>:!state?<p role="status">{t('loading')}</p>:<>
    {state.example&&<p className="risk-example">{t('example')} · {t('exampleNote')}</p>}
    {stale&&showForecast(state.index.meta,state.example)&&<p role="status">{t('stale',{date:state.index.meta?.days.tomorrow??''})}</p>}
    {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:state.spot?<>
-    <p className="risk-muted">{t('valid',{date:state.index.meta?.days.tomorrow??''})}</p>
-    <RiskSpotDetails spot={state.spot}/>
+    <RiskSpotDetails spot={state.spot} compact/>
    </>:<><p>{t('noForecast')}</p><p className="risk-muted">{t('coverage')}</p></>}
    <a href={state.example?'/risk?risk=example':'/risk'}>{t('outlook')}</a>
   </>}

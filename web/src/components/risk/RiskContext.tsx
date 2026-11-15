@@ -1,4 +1,5 @@
 'use client';
+import { useId, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usualWord, weatherWord } from '@/lib/risk/context';
 
@@ -55,5 +56,27 @@ export default function RiskContext(props: ContextProps) {
   {c.usualText && <p className="risk-muted">{c.usualText}</p>}
   <p className="risk-muted">{c.weatherText}</p>
   <details className="risk-muted"><summary>{t('levelMeaningTitle')}</summary><p>{t('levelMeaning')}</p>{c.fwiText && <p>{c.fwiText}</p>}</details>
+ </>;
+}
+
+/** The level meaning (and the fire-weather index) behind a small info button. */
+export function LevelInfo({fwi}: {fwi?: number | null}) {
+ const t = useTranslations('risk');
+ const locale = useLocale();
+ const [open, setOpen] = useState(false);
+ const id = useId();
+ return <>
+  <button type="button" className="fc-info" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+   <svg viewBox="0 0 20 20" aria-hidden="true">
+    <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.4"/>
+    <path d="M10 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    <circle cx="10" cy="6.4" r="1" fill="currentColor"/>
+   </svg>
+   <span className="fc-infoText">{t('levelMeaningTitle')}</span>
+  </button>
+  <div id={id} className="fc-infoBody" hidden={!open}>
+   <p>{t('levelMeaning')}</p>
+   {fwi != null && <p>{t('weatherIndex', {value: new Intl.NumberFormat(locale, {maximumFractionDigits:1}).format(fwi)})}</p>}
+  </div>
  </>;
 }

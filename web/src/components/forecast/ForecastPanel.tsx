@@ -1,7 +1,7 @@
 "use client";
-import { RiskContextChips, UsualArrow, useRiskContext } from '@/components/risk/RiskContext';
+import { LevelInfo, RiskContextChips, UsualArrow, useRiskContext } from '@/components/risk/RiskContext';
 
-import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { Selection } from "@/types/ui";
 import type { RiskIndex, RiskSpot } from "@/types/risk";
@@ -10,6 +10,7 @@ import { distanceKm, nearestSpot as nearestSpotOf } from "@/lib/risk/geo";
 import { pointScore, type PointSpot } from "@/lib/risk/here";
 import { riskSquare } from "@/lib/risk/spot-scores";
 import { dangerDate } from "@/lib/layers/danger";
+import { pickModelDay } from "@/lib/risk/model-day";
 import { fetchPower, type PowerData, type PowerParameter } from "@/lib/forecast/power";
 import Sparkline from "./Sparkline";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
@@ -155,12 +156,8 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       if (!index.meta || !showForecast(index.meta, example)) {
         return { ...base, open: false, country: sel.kind === "country" ? sel.iso3 : "" };
       }
-      // The published days can lag the calendar: a forecast is labelled by the
-      // date it is valid for, never by its slot name in the file.
-      const published = [index.meta.days.today, index.meta.days.tomorrow].filter((date): date is string => Boolean(date));
-      const matching = published.find((date) => date === viewedDate) ?? null;
-      const fallback = day === 0 && matching === null ? ([...published].sort().reverse().find((date) => date <= viewedDate) ?? null) : null;
-      const modelDate = matching ?? fallback;
+      const picked = pickModelDay(index.meta.days, viewedDate, day);
+      const modelDate = picked?.date ?? null;
       if (modelDate === null) {
         // Our model scores today and tomorrow only; later days carry the
         // NASA fire-weather index from the week files, never a model score.
@@ -193,7 +190,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         return { ...base, open: true, weekly: { fwi, date }, country: sel.kind === "country" ? sel.iso3 : (countries[0] ?? "") };
       }
       const dayKey = modelDate;
-      const dated = { modelDate, latest: matching === null };
+      const dated = { modelDate, latest: picked?.latest === true };
       if (sel.kind === "country") {
         const { status, file } = await loadRiskCountry(sel.iso3, example);
         const spots = Object.values(file.regions).flatMap((days) => days[dayKey] ?? []);
@@ -516,31 +513,6 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       </section>
       <p className="fc-muted">{tr("disclaimer")}</p>
     </div>
-  );
-}
-
-/** The level meaning, opened from a small info button. */
-function LevelInfo({ fwi }: { fwi?: number | null }) {
-  const tr = useTranslations("risk");
-  const t = useTranslations("forecast");
-  const locale = useLocale();
-  const [open, setOpen] = useState(false);
-  const id = useId();
-  return (
-    <>
-      <button type="button" className="fc-info" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
-        <svg viewBox="0 0 20 20" aria-hidden="true">
-          <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
-          <path d="M10 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          <circle cx="10" cy="6.4" r="1" fill="currentColor" />
-        </svg>
-        <span className="fc-infoText">{t("levelInfo")}</span>
-      </button>
-      <div id={id} className="fc-infoBody" hidden={!open}>
-        <p>{tr("levelMeaning")}</p>
-        {fwi != null ? <p>{tr("weatherIndex", { value: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(fwi) })}</p> : null}
-      </div>
-    </>
   );
 }
 

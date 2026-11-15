@@ -103,5 +103,7 @@
   "weatherShortModerate": "умерено",
   "weatherShortStrong": "силно",
   "weatherShortVeryStrong": "много силно",
-  "weatherShortNone": "няма данни"
+  "weatherShortNone": "няма данни",
+  "hereToday": "Рискът тук днес",
+  "hereLatest": "Последна прогноза за риска тук, за {date}"
 }

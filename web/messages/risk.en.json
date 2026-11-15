@@ -103,5 +103,7 @@
   "weatherShortModerate": "moderate",
   "weatherShortStrong": "strong",
   "weatherShortVeryStrong": "very strong",
-  "weatherShortNone": "no data"
+  "weatherShortNone": "no data",
+  "hereToday": "Today's risk here",
+  "hereLatest": "Latest risk forecast here, for {date}"
 }

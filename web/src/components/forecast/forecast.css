@@ -557,3 +557,22 @@ button.fc-topRow:focus-visible {
     gap: 0;
   }
 }
+
+/* The info text opens on its own line under the row that holds its button. */
+.fc-scoreRow > .fc-infoBody,
+.fc-listFoot > .fc-infoBody {
+  flex-basis: 100%;
+}
+
+.fc-listFoot {
+  flex-wrap: wrap;
+}
+
+.risk-hereRow {
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.risk-hereRow strong {
+  font: 600 15px/1.3 var(--font-head);
+}
