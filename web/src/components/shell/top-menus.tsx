@@ -93,14 +93,21 @@ function useCredits(): string[] {
 
 function InfoLinks({ onPick }: { onPick: () => void }) {
   const t = useTranslations("shell");
+  const how = useTranslations("how");
   const credits = useCredits();
   return (
     <>
       <Link className="dropdown-item" href="/about" onClick={onPick}>
         {t("aboutProject")}
       </Link>
+      <Link className="dropdown-item" href="/how-it-works" onClick={onPick}>
+        {how("menuLink")}
+      </Link>
       <Link className="dropdown-item" href="/proof" onClick={onPick}>
         {t("howWeKnow")}
+      </Link>
+      <Link className="dropdown-item" href="/data-sources" onClick={onPick}>
+        {t("dataSources")}
       </Link>
       <h2 className="info-heading">{t("creditsHeading")}</h2>
       <ul className="info-credits">

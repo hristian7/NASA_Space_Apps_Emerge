@@ -1,80 +1,171 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import homeEn from "../../../messages/home.en.json";
 import { getTranslations } from "next-intl/server";
-import Disclaimer from "@/components/shell/disclaimer";
-import { dataCredits, officialServices, softwareCredits, type Credit } from "@/lib/ui/credits";
+import metaJson from "../../../public/data/meta.json";
+import AnchorHeading from "@/components/explain/anchor-heading";
+import InfoPage from "@/components/explain/info-page";
+import SatelliteTimeline, { satelliteLanes } from "@/components/explain/satellite-timeline";
+import { officialServices } from "@/lib/ui/credits";
+import { roleOrder, sourceGroups, type Source } from "@/lib/ui/sources";
+import "./about.css";
 
-function CreditTable({
-  rows,
-  resource,
-  licence,
-  translate,
-}: {
-  rows: Credit[];
-  resource: string;
-  licence: string;
-  translate: (key: string) => string;
-}) {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("about");
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+    openGraph: { title: t("metaTitle"), description: t("metaDescription"), type: "website", siteName: "Emerge" },
+    twitter: { card: "summary", title: t("metaTitle"), description: t("metaDescription") },
+  };
+}
+
+const record = metaJson as unknown as { first_month: string; last_month: string };
+const aboutGroups = sourceGroups.map((group) => ({ ...group, rows: group.rows.filter((row) => !row.formOnly) }));
+const sourceCount = aboutGroups.reduce((sum, group) => sum + group.rows.length, 0);
+const compactGroups = new Set(["software", "fonts", "video"]);
+
+type T = (key: string, values?: Record<string, string | number>) => string;
+
+function Card({ row, t, compact }: { row: Source; t: T; compact: boolean }) {
   return (
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">{resource}</th>
-          <th scope="col">{licence}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={row.name}>
-            <td>
-              <a href={row.url} target="_blank" rel="noreferrer noopener">
-                {creditText(row.name, homeEn.creditNames, "creditNames", translate)}
-              </a>
-            </td>
-            <td>{creditText(row.licence, homeEn.creditLicences, "creditLicences", translate)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <li className="ab-card" data-compact={compact || undefined}>
+      {row.provider ? <span className="ab-provider">{row.provider}</span> : null}
+      <a className="ab-name" href={row.url} target="_blank" rel="noreferrer noopener">
+        {row.name}
+      </a>
+      <p className="ab-use">{t(`used.${row.id}`)}</p>
+      {row.roles ? (
+        <span className="ab-roles">
+          {row.roles.map((role) => (
+            <span key={role} className="ab-role" data-role={role}>
+              {t(`roles.${role}`)}
+            </span>
+          ))}
+        </span>
+      ) : null}
+      <span className="ab-licence">{row.licence}</span>
+    </li>
   );
 }
 
 export default async function AboutPage() {
+  const t = (await getTranslations("about")) as unknown as T;
   const home = await getTranslations("home");
   const shell = await getTranslations("shell");
 
-  return (
-    <main className="page">
-      <nav className="chip-group">
-        <Link className="chip" href="/">
-          {home("backToMap")}
-        </Link>
-        <Link className="chip" href="/proof">
-          {shell("proofLink")}
-        </Link>
-      </nav>
+  const groups = aboutGroups.filter((group) => group.id !== "project");
+  const project = aboutGroups.find((group) => group.id === "project");
+  const sections = [
+    { id: "what", title: home("aboutWhatHeading") },
+    ...groups.map((group) => ({ id: group.id, title: t(`groups.${group.id}`) })),
+    { id: "project", title: t("groups.project") },
+    { id: "official", title: home("aboutOfficialHeading") },
+  ];
 
+  return (
+    <InfoPage current="about" className="ab">
       <header>
         <h1>{home("aboutTitle")}</h1>
-        <p>{home("aboutLead")}</p>
+        <p>{t("lead")}</p>
       </header>
 
-      <section>
-        <h2>{home("aboutWhatHeading")}</h2>
-        <p>{home("aboutWhatBody")}</p>
+      <nav className="ab-toc" aria-label={t("onThisPage")}>
+        {sections.map((section) => (
+          <a key={section.id} href={`#${section.id}`}>
+            {section.title}
+          </a>
+        ))}
+      </nav>
+
+      <section id="what">
+        <AnchorHeading id="what" label={t("anchorLabel")}>
+          {home("aboutWhatHeading")}
+        </AnchorHeading>
+        <div className="ab-stats">
+          <div>
+            <strong>{t("statYears", { from: record.first_month.slice(0, 4), to: record.last_month.slice(0, 4) })}</strong>
+            <span>{t("statYearsLabel")}</span>
+          </div>
+          <div>
+            <strong>{t("statSatellites", { n: satelliteLanes.length })}</strong>
+            <span>{t("statSatellitesLabel")}</span>
+          </div>
+          <div>
+            <strong>{t("statSources", { n: sourceCount })}</strong>
+            <span>{t("statSourcesLabel")}</span>
+          </div>
+        </div>
+        <div className="ab-what">
+          <div className="ab-prose">
+            <p>{t("whatBody")}</p>
+            <p>{t("notBody")}</p>
+          </div>
+          <Link className="ab-how" href="/how-it-works">
+            <strong>{t("howLink")} →</strong>
+            <span>{t("howLinkBody")}</span>
+          </Link>
+        </div>
       </section>
 
-      <section>
-        <h2>{home("aboutHonestHeading")}</h2>
-        <p>{home("aboutHonestBody")}</p>
+      <section id="credits" className="ab-credits">
+        <AnchorHeading id="credits" label={t("anchorLabel")}>
+          {home("aboutCreditsHeading")}
+        </AnchorHeading>
+        <p className="ab-prose">{t("creditsLead")}</p>
+        <p className="ab-legend">
+          <span>{t("rolesLead")}</span>
+          {roleOrder.map((role) => (
+            <span key={role} className="ab-role" data-role={role}>
+              {t(`roles.${role}`)}
+            </span>
+          ))}
+        </p>
       </section>
 
-      <Disclaimer />
+      {groups.map((group) => (
+        <section key={group.id} id={group.id} className="ab-group">
+          {group.aliases?.map((alias) => <span key={alias} id={alias} className="ab-alias" aria-hidden="true" />)}
+          <AnchorHeading id={group.id} label={t("anchorLabel")}>
+            {t(`groups.${group.id}`)}
+          </AnchorHeading>
+          {group.id === "satellite" ? (
+            <figure className="ab-timeline">
+              <figcaption className="label">{t("timelineCaption")}</figcaption>
+              <SatelliteTimeline />
+            </figure>
+          ) : null}
+          <ul className="ab-cards" data-compact={compactGroups.has(group.id) || undefined}>
+            {group.rows.map((row) => (
+              <Card key={row.id} row={row} t={t} compact={compactGroups.has(group.id)} />
+            ))}
+          </ul>
+        </section>
+      ))}
 
-      <section>
-        <h2>{home("aboutOfficialHeading")}</h2>
+      {project ? (
+        <section id="project" className="ab-group">
+          <AnchorHeading id="project" label={t("anchorLabel")}>
+            {t("groups.project")}
+          </AnchorHeading>
+          <p className="ab-prose">{t("projectBody")}</p>
+          <ul className="ab-cards">
+            {project.rows.map((row) => (
+              <Card key={row.id} row={row} t={t} compact={false} />
+            ))}
+          </ul>
+          <p className="ab-licences">
+            <span>{t("projectCode")}</span>
+            <span>{t("projectData")}</span>
+          </p>
+        </section>
+      ) : null}
+
+      <section id="official">
+        <AnchorHeading id="official" label={t("anchorLabel")}>
+          {home("aboutOfficialHeading")}
+        </AnchorHeading>
         <p>{home("aboutOfficialBody")}</p>
-        <ul>
+        <ul className="ab-official">
           {officialServices.map((service) => (
             <li key={service.key}>
               <a href={service.url} target="_blank" rel="noreferrer noopener">
@@ -84,30 +175,6 @@ export default async function AboutPage() {
           ))}
         </ul>
       </section>
-
-      <section>
-        <h2>{home("aboutCreditsHeading")}</h2>
-        <p>{home("aboutCreditsBody")}</p>
-        <h3 className="label">{home("aboutDataHeading")}</h3>
-        <CreditTable
-          translate={home}
-          rows={dataCredits}
-          resource={home("columnResource")}
-          licence={home("columnLicence")}
-        />
-        <h3 className="label">{home("aboutSoftwareHeading")}</h3>
-        <CreditTable
-          translate={home}
-          rows={softwareCredits}
-          resource={home("columnResource")}
-          licence={home("columnLicence")}
-        />
-      </section>
-    </main>
+    </InfoPage>
   );
-}
-
-function creditText(value: string, sources: Record<string, string>, prefix: string, translate: (key: string) => string): string {
-  const match = Object.entries(sources).find(([, source]) => source === value);
-  return match ? translate(`${prefix}.${match[0]}`) : value;
 }

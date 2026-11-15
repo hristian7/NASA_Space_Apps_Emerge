@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { brierSkill, claimAllowed, dailyWindow, loadScorecard, methods, weakSlices, type Aggregate, type Metric, type RiskScorecard, type Selection } from "./risk-data";
-import styles from "./risk-scorecard.module.css";
+import "./risk-scorecard.css";
 
 type Translate = ReturnType<typeof useTranslations>;
 
@@ -41,7 +41,7 @@ export default function RiskScorecardSection() {
   const points = (value: Metric) => typeof value === "number" ? number(value * 100) : t("empty");
   const card = state.card;
 
-  return <section className={styles.scorecard} id="next-day-risk" data-testid="proof-risk">
+  return <section className="risk-scorecard" id="next-day-risk" data-testid="proof-risk">
     <h2>{t("title")}</h2>
     <p>{t("experimental")}</p>
     {!card ? <p role="status">{t(state.status === "loading" ? "loading" : state.status === "failed" ? "failed" : "absent")}</p> : <>
@@ -116,7 +116,7 @@ export default function RiskScorecardSection() {
         return <section key={days}>
           <h4>{t("dailyWindow", { days })}</h4>
           {count < days ? <p>{t("dailyShort", { count })}</p> : null}
-          {rows.length === 0 ? <p>{t("dailyEmpty")}</p> : <table className="dailyTable">
+          {rows.length === 0 ? <p>{t("dailyEmpty")}</p> : <table className="risk-daily-table">
             <caption>{t("dailyCounts")}</caption>
             <thead><tr>{["dailyDate", "dailyScope", "dailyFires", "dailyModel", "dailyIndex", "dailyRegions"].map(key => <th scope="col" key={key}>{t(key)}</th>)}</tr></thead>
             <tbody>{rows.map(row => <tr key={`${row.date}-${row.scope}`}>

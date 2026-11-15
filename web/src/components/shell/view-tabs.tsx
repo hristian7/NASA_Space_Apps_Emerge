@@ -5,10 +5,9 @@ import { useRef } from "react";
 import { useSlidingPill } from "@/lib/ui/motion";
 import { useTranslations } from "next-intl";
 
-export type AppView = "history" | "forecast";
+import { viewParam, type AppView } from "@/lib/ui/app-view";
 
-/** The shell keeps both views on one page; the view travels in the address bar as `v=f`. */
-export const viewParam = "v";
+export type { AppView };
 
 /**
  * Switches between the past (fire history) and the next days (forecast).
@@ -29,7 +28,7 @@ export default function ViewTabs({
   return (
     <div ref={group} className="chip-group glass view-tabs" role="group" aria-label={t("viewTabs")}>
       <span className="pill" aria-hidden="true" />
-      {(["history", "forecast"] as const).map((view) => {
+      {(["forecast", "history"] as const).map((view) => {
         const label = t(view === "history" ? "historyTab" : "forecastTab");
         if (onChange) {
           return (
@@ -48,7 +47,7 @@ export default function ViewTabs({
           <Link
             key={view}
             className="chip"
-            href={view === "history" ? "/" : `/?${viewParam}=f`}
+            href={`/?${viewParam}=${view === "history" ? "h" : "f"}`}
             aria-current={view === current ? "page" : undefined}
           >
             {label}

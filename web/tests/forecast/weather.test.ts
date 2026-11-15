@@ -136,6 +136,18 @@ describe("wind direction", () => {
     expect(blowsToward(0)).toBe(180);
     expect(blowsToward(270)).toBe(90);
   });
+
+  it("turns each meteorological 'from' direction into the way the wind blows to", () => {
+    // From N blows to S, from E to W, from S to N, from W to E.
+    expect(blowsToward(0)).toBe(180);
+    expect(blowsToward(90)).toBe(270);
+    expect(blowsToward(180)).toBe(0);
+    expect(blowsToward(270)).toBe(90);
+    // From 350 (just west of north) blows to 170, a little east of south.
+    expect(blowsToward(350)).toBe(170);
+    expect(compassPoint(blowsToward(350))).toBe("S");
+    expect(blowsToward(360)).toBe(180);
+  });
 });
 
 describe("fetchWeather", () => {

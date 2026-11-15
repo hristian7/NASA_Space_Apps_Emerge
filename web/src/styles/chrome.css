@@ -415,8 +415,23 @@
 
 .report-kind {
   margin-top: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
   font-size: 12px;
   color: var(--ink-3);
+}
+
+.report-kind .whole-country.inline {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* Phones */
@@ -712,4 +727,78 @@
   .report-scroll .disclaim {
     margin: 8px -14px 0;
   }
+}
+
+/* Downwind arrow on the map for a place already burning: starts at the
+   point, points where the wind blows to. Only the drawn arrow takes the
+   pointer, so the map around it stays clickable. */
+.downwind-marker {
+  pointer-events: none;
+}
+
+.downwind-marker svg {
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  animation: m-fade-in var(--dur-slow, 320ms) var(--ease-out, ease-out) both;
+}
+
+.downwind-marker path {
+  pointer-events: visiblePainted;
+  cursor: help;
+  stroke: var(--space);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  paint-order: stroke;
+}
+
+.downwind-marker .downwind-outline {
+  fill: none;
+  stroke: var(--space);
+  stroke-width: 9px;
+}
+
+.downwind-marker .downwind-shaft {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4.5px;
+}
+
+.downwind-head {
+  fill: var(--accent);
+  stroke-width: 3px;
+}
+
+.downwind-marker svg:focus-visible {
+  outline: none;
+}
+
+.downwind-marker svg:focus-visible .downwind-head {
+  stroke: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .downwind-marker svg {
+    animation: none;
+  }
+}
+
+/* A soft shade from the top of the screen behind the top bar, so the name
+   and tabs stay readable over bright imagery. It ends a little below the
+   bar, takes no clicks, and leaves the map below the bar untouched. */
+.shell::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--gap, 16px) + var(--top-bar-h, 60px) + 28px);
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--space) 72%, transparent) 0%,
+    color-mix(in oklch, var(--space) 45%, transparent) 55%,
+    color-mix(in oklch, var(--space) 0%, transparent) 100%
+  );
 }

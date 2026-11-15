@@ -61,7 +61,7 @@ Written 2026-11-14 from the team's interview answers ([`interview-answers.md`](i
 | M7 | **Plain-language explanations** | Short tooltips and one-line explanations for every term ("hot spot", "anomaly", "FRP", "radius", "no data") | S |
 | M8 | **English and Bulgarian** | The whole interface in both languages, switchable | S |
 | M9 | **Works on phones** | The layout adapts to a phone screen, so people in the field can use it | S |
-| M10 | **Public web address** | The app runs online on **Vercel** at a link judges can open: https://emerge-beta-ten.vercel.app | S |
+| M10 | **Public web address** | The app runs online on **Vercel** at a link judges can open: https://emergefire.app | S |
 | M12 | **Tests on the main paths** | Automatic tests for what users do most: choose a place (point + radius, area, country), load the calendar, convert numbers, export. They check against expected answers written before the code | M |
 
 ## Should have

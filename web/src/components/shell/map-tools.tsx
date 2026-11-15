@@ -12,6 +12,8 @@ type Props = {
   onRadius: () => void;
   onRadiusKm: (km: number) => void;
   onLayers: () => void;
+  /** False where the layer dock is always open, so no button is needed. */
+  showLayers?: boolean;
 };
 
 const zoom = (step: number) => window.dispatchEvent(new CustomEvent("emerge-zoom", { detail: step }));
@@ -26,6 +28,7 @@ export default function MapTools({
   onRadius,
   onRadiusKm,
   onLayers,
+  showLayers = true,
 }: Props) {
   const t = useTranslations("shell");
   const s = useTranslations("selection");
@@ -51,14 +54,14 @@ export default function MapTools({
         </button>
       </div>
 
-      <div className="tool-group glass">
+      {showLayers ? <div className="tool-group glass">
         <button type="button" className="tool" aria-pressed={layersOpen} title={t("layersTool")} aria-label={t("layersTool")} onClick={onLayers}>
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="m10 3.5 7 3.6-7 3.6-7-3.6z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
             <path d="m3 10.4 7 3.6 7-3.6M3 13.6l7 3.6 7-3.6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
           </svg>
         </button>
-      </div>
+      </div> : null}
 
       <div className="tool-group glass">
         <button type="button" className="tool" title={t("zoomIn")} aria-label={t("zoomIn")} onClick={() => zoom(1)}>

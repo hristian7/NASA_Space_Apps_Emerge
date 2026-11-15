@@ -271,3 +271,453 @@ button.fc-topRow:focus-visible {
   height: 28px;
   display: block;
 }
+
+/* Compact, data-first layout: section labels carry their date or place on
+   the same line, the score sits in two rows, the tiles run three across. */
+
+.fc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  min-width: 0;
+}
+
+.fc-head > h2,
+.fc-head > h3 {
+  margin: 0;
+}
+
+.fc-where {
+  font-size: 11px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.fc-panel .fc-score {
+  gap: 8px;
+}
+
+.fc-scoreRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-width: 0;
+}
+
+.fc-scoreRow .fc-levelFigure {
+  font-size: 34px;
+}
+
+.fc-scoreRow .fc-levelOf {
+  font-size: 15px;
+}
+
+.fc-scoreRow .fc-meter {
+  flex: 0 1 96px;
+  min-width: 64px;
+}
+
+.fc-scoreRow .fc-levelName {
+  font-size: 15px;
+}
+
+.fc-info {
+  margin-inline-start: auto;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-3);
+}
+
+.fc-info:hover,
+.fc-info[aria-expanded="true"] {
+  color: var(--ink);
+  background: var(--empty);
+}
+
+.fc-info svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fc-infoText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fc-infoBody {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.fc-infoBody[hidden] {
+  display: none;
+}
+
+.fc-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.fc-chip:first-child {
+  color: var(--ink);
+}
+
+.fc-chipWhy {
+  color: var(--ink);
+  border-color: color-mix(in oklch, var(--accent) 45%, var(--line));
+}
+
+.usual-arrow {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  color: var(--ink-2);
+}
+
+.usual-arrow[data-dir="up"] {
+  color: var(--accent);
+}
+
+.weather-dot,
+.fc-topWeather::before {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.weather-dot[data-level="1"],
+.fc-topWeather[data-level="1"]::before {
+  background: var(--ramp-0);
+}
+
+.weather-dot[data-level="2"],
+.fc-topWeather[data-level="2"]::before {
+  background: var(--ramp-1);
+}
+
+.weather-dot[data-level="3"],
+.fc-topWeather[data-level="3"]::before {
+  background: var(--ramp-2);
+}
+
+.weather-dot[data-level="4"],
+.fc-topWeather[data-level="4"]::before {
+  background: var(--ramp-3);
+}
+
+/* Spot list: one row per spot. */
+
+.fc-panel .fc-topRow {
+  grid-template-columns: auto minmax(0, 1fr) 14px auto auto;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 2px;
+}
+
+.fc-topUsual {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.fc-topWeather {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.fc-topWeather::before {
+  content: "";
+  display: block;
+}
+
+.fc-panel .fc-topChance {
+  min-width: 78px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fc-listFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fc-listFoot .fc-muted {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.fc-listFoot + .fc-infoBody,
+.fc-scoreRow ~ .fc-infoBody {
+  margin-top: 0;
+}
+
+/* Weather tiles: denser, three across where the panel allows. */
+
+.fc-panel .fc-tiles {
+  grid-template-columns: repeat(auto-fill, minmax(106px, 1fr));
+  gap: 6px;
+}
+
+.fc-panel .fc-tileWide {
+  grid-column: auto;
+}
+
+.fc-panel .fc-tile {
+  padding: 8px 9px;
+  gap: 2px;
+}
+
+.fc-tileFigure {
+  font: 600 18px/1.15 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.fc-panel .fc-tileLabel {
+  font-size: 11px;
+  gap: 4px;
+}
+
+.fc-panel .fc-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.fc-panel .fc-tileLine {
+  font-size: 11px;
+  gap: 2px 6px;
+}
+
+.fc-panel .fc-arrow {
+  width: 13px;
+  height: 13px;
+}
+
+.fc-panel .fc-trend {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.fc-panel .fc-trend svg {
+  height: 22px;
+}
+
+.fc-footnote {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+@media (max-width: 380px) {
+  .fc-panel .fc-topWeather {
+    font-size: 0;
+    gap: 0;
+  }
+}
+
+/* The info text opens on its own line under the row that holds its button. */
+.fc-scoreRow > .fc-infoBody,
+.fc-listFoot > .fc-infoBody {
+  flex-basis: 100%;
+}
+
+.fc-listFoot {
+  flex-wrap: wrap;
+}
+
+.risk-hereRow {
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.risk-hereRow strong {
+  font: 600 15px/1.3 var(--font-head);
+}
+
+/* Active fire: replaces the level where the area is already burning. */
+.fire-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid color-mix(in oklch, var(--accent) 55%, var(--line));
+  border-radius: var(--radius-s);
+  background: color-mix(in oklch, var(--accent) 7%, transparent);
+  min-width: 0;
+}
+
+.fire-card p {
+  margin: 0;
+}
+
+.fire-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 16px/1.25 var(--font-head);
+  color: var(--accent);
+}
+
+.fire-title svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.fire-counts {
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fire-note {
+  font-size: 13px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fire-wind {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.fire-wind > .fc-muted,
+.fire-guide {
+  grid-column: 1 / -1;
+}
+
+.fire-arrow {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+}
+
+.fire-guide {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.fire-card {
+  animation: m-rise var(--dur-slow, 320ms) var(--ease-out, ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fire-card {
+    animation: none;
+  }
+}
+
+/* Fire around here: recent detections within 50 km, above the score. */
+.fire-around {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fire-around > h2 {
+  margin: 0;
+}
+
+.fire-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.fire-figures p {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.fire-figure {
+  font: 600 22px/1.1 var(--font-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.fire-around[data-verdict="many"] .fire-figure,
+.fire-around[data-verdict="many"] .fire-verdict {
+  color: var(--accent);
+}
+
+.fire-verdict {
+  margin: 0;
+  font: 500 14px/1.3 var(--font-head);
+  color: var(--ink);
+}
+
+.fire-around .fire-guide {
+  margin: 0;
+}
+
+.fire-failed {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in oklch, var(--accent) 55%, var(--line));
+  border-radius: var(--radius-s);
+  font-size: 12px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.fc-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}

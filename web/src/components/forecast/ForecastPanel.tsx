@@ -1,5 +1,5 @@
 "use client";
-import RiskContext from '@/components/risk/RiskContext';
+import { LevelInfo, RiskContextChips, UsualArrow, useRiskContext } from '@/components/risk/RiskContext';
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -10,6 +10,7 @@ import { distanceKm, nearestSpot as nearestSpotOf } from "@/lib/risk/geo";
 import { pointScore, type PointSpot } from "@/lib/risk/here";
 import { riskSquare } from "@/lib/risk/spot-scores";
 import { dangerDate } from "@/lib/layers/danger";
+import { pickModelDay } from "@/lib/risk/model-day";
 import { fetchPower, type PowerData, type PowerParameter } from "@/lib/forecast/power";
 import Sparkline from "./Sparkline";
 import { useCountryBoxes } from "@/lib/ui/use-countries";
@@ -27,6 +28,7 @@ import { RiskLinks } from "@/components/risk/RiskLinks";
 import "@/components/risk/risk.css";
 import "./forecast.css";
 import Roll from "@/components/ui/roll";
+import ActiveFireCard, { FireAround, useActiveFire } from "@/components/risk/ActiveFireCard";
 
 type Props = {
   selection: Selection;
@@ -51,6 +53,10 @@ type ScoreResult =
       square: { p: number; level: number; usual: number | null; fwi: number | null; context?: [number | null, number | null] } | null;
       /** Past tomorrow our model has no score: that day's fire-weather value instead. */
       weekly: { fwi: number | null; date: string } | null;
+      /** The published model day shown, which can lag the calendar by a day. */
+      modelDate: string | null;
+      /** True when no model day matches the viewed day and the latest one is shown. */
+      latest: boolean;
       top: RiskSpot[] | null;
       countryMissing: boolean;
       country: string;
@@ -131,6 +137,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const sel = useMemo(() => JSON.parse(selectionKey) as Selection, [selectionKey]);
   const scoreKey = `${selectionKey}|${day}`;
   const named = day === 0 ? "today" : day === 1 ? "tomorrow" : null;
+  const viewedDate = dangerDate(day);
 
   const place = useMemo(() => selectionPoint(sel, boxes), [sel, boxes]);
   const placeKey = place ? `${roundedPlace(place.lat, place.lon).lat},${roundedPlace(place.lat, place.lon).lon}` : null;
@@ -138,6 +145,9 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const countryKnown = sel.kind !== "country" || boxes.size > 0;
 
   const [score, setScore] = useState<ScoreResult | null>(null);
+  // A place already burning gets a near-zero model chance, which would read as safe.
+  const firePlace = useMemo(() => (sel.kind === "point" ? { lat: sel.lat, lon: sel.lon, radiusKm: sel.radiusKm } : null), [sel]);
+  const fireCheck = useActiveFire(firePlace, score?.status === "ready" ? score.index.meta?.grid_g : undefined);
   const [weather, setWeather] = useState<WeatherResult | null>(null);
 
   useEffect(() => {
@@ -146,11 +156,13 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     const example = exampleMode(search);
     (async (): Promise<ScoreResult> => {
       const index = await loadRiskIndex(example);
-      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, square: null, weekly: null, top: null, countryMissing: false };
+      const base = { key: scoreKey, status: "ready" as const, example, search, index, spot: null, nearest: null, square: null, weekly: null, top: null, countryMissing: false, modelDate: null, latest: false };
       if (!index.meta || !showForecast(index.meta, example)) {
         return { ...base, open: false, country: sel.kind === "country" ? sel.iso3 : "" };
       }
-      if (named === null) {
+      const picked = pickModelDay(index.meta.days, viewedDate, day);
+      const modelDate = picked?.date ?? null;
+      if (modelDate === null) {
         // Our model scores today and tomorrow only; later days carry the
         // NASA fire-weather index from the week files, never a model score.
         const date = dangerDate(day);
@@ -172,7 +184,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           } else if (at !== null) {
             const square = riskSquare(at.lat, at.lon, index.meta.grid_g).spot_id;
             const own = spots.find((spot) => spot.spot_id === square) ?? nearestSpotOf(spots, at.lat, at.lon);
-            const value = own ? values([own])[0] : undefined;
+            const value = own ? values([own])[0] : file.fwi?.[date]?.find(([id]) => id === square)?.[1];
             if (value !== undefined) {
               fwi = value;
               break;
@@ -181,17 +193,18 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         }
         return { ...base, open: true, weekly: { fwi, date }, country: sel.kind === "country" ? sel.iso3 : (countries[0] ?? "") };
       }
-      const dayKey = index.meta.days[named];
+      const dayKey = modelDate;
+      const dated = { modelDate, latest: picked?.latest === true };
       if (sel.kind === "country") {
         const { status, file } = await loadRiskCountry(sel.iso3, example);
         const spots = Object.values(file.regions).flatMap((days) => days[dayKey] ?? []);
-        return { ...base, open: true, top: topSpots(spots), countryMissing: status === "missing", country: sel.iso3 };
+        return { ...base, ...dated, open: true, top: topSpots(spots), countryMissing: status === "missing", country: sel.iso3 };
       }
       const at = selectionPoint(sel, noCountries);
       const found = at ? await lookupOnDay(index, at.lat, at.lon, dayKey, example) : { spot: null, nearest: null, square: null };
       const regionOf = found.spot?.region_id ?? found.nearest?.spot.region_id;
       const country = index.regions.find((region) => region.region_id === regionOf)?.country ?? "";
-      return { ...base, open: true, spot: found.spot, nearest: found.nearest, square: found.square, country };
+      return { ...base, ...dated, open: true, spot: found.spot, nearest: found.nearest, square: found.square, country };
     })()
       .then((result) => {
         if (live) setScore(result);
@@ -266,12 +279,11 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const scoreSection = (): ReactNode => {
     if (!currentScore) return <p role="status" className="fc-muted">{tr("loading")}</p>;
     if (currentScore.status === "failed") return <p role="alert">{tr("failed")}</p>;
-    const { example, open, spot, nearest, square, weekly, top, countryMissing, index } = currentScore;
-    const validDate = index.meta && named !== null ? dateText(index.meta.days[named]) : "";
+    const { example, open, spot, nearest, square, weekly, top, countryMissing, modelDate } = currentScore;
     if (weekly !== null) {
       return (
         <>
-          <p className="fc-levelName">{t("weekOnly")}</p>
+          <p className="fc-levelName">{t(day < 2 ? "noModelDay" : "weekOnly")}</p>
           {weekly.fwi === null ? (
             <p className="fc-muted">{t("weekNoValue")}</p>
           ) : (
@@ -285,6 +297,18 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
         </>
       );
     }
+    const contextDay = modelDate ?? viewedDate;
+    if (open && fireCheck !== null && top === null) {
+      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("aroundChecking")}</p>;
+      if (fireCheck.status === "ready" && fireCheck.fire.active) {
+        return (
+          <>
+            {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
+            <ActiveFireCard fire={fireCheck.fire} weather={parsed} at={sel.kind === "point" ? { lat: sel.lat, lon: sel.lon } : undefined} />
+          </>
+        );
+      }
+    }
     return (
       <>
         {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
@@ -296,42 +320,14 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           ) : top.length === 0 ? (
             <p className="fc-muted">{tr("empty")}</p>
           ) : (
-            <>
-              <h3 className={styles.heading}>{t("topSpots", { country: countryName(currentScore.country) })}</h3>
-              <ol className="fc-top">
-                {top.map((item) => {
-                  const region = regionName(item.region_id);
-                  const content = (
-                    <>
-                      <span className="fc-topLevel" aria-label={t("levelAria", { level: item.level })}>
-                        <span className="fc-swatch" data-level={item.level} aria-hidden="true" />
-                        <span className={`${styles.num} num`}><Roll value={item.level} /></span>
-                      </span>
-                      <span className="fc-topName">{region}</span>
-                      <span className="fc-topChance"><Roll value={chance(item.p)} /></span>
-                    </>
-                  );
-                  return (
-                    <li key={item.spot_id}>
-                      {onPickPoint ? (
-                        <button
-                          type="button"
-                          className="fc-topRow"
-                          aria-label={`${t("pickSpot", { region })}. ${t("levelAria", { level: item.level })}, ${chance(item.p)}`}
-                          onClick={() => onPickPoint(item.lat, item.lon)}
-                        >
-                          {content}
-                        </button>
-                      ) : (
-                        <div className="fc-topRow">{content}</div>
-                      )}
-                      <RiskContext p={item.p} usual={item.usual} fwi={item.inputs.fwi} day={item.day}/>
-                    </li>
-                  );
-                })}
-              </ol>
-              <p className="fc-muted">{tr("valid", { date: validDate })}</p>
-            </>
+            <TopSpots
+              heading={t("topSpots", { country: countryName(currentScore.country) })}
+              spots={top}
+              day={contextDay}
+              regionName={regionName}
+              chance={chance}
+              onPickPoint={onPickPoint}
+            />
           )
         ) : spot ? (
           spot.p === null ? (
@@ -340,91 +336,50 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               <p className="fc-muted">{tr("missingInputs")}</p>
             </>
           ) : (
-            <div className="fc-score">
-              <p className="fc-level" aria-label={t("levelAria", { level: spot.level })}>
-                <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true"><Roll value={spot.level} ms={420} /></span>
-                <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
-              </p>
-              <div className="fc-meter" aria-hidden="true" key={spot.level}>
-                {[1, 2, 3, 4, 5].map((step) => (
-                  <span key={step} data-on={step <= spot.level} />
-                ))}
-              </div>
-              <p className="fc-levelName">{tr("level", {level: spot.level})}</p>
-              <p className="fc-facts">
-                <span>{chance(spot.p)}</span>
-                <span>{fuel(spot.fire_type ?? "")}</span>
-              </p>
-              <RiskContext p={spot.p} usual={spot.usual} fwi={spot.inputs?.fwi} day={spot.day}/>
-              {(() => {
-                const why = spot.why.filter((key) => tr.has(`why.${key}`)).slice(0, 4);
-                return why.length > 0 ? (
-                  <ul className="fc-why">
-                    {why.map((key) => (
-                      <li key={key}>{tr(`why.${key}`)}</li>
+            <ScoreBlock
+              level={spot.level}
+              fwi={spot.inputs?.fwi ?? null}
+              chips={
+                <>
+                  <li className="fc-chip"><Roll value={chance(spot.p)} /></li>
+                  <li className="fc-chip">{fuel(spot.fire_type ?? "")}</li>
+                  <RiskContextChips p={spot.p} usual={spot.usual} fwi={spot.inputs?.fwi} day={spot.day} />
+                  {spot.why
+                    .filter((key) => tr.has(`why.${key}`))
+                    .slice(0, 4)
+                    .map((key) => (
+                      <li key={key} className="fc-chip fc-chipWhy">{tr(`why.${key}`)}</li>
                     ))}
-                  </ul>
-                ) : null;
-              })()}
-              <p className="fc-muted">{tr("valid", { date: validDate })}</p>
-            </div>
+                </>
+              }
+              after={<p className="fc-note">{t("newFireNote")}</p>}
+            />
           )
         ) : square !== null ? (
-          <div className="fc-score">
-            <p className="fc-level" aria-label={t("levelAria", { level: square.level })}>
-              <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true"><Roll value={square.level} ms={420} /></span>
-              <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
-            </p>
-            <div className="fc-meter" aria-hidden="true" key={square.level}>
-              {[1, 2, 3, 4, 5].map((step) => (
-                <span key={step} data-on={step <= square.level} />
-              ))}
-            </div>
-            <p className="fc-levelName">{tr("level", {level: square.level})}</p>
-            <p className="fc-facts">
-              <span>{chance(square.p)}</span>
-            </p>
-            <RiskContext p={square.p} usual={square.usual} fwi={square.fwi} day={index.meta && named !== null ? index.meta.days[named] : dangerDate(day)} context={square.context}/>
-            <p className="fc-muted">{t("squareNote")}</p>
-            {nearest !== null ? (
-              <div className="fc-nearest">
-                <p className="fc-muted">
-                  {t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })} {chance(nearest.spot.p)}
-                </p>
-                <RiskContext p={nearest.spot.p} usual={nearest.spot.usual} fwi={nearest.spot.inputs.fwi} day={nearest.spot.day}/>
-                {onPickPoint ? (
-                  <button type="button" className="whole-country" onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}>
-                    {t("goToSpot")}
-                  </button>
+          <ScoreBlock
+            level={square.level}
+            fwi={square.fwi}
+            chips={
+              <>
+                <li className="fc-chip"><Roll value={chance(square.p)} /></li>
+                <RiskContextChips p={square.p} usual={square.usual} fwi={square.fwi} day={contextDay} context={square.context} />
+              </>
+            }
+            after={
+              <>
+                <p className="fc-note">{t("newFireNote")}</p>
+                <p className="fc-muted">{t("squareNote")}</p>
+                {nearest !== null ? (
+                  <NearestSpot nearest={nearest} text={`${t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })} ${chance(nearest.spot.p)}`} goLabel={t("goToSpot")} onPickPoint={onPickPoint} />
                 ) : null}
-              </div>
-            ) : null}
-            <p className="fc-muted">{tr("valid", { date: validDate })}</p>
-          </div>
+              </>
+            }
+          />
         ) : nearest !== null ? (
           <div className="fc-score">
             <p className="fc-levelName">{t("notScored")}</p>
             <p className="fc-muted">{t("notScoredWhy")}</p>
-            <div className="fc-nearest">
-              <p>
-                {t("nearestSpot", {
-                  km: number(nearest.km, 0),
-                  level: nearest.spot.level,
-                })}{" "}
-                <span className="fc-muted">{chance(nearest.spot.p)}</span>
-              </p>
-              <RiskContext p={nearest.spot.p} usual={nearest.spot.usual} fwi={nearest.spot.inputs.fwi} day={nearest.spot.day}/>
-              {onPickPoint ? (
-                <button
-                  type="button"
-                  className="whole-country"
-                  onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}
-                >
-                  {t("goToSpot")}
-                </button>
-              ) : null}
-            </div>
-            <p className="fc-muted">{tr("valid", { date: validDate })}</p>
+            <NearestSpot nearest={nearest} text={`${t("nearestSpot", { km: number(nearest.km, 0), level: nearest.spot.level })} ${chance(nearest.spot.p)}`} goLabel={t("goToSpot")} onPickPoint={onPickPoint} />
           </div>
         ) : (
           <>
@@ -441,12 +396,11 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     label: string;
     value: string | null;
     unit: string;
-    source: string;
     wide?: boolean;
     extra?: ReactNode;
     trend?: PowerParameter;
   }) => (
-    <div className={`${styles.card}${props.wide ? " fc-tileWide" : ""}`}>
+    <div className={`${styles.card} fc-tile${props.wide ? " fc-tileWide" : ""}`}>
       <p className="fc-tileLabel">
         <MetricIcon name={props.icon} />
         {props.label}
@@ -456,23 +410,26 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
           <span className="fc-tileNoData">{t("noData")}</span>
         ) : (
           <>
-            <span className={`${styles.cardFigure} ${styles.num} num`}><Roll value={props.value} /></span>
+            <span className={`${styles.num} num fc-tileFigure`}><Roll value={props.value} /></span>
             <span className="fc-tileUnit">{props.unit}</span>
           </>
         )}
       </p>
       {props.extra}
-      <p className="fc-tileSource">{props.source}</p>
       {props.trend && powerData && powerData.series[props.trend].some((entry) => entry.value !== null) ? (
         <div className="fc-trend">
           <Sparkline bare label={props.label} values={powerData.series[props.trend]} unit={powerData.units[props.trend]} />
-          <p className="fc-tileSource">
-            {t("trendNote", { date: powerData.lastDate ? dateText(powerData.lastDate) : "" })}
-          </p>
         </div>
       ) : null}
     </div>
   );
+
+  const weatherWhere = (): string | null => {
+    if (!parsed) return null;
+    return sel.kind === "country"
+      ? t("atCountry", { name: countryName(sel.iso3), date: dateText(parsed.date) })
+      : t("atPoint", { lat: place ? place.lat.toFixed(2) : "", lon: place ? place.lon.toFixed(2) : "", date: dateText(parsed.date) });
+  };
 
   const weatherSection = (): ReactNode => {
     if (sel.kind === "country" && countryKnown && !countryEntry) return <p className="fc-muted">{t("noPlace")}</p>;
@@ -481,25 +438,17 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     if ("failed" in currentWeather || !parsed) return <p role="alert">{t("failedWeather")}</p>;
     const w = parsed;
     const show = (value: number | null, digits: number) => (value === null ? null : number(value, digits));
-    const where =
-      sel.kind === "country"
-        ? t("atCountry", { name: countryName(sel.iso3), date: dateText(w.date) })
-        : t("atPoint", { lat: place ? place.lat.toFixed(2) : "", lon: place ? place.lon.toFixed(2) : "", date: dateText(w.date) });
     const dry = w.dryDays;
-    const forecastSource = t("sourceForecast");
     return (
       <>
-        <p className="fc-muted">{where}</p>
         <div className="fc-tiles">
-          {tile({ icon: "temp", label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), source: forecastSource, trend: "T2M_MAX" })}
-          {tile({ icon: "humidity", label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), source: forecastSource, trend: "RH2M" })}
+          {tile({ icon: "temp", label: t("tTemp"), value: show(w.tMax, 1), unit: t("unitC"), trend: "T2M_MAX" })}
+          {tile({ icon: "humidity", label: t("tHumidity"), value: show(w.rhMin, 0), unit: t("unitPct"), trend: "RH2M" })}
           {tile({
             icon: "wind",
             label: t("tWind"),
             value: show(w.windMax, 0),
             unit: t("unitKmh"),
-            source: forecastSource,
-            wide: true,
             trend: "WS10M",
             extra: (
               <p className="fc-tileLine">
@@ -522,45 +471,168 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
               </p>
             ),
           })}
-          {tile({ icon: "rain", label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), source: forecastSource, trend: "PRECTOTCORR" })}
-          {tile({ icon: "rain", label: t("tRain7"), value: show(w.rain7, 1), unit: t("unitMm"), source: t("sourcePast") })}
+          {tile({ icon: "rain", label: t("tRain"), value: show(w.rain, 1), unit: t("unitMm"), trend: "PRECTOTCORR" })}
+          {tile({ icon: "rain", label: t("tRain7"), value: show(w.rain7, 1), unit: t("unitMm") })}
           {tile({
             icon: "dry",
             label: t("tDry"),
             value: dry === null ? null : dry.atLeast ? t("atLeast", { n: dry.days }) : number(dry.days, 0),
             unit: dry === null ? "" : t("unitDays", { n: dry.days }),
-            source: `${t("sourcePast")}. ${t("tDryNote")}`,
           })}
-          {tile({ icon: "soil", label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), source: t("sourceSoil"), trend: "GWETTOP" })}
+          {tile({ icon: "soil", label: t("tSoil"), value: show(w.soil, 2), unit: t("unitSoil"), trend: "GWETTOP" })}
         </div>
+        <p className="fc-footnote">
+          {t("sourcesNote", {
+            forecast: t("sourceForecast"),
+            past: t("sourcePast"),
+            dry: t("tDryNote"),
+            soil: t("sourceSoil"),
+            trend: t("trendNote", { date: powerData?.lastDate ? dateText(powerData.lastDate) : "" }),
+          })}
+        </p>
       </>
     );
   };
 
   const dayDate = dateText(dangerDate(day));
-  const scoreTitle =
-    named === "today" ? t("scoreTitleToday") : named === "tomorrow" ? t("scoreTitleTomorrow") : t("scoreTitleDay", { date: dayDate });
+  const readyScore = currentScore?.status === "ready" ? currentScore : null;
+  const latest = readyScore?.latest === true && readyScore.modelDate !== null;
+  const scoreTitle = latest
+    ? t("scoreTitleLatest", { date: dateText(readyScore!.modelDate!) })
+    : named === "today" ? t("scoreTitleToday") : named === "tomorrow" ? t("scoreTitleTomorrow") : t("scoreTitleDay", { date: dayDate });
+  // A country list carries its date in its own header.
+  const validLabel = !latest && readyScore?.open && readyScore.modelDate && readyScore.top === null ? tr("valid", { date: dateText(readyScore.modelDate) }) : null;
   const inputsTitle =
     named === "today" ? t("inputsTitleToday") : named === "tomorrow" ? t("inputsTitleTomorrow") : t("inputsTitleDay", { date: dayDate });
 
-  const ready = currentScore?.status === "ready" ? currentScore : null;
-  const listHref = `/risk${ready?.search ?? ""}`;
+  const listHref = `/risk${readyScore?.search ?? ""}`;
+  const where = weatherWhere();
 
   return (
     <div className={`${styles.report} fc-panel`}>
+      {fireCheck !== null ? <FireAround check={fireCheck} /> : null}
       <section className={styles.section} aria-label={scoreTitle}>
-        <h2 className={styles.heading}>{scoreTitle}</h2>
+        <div className="fc-head">
+          <h2 className={styles.heading}>{scoreTitle}</h2>
+          {validLabel ? <span className="fc-where">{validLabel}</span> : null}
+        </div>
         {scoreSection()}
       </section>
       <section className={styles.section} aria-label={inputsTitle}>
-        <h2 className={styles.heading}>{inputsTitle}</h2>
+        <div className="fc-head">
+          <h2 className={styles.heading}>{inputsTitle}</h2>
+          {where ? <span className="fc-where">{where}</span> : null}
+        </div>
         {weatherSection()}
       </section>
       <section className={`${styles.section} fc-links`}>
         <a href={listHref}>{t("allSpots")}</a>
-        <RiskLinks country={ready?.country ?? (sel.kind === "country" ? sel.iso3 : "")} />
+        <RiskLinks country={readyScore?.country ?? (sel.kind === "country" ? sel.iso3 : "")} />
       </section>
       <p className="fc-muted">{tr("disclaimer")}</p>
     </div>
+  );
+}
+
+/** Level figure, meter and name on one line, then one wrapping row of chips. */
+function ScoreBlock({ level, chips, fwi, after }: { level: number; chips: ReactNode; fwi?: number | null; after?: ReactNode }) {
+  const t = useTranslations("forecast");
+  const tr = useTranslations("risk");
+  return (
+    <div className="fc-score">
+      <div className="fc-scoreRow">
+        <p className="fc-level" aria-label={t("levelAria", { level })}>
+          <span className={`fc-levelFigure ${styles.num} num`} aria-hidden="true"><Roll value={level} ms={420} /></span>
+          <span className="fc-levelOf num" aria-hidden="true">/ 5</span>
+        </p>
+        <div className="fc-meter" aria-hidden="true" key={level}>
+          {[1, 2, 3, 4, 5].map((step) => (
+            <span key={step} data-on={step <= level} />
+          ))}
+        </div>
+        <p className="fc-levelName">{tr("level", { level })}</p>
+        <LevelInfo fwi={fwi} />
+      </div>
+      <ul className="fc-chips">{chips}</ul>
+      {after}
+    </div>
+  );
+}
+
+function NearestSpot({ nearest, text, goLabel, onPickPoint }: { nearest: { spot: RiskSpot; km: number }; text: string; goLabel: string; onPickPoint?: (lat: number, lon: number) => void }) {
+  return (
+    <div className="fc-nearest">
+      <p className="fc-muted">{text}</p>
+      <ul className="fc-chips">
+        <RiskContextChips p={nearest.spot.p} usual={nearest.spot.usual} fwi={nearest.spot.inputs.fwi} day={nearest.spot.day} />
+      </ul>
+      {onPickPoint ? (
+        <button type="button" className="whole-country" onClick={() => onPickPoint(nearest.spot.lat, nearest.spot.lon)}>
+          {goLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+/** One dense row per spot: level, place, versus usual, fire weather, chance. */
+function TopSpots({ heading, spots, day, regionName, chance, onPickPoint }: {
+  heading: string;
+  spots: RiskSpot[];
+  day: string;
+  regionName: (id: string) => string;
+  chance: (p: number | null) => string;
+  onPickPoint?: (lat: number, lon: number) => void;
+}) {
+  const t = useTranslations("forecast");
+  const tr = useTranslations("risk");
+  const locale = useLocale();
+  const month = new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`));
+  return (
+    <>
+      <div className="fc-head">
+        <h3 className={styles.heading}>{heading}</h3>
+        <span className="fc-where">{tr("valid", { date: new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`)) })}</span>
+      </div>
+      <ol className="fc-top">
+        {spots.map((item) => (
+          <TopSpotRow key={item.spot_id} item={item} region={regionName(item.region_id)} chance={chance(item.p)} onPickPoint={onPickPoint} />
+        ))}
+      </ol>
+      <div className="fc-listFoot">
+        <p className="fc-muted">{t("listKey", { month })}</p>
+        <LevelInfo />
+      </div>
+      <p className="fc-note">{t("newFireNoteList")}</p>
+    </>
+  );
+}
+
+function TopSpotRow({ item, region, chance, onPickPoint }: { item: RiskSpot; region: string; chance: string; onPickPoint?: (lat: number, lon: number) => void }) {
+  const t = useTranslations("forecast");
+  const c = useRiskContext({ p: item.p, usual: item.usual, fwi: item.inputs.fwi, day: item.day });
+  const spoken = [t("levelAria", { level: item.level }), chance, c.usualText, c.weatherText].filter(Boolean).join(", ");
+  const content = (
+    <>
+      <span className="fc-topLevel" aria-hidden="true">
+        <span className="fc-swatch" data-level={item.level} />
+        <span className={`${styles.num} num`}><Roll value={item.level} /></span>
+      </span>
+      <span className="fc-topName">{region}</span>
+      <span className="fc-topUsual" aria-hidden="true"><UsualArrow direction={c.direction} /></span>
+      <span className="fc-topWeather" data-level={c.weatherLevel} aria-hidden="true">{c.weatherShort}</span>
+      <span className="fc-topChance num" aria-hidden="true"><Roll value={chance} /></span>
+    </>
+  );
+  return (
+    <li>
+      {onPickPoint ? (
+        <button type="button" className="fc-topRow" aria-label={`${t("pickSpot", { region })}. ${spoken}`} onClick={() => onPickPoint(item.lat, item.lon)}>
+          {content}
+        </button>
+      ) : (
+        <div className="fc-topRow" role="group" aria-label={`${region}. ${spoken}`}>{content}</div>
+      )}
+    </li>
   );
 }

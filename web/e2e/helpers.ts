@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 /**
  * The map streams tiles for as long as it is on screen, so "the network went
@@ -35,4 +35,25 @@ export async function openSheet(page: Page): Promise<void> {
   await page.evaluate(() =>
     document.documentElement.setAttribute("data-sheet", "full"),
   );
+}
+
+/**
+ * The layer list: a dock that is always open from 1024px wide, a panel behind
+ * the tool column's button on narrower screens. Opens it either way.
+ */
+export async function openLayers(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => document.querySelector("#layer-panel.docked") !== null || window.matchMedia("(max-width: 1023px)").matches,
+  );
+  const panel = page.locator("#layer-panel");
+  if (!(await panel.isVisible())) {
+    await page.getByRole("button", { name: "Layers and legend" }).click();
+  }
+  await expect(panel).toBeVisible();
+}
+
+/** Closes the narrow-screen layer panel; the wide-screen dock stays, clear of the map's middle. */
+export async function closeLayers(page: Page): Promise<void> {
+  const close = page.locator("#layer-panel:not(.docked)").getByRole("button", { name: "Close", exact: true });
+  if (await close.isVisible()) await close.click();
 }

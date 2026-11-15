@@ -43,6 +43,8 @@ export interface RiskCountry {
   days: string[];
   regions: Record<string, Record<string, RiskSpot[]>>;
   all_vegetation?: Record<string, Record<string, RiskSpot[]>>;
+  /** NASA fire-weather index for every land square, by day: [spot_id, fwi]. */
+  fwi?: Record<string, [spot_id: number, fwi: number][]>;
 }
 export interface RiskIndex { meta: RiskMeta | null; regions: RiskRegion[] }
 export type CountryResult = { status: "ready" | "missing"; file: RiskCountry };

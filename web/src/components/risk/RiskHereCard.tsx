@@ -3,26 +3,44 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RiskIndex } from '@/types/risk';
 import { exampleMode, loadRiskIndex, showForecast, forecastIsStale } from '@/lib/risk/loaders';
+import { dangerDate } from '@/lib/layers/danger';
+import { hereTitle } from '@/lib/risk/model-day';
 import { loadRiskHere, type PointSpot } from '@/lib/risk/here';
 import styles from '@/components/report/styles';
 import RiskSpotDetails from './RiskSpotDetails';
 import RiskPlaceholder from './RiskPlaceholder';
 import { RiskLinks } from './RiskLinks';
 import './risk.css';
+import ActiveFireCard, { FireAround, useActiveFire } from './ActiveFireCard';
+import { fetchWeather, parseWeather, roundedPlace, type DayWeather } from '@/lib/forecast/weather';
 
 export interface RiskHereCardProps {
  point: {lat:number;lon:number};
+ /** Search distance of the chosen point, for counting recent detections. */
+ radiusKm?: number;
  /** Omit to inherit the URL/environment example switch. */
  example?: boolean;
  country?: string;
 }
 /** Drop-in report card. It never substitutes a neighbouring spot outside its radius. */
-export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
+export function RiskHereCard({point,example,country='',radiusKm=0}:RiskHereCardProps) {
  const t=useTranslations('risk');
+ const f=useTranslations('forecast');
  const [state,setState]=useState<{index:RiskIndex;spot:PointSpot|null;example:boolean;country:string}|null>(null);
  const [stale,setStale]=useState(false);
  useEffect(()=>{const update=()=>setStale(!!state?.index.meta && forecastIsStale(state.index.meta.days.tomorrow)); update(); const timer=setInterval(update,60000); return ()=>clearInterval(timer);},[state]);
  const [failed,setFailed]=useState(false);
+ const fireCheck=useActiveFire({lat:point.lat,lon:point.lon,radiusKm},state?.index.meta?.grid_g);
+ const burning=fireCheck?.status==='ready'&&fireCheck.fire.active;
+ const [weather,setWeather]=useState<DayWeather|null>(null);
+ useEffect(()=>{
+  setWeather(null);
+  if(!burning)return;
+  const controller=new AbortController();
+  const place=roundedPlace(point.lat,point.lon);
+  fetchWeather(place.lat,place.lon,controller.signal).then(json=>setWeather(parseWeather(json,0)),()=>{});
+  return ()=>controller.abort();
+ },[burning,point.lat,point.lon]);
  useEffect(()=>{
   let live=true;setState(null);setFailed(false);
   const mode=example??exampleMode(window.location.search);
@@ -34,14 +52,20 @@ export function RiskHereCard({point,example,country=''}:RiskHereCardProps) {
   })().catch(()=>{if(live)setFailed(true);});
   return ()=>{live=false;};
  },[point.lat,point.lon,example,country]);
- return <section className={`${styles.card} risk-here`} aria-label={t(stale?'hereDated':'here')}>
-  <h2 className={styles.heading}>{t(stale?'hereDated':'here')}</h2>
+ // Titled by the date the published forecast is valid for, which can lag the calendar.
+ const validFor=state?.index.meta?.days.tomorrow??null;
+ const titleKey=hereTitle(validFor,dangerDate(0),dangerDate(1),stale||(validFor!==null&&forecastIsStale(validFor)));
+ const title=titleKey==='hereLatest'?t('hereLatest',{date:validFor??''}):t(titleKey);
+ const showValid=!!state&&!failed&&showForecast(state.index.meta,state.example)&&!!state.spot;
+ return <section className={`${styles.card} risk-here`} aria-label={title}>
+  {fireCheck!==null&&<FireAround check={fireCheck}/>}
+  <div className="fc-head"><h2 className={styles.heading}>{title}</h2>{showValid&&<span className="fc-where">{t('valid',{date:validFor??''})}</span>}</div>
   {failed?<p role="alert">{t('failed')}</p>:!state?<p role="status">{t('loading')}</p>:<>
    {state.example&&<p className="risk-example">{t('example')} · {t('exampleNote')}</p>}
    {stale&&showForecast(state.index.meta,state.example)&&<p role="status">{t('stale',{date:state.index.meta?.days.tomorrow??''})}</p>}
-   {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:state.spot?<>
-    <p className="risk-muted">{t('valid',{date:state.index.meta?.days.tomorrow??''})}</p>
-    <RiskSpotDetails spot={state.spot}/>
+   {!showForecast(state.index.meta,state.example)?<RiskPlaceholder/>:fireCheck?.status==='loading'?<p role="status" className="risk-muted">{t('aroundChecking')}</p>:burning&&fireCheck?.status==='ready'?<ActiveFireCard fire={fireCheck.fire} weather={weather} at={point}/>:state.spot?<>
+    <RiskSpotDetails spot={state.spot} compact/>
+    <p className="fc-note">{f('newFireNote')}</p>
    </>:<><p>{t('noForecast')}</p><p className="risk-muted">{t('coverage')}</p></>}
    <a href={state.example?'/risk?risk=example':'/risk'}>{t('outlook')}</a>
   </>}

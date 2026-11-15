@@ -13,7 +13,7 @@ it('uses an eligible spot even when a nearer spot has a smaller non-covering rad
  expect(nearestSpot([small,spot],42.17,23.45)).toBe(spot);
 });
 it('links to the established point report URL',()=>{
- expect(historyHref(spot)).toBe('/?sel=p:42.15,23.45,7');
+ expect(historyHref(spot)).toBe('/?v=h&sel=p:42.15,23.45,7');
 });
 it('returns a containing box, never a faraway region',()=>{
  const region={region_id:'BG-10',bbox:[23,42,24,43]} as RiskRegion;

@@ -302,3 +302,113 @@
   text-align: center;
   color: var(--ink);
 }
+
+/* Wide screens: the layer list is a dock that never closes, only collapses to
+   its title bar. It sits under the top bar and ends above the map tools. */
+.layers .hint[hidden] {
+  display: none;
+}
+
+.layer-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.layer-line .layer-switch {
+  flex: 1;
+  min-width: 0;
+}
+
+.layer-about {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-3);
+}
+
+.layer-about:hover,
+.layer-about[aria-expanded="true"] {
+  color: var(--ink);
+  background: var(--empty);
+}
+
+.layer-about svg {
+  width: 15px;
+  height: 15px;
+}
+
+.layers-dockHead {
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .layers.docked {
+    top: calc(var(--gap) + var(--bar-h) + 12px);
+    left: var(--gap);
+    bottom: auto;
+    width: 252px;
+    max-height: calc(100dvh - var(--gap) - var(--bar-h) - 12px - var(--gap) - var(--time-h) - 10px - (4 * var(--tool) + 24px) - 12px);
+  }
+
+  .layers.docked[data-collapsed] {
+    width: auto;
+    min-width: 180px;
+  }
+
+  .layers.docked .layers-head {
+    cursor: pointer;
+    padding: 10px 12px;
+  }
+
+  .layers.docked .layers-head > span:first-child {
+    margin-inline-end: auto;
+  }
+
+  .layers.docked .layers-count {
+    margin-right: 0;
+  }
+
+  .layers.docked .layers-head::after {
+    content: "";
+  }
+
+  .layers.docked .layers-body {
+    gap: 8px;
+    padding: 0 10px 10px;
+  }
+
+  .layers.docked .layer-row {
+    gap: 4px;
+    padding-top: 8px;
+  }
+
+  .layers.docked .layer-row:first-child {
+    padding-top: 0;
+  }
+
+  .layers.docked .layer-switch {
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .layers.docked .layer-switch input {
+    width: 30px;
+    height: 17px;
+  }
+
+  .layers.docked .layer-switch input::after {
+    width: 11px;
+    height: 11px;
+  }
+
+  .layers.docked .layer-switch input:checked::after {
+    translate: 13px 0;
+  }
+}

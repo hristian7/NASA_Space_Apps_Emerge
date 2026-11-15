@@ -1,38 +1,38 @@
-.scorecard {
+.risk-scorecard {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.scorecard table {
+.risk-scorecard table {
   display: table;
   table-layout: fixed;
   width: 100%;
 }
 
-.scorecard th,
-.scorecard td {
+.risk-scorecard th,
+.risk-scorecard td {
   overflow-wrap: anywhere;
 }
 
-.scorecard caption {
+.risk-scorecard caption {
   text-align: left;
   color: var(--ink-2);
 }
 
-section table.dailyTable {
+section table.risk-daily-table {
   display: table;
   table-layout: fixed;
   width: 100%;
 }
 
-.dailyTable th,
-.dailyTable td {
+.risk-daily-table th,
+.risk-daily-table td {
   overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {
-  .dailyTable th,
-  .dailyTable td {
+  .risk-daily-table th,
+  .risk-daily-table td {
     padding-inline-end: 3px;
   }
 }

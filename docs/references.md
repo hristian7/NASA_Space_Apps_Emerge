@@ -16,6 +16,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | Executive Forest Agency of Bulgaria, annual report for 2025 | Checking Bulgaria's 2024 revision (565 fires on the same 171,164 decares) | https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf | Terms not stated on the source page |
 | firms-catalog (public mirror of NASA FIRMS as GeoParquet) | Raw hotspots download | https://source.coop/portolan-mirrors/firms-catalog | Data CC0-1.0, code Apache-2.0 |
 | OpenFreeMap street style (OpenMapTiles, OpenStreetMap data) | Streets base map | https://openfreemap.org | ODbL, credit OpenStreetMap contributors |
+| Photon geocoder (public instance), OpenStreetMap data | Place search in the app | https://photon.komoot.io | Data ODbL, credit OpenStreetMap contributors |
 | Natural Earth admin-0 country borders | Country outlines in the preview | https://www.naturalearthdata.com/ | Public domain |
 | NASA GFWED GEOS-5 fire-weather forecasts | Fire-weather input and baseline for next-day risk | https://data.giss.nasa.gov/impacts/gfwed/; [forecast files](https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/) | NASA open data; accessed 14 Nov 2026 |
 | Natural Earth admin-1 regions | Regional boundaries for next-day risk | https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/ | Public domain; accessed 14 Nov 2026 |
@@ -74,6 +75,7 @@ For the "References" field of the NASA submission. **Add a row the first time a 
 | Remotion | Building and rendering the 30 s demo video | https://www.remotion.dev | Remotion licence (free for individuals and small teams) |
 | ElevenLabs (voice "Charlie", Music) | AI voice-over and the music bed of the demo video | https://elevenlabs.io | ElevenLabs paid plan, commercial use allowed |
 | Familjen Grotesk and IBM Plex Mono (Google Fonts) | Type in the demo video | https://fonts.google.com | SIL Open Font License 1.1 |
+| Claude Code (Anthropic) | AI coding assistant for writing and testing code; see [the AI-usage note](si-usage.md) | https://www.anthropic.com/claude-code | Anthropic terms of service |
 
 ## Licence text
 

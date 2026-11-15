@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { closeLayers, openLayers } from './helpers';
 
 declare global { interface Window { __windMetrics: { frames: number[]; builds: number[]; strokes: number } } }
 
@@ -19,7 +20,7 @@ test('each driver requests its own data and displays its date', async ({ page })
   });
   // The driver layers belong to the Forecast view; the list opens from the map's tool column.
   await page.goto('/?v=f&lay=', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Layers and legend' }).click();
+  await openLayers(page);
   for (const driver of drivers) {
     const row = page.locator('.layer-row').filter({ has: page.getByRole('switch', { name: driver.name, exact: true }) });
     const request = page.waitForRequest(req => req.url().includes(driver.address) && (req.url().includes('GetMap') || /\/\d+\/\d+\/\d+\.png/.test(req.url())));
@@ -45,7 +46,7 @@ test('each driver requests its own data and displays its date', async ({ page })
   };
   await assertRotations();
   // Real input makes MapLibre rewrite marker positions and transforms.
-  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await closeLayers(page);
   const box = await page.locator('.maplibregl-canvas').boundingBox();
   if (!box) throw new Error('Map did not render');
   await page.mouse.move(box.x + box.width * 0.65, box.y + box.height * 0.55);
@@ -176,7 +177,7 @@ test.describe('animated wind field', () => {
       expect(metrics.frames).toBeGreaterThan(30);
       expect(metrics.p95).toBeLessThanOrEqual(3);
       expect(errors).toEqual([]);
-      await page.getByRole('button', { name: 'Layers and legend' }).click();
+      await openLayers(page);
       await page.getByRole('switch', { name: 'Wind', exact: true }).uncheck();
       await expect(flow).toHaveCount(0);
       await expect(page.locator('[data-wind-arrow]')).toHaveCount(0);
@@ -201,7 +202,7 @@ test('forecast temperature uses one ten-day grid request and follows the day con
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/?v=f&lay=', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Layers and legend' }).click();
+  await openLayers(page);
   const row = page.locator('.layer-row').filter({ has: page.getByRole('switch', { name: 'Air temperature (forecast)', exact: true }) });
   await row.getByRole('switch').check();
   await expect(row.locator('[data-temperature-state]')).toHaveAttribute('data-temperature-state', 'ready');
@@ -230,7 +231,7 @@ test('forecast temperature uses one ten-day grid request and follows the day con
 test('forecast temperature reports unavailable data without a fabricated field', async ({ page }) => {
   await page.route('https://api.open-meteo.com/v1/forecast**', route => route.fulfill({ status: 503, body: 'Unavailable' }));
   await page.goto('/?v=f&lay=t', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Layers and legend' }).click();
+  await openLayers(page);
   const row = page.locator('.layer-row').filter({ has: page.getByRole('switch', { name: 'Air temperature (forecast)', exact: true }) });
   await expect(row.locator('[data-temperature-state]')).toHaveAttribute('data-temperature-state', 'failed');
   await expect(row).toContainText('No temperature data');

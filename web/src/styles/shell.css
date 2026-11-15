@@ -342,7 +342,7 @@ ol {
 }
 
 .report h1 {
-  font: 600 26px/1.15 var(--font-head);
+  font: 600 22px/1.15 var(--font-head);
   letter-spacing: -0.01em;
   text-wrap: pretty;
 }
