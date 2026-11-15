@@ -601,7 +601,7 @@ function Report({
       </div>
 
       {selection.kind === "point" ? (
-        <RiskHereCard point={{ lat: selection.lat, lon: selection.lon }} country={data.reported?.iso3 ?? ""} />
+        <RiskHereCard point={{ lat: selection.lat, lon: selection.lon }} radiusKm={selection.radiusKm} country={data.reported?.iso3 ?? ""} />
       ) : null}
 
       </section>

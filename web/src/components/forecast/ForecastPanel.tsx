@@ -28,6 +28,7 @@ import { RiskLinks } from "@/components/risk/RiskLinks";
 import "@/components/risk/risk.css";
 import "./forecast.css";
 import Roll from "@/components/ui/roll";
+import ActiveFireCard, { useActiveFire } from "@/components/risk/ActiveFireCard";
 
 type Props = {
   selection: Selection;
@@ -144,6 +145,9 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
   const countryKnown = sel.kind !== "country" || boxes.size > 0;
 
   const [score, setScore] = useState<ScoreResult | null>(null);
+  // A place already burning gets a near-zero model chance, which would read as safe.
+  const firePlace = useMemo(() => (sel.kind === "point" ? { lat: sel.lat, lon: sel.lon, radiusKm: sel.radiusKm } : null), [sel]);
+  const fireCheck = useActiveFire(firePlace, score?.status === "ready" ? score.index.meta?.grid_g : undefined);
   const [weather, setWeather] = useState<WeatherResult | null>(null);
 
   useEffect(() => {
@@ -294,6 +298,17 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
       );
     }
     const contextDay = modelDate ?? viewedDate;
+    if (open && fireCheck !== null && top === null) {
+      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("fireChecking")}</p>;
+      if (fireCheck.status === "ready" && fireCheck.fire.active) {
+        return (
+          <>
+            {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}
+            <ActiveFireCard fire={fireCheck.fire} radiusKm={sel.kind === "point" ? sel.radiusKm : 0} weather={parsed} />
+          </>
+        );
+      }
+    }
     return (
       <>
         {example && <p className="fc-example">{tr("example")} · {tr("exampleNote")}</p>}

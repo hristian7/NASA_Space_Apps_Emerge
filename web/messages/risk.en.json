@@ -105,5 +105,18 @@
   "weatherShortVeryStrong": "very strong",
   "weatherShortNone": "no data",
   "hereToday": "Today's risk here",
-  "hereLatest": "Latest risk forecast here, for {date}"
+  "hereLatest": "Latest risk forecast here, for {date}",
+  "fireTitle": "Active fire nearby",
+  "fireCounts": "{n24, plural, one {# detection} other {# detections}} in the last 24 hours, {n72} in the last 72 hours",
+  "fireWithin": "within {km} km",
+  "fireSquares": "in this square and the 8 around it",
+  "fireNewest": "Newest: {time} UTC",
+  "fireNote": "Our score covers new fires only; this area is already burning.",
+  "fireChecking": "Checking for active fires nearby…",
+  "downwind": "Wind from {from} at {speed} km/h: fire is more likely to be pushed towards the {to}.",
+  "downwindGusts": "Gusts up to {gust} km/h.",
+  "downwindCalm": "No wind direction in the forecast for this day.",
+  "downwindNote": "Guide from the wind forecast, not a tested spread forecast.",
+  "dryAir": "dry air ({rh}%)",
+  "noRain": "no rain for {n, plural, one {# day} other {# days}}"
 }
