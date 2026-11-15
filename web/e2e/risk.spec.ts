@@ -20,6 +20,7 @@ test('engine not ready shows the placeholder and official services',async({page}
 
 test('example outlook supports days, regions, map picks, probability and history',async({page},testInfo)=>{
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.route('**/data/risk/example/week/BGR.json',route=>route.fulfill({json:{...JSON.parse(exampleFile('week/BGR.json')),ranking:{'2026-11-16':'model','2026-11-17':'history'}}}));
  await page.goto('/risk?risk=example');
  await expect(page.getByText('Example data',{exact:false})).toBeVisible();
  await expect(page.getByRole('link',{name:'How we know it is right'})).toHaveAttribute('href','/proof?risk=example#next-day-risk');
@@ -30,9 +31,10 @@ test('example outlook supports days, regions, map picks, probability and history
  const weekCard=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/scorecard.json'),'utf8'));
  const lead4=weekCard.week.leads['4'].scopes.world.selections.forest_wildland.pooled.methods;
  const percent=(n:number)=>new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(n);
- await expect(page.getByText(`Day 4 ahead: the fire-weather ranking caught ${percent(lead4.fwi.capture_rate)} of new fires in 2025; history alone ${percent(lead4.history.capture_rate)}, worldwide, forest and wildland [V].`)).toBeVisible();
+ await expect(page.getByText(`Day 4 ahead: ranked by the model. It caught ${percent(lead4.model.capture_rate)} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
  await page.getByRole('button',{name:'2026-11-17',exact:true}).click();
- await expect(page.getByText('Day 5 ahead:',{exact:false})).toBeVisible();
+ const lead5=weekCard.week.leads['5'].scopes.world.selections.forest_wildland.pooled.methods;
+ await expect(page.getByText(`Day 5 ahead: ranked by fire history. It caught ${percent(lead5.history.capture_rate)} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
  for (const width of [375,1280]) {
   await page.setViewportSize({width,height:1000});
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
@@ -78,6 +80,31 @@ test('real files become visible through metadata only',async({page})=>{
  await expect(page.locator('.risk-example')).toHaveCount(0);
 });
 
+test('real week uses its exported ranking and measured score',async({page},testInfo)=>{
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ const week=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/week/BGR.json'),'utf8'));
+ const card=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/scorecard.json'),'utf8'));
+ await page.goto('/risk');
+ await page.getByLabel('Country',{exact:true}).selectOption('BGR');
+ await page.getByLabel('Region',{exact:true}).selectOption('BG-01');
+ await page.getByRole('button',{name:'Week',exact:true}).click();
+ const day=week.days[0];
+ const lead=(Date.parse(`${day}T00:00:00Z`)-Date.parse(`${week.run_date}T00:00:00Z`))/86400000;
+ expect(week.ranking[day]).toBe('model');
+ const score=card.week.leads[String(lead)].scopes.world.selections.forest_wildland.pooled.methods.model.capture_rate;
+ const percent=new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(score);
+ await expect(page.getByText(`Day ${lead} ahead: ranked by the model. It caught ${percent} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
+ await expect(page.locator('.risk-list > li').first()).toBeVisible();
+ const fwi=new Intl.NumberFormat('en',{maximumFractionDigits:1}).format(week.regions['BG-01'][day][0].inputs.fwi);
+ await expect(page.locator('.risk-list > li').first()).toContainText(`NASA fire-weather index: ${fwi}`);
+ for(const width of [375,1280]){
+  await page.setViewportSize({width,height:1000});
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
+  await page.screenshot({path:testInfo.outputPath(`week-real-${width}.png`)});
+ }
+ expect(errors).toEqual([]);
+});
+
 test('missing country remains an empty labelled state',async({page})=>{
  await page.route('**/data/risk/example/latest/USA.json',route=>route.fulfill({status:404,body:''}));
  await page.goto('/risk?risk=example');
@@ -112,7 +139,7 @@ test('Bulgarian outlook and placeholder keep the same controls and fit a phone',
  await expect(page.getByRole('button',{name:'Място 1, Ниво 4',exact:true})).toBeVisible();
  await page.screenshot({path:testInfo.outputPath('risk-bg-375.png'),fullPage:true});
  await page.getByRole('button',{name:'Седмица',exact:true}).click();
- await expect(page.getByText('Ден 4 напред:',{exact:false})).toBeVisible();
+ await expect(page.getByText('Методът за подреждане не е наличен за този ден.')).toBeVisible();
  await page.route('**/data/risk/meta.json',route=>route.fulfill({json:{...JSON.parse(exampleFile('meta.json')),example:false,engine_ready:false}}));
  await page.goto('/risk');
  await expect(page.getByRole('heading',{name:'Рискът от пожар утре: в процес на разработка и проверка. Ето какво ще показва.'})).toBeVisible();

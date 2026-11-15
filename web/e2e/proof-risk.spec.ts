@@ -92,6 +92,8 @@ test("week outlook displays the measured lead scores at phone and desktop widths
   await expect(table.locator("tbody tr")).toHaveCount(6);
   const first = card.week!.leads["3"].scopes.world.selections.forest_wildland.pooled.methods;
   const percent = (n: number) => new Intl.NumberFormat("en", { style: "percent", maximumFractionDigits: 1 }).format(n);
+  await expect(table).toContainText("2025 is not an untouched test of that choice");
+  await expect(table.locator("tbody tr").first()).toContainText(percent(first.model!.capture_rate!));
   await expect(table.locator("tbody tr").first()).toContainText(percent(first.fwi!.capture_rate!));
   await expect(table.locator("tbody tr").first()).toContainText(percent(first.history!.capture_rate!));
   for (const width of [375, 1280]) {

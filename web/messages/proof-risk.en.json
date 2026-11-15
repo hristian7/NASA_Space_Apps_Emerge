@@ -62,7 +62,11 @@
   "dailyRegions": "Regions scored",
   "dailyCounts": "Counts [U]",
   "weekTitle": "Week outlook",
-  "weekExplanation": "2025 worldwide, forest and wildland. Share of new fires in the top five spots per region and day [V].",
+  "weekExplanation": "2025 worldwide, forest and wildland. Share of new fires in the top five spots per region and day. Fire weather is NASA's fire-weather index [V].",
+  "weekSelectionCaveat": "The week outlook method was chosen after scoring on 2025, so 2025 is not an untouched test of that choice. A later independent test is needed [U].",
   "weekLead": "Days ahead",
+  "weekFwi": "Fire weather",
+  "weekHistory": "History",
+  "weekRandom": "Random",
   "weekDays": "Forecast days [V]"
 }
