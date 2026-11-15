@@ -151,9 +151,16 @@ def main():
         con.execute('SET threads=4')
         first, newest = detection_spots(con, firms, args.world / 'static_mask.parquet', args.world / 'cell_days_2026.parquet')
         meta = json.loads((args.web / 'meta.json').read_text())
-        days = sorted({dt.date.fromisoformat(value) for value in meta['days'].values()})
+        published = {dt.date.fromisoformat(value): args.web for value in meta['days'].values()}
+        for archive in (args.data / 'daily_archive').glob('*'):
+            if archive.is_dir():
+                try:
+                    published.setdefault(dt.date.fromisoformat(archive.name), archive)
+                except ValueError:
+                    continue
+        days = sorted(published)
         if args.date:
-            days = [args.date] if args.date in days else []
+            days = [args.date] if args.date in published else []
         card_path = args.web / 'scorecard.json'
         card = json.loads(card_path.read_text())
         rows = []
@@ -162,7 +169,7 @@ def main():
                 print(f'{day}: detections incomplete or outside FIRMS window, skipped', flush=True)
                 continue
             new_fires(con, day)
-            rows.extend(score_day(con, day, args.web, args.data))
+            rows.extend(score_day(con, day, published[day], args.data))
         if update_log(card, rows):
             temp = card_path.with_suffix('.json.tmp')
             temp.write_text(json.dumps(card, separators=(',', ':'), ensure_ascii=False, allow_nan=False) + '\n')

@@ -45,3 +45,50 @@ def test_daily_log_is_idempotent_and_updates_only_matching_key():
     assert module.update_log(card, [row])
     assert not module.update_log(card, [row])
     assert card == {'other': {'keep': True}, 'daily_log': [row]}
+
+
+def test_firms_labels_match_preregistered_independent_oracle(tmp_path):
+    import csv
+    import json
+    oracle = json.loads((Path(__file__).parents[3] / 'tests/expected/risk/labels.json').read_text())
+    cases = list(oracle['cases']) + [
+        {'name': 'neighbour probe', 'detections': [item['prior_detection'], item['current_detection']],
+         'target_spot': [1, 1], 'expected': item['expected']}
+        for item in oracle['neighbour_probes']]
+    target_day = dt.date(2025, 7, 3)
+    for case in cases:
+        csv_path = tmp_path / 'firms.csv'
+        mask_cells = set()
+        rows = []
+        for detection in case['detections']:
+            if detection['satellite'] != 'NOAA-20':
+                continue  # This NASA file contains NOAA-20 only.
+            row, col = detection['spot']
+            if case['name'] == 'wrap neighbour' and col == 3:
+                col = 1439
+            cy, cx = 8999 - row * 25, col * 25 - 18000
+            if detection['static_source']:
+                mask_cells.add((cy, cx))
+            rows.append([(cy + .5) / 100, (cx + .5) / 100,
+                         (target_day + dt.timedelta(days=detection['day'])).isoformat(), detection['confidence']])
+        # Guarantee the file has an acquisition date even when the case has no NOAA-20 rows.
+        rows.append([0.1, 0.1, '2025-07-04', 'n'])
+        with csv_path.open('w', newline='') as stream:
+            writer = csv.writer(stream)
+            writer.writerow(['latitude', 'longitude', 'acq_date', 'confidence'])
+            writer.writerows(rows)
+        mask = tmp_path / 'mask.parquet'
+        pq.write_table(pa.table({'cy': pa.array([x[0] for x in mask_cells], type=pa.int64()),
+                                 'cx': pa.array([x[1] for x in mask_cells], type=pa.int64())}), mask)
+        base = tmp_path / 'base.parquet'
+        pq.write_table(pa.table({'cy': pa.array([], type=pa.int64()), 'cx': pa.array([], type=pa.int64()),
+            'day': pa.array([], type=pa.date32()), 'sat': pa.array([], type=pa.string())}), base)
+        con = duckdb.connect()
+        module.detection_spots(con, csv_path, mask, base)
+        module.new_fires(con, target_day)
+        row, col = case['target_spot']
+        spot = row * 1440 + col
+        seen = con.execute('SELECT count(*) FROM detections WHERE spot_id=? AND day=?', [spot, target_day]).fetchone()[0]
+        is_new = con.execute('SELECT count(*) FROM new_fires WHERE spot_id=?', [spot]).fetchone()[0]
+        actual = ('new' if is_new else 'continuing') if seen else None
+        assert actual == case['expected'], case['name']
