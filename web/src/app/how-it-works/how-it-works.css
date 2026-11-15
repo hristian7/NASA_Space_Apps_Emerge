@@ -788,8 +788,6 @@
   font: 600 20px/1.35 var(--font-head);
   color: var(--ink) !important;
   max-width: 40ch;
-  padding-left: 14px;
-  border-left: 3px solid var(--model);
 }
 
 /* Gain ranges */
