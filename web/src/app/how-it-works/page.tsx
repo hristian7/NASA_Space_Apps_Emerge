@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import AnchorHeading from "@/components/explain/anchor-heading";
-import Disclaimer from "@/components/shell/disclaimer";
+import InfoPage from "@/components/explain/info-page";
+import SatelliteTimeline from "@/components/explain/satellite-timeline";
 import {
   bootstrapDraws,
   capture,
@@ -53,27 +54,13 @@ const sections = ["sources", "record", "model", "compare", "limits"] as const;
 
 export default async function HowItWorksPage() {
   const t = (await getTranslations("how")) as unknown as T;
-  const home = await getTranslations("home");
-  const shell = await getTranslations("shell");
   const fmt = formatters(await getLocale());
 
   return (
-    <main className="page hw">
-      <nav className="chip-group">
-        <Link className="chip" href="/">
-          {home("backToMap")}
-        </Link>
-        <Link className="chip" href="/proof">
-          {shell("proofLink")}
-        </Link>
-        <Link className="chip" href="/about">
-          {shell("aboutLink")}
-        </Link>
-      </nav>
-
-      <header className="hw-intro">
+    <InfoPage current="how" className="hw">
+      <header>
         <h1>{t("title")}</h1>
-        <p className="hw-lead">{t("lead")}</p>
+        <p>{t("lead")}</p>
       </header>
 
       <nav className="hw-toc" aria-label={t("onThisPage")}>
@@ -90,9 +77,7 @@ export default async function HowItWorksPage() {
       <Model t={t} fmt={fmt} />
       <Compare t={t} fmt={fmt} />
       <Limits t={t} fmt={fmt} />
-
-      <Disclaimer />
-    </main>
+    </InfoPage>
   );
 }
 
@@ -109,17 +94,6 @@ function Section({ id, t, children }: { id: string; t: T; children: React.ReactN
 
 /* 1. The data */
 
-const START = 2000;
-const END = 2027;
-const at = (year: number) => `${((year - START) / (END - START)) * 100}%`;
-
-const lanes = [
-  { id: "terra", from: 2000 + 10 / 12, to: END, family: "modis" },
-  { id: "aqua", from: 2002 + 6 / 12, to: END, family: "modis" },
-  { id: "snpp", from: 2012, to: 2026 + 10 / 12, family: "viirs" },
-  { id: "noaa20", from: 2018, to: END, family: "viirs" },
-  { id: "noaa21", from: 2026 + 10 / 12 - 7 / 365, to: END, family: "recent" },
-] as const;
 
 function Sources({ t }: { t: T }) {
   return (
@@ -129,30 +103,7 @@ function Sources({ t }: { t: T }) {
       <div className="hw-split">
         <figure className="hw-figure">
           <figcaption className="label">{t("sources.timelineCaption")}</figcaption>
-          <div className="hw-timeline">
-            {lanes.map((lane) => (
-              <div key={lane.id} className="hw-lane">
-                <div className="hw-lane-label">
-                  <strong>{t(`sources.${lane.id}`)}</strong>
-                  <span>{t(`sources.${lane.id}Note`)}</span>
-                </div>
-                <div className="hw-track">
-                  <span
-                    className="hw-span"
-                    data-family={lane.family}
-                    style={{ left: at(lane.from), width: `calc(${at(lane.to)} - ${at(lane.from)})` }}
-                  />
-                </div>
-              </div>
-            ))}
-            <div className="hw-axis" aria-hidden="true">
-              {[2000, 2005, 2010, 2015, 2020, 2025].map((year) => (
-                <span key={year} style={{ left: at(year) }}>
-                  {year}
-                </span>
-              ))}
-            </div>
-          </div>
+          <SatelliteTimeline />
         </figure>
 
         <figure className="hw-figure">

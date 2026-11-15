@@ -9,21 +9,17 @@
   "onThisPage": "On this page",
   "anchorLabel": "Link to this section",
   "creditsLead": "Every outside dataset, service, library and font, as listed in the project's references file. Names and licences are given in each resource's own words.",
-  "columnResource": "Resource",
-  "columnUse": "Used for",
-  "columnLicence": "Licence or terms",
   "groups": {
-    "satellite": "Satellite fire data",
-    "weather": "Fire weather and forecasts",
-    "imagery": "Map imagery, layers and search",
-    "boundaries": "Boundaries and regions",
-    "reported": "Reported fires and statistics",
-    "planned": "Named for the model, not used yet",
-    "experimental": "Separate experimental engines, not the published model",
+    "satellite": "Satellite fire detections",
+    "weather": "Forecasts and weather",
+    "land": "Ground and land",
+    "maps": "Maps and boundaries",
+    "reported": "Reported fires, for comparison",
     "software": "Software",
     "fonts": "Fonts",
+    "experimental": "Separate experimental engines, not the published model",
     "video": "Demo video",
-    "project": "Challenge and licence"
+    "project": "Project, licence and open source"
   },
   "used": {
     "firmsCountry": "All fire detections in the record, 2000 to 2025",
@@ -82,5 +78,26 @@
     "videoFonts": "Type in the demo video",
     "challenge": "The challenge text",
     "repoLicence": "Licence of the open-source repository"
-  }
+  },
+  "roles": {
+    "model": "Feeds the model",
+    "record": "Builds the record",
+    "map": "On the map",
+    "app": "In the app",
+    "compare": "For comparison",
+    "planned": "Planned, not used yet",
+    "experimental": "Experimental only"
+  },
+  "statYears": "{from} to {to}",
+  "statYearsLabel": "of satellite fire record, month by month",
+  "statSatellites": "{n} satellites",
+  "statSatellitesLabel": "MODIS on Terra and Aqua, VIIRS on S-NPP, NOAA-20 and NOAA-21",
+  "statSources": "{n} credits",
+  "statSourcesLabel": "datasets, services, libraries and fonts, every one listed below",
+  "timelineCaption": "Which satellites cover which years",
+  "rolesLead": "Each card says what the resource does in Emerge:",
+  "providerLabel": "Provider",
+  "projectBody": "Emerge was built for the NASA Space Apps Challenge 2026, at the Sofia local event, for the challenge on harmonizing MODIS and VIIRS hot spots. Its code is open source under the Apache License 2.0. The data keeps its own licences, listed with each source above.",
+  "projectCode": "The code: Apache License 2.0",
+  "projectData": "The data: each source's own licence"
 }

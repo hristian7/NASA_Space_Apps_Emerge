@@ -32,8 +32,12 @@ test("the About page lists every source group with anchors, and links the explai
   await page.goto("/about#software", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveTitle(/About Emerge/);
   await expect(page.locator("section#software")).toBeInViewport();
-  for (const id of ["satellite", "weather", "imagery", "boundaries", "reported", "software", "fonts"]) {
-    await expect(page.locator(`section#${id} li`).first()).toBeVisible();
+  for (const id of ["satellite", "weather", "land", "maps", "reported", "software", "fonts", "experimental", "video", "project"]) {
+    await expect(page.locator(`section#${id} li.ab-card`).first()).toBeVisible();
+  }
+  // Earlier section anchors stay valid after the regrouping.
+  for (const id of ["what", "official", "credits", "imagery", "boundaries", "planned"]) {
+    await expect(page.locator(`[id="${id}"]`)).toHaveCount(1);
   }
   await expect(page.getByRole("link", { name: /NASA GFWED GEOS-5 fire-weather forecasts/ })).toHaveAttribute(
     "href",
@@ -49,4 +53,19 @@ test("both pages read in Bulgarian", async ({ page, context }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Как работи Emerge" })).toBeVisible();
   await page.goto("/about", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Сателитни данни за пожари" })).toBeVisible();
+});
+
+test("the three information pages share one header with the current tab marked", async ({ page }) => {
+  for (const [path, tab] of [
+    ["/how-it-works", "How it works"],
+    ["/proof#next-day-risk", "Proof"],
+    ["/about", "About and credits"],
+  ] as const) {
+    await page.goto(path, { waitUntil: "domcontentloaded" });
+    const tabs = page.getByRole("navigation", { name: "Information pages" });
+    await expect(tabs.getByRole("link")).toHaveText(["How it works", "Proof", "About and credits"]);
+    await expect(tabs.getByRole("link", { name: tab })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByRole("link", { name: "Emerge, back to the map" })).toHaveAttribute("href", "/");
+    await expect(page.getByRole("contentinfo").getByText(/Research prototype\. Not an official warning/)).toBeVisible();
+  }
 });

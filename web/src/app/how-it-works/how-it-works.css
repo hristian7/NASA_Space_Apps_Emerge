@@ -3,8 +3,6 @@
    prefers-reduced-motion at the end, like src/styles/motion.css. */
 
 .page.hw {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: 1000px;
   gap: 40px;
   --modis: var(--ramp-1);
   --terra: color-mix(in oklch, var(--ramp-1) 55%, var(--space));
@@ -66,9 +64,6 @@
 }
 
 .hw-section > h2 {
-  font-size: 26px !important;
-  line-height: 1.15 !important;
-  letter-spacing: -0.01em;
   margin: 0 0 4px !important;
   padding-top: 24px;
   border-top: 1px solid var(--line);
@@ -116,66 +111,6 @@
 }
 .hw [data-method="random"] {
   --c: color-mix(in oklch, var(--ink) 22%, transparent);
-}
-
-/* Instrument timeline */
-
-.hw-timeline {
-  display: grid;
-  gap: 10px;
-}
-
-.hw-lane {
-  display: grid;
-  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-}
-
-.hw-lane-label {
-  display: grid;
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.hw-lane-label span {
-  color: var(--ink-3);
-  font-size: 12px;
-}
-
-.hw-track {
-  position: relative;
-  height: 12px;
-  background: var(--empty);
-  border-radius: 6px;
-}
-
-.hw-span {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  min-width: 4px;
-  background: var(--c);
-  border-radius: 6px;
-  transform-origin: left center;
-  animation: m-grow-x 700ms var(--ease-out) both;
-}
-
-.hw-axis {
-  position: relative;
-  height: 16px;
-  margin-left: calc(13rem + 12px);
-  font: 500 11px/1 var(--font-num);
-  color: var(--ink-3);
-}
-
-.hw-axis span {
-  position: absolute;
-  translate: -50% 0;
-}
-
-.hw-axis span:first-child {
-  translate: 0 0;
 }
 
 /* Pixel scale: 1 km against 375 m */
@@ -1056,15 +991,6 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .hw-lane {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-  }
-
-  .hw-axis {
-    margin-left: 0;
-  }
-
   .hw-matrix {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1167,7 +1093,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hw-span,
   .hw-vbar,
   .hw-node,
   .hw-bar,
@@ -1176,10 +1101,6 @@
   .hw-wbar {
     animation: none;
   }
-}
-
-.hw > .chip-group {
-  flex-wrap: wrap;
 }
 
 @media (max-width: 600px) {
