@@ -683,8 +683,8 @@ i.rp-paired-ours {
 /* Mini tabs: jump to a part of the report; every part stays on the page. */
 .rp-jump {
   position: sticky;
-  /* Sticky offsets count from inside the panel's top padding (18px). */
-  top: -18px;
+  /* Sticky offsets count from inside the panel's top padding (14px). */
+  top: -14px;
   z-index: 2;
   display: flex;
   gap: 2px;
@@ -725,8 +725,4 @@ i.rp-paired-ours {
   letter-spacing: 0.01em;
 }
 
-@media (max-width: 767px) {
-  .rp-jump {
-    top: -2px;
-  }
-}
+

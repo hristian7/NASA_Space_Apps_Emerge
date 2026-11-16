@@ -65,5 +65,6 @@
   "activityPlace": "Стълбове: дни с пожар по месеци, {place}",
   "activityPoint": "тази точка",
   "activityArea": "тази област",
-  "monthOnMap": "Месец от календара на картата"
+  "monthOnMap": "Месец от календара на картата",
+  "timelineFixedButton": "Слоеве, които плъзгачът не мести"
 }

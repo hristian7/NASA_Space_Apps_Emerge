@@ -61,7 +61,7 @@ test("a place with no recent fire nearby keeps its score", async ({ page }) => {
   await page.goto(`/?v=f&sel=p:${place.lat},${place.lon},0`, { waitUntil: "domcontentloaded" });
   // The score block replaces the "checking" line once the fire check has answered.
   await expect(page.locator(".fc-panel .fc-score").first()).toBeVisible();
-  await expect(page.getByText("Checking for active fires nearby…")).toHaveCount(0);
+  await expect(page.getByText("Checking recent fires nearby…")).toHaveCount(0);
   await expect(page.getByTestId("active-fire")).toHaveCount(0);
   // About 89 km away: outside the 50 km of "fire around here" too.
   await expect(page.getByTestId("fire-around").locator(".fire-verdict")).toHaveText("No fires detected nearby this week.");

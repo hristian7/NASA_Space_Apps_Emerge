@@ -26,7 +26,6 @@ import TopBar from "./top-bar";
 import { type AppView } from "./view-tabs";
 import { viewFromSearch, viewParam, viewValue } from "@/lib/ui/app-view";
 
-const sheetHeights = ["peek", "half", "full"] as const;
 const defaultRadiusKm = 50;
 /** A tapped detection is looked at with a 10 km search distance (M27). */
 const recentRadiusKm = 10;
@@ -166,9 +165,8 @@ export default function AppShell() {
 
   const cycleSheet = useCallback(() => {
     const root = document.documentElement;
-    const now = root.getAttribute("data-sheet") ?? "half";
-    const index = sheetHeights.indexOf(now as (typeof sheetHeights)[number]);
-    root.setAttribute("data-sheet", sheetHeights[(index + 1) % sheetHeights.length]);
+    // A tap on the strip toggles between half and full; a drag reaches the rest.
+    root.setAttribute("data-sheet", root.getAttribute("data-sheet") === "full" ? "half" : "full");
   }, []);
 
   // Each view draws only its own layers; the choices of the other are kept.

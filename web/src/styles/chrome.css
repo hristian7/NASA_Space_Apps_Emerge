@@ -402,11 +402,21 @@
   padding-bottom: calc(var(--time-h) + 10px);
 }
 
+/* The header sits outside the panel's scroll, so the title and the close
+   button stay in view however far the report is read. */
 .report-head {
+  flex: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  padding: 18px 18px 12px;
+  background: var(--panel-solid);
+  border-bottom: 1px solid var(--line);
+}
+
+.report-head + .report-scroll {
+  padding-top: 14px;
 }
 
 .report-head h1 {
@@ -548,10 +558,30 @@
     padding-bottom: calc(var(--time-h) + var(--gap) + 12px);
   }
 
+  /* The whole top strip catches a finger: drag to resize, tap for half or full. */
   .report .handle {
     touch-action: none;
-    height: 28px;
+    height: 44px;
     cursor: grab;
+    background: var(--panel-solid);
+  }
+
+  .report .handle::after {
+    top: 12px;
+  }
+
+  .report-head {
+    padding: 0 14px 10px;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .report-head button {
+    cursor: pointer;
+  }
+
+  .report-scroll {
+    padding-top: 10px;
   }
 
   [data-sheet="peek"] {
@@ -801,4 +831,45 @@
     color-mix(in oklch, var(--space) 45%, transparent) 55%,
     color-mix(in oklch, var(--space) 0%, transparent) 100%
   );
+}
+
+/* The note on layers the slider does not move opens from a small button
+   beside the date, and stays clear of the report on a wide screen. */
+.timeline-info {
+  flex: none;
+  display: flex;
+}
+
+.timeline-infoButton {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--accent);
+}
+
+.timeline-infoButton:hover,
+.timeline-infoButton[aria-expanded="true"] {
+  background: var(--empty);
+}
+
+.timeline-infoButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+.timeline-info .timeline-note {
+  right: calc(var(--report-space, 0px) + 12px);
+  width: auto;
+  max-width: 640px;
+}
+
+@media (max-width: 767px) {
+  /* The sheet lies under the timeline on a phone, so the note spans it. */
+  .timeline-info .timeline-note {
+    right: 0;
+  }
 }

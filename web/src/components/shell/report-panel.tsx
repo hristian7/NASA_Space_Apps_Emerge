@@ -41,7 +41,7 @@ export default function ReportPanel({ selection, closing = false, view, day, onP
   // On a phone the handle can be dragged: the sheet follows the finger, then
   // settles on the nearest of the three heights.
   const dragged = useRef(false);
-  const startDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+  const startDrag = (event: React.PointerEvent<HTMLElement>) => {
     if (window.innerWidth >= 768) return;
     const root = document.documentElement;
     const sheet = event.currentTarget.parentElement;
@@ -64,6 +64,10 @@ export default function ReportPanel({ selection, closing = false, view, day, onP
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
       if (!dragged.current) return;
+      // The click that follows a drag is swallowed; the next tap counts again.
+      window.setTimeout(() => {
+        dragged.current = false;
+      }, 0);
       const height = parseFloat(root.style.getPropertyValue("--sheet-drag")) || startHeight;
       const share = height / window.innerHeight;
       const nearest = (Object.entries(stops) as [keyof typeof stops, number][]).sort(
@@ -107,25 +111,29 @@ export default function ReportPanel({ selection, closing = false, view, day, onP
         }}
         onPointerDown={startDrag}
       />
+      <header className="report-head" onPointerDown={(event) => {
+        // Buttons in the header keep their own taps.
+        if ((event.target as HTMLElement).closest("button, a") !== null) return;
+        startDrag(event);
+      }}>
+        <div>
+          <h1>{title}</h1>
+          <p className="report-kind">
+            <span>{sub}</span>
+            {pointCountry !== null && selection.kind === "point" ? (
+              <button type="button" className="whole-country inline" onClick={() => onWholeCountry(pointCountry)}>
+                {t("wholeCountry", { name: countryName })}
+              </button>
+            ) : null}
+          </p>
+        </div>
+        <button type="button" className="layers-close" aria-label={t("clearPlace")} onClick={onClose}>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </header>
       <div className="report-scroll">
-        <header className="report-head">
-          <div>
-            <h1>{title}</h1>
-            <p className="report-kind">
-              <span>{sub}</span>
-              {pointCountry !== null && selection.kind === "point" ? (
-                <button type="button" className="whole-country inline" onClick={() => onWholeCountry(pointCountry)}>
-                  {t("wholeCountry", { name: countryName })}
-                </button>
-              ) : null}
-            </p>
-          </div>
-          <button type="button" className="layers-close" aria-label={t("clearPlace")} onClick={onClose}>
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <path d="m5.5 5.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </button>
-        </header>
         <div aria-live="polite" className="stack">
           <div key={view} className="view-swap">
             {view === "history" ? (

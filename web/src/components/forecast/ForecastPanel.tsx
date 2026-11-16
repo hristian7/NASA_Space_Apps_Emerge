@@ -299,7 +299,7 @@ export default function ForecastPanel({ selection, day, onPickPoint }: Props) {
     }
     const contextDay = modelDate ?? viewedDate;
     if (open && fireCheck !== null && top === null) {
-      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("aroundChecking")}</p>;
+      if (fireCheck.status === "loading") return <p role="status" className="fc-muted">{tr("loading")}</p>;
       if (fireCheck.status === "ready" && fireCheck.fire.active) {
         return (
           <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { dangerDate, dangerDays } from "@/lib/layers/danger";
 import type { AppView } from "./view-tabs";
@@ -35,6 +35,29 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
       new Date(`${iso}T00:00:00Z`),
     );
   const [playing, setPlaying] = useState(false);
+  // The note on layers the slider does not move opens on request only, so it
+  // never sits over the report.
+  const [noteOpen, setNoteOpen] = useState(false);
+  const noteBox = useRef<HTMLDivElement | null>(null);
+  const fixedCount = fixedLayers.length;
+  useEffect(() => {
+    if (fixedCount === 0) setNoteOpen(false);
+  }, [fixedCount]);
+  useEffect(() => {
+    if (!noteOpen) return;
+    const away = (event: PointerEvent) => {
+      if (noteBox.current !== null && !noteBox.current.contains(event.target as Node)) setNoteOpen(false);
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setNoteOpen(false);
+    };
+    window.addEventListener("pointerdown", away);
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("pointerdown", away);
+      window.removeEventListener("keydown", key);
+    };
+  }, [noteOpen]);
 
   const history = view === "history";
   const values = history ? years : dangerDays();
@@ -88,15 +111,6 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
 
   return (
     <div className="timeline glass" role="group" aria-label={history ? t("historyTime") : t("forecastTime")}>
-      {fixedLayers.length > 0 ? (
-        <p className="timeline-note glass" role="note">
-          {t("timelineFixed", {
-            layers: fixedLayers
-              .map((entry) => `${layerNames(entry.nameKey.replace(/^layers\./, ""))} (${shortDate(entry.date)})`)
-              .join(", "),
-          })}
-        </p>
-      ) : null}
       <button
         type="button"
         className="tool play"
@@ -128,6 +142,33 @@ export default function TimeSlider({ view, years, year, onYear, day, onDay, fixe
             : t("forecastTime")}
         </span>
       </div>
+      {fixedCount > 0 ? (
+        <div className="timeline-info" ref={noteBox}>
+          <button
+            type="button"
+            className="timeline-infoButton"
+            aria-expanded={noteOpen}
+            aria-controls="timeline-note"
+            aria-label={t("timelineFixedButton")}
+            onClick={() => setNoteOpen(!noteOpen)}
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M10 9v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="10" cy="6.4" r="1" fill="currentColor" />
+            </svg>
+          </button>
+          {noteOpen ? (
+            <p id="timeline-note" className="timeline-note glass" role="note">
+          {t("timelineFixed", {
+            layers: fixedLayers
+              .map((entry) => `${layerNames(entry.nameKey.replace(/^layers\./, ""))} (${shortDate(entry.date)})`)
+              .join(", "),
+          })}
+        </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="timeline-track">
         {values.length > 1 ? (
           <svg className={history ? "timeline-bars" : "timeline-bars days"} viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
