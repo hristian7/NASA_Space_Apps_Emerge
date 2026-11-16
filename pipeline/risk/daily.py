@@ -16,6 +16,7 @@ import urllib.parse
 from pathlib import Path
 
 import duckdb
+import daily_v3
 import score_daily
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -205,15 +206,24 @@ def publish_forecast(run, day, previous_day, first, data, web):
             SELECT * FROM read_parquet(?)) TO ? (FORMAT parquet, COMPRESSION zstd)''',
             [str(data / 'predictions_live_v2.parquet'), previous_day, str(predicted), str(combined)])
         validate_predictions(con, combined, stage / 'grid_0.25.parquet', previous_day, day)
+        v3_mode = daily_v3.mode()
+        v3_result = daily_v3.stage(data, stage, previous_day, day) if v3_mode != 'off' else None
+        # The map switches only when both published days come from v3.
+        show_v3 = v3_mode == 'on' and v3_result is not None and v3_result['both_days']
         usual = data / 'usual_v2.parquet'
         if not usual.exists():
             usual = stage / 'usual_v2.parquet'
         ensure_usual(data, usual, [previous_day.month, day.month])
         export_risk.DAYS = (previous_day.isoformat(), day.isoformat())
+        if show_v3:
+            export_args = ['--model', str(stage / 'model_v3.json'), '--predictions', str(v3_result['combined']),
+                           '--usual', str(data / 'usual_v3.parquet'), '--v3-dir', str(stage / 'v3')]
+        else:
+            export_args = ['--model', str(stage / 'model_v2.json'), '--predictions', str(combined), '--usual', str(usual)]
         old_argv = sys.argv
         try:
-            sys.argv = ['export_risk.py', '--model', str(stage / 'model_v2.json'), '--predictions', str(combined),
-                        '--usual', str(usual), '--scorecard', str(web / 'scorecard.json'), '--data', str(stage), '--dest', str(out)]
+            sys.argv = ['export_risk.py', *export_args,
+                        '--scorecard', str(web / 'scorecard.json'), '--data', str(stage), '--dest', str(out)]
             export_risk.main()
         finally:
             sys.argv = old_argv
@@ -224,6 +234,11 @@ def publish_forecast(run, day, previous_day, first, data, web):
             issued = valid - dt.timedelta(days=3)
             source_meta.update(url=weather_url(issued), date=issued.isoformat())
         meta['sources'][2]['date'] = (day - dt.timedelta(days=2)).isoformat()
+        if v3_mode != 'off':
+            meta['v3'] = daily_v3.meta_note(v3_result, show_v3)
+        if show_v3:
+            meta['sources'].append({**daily_v3.GFS_SOURCE, 'date': v3_result['gfs_run']})
+            meta['sources'].extend(daily_v3.PEOPLE_SOURCES)
         meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + '\n')
         # Retain days leaving the public two-day window for delayed scoring.
         outgoing = set(json.loads((web / 'meta.json').read_text())['days'].values()) - {previous_day.isoformat(), day.isoformat()}
@@ -252,7 +267,9 @@ def publish_forecast(run, day, previous_day, first, data, web):
                     shutil.copyfile(path, dest)
         if usual.parent == stage:
             shutil.copyfile(usual, data / 'usual_v2.parquet')
-    print(f'Published {previous_day} and {day} using model_v2', flush=True)
+        if v3_result is not None:
+            daily_v3.save(data, stage, v3_result)
+    print(f'Published {previous_day} and {day} using {meta["model_version"]}', flush=True)
 
 
 def clean_tar_owner(info):
@@ -284,6 +301,8 @@ def make_bundle(output, data, world, web):
                 path = data / name
                 if path.exists():
                     bundle.add(path, arcname=f'data/derived/risk/{name}', filter=clean_tar_owner)
+            for name in daily_v3.bundle_paths(data):
+                bundle.add(data / name, arcname=f'data/derived/risk/{name}', filter=clean_tar_owner)
             for day in days:
                 file = data / 'fwi_0.25' / f'month={day:%Y-%m}' / f'{day}.parquet'
                 bundle.add(file, arcname=f'data/derived/risk/{file.relative_to(data)}', filter=clean_tar_owner)

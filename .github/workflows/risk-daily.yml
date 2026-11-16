@@ -20,6 +20,10 @@ jobs:
     env:
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       NEXT_PUBLIC_RISK_DATA_URL: ${{ vars.NEXT_PUBLIC_RISK_DATA_URL }}
+      # Model v3: off (default), shadow (computed and saved, v2 shown) or on (v3 shown, v2 fallback).
+      RISK_V3_MODE: ${{ vars.RISK_V3_MODE || 'off' }}
+      RISK_V3_SEED_URL: ${{ vars.RISK_V3_SEED_URL }}
+      RISK_V3_SEED_SHA256: ${{ vars.RISK_V3_SEED_SHA256 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,6 +32,10 @@ jobs:
       # These packages are already used by the existing risk pipeline.
       - name: Install pipeline requirements
         run: python -m pip install duckdb==2.0.0 numpy==2.5.4 pandas==3.1.1 pyarrow==26.0.1 xarray==2026.9.0 scipy==1.18.1 lightgbm==4.7.0
+      # Model v3 reads NOAA GFS forecasts (GRIB2) with the GDAL command-line tools.
+      - name: Install GDAL for model v3
+        if: env.RISK_V3_MODE != 'off'
+        run: sudo apt-get update -q && sudo apt-get install -y -q gdal-bin && gdalinfo --version
       - name: Restore saved inputs and published files
         shell: bash
         run: |

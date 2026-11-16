@@ -9,7 +9,8 @@ from pathlib import Path
 import duckdb
 import numpy as np
 import pandas as pd
-from features import FEATURES, feature_sql
+from features import feature_sql
+from features_v3 import extra_sql
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / 'data/derived/risk'
@@ -35,19 +36,46 @@ def fwi_category(fwi):
     return None if fwi is None else int(np.searchsorted([11.2, 21.3, 38], fwi, side='right'))
 
 
+# Model v3 weather inputs, grouped under the reasons the app already words.
+WEATHER_REASONS = {'tmax_c': 'very_hot', 'wind_max': 'strong_wind', 'gust_max': 'strong_wind',
+                   'rain_d': 'little_rain', 'rain_d1': 'little_rain', 'rain_next3': 'little_rain',
+                   'days_since_rain': 'little_rain', 'rh_min': 'very_dry'}
+# A weather reason is shown only when its words are also true in plain terms;
+# a contribution above the regional mean alone (9 C in November) is not "hot".
+HOT_C, WINDY_MS, GUSTY_MS, DRY_SPELL_DAYS, WET_DAY_MM, DRY_AIR_RH = 30.0, 30 / 3.6, 50 / 3.6, 7, 1.0, 35.0
+
+
+def weather_reason_holds(reason, name, row):
+    value = lambda key: row.get(key) if key in row and pd.notna(row.get(key)) else None
+    if reason == 'very_hot':
+        return (value('tmax_c') or -99) >= HOT_C
+    if reason == 'strong_wind':
+        return (value('wind_max') or 0) >= WINDY_MS or (value('gust_max') or 0) >= GUSTY_MS
+    if reason == 'little_rain':
+        dry = value('days_since_rain')
+        return dry is not None and dry >= DRY_SPELL_DAYS and (value('rain_d') or 0) < WET_DAY_MM
+    if reason == 'very_dry' and name == 'rh_min':
+        return (value('rh_min') or 100) <= DRY_AIR_RH
+    return True
+
+
 def explanations(row, mean, model):
     if pd.isna(row.p):
         return []
+    names = model['features']
     if model.get('kind') == 'lightgbm':
-        contributions = row[[f'contrib_{name}' for name in FEATURES]].to_numpy(dtype=float) - mean
+        contributions = row[[f'contrib_{name}' for name in names]].to_numpy(dtype=float) - mean
     else:
         weights = np.asarray(model['coefficients']) * model['calibration_slope'] / np.asarray(model['scale'])
-        contributions = (row[list(FEATURES)].to_numpy(dtype=float) - mean) * weights
+        contributions = (row[list(names)].to_numpy(dtype=float) - mean) * weights
     sums = defaultdict(float)
-    for name, value in zip(FEATURES, contributions):
+    for name, value in zip(names, contributions):
         if not np.isfinite(value) or value <= 0:
             continue
-        if name in ('fwi', 'ffmc', 'dmc', 'dc', 'bui', 'dsr', 'fwi_x_forest'):
+        if name in WEATHER_REASONS:
+            if weather_reason_holds(WEATHER_REASONS[name], name, row):
+                sums[WEATHER_REASONS[name]] += value
+        elif name in ('fwi', 'ffmc', 'dmc', 'dc', 'bui', 'dsr', 'fwi_x_forest'):
             sums['very_dry'] += value
         elif name == 'forest' and row.fuel_class == 'forest':
             sums['mostly_forest'] += value
@@ -58,6 +86,18 @@ def explanations(row, mean, model):
         elif name == 'fire_near_3d' and row.fire_near_3d:
             sums['nearby_fire'] += value
     return [key for key, _ in sorted(sums.items(), key=lambda item: (-item[1], item[0]))[:4]]
+
+
+def weather_inputs(row):
+    """Model v3 forecast weather for a spot, in the app's units; empty for v2."""
+    def value(name, scale=1.0, digits=1):
+        v = scalar(row.get(name)) if name in row else None
+        return None if v is None else round(v * scale, digits)
+    direction = None
+    if 'wind_dir_sin' in row and scalar(row.wind_dir_sin) is not None and scalar(row.wind_dir_cos) is not None:
+        direction = round(float(np.degrees(np.arctan2(row.wind_dir_sin, row.wind_dir_cos)) % 360))
+    return {'t_max_c': value('tmax_c'), 'rh_min': value('rh_min', digits=0),
+            'wind_max_kmh': value('wind_max', 3.6, 0), 'wind_dir_deg': direction}
 
 
 def ready_from_scorecard(card):
@@ -85,8 +125,13 @@ def main():
     ap.add_argument('--scorecard', type=Path, default=WEB / 'scorecard.json')
     ap.add_argument('--data', type=Path, default=DATA)
     ap.add_argument('--dest', type=Path, default=WEB)
+    ap.add_argument('--v3-dir', type=Path, help='people map and weather_0.25/<day>.parquet for model v3')
     args = ap.parse_args()
     model = json.loads(args.model.read_text())
+    groups = model.get('input_groups', [])
+    FEATURES = model['features']
+    if groups and args.v3_dir is None:
+        ap.error('--v3-dir is required for a model with added inputs')
     card = json.loads(args.scorecard.read_text())
     ready = ready_from_scorecard(card)
     booster = None
@@ -112,14 +157,26 @@ def main():
     for day in DAYS:
         weather = args.data / 'fwi_0.25' / f'month={day[:7]}' / f'{day}.parquet'
         history = args.data / 'history_0.25' / f'month={day[:7]}' / 'history.parquet'
+        added, joins, params = '', '', []
+        if groups:
+            # The v3 expressions name the row `t`; here the forecast row is `f`.
+            added = extra_sql(groups).replace('t.day', 'f.day')
+            if 'people' in groups:
+                joins += ' LEFT JOIN read_parquet(?) pp ON pp.spot_id=f.spot_id'
+                params.append(str(args.v3_dir / 'people_0.25.parquet'))
+            if 'weather' in groups:
+                joins += ' LEFT JOIN read_parquet(?) wx ON wx.spot_id=f.spot_id AND wx.day=f.day'
+                params.append(str(args.v3_dir / 'weather_0.25' / f'{day}.parquet'))
+            if set(groups) - {'people', 'weather', 'calendar'}:
+                raise ValueError(f'export does not support input groups {groups}')
         rows = con.execute(f'''SELECT g.spot_id,g.lat::DOUBLE AS lat,g.lon::DOUBLE AS lon,
            g.precision_radius_km,g.region_id,g.country,g.fuel_class,f.day,p.p,u.usual,
-           hash(g.spot_id,f.day,20261114) AS tie_order,{feature_sql()}
+           hash(g.spot_id,f.day,20261114) AS tie_order,{feature_sql()}{added}
            FROM read_parquet(?) f JOIN grid g USING(spot_id)
            JOIN read_parquet(?) h ON h.spot_id=f.spot_id AND h.day=f.day
            LEFT JOIN predictions p ON p.spot_id=f.spot_id AND p.day=f.day
-           LEFT JOIN read_parquet(?) u ON u.spot_id=f.spot_id AND u.month=month(f.day)
-           WHERE f.day=?''', [str(weather), str(history), str(args.usual), day]).fetchdf()
+           LEFT JOIN read_parquet(?) u ON u.spot_id=f.spot_id AND u.month=month(f.day){joins}
+           WHERE f.day=?''', [str(weather), str(history), str(args.usual), *params, day]).fetchdf()
         expected = con.execute('SELECT count(*) FROM grid').fetchone()[0]
         if len(rows) != expected:
             raise ValueError(f'{day}: expected {expected} inputs, got {len(rows)}')
@@ -174,7 +231,7 @@ def main():
                               'rank': rank, 'p': p, 'level': level, 'usual': scalar(row.usual),
                               'fire_type': {'forest': 'forest', 'shrub_grass': 'grass_shrub', 'farmland': 'farmland'}[row.fuel_class],
                               'inputs': {'fwi': scalar(row.fwi), 'ffmc': scalar(row.ffmc), 'dmc': scalar(row.dmc), 'dc': scalar(row.dc),
-                                         't_max_c': None, 'rh_min': None, 'wind_max_kmh': None, 'wind_dir_deg': None,
+                                         **weather_inputs(row),
                                          'rain_3d_mm': None, 'ndvi_diff': None, 'forest': None, 'farm': None, 'grass_shrub': None,
                                          'hist_p': scalar(row.hist_p), 'fire_near_3d': bool(row.fire_near_3d)},
                               'why': explanations(row, mean, model)}

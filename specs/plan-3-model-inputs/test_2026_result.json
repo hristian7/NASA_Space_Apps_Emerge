@@ -1,0 +1,1438 @@
+{
+ "year": 2026,
+ "freeze_record": {
+  "frozen_at": "2026-11-16T17:29:19+00:00",
+  "code_commit_before_freeze": "cac68cd1571245a443c84c8bc208fa13b34eb7de",
+  "model_json_sha256": "af0347e9ff6e41a55cf4b5879d9b3ce653777b91cadcc55461365d365390928c",
+  "booster_sha256": "8cd93f9352385a275c7feacc16553af56bb4eb56c4ef5bd438380a62d1a4f784",
+  "search_trial": "search_23",
+  "input_groups": [
+   "people",
+   "weather"
+  ],
+  "params": {
+   "n_estimators": 400,
+   "max_depth": 8,
+   "learning_rate": 0.03,
+   "num_leaves": 63,
+   "min_child_samples": 200,
+   "colsample_bytree": 0.7
+  },
+  "calibration_slope": 1.047814327640401,
+  "calibration_intercept": 0.1660535074110387,
+  "settings_year_result": {
+   "capture": 0.20862650546546269,
+   "alarm_precision": 0.069797783933518,
+   "capture_vs_v2_refit": 0.004018438450273748,
+   "alarm_precision_vs_v2_refit": 0.00888365650969529
+  },
+  "test_period": [
+   "2026-01-01",
+   "2026-10-31"
+  ],
+  "note": "Written before any test-period score was computed."
+ },
+ "selections": {
+  "forest_wildland": {
+   "pooled_vs_v2": {
+    "region_days": 92620,
+    "new_fires": 224867,
+    "methods": {
+     "fwi": {
+      "captured_new": 25878,
+      "capture_rate": 0.11508135920344026,
+      "lift_over_random": 0.9611708419056858
+     },
+     "history": {
+      "captured_new": 38740,
+      "capture_rate": 0.17227961417193274,
+      "lift_over_random": 1.4388962986098721
+     },
+     "random": {
+      "captured_new": 24587,
+      "capture_rate": 0.10934018775542877,
+      "lift_over_random": 0.9132200127496367
+     },
+     "v2_served": {
+      "captured_new": 46980,
+      "capture_rate": 0.20892349700044915,
+      "lift_over_random": 1.7449496156089777
+     },
+     "v3": {
+      "captured_new": 48107,
+      "capture_rate": 0.21393534845041737,
+      "lift_over_random": 1.7868090923393163
+     }
+    },
+    "versus_v2_served": {
+     "fwi": {
+      "difference": -0.0938421377970089,
+      "interval_95": [
+       -0.09897048565791369,
+       -0.08922740203422097
+      ]
+     },
+     "history": {
+      "difference": -0.03664388282851641,
+      "interval_95": [
+       -0.0388222299808258,
+       -0.034565618139293715
+      ]
+     },
+     "random": {
+      "difference": -0.09958330924502039,
+      "interval_95": [
+       -0.10462579659539363,
+       -0.09504217061425344
+      ]
+     },
+     "v3": {
+      "difference": 0.005011851449968204,
+      "interval_95": [
+       0.004046656370976351,
+       0.006084112533663603
+      ]
+     }
+    }
+   },
+   "pooled_vs_v3": {
+    "region_days": 92620,
+    "new_fires": 224867,
+    "methods": {
+     "fwi": {
+      "captured_new": 25878,
+      "capture_rate": 0.11508135920344026,
+      "lift_over_random": 0.9611708419056858
+     },
+     "history": {
+      "captured_new": 38740,
+      "capture_rate": 0.17227961417193274,
+      "lift_over_random": 1.4388962986098721
+     },
+     "random": {
+      "captured_new": 24587,
+      "capture_rate": 0.10934018775542877,
+      "lift_over_random": 0.9132200127496367
+     },
+     "v2_served": {
+      "captured_new": 46980,
+      "capture_rate": 0.20892349700044915,
+      "lift_over_random": 1.7449496156089777
+     },
+     "v3": {
+      "captured_new": 48107,
+      "capture_rate": 0.21393534845041737,
+      "lift_over_random": 1.7868090923393163
+     }
+    },
+    "versus_v3": {
+     "fwi": {
+      "difference": -0.09885398924697711,
+      "interval_95": [
+       -0.1040892400655128,
+       -0.09402414297037948
+      ]
+     },
+     "history": {
+      "difference": -0.04165573427848462,
+      "interval_95": [
+       -0.04392839054423303,
+       -0.039584609284977854
+      ]
+     },
+     "random": {
+      "difference": -0.10459516069498859,
+      "interval_95": [
+       -0.10969397931426245,
+       -0.09979776862274022
+      ]
+     },
+     "v2_served": {
+      "difference": -0.005011851449968204,
+      "interval_95": [
+       -0.006084112533663605,
+       -0.004046656370976352
+      ]
+     }
+    }
+   },
+   "continents": {
+    "Africa": {
+     "region_days": 25060,
+     "new_fires": 63502,
+     "methods": {
+      "fwi": {
+       "captured_new": 7009,
+       "capture_rate": 0.11037447639444427,
+       "lift_over_random": 1.0032909663877756
+      },
+      "history": {
+       "captured_new": 10833,
+       "capture_rate": 0.17059305218733267,
+       "lift_over_random": 1.5506707146352936
+      },
+      "random": {
+       "captured_new": 6967,
+       "capture_rate": 0.10971307990299518,
+       "lift_over_random": 0.9972789503243876
+      },
+      "v2_served": {
+       "captured_new": 13651,
+       "capture_rate": 0.21496960725646436,
+       "lift_over_random": 1.9540483638407082
+      },
+      "v3": {
+       "captured_new": 13831,
+       "capture_rate": 0.21780416364838903,
+       "lift_over_random": 1.979814146969514
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.10459513086202009,
+       "interval_95": [
+        -0.112195868080983,
+        -0.09785463386289905
+       ]
+      },
+      "history": {
+       "difference": -0.04437655506913168,
+       "interval_95": [
+        -0.04774254654209118,
+        -0.04116706637135308
+       ]
+      },
+      "random": {
+       "difference": -0.10525652735346919,
+       "interval_95": [
+        -0.1122014578048382,
+        -0.09897566684341731
+       ]
+      },
+      "v3": {
+       "difference": 0.002834556391924664,
+       "interval_95": [
+        0.0006961280521021963,
+        0.005164323367463428
+       ]
+      }
+     }
+    },
+    "Asia": {
+     "region_days": 21162,
+     "new_fires": 40091,
+     "methods": {
+      "fwi": {
+       "captured_new": 6947,
+       "capture_rate": 0.17328078621136914,
+       "lift_over_random": 0.9144715579363031
+      },
+      "history": {
+       "captured_new": 10075,
+       "capture_rate": 0.25130328502656457,
+       "lift_over_random": 1.3262272846132508
+      },
+      "random": {
+       "captured_new": 6493,
+       "capture_rate": 0.16195654885136315,
+       "lift_over_random": 0.8547090579646489
+      },
+      "v2_served": {
+       "captured_new": 11763,
+       "capture_rate": 0.2934074979421815,
+       "lift_over_random": 1.548427945300811
+      },
+      "v3": {
+       "captured_new": 11999,
+       "capture_rate": 0.2992941059090569,
+       "lift_over_random": 1.5794939144490716
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.12012671173081241,
+       "interval_95": [
+        -0.13096785510465922,
+        -0.11088724185111704
+       ]
+      },
+      "history": {
+       "difference": -0.04210421291561697,
+       "interval_95": [
+        -0.04674146255791127,
+        -0.037670279445631685
+       ]
+      },
+      "random": {
+       "difference": -0.1314509490908184,
+       "interval_95": [
+        -0.1434586567713687,
+        -0.12103599314665897
+       ]
+      },
+      "v3": {
+       "difference": 0.005886607966875359,
+       "interval_95": [
+        0.0034459263534523292,
+        0.008381814995252944
+       ]
+      }
+     }
+    },
+    "Europe": {
+     "region_days": 11907,
+     "new_fires": 19786,
+     "methods": {
+      "fwi": {
+       "captured_new": 4307,
+       "capture_rate": 0.21767916708783988,
+       "lift_over_random": 0.9386936205359789
+      },
+      "history": {
+       "captured_new": 5893,
+       "capture_rate": 0.29783685434145357,
+       "lift_over_random": 1.2843560496444215
+      },
+      "random": {
+       "captured_new": 4034,
+       "capture_rate": 0.20388153239664408,
+       "lift_over_random": 0.8791943499517388
+      },
+      "v2_served": {
+       "captured_new": 6441,
+       "capture_rate": 0.3255332052966744,
+       "lift_over_random": 1.403790482905094
+      },
+      "v3": {
+       "captured_new": 6683,
+       "capture_rate": 0.3377640756090165,
+       "lift_over_random": 1.4565334260603546
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.10785403820883453,
+       "interval_95": [
+        -0.12222696869199055,
+        -0.09297683135119462
+       ]
+      },
+      "history": {
+       "difference": -0.027696350955220862,
+       "interval_95": [
+        -0.033006442086262924,
+        -0.022341626207357437
+       ]
+      },
+      "random": {
+       "difference": -0.12165167290003033,
+       "interval_95": [
+        -0.13604494680733298,
+        -0.10665788606668601
+       ]
+      },
+      "v3": {
+       "difference": 0.01223087031234206,
+       "interval_95": [
+        0.008647671511733344,
+        0.015727928166782233
+       ]
+      }
+     }
+    },
+    "North America": {
+     "region_days": 13445,
+     "new_fires": 33922,
+     "methods": {
+      "fwi": {
+       "captured_new": 2890,
+       "capture_rate": 0.08519544838158127,
+       "lift_over_random": 0.8356679793217294
+      },
+      "history": {
+       "captured_new": 4506,
+       "capture_rate": 0.132834148929898,
+       "lift_over_random": 1.3029480674130494
+      },
+      "random": {
+       "captured_new": 2883,
+       "capture_rate": 0.08498909262425565,
+       "lift_over_random": 0.8336438700292547
+      },
+      "v2_served": {
+       "captured_new": 5558,
+       "capture_rate": 0.16384647131654972,
+       "lift_over_random": 1.6071427782249732
+      },
+      "v3": {
+       "captured_new": 5695,
+       "capture_rate": 0.16788514828135134,
+       "lift_over_random": 1.646757488663408
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.07865102293496845,
+       "interval_95": [
+        -0.085491503224964,
+        -0.07175105541744793
+       ]
+      },
+      "history": {
+       "difference": -0.03101232238665173,
+       "interval_95": [
+        -0.03531361377598128,
+        -0.026357189960351846
+       ]
+      },
+      "random": {
+       "difference": -0.07885737869229409,
+       "interval_95": [
+        -0.08647083831498516,
+        -0.07156165486169765
+       ]
+      },
+      "v3": {
+       "difference": 0.004038676964801604,
+       "interval_95": [
+        0.0018395640843864654,
+        0.006332847728416383
+       ]
+      }
+     }
+    },
+    "Oceania": {
+     "region_days": 3414,
+     "new_fires": 13980,
+     "methods": {
+      "fwi": {
+       "captured_new": 801,
+       "capture_rate": 0.057296137339055794,
+       "lift_over_random": 1.150673022411552
+      },
+      "history": {
+       "captured_new": 1293,
+       "capture_rate": 0.0924892703862661,
+       "lift_over_random": 1.8574534556531046
+      },
+      "random": {
+       "captured_new": 619,
+       "capture_rate": 0.04427753934191703,
+       "lift_over_random": 0.8892217239360184
+      },
+      "v2_served": {
+       "captured_new": 1663,
+       "capture_rate": 0.11895565092989986,
+       "lift_over_random": 2.3889753261802884
+      },
+      "v3": {
+       "captured_new": 1731,
+       "capture_rate": 0.12381974248927038,
+       "lift_over_random": 2.4866604267096086
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.06165951359084406,
+       "interval_95": [
+        -0.06681176715107429,
+        -0.056472135970451705
+       ]
+      },
+      "history": {
+       "difference": -0.026466380543633764,
+       "interval_95": [
+        -0.03120569708962253,
+        -0.021454216568900862
+       ]
+      },
+      "random": {
+       "difference": -0.07467811158798283,
+       "interval_95": [
+        -0.08115129439413893,
+        -0.06761627217062317
+       ]
+      },
+      "v3": {
+       "difference": 0.004864091559370529,
+       "interval_95": [
+        0.0014427616557257323,
+        0.008593652695525854
+       ]
+      }
+     }
+    },
+    "South America": {
+     "region_days": 17517,
+     "new_fires": 53444,
+     "methods": {
+      "fwi": {
+       "captured_new": 3881,
+       "capture_rate": 0.07261806750991692,
+       "lift_over_random": 1.0918152197576745
+      },
+      "history": {
+       "captured_new": 6060,
+       "capture_rate": 0.11338971633859742,
+       "lift_over_random": 1.7048184054963946
+      },
+      "random": {
+       "captured_new": 3547,
+       "capture_rate": 0.06636853528927475,
+       "lift_over_random": 0.9978532812369162
+      },
+      "v2_served": {
+       "captured_new": 7822,
+       "capture_rate": 0.14635880547863184,
+       "lift_over_random": 2.200509829668779
+      },
+      "v3": {
+       "captured_new": 8085,
+       "capture_rate": 0.1512798443230297,
+       "lift_over_random": 2.2744978231746455
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.07374073796871491,
+       "interval_95": [
+        -0.07906996401582761,
+        -0.06939289989908867
+       ]
+      },
+      "history": {
+       "difference": -0.03296908914003443,
+       "interval_95": [
+        -0.03711403945307562,
+        -0.02916373274886772
+       ]
+      },
+      "random": {
+       "difference": -0.07999027018935709,
+       "interval_95": [
+        -0.0857849683413287,
+        -0.07525721035726496
+       ]
+      },
+      "v3": {
+       "difference": 0.0049210388443978745,
+       "interval_95": [
+        0.00293978977465216,
+        0.006921124325103728
+       ]
+      }
+     }
+    },
+    "Unknown": {
+     "region_days": 115,
+     "new_fires": 142,
+     "methods": {
+      "fwi": {
+       "captured_new": 43,
+       "capture_rate": 0.3028169014084507,
+       "lift_over_random": 0.9926326129666011
+      },
+      "history": {
+       "captured_new": 80,
+       "capture_rate": 0.5633802816901409,
+       "lift_over_random": 1.8467583497053044
+      },
+      "random": {
+       "captured_new": 44,
+       "capture_rate": 0.30985915492957744,
+       "lift_over_random": 1.0157170923379175
+      },
+      "v2_served": {
+       "captured_new": 82,
+       "capture_rate": 0.5774647887323944,
+       "lift_over_random": 1.892927308447937
+      },
+      "v3": {
+       "captured_new": 83,
+       "capture_rate": 0.5845070422535211,
+       "lift_over_random": 1.9160117878192533
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.2746478873239437,
+       "interval_95": [
+        -0.3419441437540593,
+        -0.2088539644327095
+       ]
+      },
+      "history": {
+       "difference": -0.014084507042253521,
+       "interval_95": [
+        -0.06364119922630561,
+        0.029850746268656716
+       ]
+      },
+      "random": {
+       "difference": -0.2676056338028169,
+       "interval_95": [
+        -0.3461666666666667,
+        -0.19845157014215856
+       ]
+      },
+      "v3": {
+       "difference": 0.007042253521126761,
+       "interval_95": [
+        -0.015509979857169016,
+        0.02970444365865157
+       ]
+      }
+     }
+    }
+   },
+   "alarms": {
+    "100": {
+     "methods": {
+      "fwi": {
+       "alarms": 30400,
+       "alarms_with_fire": 143,
+       "precision": 0.004703947368421052
+      },
+      "history": {
+       "alarms": 30400,
+       "alarms_with_fire": 515,
+       "precision": 0.01694078947368421
+      },
+      "random": {
+       "alarms": 30400,
+       "alarms_with_fire": 197,
+       "precision": 0.006480263157894737
+      },
+      "v2_served": {
+       "alarms": 30400,
+       "alarms_with_fire": 2599,
+       "precision": 0.08549342105263158
+      },
+      "v3": {
+       "alarms": 30400,
+       "alarms_with_fire": 2940,
+       "precision": 0.09671052631578947
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.08078947368421052,
+       "interval_95": [
+        -0.0872086038961039,
+        -0.07444015934723172
+       ]
+      },
+      "history": {
+       "difference": -0.06855263157894737,
+       "interval_95": [
+        -0.07444178272385508,
+        -0.06243425324675325
+       ]
+      },
+      "random": {
+       "difference": -0.07901315789473684,
+       "interval_95": [
+        -0.08490340909090908,
+        -0.07286091293574846
+       ]
+      },
+      "v3": {
+       "difference": 0.011217105263157895,
+       "interval_95": [
+        0.006513157894736842,
+        0.01621746665496665
+       ]
+      }
+     }
+    },
+    "1000": {
+     "methods": {
+      "fwi": {
+       "alarms": 304000,
+       "alarms_with_fire": 1586,
+       "precision": 0.0052171052631578944
+      },
+      "history": {
+       "alarms": 304000,
+       "alarms_with_fire": 5039,
+       "precision": 0.01657565789473684
+      },
+      "random": {
+       "alarms": 304000,
+       "alarms_with_fire": 1952,
+       "precision": 0.006421052631578947
+      },
+      "v2_served": {
+       "alarms": 304000,
+       "alarms_with_fire": 19049,
+       "precision": 0.06266118421052631
+      },
+      "v3": {
+       "alarms": 304000,
+       "alarms_with_fire": 21408,
+       "precision": 0.07042105263157895
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.05744407894736842,
+       "interval_95": [
+        -0.06015144956140351,
+        -0.05480183178308178
+       ]
+      },
+      "history": {
+       "difference": -0.04608552631578947,
+       "interval_95": [
+        -0.04862025,
+        -0.04358111329460014
+       ]
+      },
+      "random": {
+       "difference": -0.05624013157894737,
+       "interval_95": [
+        -0.058928857142857144,
+        -0.05360943908065619
+       ]
+      },
+      "v3": {
+       "difference": 0.007759868421052632,
+       "interval_95": [
+        0.00635184100877193,
+        0.009230423245614034
+       ]
+      }
+     }
+    },
+    "5000": {
+     "methods": {
+      "fwi": {
+       "alarms": 1520000,
+       "alarms_with_fire": 7624,
+       "precision": 0.0050157894736842104
+      },
+      "history": {
+       "alarms": 1520000,
+       "alarms_with_fire": 24872,
+       "precision": 0.016363157894736843
+      },
+      "random": {
+       "alarms": 1520000,
+       "alarms_with_fire": 9655,
+       "precision": 0.006351973684210526
+      },
+      "v2_served": {
+       "alarms": 1520000,
+       "alarms_with_fire": 62908,
+       "precision": 0.04138684210526316
+      },
+      "v3": {
+       "alarms": 1520000,
+       "alarms_with_fire": 69593,
+       "precision": 0.04578486842105263
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.03637105263157895,
+       "interval_95": [
+        -0.03778608766233766,
+        -0.03501264802631579
+       ]
+      },
+      "history": {
+       "difference": -0.025023684210526316,
+       "interval_95": [
+        -0.026054805194805197,
+        -0.024024025324675326
+       ]
+      },
+      "random": {
+       "difference": -0.035034868421052634,
+       "interval_95": [
+        -0.03646315575871496,
+        -0.03368759248974709
+       ]
+      },
+      "v3": {
+       "difference": 0.004398026315789474,
+       "interval_95": [
+        0.003916211255411256,
+        0.004913077966553994
+       ]
+      }
+     }
+    }
+   }
+  },
+  "all_vegetation": {
+   "pooled_vs_v2": {
+    "region_days": 115562,
+    "new_fires": 287373,
+    "methods": {
+     "fwi": {
+      "captured_new": 33513,
+      "capture_rate": 0.11661847146391624,
+      "lift_over_random": 0.9695756383368621
+     },
+     "history": {
+      "captured_new": 48909,
+      "capture_rate": 0.1701934419726279,
+      "lift_over_random": 1.4150023840126993
+     },
+     "random": {
+      "captured_new": 31592,
+      "capture_rate": 0.1099337794434411,
+      "lift_over_random": 0.9139985547798809
+     },
+     "v2_served": {
+      "captured_new": 58911,
+      "capture_rate": 0.20499838189391487,
+      "lift_over_random": 1.704373539523853
+     },
+     "v3": {
+      "captured_new": 60216,
+      "capture_rate": 0.20953951832635634,
+      "lift_over_random": 1.742128924241115
+     }
+    },
+    "versus_v2_served": {
+     "fwi": {
+      "difference": -0.08837991042999864,
+      "interval_95": [
+       -0.0931517374250407,
+       -0.08403149358452347
+      ]
+     },
+     "history": {
+      "difference": -0.03480493992128697,
+      "interval_95": [
+       -0.0367154353883655,
+       -0.03299056786682287
+      ]
+     },
+     "random": {
+      "difference": -0.09506460245047378,
+      "interval_95": [
+       -0.09997015561734605,
+       -0.09035399158637199
+      ]
+     },
+     "v3": {
+      "difference": 0.004541136432441461,
+      "interval_95": [
+       0.0036637302044852265,
+       0.005457404877977921
+      ]
+     }
+    }
+   },
+   "pooled_vs_v3": {
+    "region_days": 115562,
+    "new_fires": 287373,
+    "methods": {
+     "fwi": {
+      "captured_new": 33513,
+      "capture_rate": 0.11661847146391624,
+      "lift_over_random": 0.9695756383368621
+     },
+     "history": {
+      "captured_new": 48909,
+      "capture_rate": 0.1701934419726279,
+      "lift_over_random": 1.4150023840126993
+     },
+     "random": {
+      "captured_new": 31592,
+      "capture_rate": 0.1099337794434411,
+      "lift_over_random": 0.9139985547798809
+     },
+     "v2_served": {
+      "captured_new": 58911,
+      "capture_rate": 0.20499838189391487,
+      "lift_over_random": 1.704373539523853
+     },
+     "v3": {
+      "captured_new": 60216,
+      "capture_rate": 0.20953951832635634,
+      "lift_over_random": 1.742128924241115
+     }
+    },
+    "versus_v3": {
+     "fwi": {
+      "difference": -0.0929210468624401,
+      "interval_95": [
+       -0.09796995701179773,
+       -0.08824417238573208
+      ]
+     },
+     "history": {
+      "difference": -0.03934607635372843,
+      "interval_95": [
+       -0.04147566929757583,
+       -0.03724420926764271
+      ]
+     },
+     "random": {
+      "difference": -0.09960573888291524,
+      "interval_95": [
+       -0.10479596453764824,
+       -0.09464473973060841
+      ]
+     },
+     "v2_served": {
+      "difference": -0.004541136432441461,
+      "interval_95": [
+       -0.005457404877977922,
+       -0.0036637302044852274
+      ]
+     }
+    }
+   },
+   "continents": {
+    "Africa": {
+     "region_days": 28096,
+     "new_fires": 68680,
+     "methods": {
+      "fwi": {
+       "captured_new": 8549,
+       "capture_rate": 0.12447582993593477,
+       "lift_over_random": 0.9992510532424954
+      },
+      "history": {
+       "captured_new": 12729,
+       "capture_rate": 0.18533779848573093,
+       "lift_over_random": 1.4878309342290004
+      },
+      "random": {
+       "captured_new": 8512,
+       "capture_rate": 0.12393709959231217,
+       "lift_over_random": 0.9949263030997919
+      },
+      "v2_served": {
+       "captured_new": 15801,
+       "capture_rate": 0.2300669772859639,
+       "lift_over_random": 1.846902081212384
+      },
+      "v3": {
+       "captured_new": 15966,
+       "capture_rate": 0.23246942341292953,
+       "lift_over_random": 1.8661881291460618
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.10559114735002913,
+       "interval_95": [
+        -0.11317198807350522,
+        -0.09893516201464944
+       ]
+      },
+      "history": {
+       "difference": -0.044729178800232965,
+       "interval_95": [
+        -0.04820435243003122,
+        -0.041424470374234135
+       ]
+      },
+      "random": {
+       "difference": -0.10612987769365172,
+       "interval_95": [
+        -0.1130107187166829,
+        -0.10009314157729185
+       ]
+      },
+      "v3": {
+       "difference": 0.0024024461269656376,
+       "interval_95": [
+        0.0003763949206493961,
+        0.004761036584637048
+       ]
+      }
+     }
+    },
+    "Asia": {
+     "region_days": 29503,
+     "new_fires": 67014,
+     "methods": {
+      "fwi": {
+       "captured_new": 9539,
+       "capture_rate": 0.14234339093323783,
+       "lift_over_random": 0.9442379417955623
+      },
+      "history": {
+       "captured_new": 13552,
+       "capture_rate": 0.20222640045363655,
+       "lift_over_random": 1.341473171948156
+      },
+      "random": {
+       "captured_new": 8764,
+       "capture_rate": 0.13077864326857075,
+       "lift_over_random": 0.8675229397102744
+      },
+      "v2_served": {
+       "captured_new": 16133,
+       "capture_rate": 0.24074074074074073,
+       "lift_over_random": 1.5969588756670308
+      },
+      "v3": {
+       "captured_new": 16408,
+       "capture_rate": 0.24484436087981615,
+       "lift_over_random": 1.6241803280198748
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.0983973498075029,
+       "interval_95": [
+        -0.10669820318687603,
+        -0.09098438452381921
+       ]
+      },
+      "history": {
+       "difference": -0.03851434028710419,
+       "interval_95": [
+        -0.04225407573426833,
+        -0.03506993225390885
+       ]
+      },
+      "random": {
+       "difference": -0.10996209747216999,
+       "interval_95": [
+        -0.11953403863505056,
+        -0.10123473935471254
+       ]
+      },
+      "v3": {
+       "difference": 0.004103620139075417,
+       "interval_95": [
+        0.002392482845787059,
+        0.005756306342189891
+       ]
+      }
+     }
+    },
+    "Europe": {
+     "region_days": 20591,
+     "new_fires": 34885,
+     "methods": {
+      "fwi": {
+       "captured_new": 7490,
+       "capture_rate": 0.21470546079977068,
+       "lift_over_random": 0.9698575763209324
+      },
+      "history": {
+       "captured_new": 10071,
+       "capture_rate": 0.2886914146481296,
+       "lift_over_random": 1.3040635048235127
+      },
+      "random": {
+       "captured_new": 6936,
+       "capture_rate": 0.19882470976064212,
+       "lift_over_random": 0.8981217822913201
+      },
+      "v2_served": {
+       "captured_new": 11003,
+       "capture_rate": 0.315407768381826,
+       "lift_over_random": 1.424745382144088
+      },
+      "v3": {
+       "captured_new": 11375,
+       "capture_rate": 0.3260713773828293,
+       "lift_over_random": 1.4729145434780515
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.10070230758205533,
+       "interval_95": [
+        -0.11127253556858088,
+        -0.09034273868507176
+       ]
+      },
+      "history": {
+       "difference": -0.02671635373369643,
+       "interval_95": [
+        -0.03203622307765573,
+        -0.021147480919442685
+       ]
+      },
+      "random": {
+       "difference": -0.11658305862118389,
+       "interval_95": [
+        -0.12824438335276012,
+        -0.10549070657968629
+       ]
+      },
+      "v3": {
+       "difference": 0.010663609001003297,
+       "interval_95": [
+        0.007938749169964005,
+        0.01328510135504486
+       ]
+      }
+     }
+    },
+    "North America": {
+     "region_days": 15693,
+     "new_fires": 44528,
+     "methods": {
+      "fwi": {
+       "captured_new": 3190,
+       "capture_rate": 0.0716403162055336,
+       "lift_over_random": 0.8293983246782849
+      },
+      "history": {
+       "captured_new": 4965,
+       "capture_rate": 0.11150287459575997,
+       "lift_over_random": 1.2908973924851677
+      },
+      "random": {
+       "captured_new": 3135,
+       "capture_rate": 0.07040513833992094,
+       "lift_over_random": 0.8150983535631421
+      },
+      "v2_served": {
+       "captured_new": 6229,
+       "capture_rate": 0.1398895077254761,
+       "lift_over_random": 1.6195367286586322
+      },
+      "v3": {
+       "captured_new": 6413,
+       "capture_rate": 0.14402173913043478,
+       "lift_over_random": 1.6673766320256556
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.0682491915199425,
+       "interval_95": [
+        -0.07487909361759933,
+        -0.06208830011789725
+       ]
+      },
+      "history": {
+       "difference": -0.028386633129716135,
+       "interval_95": [
+        -0.03181747087160795,
+        -0.024785023440941623
+       ]
+      },
+      "random": {
+       "difference": -0.06948436938555516,
+       "interval_95": [
+        -0.07652802199858937,
+        -0.06262585124342783
+       ]
+      },
+      "v3": {
+       "difference": 0.004132231404958678,
+       "interval_95": [
+        0.0021398612009659425,
+        0.0062045735297058665
+       ]
+      }
+     }
+    },
+    "Oceania": {
+     "region_days": 3482,
+     "new_fires": 15457,
+     "methods": {
+      "fwi": {
+       "captured_new": 799,
+       "capture_rate": 0.05169179012745034,
+       "lift_over_random": 1.145405862806851
+      },
+      "history": {
+       "captured_new": 1295,
+       "capture_rate": 0.08378081128291388,
+       "lift_over_random": 1.8564462982914545
+      },
+      "random": {
+       "captured_new": 623,
+       "capture_rate": 0.04030536326583425,
+       "lift_over_random": 0.893101192151024
+      },
+      "v2_served": {
+       "captured_new": 1668,
+       "capture_rate": 0.10791227275667982,
+       "lift_over_random": 2.391160174169997
+      },
+      "v3": {
+       "captured_new": 1742,
+       "capture_rate": 0.11269974768713205,
+       "lift_over_random": 2.4972428197866514
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.056220482629229476,
+       "interval_95": [
+        -0.06075728846284794,
+        -0.05141426799115539
+       ]
+      },
+      "history": {
+       "difference": -0.024131461473765933,
+       "interval_95": [
+        -0.02819745383903342,
+        -0.01983196210160804
+       ]
+      },
+      "random": {
+       "difference": -0.06760690949084557,
+       "interval_95": [
+        -0.07376991027678492,
+        -0.061107972732194336
+       ]
+      },
+      "v3": {
+       "difference": 0.004787474930452222,
+       "interval_95": [
+        0.001776759277734644,
+        0.008022898441482126
+       ]
+      }
+     }
+    },
+    "Seven seas (open ocean)": {
+     "region_days": 15,
+     "new_fires": 15,
+     "methods": {
+      "fwi": {
+       "captured_new": 7,
+       "capture_rate": 0.4666666666666667,
+       "lift_over_random": 1.0
+      },
+      "history": {
+       "captured_new": 7,
+       "capture_rate": 0.4666666666666667,
+       "lift_over_random": 1.0
+      },
+      "random": {
+       "captured_new": 7,
+       "capture_rate": 0.4666666666666667,
+       "lift_over_random": 1.0
+      },
+      "v2_served": {
+       "captured_new": 7,
+       "capture_rate": 0.4666666666666667,
+       "lift_over_random": 1.0
+      },
+      "v3": {
+       "captured_new": 7,
+       "capture_rate": 0.4666666666666667,
+       "lift_over_random": 1.0
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": 0.0,
+       "interval_95": [
+        0.0,
+        0.0
+       ]
+      },
+      "history": {
+       "difference": 0.0,
+       "interval_95": [
+        0.0,
+        0.0
+       ]
+      },
+      "random": {
+       "difference": 0.0,
+       "interval_95": [
+        0.0,
+        0.0
+       ]
+      },
+      "v3": {
+       "difference": 0.0,
+       "interval_95": [
+        0.0,
+        0.0
+       ]
+      }
+     }
+    },
+    "South America": {
+     "region_days": 18038,
+     "new_fires": 56622,
+     "methods": {
+      "fwi": {
+       "captured_new": 3867,
+       "capture_rate": 0.06829500900709971,
+       "lift_over_random": 1.0859191751663038
+      },
+      "history": {
+       "captured_new": 6181,
+       "capture_rate": 0.10916251633640635,
+       "lift_over_random": 1.7357296151287622
+      },
+      "random": {
+       "captured_new": 3542,
+       "capture_rate": 0.06255519056197238,
+       "lift_over_random": 0.9946536639356214
+      },
+      "v2_served": {
+       "captured_new": 7959,
+       "capture_rate": 0.14056373847621065,
+       "lift_over_random": 2.235022165800003
+      },
+      "v3": {
+       "captured_new": 8193,
+       "capture_rate": 0.14469640775670234,
+       "lift_over_random": 2.3007333338860945
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.07226872946911095,
+       "interval_95": [
+        -0.0771207676035123,
+        -0.0681214736679655
+       ]
+      },
+      "history": {
+       "difference": -0.03140122213980431,
+       "interval_95": [
+        -0.035217988935521666,
+        -0.02774444288134443
+       ]
+      },
+      "random": {
+       "difference": -0.07800854791423828,
+       "interval_95": [
+        -0.08306366152467512,
+        -0.0735570402181534
+       ]
+      },
+      "v3": {
+       "difference": 0.004132669280491681,
+       "interval_95": [
+        0.0023165849970318746,
+        0.0059572870084869025
+       ]
+      }
+     }
+    },
+    "Unknown": {
+     "region_days": 144,
+     "new_fires": 172,
+     "methods": {
+      "fwi": {
+       "captured_new": 72,
+       "capture_rate": 0.4186046511627907,
+       "lift_over_random": 0.9955869373345102
+      },
+      "history": {
+       "captured_new": 109,
+       "capture_rate": 0.6337209302325582,
+       "lift_over_random": 1.5072080023536336
+      },
+      "random": {
+       "captured_new": 73,
+       "capture_rate": 0.42441860465116277,
+       "lift_over_random": 1.0094145336863785
+      },
+      "v2_served": {
+       "captured_new": 111,
+       "capture_rate": 0.6453488372093024,
+       "lift_over_random": 1.53486319505737
+      },
+      "v3": {
+       "captured_new": 112,
+       "capture_rate": 0.6511627906976745,
+       "lift_over_random": 1.548690791409238
+      }
+     },
+     "versus_v2_served": {
+      "fwi": {
+       "difference": -0.22674418604651161,
+       "interval_95": [
+        -0.2824926943308007,
+        -0.17316509343093828
+       ]
+      },
+      "history": {
+       "difference": -0.011627906976744186,
+       "interval_95": [
+        -0.05224002536337918,
+        0.024639778325123103
+       ]
+      },
+      "random": {
+       "difference": -0.22093023255813954,
+       "interval_95": [
+        -0.28207236842105265,
+        -0.16292134831460675
+       ]
+      },
+      "v3": {
+       "difference": 0.005813953488372093,
+       "interval_95": [
+        -0.012905320485965648,
+        0.025161213279197497
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "probability": {
+  "spot_days": 35652103,
+  "days": 304,
+  "new_fires": 211260,
+  "brier_v2": 0.005790214992327036,
+  "brier_v3": 0.005771963463152321,
+  "brier_v3_minus_v2": -1.8251529175054265e-05,
+  "brier_interval_95": [
+   -2.198382337370382e-05,
+   -1.4709052630984966e-05
+  ],
+  "bands": {
+   "v2": {
+    "0.02": {
+     "flagged_per_day": 8919.72697368421,
+     "share_with_new_fire": 0.034024967574458886,
+     "share_of_all_new_fires": 0.43672252201079237
+    },
+    "0.05": {
+     "flagged_per_day": 1009.2467105263158,
+     "share_with_new_fire": 0.06410135229832047,
+     "share_of_all_new_fires": 0.09309381804411626
+    },
+    "0.10": {
+     "flagged_per_day": 67.94736842105263,
+     "share_with_new_fire": 0.09716305189775368,
+     "share_of_all_new_fires": 0.009500142005112185
+    }
+   },
+   "v3": {
+    "0.02": {
+     "flagged_per_day": 8884.125,
+     "share_with_new_fire": 0.03679241580376588,
+     "share_of_all_new_fires": 0.47035879958345167
+    },
+    "0.05": {
+     "flagged_per_day": 1456.0493421052631,
+     "share_with_new_fire": 0.06679709650527857,
+     "share_of_all_new_fires": 0.139955505064849
+    },
+    "0.10": {
+     "flagged_per_day": 98.85855263157895,
+     "share_with_new_fire": 0.10704422187468805,
+     "share_of_all_new_fires": 0.01522768152986841
+    }
+   }
+  }
+ },
+ "claim": {
+  "capture_higher_with_interval_above_zero": true,
+  "alarm_precision_not_lower": true,
+  "brier_not_higher": true,
+  "v3_beats_v2": true
+ },
+ "scored_at": "2026-11-16T17:44:26+00:00"
+}
