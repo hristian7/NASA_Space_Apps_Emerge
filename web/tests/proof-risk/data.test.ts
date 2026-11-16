@@ -116,3 +116,18 @@ describe("week scorecard contract", () => {
     expect(parseScorecard(real)).toBeNull();
   });
 });
+
+describe("version comparison", () => {
+  it("parses the published comparison of version 3 against version 2", () => {
+    const card = parseScorecard(JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8")))!;
+    expect(card.test_year).toBe(2026);
+    expect(card.versus_previous?.previous_model).toBe("lightgbm-v2");
+    expect(card.versus_previous!.capture.new).toBeGreaterThan(card.versus_previous!.capture.previous);
+    expect(card.versus_previous!.capture.interval_95[0]).toBeGreaterThan(0);
+  });
+  it("rejects a malformed comparison instead of showing it", () => {
+    const real = JSON.parse(readFileSync("public/data/risk/scorecard.json", "utf8"));
+    real.versus_previous.capture.interval_95 = [0.1];
+    expect(parseScorecard(real)).toBeNull();
+  });
+});

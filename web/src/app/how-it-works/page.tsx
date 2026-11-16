@@ -25,7 +25,9 @@ import {
   sensorYears,
   sofiaTimesHistory,
   testYear,
+  versus,
   week,
+  weekTestYear,
 } from "./facts";
 import "./how-it-works.css";
 
@@ -273,7 +275,7 @@ function Record({ t, fmt }: { t: T; fmt: Fmt }) {
 
 function Model({ t, fmt }: { t: T; fmt: Fmt }) {
   const featureCount = featureGroups.reduce((sum, g) => sum + g.features.length, 0);
-  const inputs = ["Fwi", "Fires", "Land", "Place"];
+  const inputs = ["Fwi", "Weather", "Fires", "Land", "People", "Place"];
   const days = ["dayEarlier", "D-4", "D-3", "D-2", "D-1", "D"];
 
   return (
@@ -355,13 +357,20 @@ function Model({ t, fmt }: { t: T; fmt: Fmt }) {
           <span>{t("model.issued")}</span>
           <span>{t("model.validFor")}</span>
         </span>
-        <span className="hw-gap" style={{ gridColumn: "6 / 7", gridRow: "2 / 5" }}>
+        <span className="hw-lane-name" style={{ gridRow: 5 }}>
+          {t("model.laneForecast")}
+        </span>
+        <span className="hw-arrow" style={{ gridColumn: "5 / 8", gridRow: 5 }}>
+          <span>{t("model.issued")}</span>
+          <span>{t("model.validFor")}</span>
+        </span>
+        <span className="hw-gap" style={{ gridColumn: "6 / 7", gridRow: "2 / 6" }}>
           {t("model.notUsed")}
         </span>
         <span className="hw-target" style={{ gridColumn: "7 / 8", gridRow: "2 / 4" }}>
           {t("model.forecastDay")}
         </span>
-        <span className="hw-cutoff" style={{ gridColumn: "6 / 8", gridRow: 5 }}>
+        <span className="hw-cutoff" style={{ gridColumn: "6 / 8", gridRow: 6 }}>
           <span>{t("model.cutoff")}</span>
         </span>
       </div>
@@ -425,6 +434,16 @@ function Compare({ t, fmt }: { t: T; fmt: Fmt }) {
           fwi: fmt.pct(capture.world.fwi),
         })}
       </p>
+      {versus ? (
+        <p className="hw-prose" data-testid="how-versus">
+          {t("compare.versus", {
+            capture: fmt.pct(versus.capture.new),
+            previousCapture: fmt.pct(versus.capture.previous),
+            alarms: fmt.pct(versus.alarm_precision_1000.new),
+            previousAlarms: fmt.pct(versus.alarm_precision_1000.previous),
+          })}
+        </p>
+      ) : null}
       <p className="hw-prose">{t("compare.randomNote", { random: fmt.pct(capture.europe.random) })}</p>
       <p className="hw-prose">
         {t("compare.hitRate", { europe: fmt.pct(hitRate.europe), world: fmt.pct(hitRate.world) })}
@@ -470,7 +489,7 @@ function Compare({ t, fmt }: { t: T; fmt: Fmt }) {
       {week.length > 0 ? (
         <>
           <h3 className="hw-subhead">{t("compare.weekTitle")}</h3>
-          <p className="hw-prose">{t("compare.weekBody", { year: testYear })}</p>
+          <p className="hw-prose">{t("compare.weekBody", { year: weekTestYear })}</p>
           <figure className="hw-figure">
             <figcaption className="label">{t("compare.weekCaption")}</figcaption>
             <div className="hw-legend">

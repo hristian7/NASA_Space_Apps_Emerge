@@ -47,3 +47,12 @@ def test_export_defaults_follow_the_published_model_version():
         version = '3'
     assert f"model_v{version}.json" in source
     assert f"predictions_live_v{version}.parquet" in source
+
+
+def test_engine_ready_reads_the_published_scorecard_test_year():
+    import json
+    from pathlib import Path
+    from export_risk import ready_from_scorecard
+    root = Path(__file__).resolve().parents[3]
+    card = json.loads((root / 'web/public/data/risk/scorecard.json').read_text())
+    assert ready_from_scorecard(card) is True

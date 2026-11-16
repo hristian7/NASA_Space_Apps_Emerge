@@ -148,6 +148,7 @@
   --c: var(--ink-2);
 }
 .ab-role[data-role="planned"],
+.ab-role[data-role="tested"],
 .ab-role[data-role="experimental"] {
   --c: var(--ink-3);
   border-style: dashed;

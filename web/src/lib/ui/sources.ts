@@ -4,7 +4,7 @@
  * and its "used for" sentence in messages/about.<locale>.json under `used.<id>`.
  * Names, links and licence wording stay in the resource's own words.
  */
-export type Role = "model" | "record" | "map" | "app" | "compare" | "planned" | "experimental";
+export type Role = "model" | "record" | "map" | "app" | "compare" | "planned" | "tested" | "experimental";
 /** Where a row goes on NASA's submission form: NASA data, or space agency partner and other data. */
 export type Section = "nasa" | "partner" | "other";
 export type Source = {
@@ -77,6 +77,14 @@ export const sourceGroups: SourceGroup[] = [
         licence: NASA,
         provider: "NASA GISS",
         roles: ["model", "compare"],
+      },
+      {
+        id: "noaaGfs", section: "other", linkText: "NOAA GFS 0.25° weather forecasts (NOAA Open Data Dissemination)",
+        name: "NOAA Global Forecast System (GFS) 0.25° forecasts, NOAA Open Data Dissemination on AWS",
+        url: "https://registry.opendata.aws/noaa-gfs-bdp-pds/",
+        licence: "NOAA open data, no restrictions on use",
+        provider: "NOAA",
+        roles: ["model"],
       },
       {
         id: "gwisFwi", section: "partner", linkText: "Copernicus GWIS fire weather index (ECMWF)", formUrl: "https://maps.effis.emergency.copernicus.eu/gwis",
@@ -171,6 +179,51 @@ export const sourceGroups: SourceGroup[] = [
         licence: "NASA open data, LP DAAC",
         provider: "NASA LP DAAC",
         roles: ["planned"],
+      },
+      {
+        id: "vnp13c1", section: "nasa", linkText: "NASA VIIRS VNP13C1 v002 vegetation index, 0.05°",
+        name: "NASA VIIRS VNP13C1 v002 vegetation index (NDVI), 16-day, 0.05°",
+        url: "https://doi.org/10.5067/VIIRS/VNP13C1.002",
+        licence: "NASA open data, LP DAAC",
+        provider: "NASA LP DAAC",
+        roles: ["tested"],
+      },
+      {
+        id: "smapL3e", section: "nasa", linkText: "NASA SMAP L3 enhanced daily soil moisture (SPL3SMP_E v006)",
+        name: "NASA SMAP L3 radiometer global daily 9 km soil moisture, SPL3SMP_E version 6",
+        url: "https://nsidc.org/data/spl3smp_e/versions/6",
+        licence: "NASA open data, NSIDC DAAC",
+        provider: "NASA NSIDC DAAC",
+        roles: ["tested"],
+      },
+    ],
+  },
+  {
+    id: "people",
+    rows: [
+      {
+        id: "gpw", section: "nasa", linkText: "NASA SEDAC GPW v4.11 population density",
+        name: "Gridded Population of the World, Version 4.11: Population Density, 2020 (CIESIN, Columbia University), NASA SEDAC",
+        url: "https://doi.org/10.7927/H49C6VHW",
+        licence: "CC BY 4.0",
+        provider: "NASA SEDAC",
+        roles: ["model"],
+      },
+      {
+        id: "grip4", section: "other", linkText: "GRIP4 global roads database (PBL)",
+        name: "GRIP4 global roads database, total road density (Meijer et al. 2018), PBL Netherlands Environmental Assessment Agency",
+        url: "https://www.globio.info/download-grip-dataset",
+        licence: "CC0",
+        provider: "PBL",
+        roles: ["model"],
+      },
+      {
+        id: "ghsl", section: "partner", linkText: "GHSL built-up surface 2020 (European Commission JRC)",
+        name: "GHS-BUILT-S R2023A, built-up surface 2020, Global Human Settlement Layer, © European Union",
+        url: "https://human-settlement.emergency.copernicus.eu/",
+        licence: "CC BY 4.0",
+        provider: "European Commission JRC",
+        roles: ["model"],
       },
     ],
   },

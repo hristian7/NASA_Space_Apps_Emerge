@@ -19,7 +19,8 @@
     "fonts": "Fonts",
     "experimental": "Separate experimental engines, not the published model",
     "video": "Demo video",
-    "project": "Project, licence and open source"
+    "project": "Project, licence and open source",
+    "people": "People and settlements"
   },
   "used": {
     "firmsCountry": "All fire detections in the record, 2000 to 2025",
@@ -48,7 +49,7 @@
     "nifc": "What the United States reported, 1983 to 2025",
     "iag": "Checking Bulgaria's 2024 revision",
     "mcd12c1": "Planned land-cover shares for the next-day model",
-    "mod13c2": "Planned monthly vegetation index for the next-day model",
+    "mod13c2": "Considered for the next-day model; the VIIRS greenness below was tested in its place",
     "worldCover": "Land cover",
     "copernicusDem": "Terrain",
     "geoBoundaries": "Bulgarian regional and municipal boundaries",
@@ -79,7 +80,13 @@
     "videoFonts": "Type in the demo video",
     "challenge": "The challenge text",
     "aiAssistants": "Help writing and testing code (see the AI-usage note)",
-    "repoLicence": "Licence of the open-source repository"
+    "repoLicence": "Licence of the open-source repository",
+    "noaaGfs": "Weather on the forecast day for the next-day model: temperature, humidity, wind and rain",
+    "gpw": "Population density, an input to the next-day model",
+    "grip4": "Road density, an input to the next-day model",
+    "ghsl": "Share of built-up land, an input to the next-day model",
+    "vnp13c1": "Plant greenness, tested for the next-day model and not kept: it did not improve the 2025 test",
+    "smapL3e": "Soil moisture, tested for the next-day model and not kept: it did not improve the 2025 test"
   },
   "roles": {
     "model": "Feeds the model",
@@ -88,7 +95,8 @@
     "app": "In the app",
     "compare": "For comparison",
     "planned": "Planned, not used yet",
-    "experimental": "Experimental only"
+    "experimental": "Experimental only",
+    "tested": "Tested, not used"
   },
   "statYears": "{from} to {to}",
   "statYearsLabel": "of satellite fire record, month by month",

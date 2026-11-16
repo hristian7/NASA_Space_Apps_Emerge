@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { capture, conversion, featureGroups, gains, levelBands, testYear } from "../../src/app/how-it-works/facts";
+import { capture, conversion, featureGroups, gains, levelBands, testYear, versus } from "../../src/app/how-it-works/facts";
 import { sourceGroups } from "../../src/lib/ui/sources";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -11,28 +11,38 @@ const messages = (name: string) =>
   JSON.parse(readFileSync(join(here, "..", "..", "messages", name), "utf8")) as Record<string, Record<string, string>>;
 
 describe("How it works facts", () => {
-  it("lists exactly the model features in pipeline/risk/features.py", () => {
+  it("lists exactly the inputs of the published model: features.py plus the frozen version 3 groups", () => {
     const source = readFileSync(join(repo, "pipeline", "risk", "features.py"), "utf8");
     const tuple = (name: string) => {
       const match = new RegExp(`${name} = ([^\\n]*(?:\\n[ ]+[^\\n]*)*)`).exec(source);
       return [...(match?.[1] ?? "").matchAll(/'([a-z_0-9]+)'/g)].map((m) => m[1]);
     };
-    const expected = [...tuple("WEATHER"), ...tuple("FEATURES").filter((f) => f !== "WEATHER")];
+    const v3 = readFileSync(join(repo, "pipeline", "risk", "features_v3.py"), "utf8");
+    const frozen = JSON.parse(readFileSync(join(repo, "pipeline", "risk", "v3_frozen.json"), "utf8")) as { input_groups: string[] };
+    const group = (name: string) => {
+      const match = new RegExp(`'${name}': \\(([^)]*)\\)`).exec(v3);
+      return [...(match?.[1] ?? "").matchAll(/'([a-z_0-9]+)'/g)].map((m) => m[1]);
+    };
+    const added = frozen.input_groups.flatMap(group);
+    expect(added.length).toBeGreaterThan(0);
+    const expected = [...tuple("WEATHER"), ...tuple("FEATURES").filter((f) => f !== "WEATHER"), ...added];
     const shown = featureGroups.flatMap((group) => [...group.features]);
     expect(new Set(shown).size).toBe(shown.length);
     expect([...shown].sort()).toEqual([...expected].sort());
   });
 
-  it("reads the 2025 hold-out numbers from the scorecard", () => {
-    expect(testYear).toBe(2025);
-    expect(capture.europe.model).toBeCloseTo(0.538, 3);
-    expect(capture.europe.history).toBeCloseTo(0.51, 3);
-    expect(capture.europe.fwi).toBeCloseTo(0.411, 3);
-    expect(capture.europe.random).toBeCloseTo(0.394, 3);
-    expect(capture.world.model).toBeCloseTo(0.204, 3);
-    expect(capture.world.history).toBeCloseTo(0.167, 3);
-    expect(capture.world.fwi).toBeCloseTo(0.112, 3);
-    expect(capture.world.random).toBeCloseTo(0.105, 3);
+  it("reads the 2026 hold-out numbers of version 3 from the scorecard", () => {
+    expect(testYear).toBe(2026);
+    expect(capture.europe.model).toBeCloseTo(0.579, 3);
+    expect(capture.europe.history).toBeCloseTo(0.543, 3);
+    expect(capture.europe.fwi).toBeCloseTo(0.436, 3);
+    expect(capture.europe.random).toBeCloseTo(0.417, 3);
+    expect(capture.world.model).toBeCloseTo(0.214, 3);
+    expect(capture.world.history).toBeCloseTo(0.172, 3);
+    expect(capture.world.fwi).toBeCloseTo(0.115, 3);
+    expect(capture.world.random).toBeCloseTo(0.109, 3);
+    expect(versus?.capture.previous).toBeCloseTo(0.209, 3);
+    expect(versus?.claim.v3_beats_v2).toBe(true);
   });
 
   it("shows a gain only where its whole interval is above zero", () => {

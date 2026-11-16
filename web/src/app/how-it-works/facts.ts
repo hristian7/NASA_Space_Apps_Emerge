@@ -36,7 +36,13 @@ const card = scorecardJson as unknown as {
   model_version: string;
   scopes: Record<"europe" | "world", { years: Record<string, { weather_days: number; selections: Record<string, SelectionLike> }> }>;
   daily_log?: { date: string; scope: "world" | "europe"; new_fires: number; captured_by_us: number; captured_by_index: number; regions_scored: number }[];
-  week?: { leads: Record<string, { scopes: Record<"europe" | "world", { selections: Record<string, WeekSelection> }> }> };
+  versus_previous?: {
+    previous_model: string;
+    capture: { new: number; previous: number; difference: number; interval_95: [number, number] };
+    alarm_precision_1000: { new: number; previous: number; difference: number; interval_95: [number, number] };
+    claim: { v3_beats_v2?: boolean };
+  };
+  week?: { test_year: number; leads: Record<string, { scopes: Record<"europe" | "world", { selections: Record<string, WeekSelection> }> }> };
 };
 
 export type Scope = "europe" | "world";
@@ -93,6 +99,11 @@ export const week = Object.entries(card.week?.leads ?? {})
   })
   .filter((row): row is NonNullable<typeof row> => row !== null)
   .sort((a, b) => a.lead - b.lead);
+
+/** The published model against the version it replaced, on the same held-out days. */
+export const versus = card.versus_previous ?? null;
+/** The week outlook keeps version 2 and its own 2025 test. */
+export const weekTestYear = card.week?.test_year ?? testYear;
 
 export const dailyLog = [...(card.daily_log ?? [])].sort((a, b) => b.date.localeCompare(a.date) || a.scope.localeCompare(b.scope));
 
@@ -159,9 +170,15 @@ export const published = [
 /** From docs/plans/2026-11-15-submission-draft.md, "Limitations". */
 export const sofiaTimesHistory = 4;
 
-/** The model's inputs in display groups. Must list exactly FEATURES in pipeline/risk/features.py. */
+/**
+ * The model's inputs in display groups. Must list exactly FEATURES in
+ * pipeline/risk/features.py plus the version 3 groups in features_v3.py that
+ * pipeline/risk/v3_frozen.json names.
+ */
 export const featureGroups = [
   { id: "Weather", features: ["fwi", "ffmc", "dmc", "dc", "isi", "bui", "dsr", "fwi_x_forest"] },
+  { id: "Forecast", features: ["tmax_c", "rh_min", "wind_max", "wind_dir_sin", "wind_dir_cos", "gust_max", "rain_d", "rain_d1", "rain_next3", "days_since_rain"] },
+  { id: "People", features: ["pop_density_log", "road_density_log", "built_share"] },
   { id: "History", features: ["hist_p", "last_year_same_month", "days_since_log", "no_previous_fire"] },
   { id: "Nearby", features: ["fire_near_3d"] },
   { id: "Land", features: ["forest", "shrub_grass", "farmland", "fuel_unknown"] },

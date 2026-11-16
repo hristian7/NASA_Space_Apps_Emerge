@@ -52,11 +52,31 @@ export interface WeekScore {
   verdict: string;
   scopes: Record<string, { weather_days: number; missing_weather_days: number; selections: Record<string, { coverage: Selection["coverage"]; pooled: Aggregate; region_days_without_scores: number; bootstrap: Partial<Record<Method, Bootstrap>> }> }>;
 }
+/** One measure of the published model against the version it replaced, on the same test days. */
+export interface VersusPair {
+  new: number;
+  previous: number;
+  difference: number;
+  interval_95: [number, number];
+}
+export interface VersusPrevious {
+  previous_model: string;
+  test_period?: [string, string] | null;
+  new_fires: number;
+  region_days: number;
+  capture: VersusPair;
+  alarm_precision_1000: VersusPair;
+  brier: VersusPair;
+  continents: Record<string, VersusPair & { new_fires: number }>;
+  claim: { v3_beats_v2?: boolean } & Record<string, boolean | undefined>;
+}
 export interface RiskScorecard {
   schema: "emerge-risk-scorecard-1";
   example?: boolean;
   grid_g: number;
   test_year: number;
+  model_version?: string;
+  versus_previous?: VersusPrevious;
   scopes: Record<string, Scope>;
   daily_log?: DailyLogRow[];
   week?: { test_year: number; leads: Record<string, WeekScore> };
@@ -64,6 +84,16 @@ export interface RiskScorecard {
 
 function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function pair(value: unknown): boolean {
+  return record(value) && typeof value.new === "number" && typeof value.previous === "number" &&
+    typeof value.difference === "number" && Array.isArray(value.interval_95) && value.interval_95.length === 2 &&
+    value.interval_95.every(v => typeof v === "number");
+}
+function versusPrevious(value: unknown): boolean {
+  return record(value) && typeof value.previous_model === "string" && typeof value.new_fires === "number" &&
+    pair(value.capture) && pair(value.alarm_precision_1000) && pair(value.brier) && record(value.continents) &&
+    Object.values(value.continents).every(row => pair(row) && record(row) && typeof row.new_fires === "number") && record(value.claim);
 }
 function aggregate(value: unknown): boolean {
   return record(value) && typeof value.region_days === "number" && record(value.methods);
@@ -99,7 +129,8 @@ export function parseScorecard(value: unknown): RiskScorecard | null {
     [row.new_fires, row.captured_by_us, row.captured_by_index, row.regions_scored].some(n =>
       typeof n !== "number" || !Number.isSafeInteger(n) || n < 0)))) return null;
   if (value.week !== undefined) {
-    if (!record(value.week) || value.week.test_year !== value.test_year || !record(value.week.leads)) return null;
+    // The week outlook keeps its own registered test year; it is scored separately from the next-day model.
+    if (!record(value.week) || value.week.test_year !== WEEK_TEST_YEAR || !record(value.week.leads)) return null;
     for (const [lead, entry] of Object.entries(value.week.leads)) {
       if (!/^[3-8]$/.test(lead) || !record(entry) || typeof entry.verdict !== "string" || !record(entry.scopes)) return null;
       for (const scope of Object.values(entry.scopes)) {
@@ -110,6 +141,7 @@ export function parseScorecard(value: unknown): RiskScorecard | null {
       }
     }
   }
+  if (value.versus_previous !== undefined && !versusPrevious(value.versus_previous)) return null;
   for (const scope of Object.values(value.scopes)) {
     if (!record(scope) || typeof scope.grid_g !== "number" || !record(scope.years)) return null;
     const year = scope.years[String(value.test_year)];
@@ -148,12 +180,20 @@ export function brierSkill(selection: Selection, method: Method): Metric {
  */
 export const SHIPPED_GRID_G = 0.25;
 
+/**
+ * Held-out years registered in pipeline/risk/PROTOCOL.md: 2025 for version 2
+ * and January to October 2026 for version 3. Each was scored once.
+ */
+export const REGISTERED_TEST_YEARS = [2025, 2026];
+/** The week outlook was selected and scored on 2025 (PROTOCOL.md, deviations of 2026-11-15). */
+export const WEEK_TEST_YEAR = 2025;
+
 /** The specification requires the shipped grid, not just a producer's pass flag. */
 export function claimAllowed(card: RiskScorecard, scope: Scope, selection: Selection, baseline: Method): boolean {
   const model = selection.pooled.methods.model?.capture_rate;
   const other = selection.pooled.methods[baseline]?.capture_rate;
   const boot = selection.bootstrap[baseline];
-  return !card.example && card.test_year === 2025 && card.grid_g === SHIPPED_GRID_G && scope.grid_g === card.grid_g &&
+  return !card.example && REGISTERED_TEST_YEARS.includes(card.test_year) && card.grid_g === SHIPPED_GRID_G && scope.grid_g === card.grid_g &&
     typeof model === "number" && typeof other === "number" && model > other &&
     boot?.claim_permitted === true && boot.bootstrap_passed && boot.valid_draws > 0 &&
     typeof boot.difference === "number" && boot.difference > 0 &&

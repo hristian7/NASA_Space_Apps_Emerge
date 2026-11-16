@@ -126,7 +126,7 @@
     "outLevels": "Levels from daily chance",
     "outLevelsNote": "fixed bands at {bands}",
     "timingTitle": "Only what would have been known in time",
-    "timingBody": "A forecast for day D uses fire detections up to the end of day D-2 and the NASA fire-weather forecast issued three days before D. Nothing from day D or the day before goes in.",
+    "timingBody": "A forecast for day D uses fire detections up to the end of day D-2, the NASA fire-weather forecast issued three days before D, and the NOAA weather forecast issued two days before D. Nothing from day D or the day before goes in.",
     "dayEarlier": "Earlier years",
     "laneHistory": "Fire history",
     "laneNearby": "Recent fires nearby",
@@ -139,11 +139,20 @@
     "splitTitle": "Trained, tuned and tested on different years",
     "splitTrain": "Training: days before {year}",
     "splitTune": "{year}: settings chosen",
-    "splitTest": "{year}: held-out test"
+    "splitTest": "{year}: held-out test",
+    "inWeather": "Weather forecast",
+    "inWeatherNote": "NOAA GFS, issued 2 days ahead",
+    "inPeople": "People",
+    "inPeopleNote": "population, roads and built-up land",
+    "fForecast": "Weather on the day",
+    "fForecastNote": "highest temperature, lowest humidity, wind and gusts, rain on the day and the next three days, days since rain",
+    "fPeople": "People",
+    "fPeopleNote": "how many people live in the square, how many roads cross it, how much of it is built up",
+    "laneForecast": "Weather forecast (NOAA)"
   },
   "compare": {
     "title": "How it compares",
-    "body": "The test asks a firefighter's question: if you could watch only five squares in each region tomorrow, how many of the new fires would land in them? On every day of {year}, each method ranks the same forest and wildland squares, and we count the new fires its top 5 caught.",
+    "body": "The test asks a firefighter's question: if you could watch only five squares in each region tomorrow, how many of the new fires would land in them? On every test day of {year}, each method ranks the same forest and wildland squares, and we count the new fires its top 5 caught.",
     "chartCaption": "Share of new fires caught in the top 5 squares per region and day, {year}",
     "europe": "Europe",
     "world": "World",
@@ -163,7 +172,7 @@
     "points": "percentage points",
     "claimMet": "range above zero",
     "weekTitle": "Further ahead: the week outlook",
-    "weekBody": "For 3 to 8 days ahead the same model runs on older fire data and longer-range weather. Worldwide it stays above history at every lead, and the gap narrows. This setup was chosen after seeing {year}, so it still needs a fresh test period.",
+    "weekBody": "For 3 to 8 days ahead the previous model version, version 2, runs on older fire data and longer-range weather. Worldwide it stays above history at every lead, and the gap narrows. This setup was chosen after seeing {year}, so it still needs a fresh test period.",
     "weekCaption": "World, share of new fires caught, by days ahead",
     "lead": "{n} days",
     "logTitle": "The live log",
@@ -191,16 +200,17 @@
     "ecmwfNote": "Open source. We plan to score it on the same squares and days as a third baseline.",
     "proofLink": "Every score, slice and check is on the How we know page.",
     "vsFwi": "NASA's fire-weather index",
-    "vsHistory": "earlier-years history"
+    "vsHistory": "earlier-years history",
+    "versus": "Version 3, now on the map, replaced version 2 after a single test on these same days: it caught {capture} of new fires worldwide against {previousCapture}, and of the 1,000 squares it ranked highest each day, {alarms} had a new fire against {previousAlarms}, so fewer false alarms."
   },
   "limits": {
     "title": "Limits, said plainly",
-    "inputs": "The model does not yet use plant greenness, soil moisture or anything about people, such as population, roads or holidays. Most fires in Europe are started by people, so this is the biggest gap.",
+    "inputs": "Plant greenness and soil moisture were tested for version 3 and did not improve it, so they are not used; holidays are not used yet. Population and roads stand in for people, who start most fires in Europe; they do not show where or when someone lights one.",
     "grid": "Squares are about 28 km across. A smaller area on the map still gets its whole square's value.",
-    "city": "Some city squares are overstated: Sofia's comes out about {n} times its own history.",
+    "city": "Some city squares were overstated by version 2: Sofia's came out about {n} times its own history. This has not been re-measured for version 3.",
     "calibration": "Low chances are too low. In Europe's lowest band, on days with fire in the region, the model said {predicted} on average and {observed} of those squares had a new fire.",
     "continuing": "For fires that are already burning, earlier-years history does better than the model: {history} against {model} in Europe.",
-    "testYear": "{year} was the only held-out year, and an earlier model version had also been scored on it before this one was picked. A fresh test period comes next.",
+    "testYear": "Version 3 was tested once, on January to October {year}, after it was frozen. 2025 had been the test year of version 2; for version 3 it was used to choose inputs and settings, so it is not a test of this version.",
     "notOfficial": "This is a research prototype. It is not an official warning and gives no orders to anyone."
   }
 }

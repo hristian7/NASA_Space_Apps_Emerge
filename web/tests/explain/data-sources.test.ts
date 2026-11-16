@@ -52,7 +52,8 @@ describe("data sources page", () => {
     const planned = new Set(rows.filter((row) => row.roles?.includes("planned")).map((row) => row.id));
     expect(planned.size).toBeGreaterThan(0);
     for (const id of nasa) expect(planned.has(id), id).toBe(false);
-    expect(nasa).toHaveLength(14);
+    // 14 before model v3, plus NASA SEDAC population (an input) and VIIRS greenness and SMAP soil moisture (tested).
+    expect(nasa).toHaveLength(17);
   });
 
   it("puts each row in one section only", () => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { brierSkill, claimAllowed, dailyWindow, loadScorecard, methods, weakSlices, type Aggregate, type Metric, type RiskScorecard, type Selection } from "./risk-data";
+import { brierSkill, claimAllowed, dailyWindow, loadScorecard, methods, weakSlices, type Aggregate, type Metric, type RiskScorecard, type Selection, type VersusPrevious } from "./risk-data";
 import "./risk-scorecard.css";
 
 type Translate = ReturnType<typeof useTranslations>;
@@ -22,6 +22,58 @@ function Comparison({ row, selection, title, t, number }: {
       {selection ? <td className="num">{method === "fwi" || method === "random" ? t("noProbability") : number(brierSkill(selection, method))}</td> : null}
     </tr>)}</tbody>
   </table>;
+}
+
+/** The published model against the version it replaced, on the same held-out days. */
+function Versus({ versus, model, t, number }: {
+  versus: VersusPrevious; model: string; t: Translate;
+  number: (value: Metric | undefined, percent?: boolean) => string;
+}) {
+  const version = (name: string) => name.replace(/^lightgbm-v/, "");
+  const points = (value: number) => number(value * 100);
+  const locale = useLocale();
+  // One fixed decimal, so 7.0% and 6.3% read as the same kind of number.
+  const share = (value: number) => new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+  const range = (low: number, high: number) => t("versusRange", { low: points(low), high: points(high) });
+  const rows = [
+    { key: "versusCapture", row: versus.capture, percent: true },
+    { key: "versusAlarms", row: versus.alarm_precision_1000, percent: true },
+  ];
+  return <section data-testid="risk-versus">
+    <h3>{t("versusTitle", { model: version(model), previous: version(versus.previous_model) })}</h3>
+    <p>{t("versusIntro", { first: versus.test_period?.[0] ?? "", last: versus.test_period?.[1] ?? "", fires: number(versus.new_fires), days: number(versus.region_days) })}</p>
+    <table>
+      <caption>{t("versusCaption")}</caption>
+      <thead><tr><th scope="col">{t("versusMeasure")}</th><th scope="col">{t("versusNew", { model: version(model) })}</th><th scope="col">{t("versusOld", { model: version(versus.previous_model) })}</th><th scope="col">{t("versusDifference")}</th></tr></thead>
+      <tbody>
+        {rows.map(({ key, row }) => <tr key={key}>
+          <th scope="row">{t(key)}</th>
+          <td className="num">{share(row.new)}</td>
+          <td className="num">{share(row.previous)}</td>
+          <td className="num">{t("versusPoints", { difference: points(row.difference) })} {range(row.interval_95[0], row.interval_95[1])}</td>
+        </tr>)}
+        <tr>
+          <th scope="row">{t("versusBrier")}</th>
+          <td className="num">{versus.brier.new.toFixed(6)}</td>
+          <td className="num">{versus.brier.previous.toFixed(6)}</td>
+          <td className="num">{versus.brier.difference.toFixed(6)} {t("versusBrierRange", { low: versus.brier.interval_95[0].toFixed(6), high: versus.brier.interval_95[1].toFixed(6) })}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p className="box" data-testid="risk-versus-verdict">{t(versus.claim.v3_beats_v2 ? "versusPassed" : "versusFailed", { model: version(model), previous: version(versus.previous_model) })}</p>
+    <table>
+      <caption>{t("versusContinents")}</caption>
+      <thead><tr><th scope="col">{t("versusContinent")}</th><th scope="col">{t("dailyFires")}</th><th scope="col">{t("versusOld", { model: version(versus.previous_model) })}</th><th scope="col">{t("versusNew", { model: version(model) })}</th><th scope="col">{t("versusDifference")}</th></tr></thead>
+      <tbody>{Object.entries(versus.continents).sort((a, b) => b[1].new_fires - a[1].new_fires).map(([name, row]) => <tr key={name}>
+        <th scope="row">{t.has(`continent.${name}`) ? t(`continent.${name}`) : name}</th>
+        <td className="num">{number(row.new_fires)}</td>
+        <td className="num">{share(row.previous)}</td>
+        <td className="num">{share(row.new)}</td>
+        <td className="num">{t("versusPoints", { difference: points(row.difference) })} {range(row.interval_95[0], row.interval_95[1])}</td>
+      </tr>)}</tbody>
+    </table>
+    <p>{t("versusRules")}</p>
+  </section>;
 }
 
 export default function RiskScorecardSection() {
@@ -46,6 +98,7 @@ export default function RiskScorecardSection() {
     <p>{t("experimental")}</p>
     {!card ? <p role="status">{t(state.status === "loading" ? "loading" : state.status === "failed" ? "failed" : "absent")}</p> : <>
       {card.example ? <p className="box" data-testid="proof-risk-example">{t("example")}</p> : null}
+      {card.versus_previous && card.model_version ? <Versus versus={card.versus_previous} model={card.model_version} t={t} number={number} /> : null}
       {Object.keys(card.scopes).length === 0 ? <p>{t("absent")}</p> : null}
       {Object.entries(card.scopes).map(([scopeName, scope]) => {
         const year = scope.years[String(card.test_year)];

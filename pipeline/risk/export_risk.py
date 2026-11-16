@@ -103,7 +103,7 @@ def weather_inputs(row):
 def ready_from_scorecard(card):
     # Both comparisons must pass for the shipped world grid and the Europe slice.
     for scope in ('world', 'europe'):
-        boot = card['scopes'][scope]['years']['2025']['selections']['forest_wildland']['bootstrap']
+        boot = card['scopes'][scope]['years'][str(card['test_year'])]['selections']['forest_wildland']['bootstrap']
         if not all(boot.get(b, {}).get('claim_permitted', False) for b in ('fwi', 'history')):
             return False
     return True
