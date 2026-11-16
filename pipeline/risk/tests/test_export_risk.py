@@ -41,5 +41,9 @@ def test_export_defaults_follow_the_published_model_version():
     source = (root / 'pipeline/risk/export_risk.py').read_text()
     meta = json.loads((root / 'web/public/data/risk/meta.json').read_text())
     version = re.search(r'v(\d+)$', meta['model_version']).group(1)
+    # With the v3 switch on, a day without the NOAA run publishes v2 as a
+    # fallback; the defaults follow the model the switch selects.
+    if meta.get('v3', {}).get('mode') == 'on':
+        version = '3'
     assert f"model_v{version}.json" in source
     assert f"predictions_live_v{version}.parquet" in source

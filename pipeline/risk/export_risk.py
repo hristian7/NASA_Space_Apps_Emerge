@@ -119,13 +119,14 @@ def ranked_spots(rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--model', type=Path, default=DATA / 'model_v2.json')
-    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live_v2.parquet')
+    ap.add_argument('--model', type=Path, default=DATA / 'model_v3.json')
+    ap.add_argument('--predictions', type=Path, default=DATA / 'predictions_live_v3.parquet')
     ap.add_argument('--usual', type=Path, required=True)
     ap.add_argument('--scorecard', type=Path, default=WEB / 'scorecard.json')
     ap.add_argument('--data', type=Path, default=DATA)
     ap.add_argument('--dest', type=Path, default=WEB)
-    ap.add_argument('--v3-dir', type=Path, help='people map and weather_0.25/<day>.parquet for model v3')
+    ap.add_argument('--v3-dir', type=Path, default=DATA / 'v3',
+                    help='people map and the day weather files (weather_0.25/ or weather_live/<day>.parquet) for model v3')
     args = ap.parse_args()
     model = json.loads(args.model.read_text())
     groups = model.get('input_groups', [])
@@ -166,7 +167,10 @@ def main():
                 params.append(str(args.v3_dir / 'people_0.25.parquet'))
             if 'weather' in groups:
                 joins += ' LEFT JOIN read_parquet(?) wx ON wx.spot_id=f.spot_id AND wx.day=f.day'
-                params.append(str(args.v3_dir / 'weather_0.25' / f'{day}.parquet'))
+                weather_day = args.v3_dir / 'weather_0.25' / f'{day}.parquet'
+                if not weather_day.exists():
+                    weather_day = args.v3_dir / 'weather_live' / f'{day}.parquet'
+                params.append(str(weather_day))
             if set(groups) - {'people', 'weather', 'calendar'}:
                 raise ValueError(f'export does not support input groups {groups}')
         rows = con.execute(f'''SELECT g.spot_id,g.lat::DOUBLE AS lat,g.lon::DOUBLE AS lon,
