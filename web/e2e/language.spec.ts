@@ -42,3 +42,35 @@ test("the language switch keeps the view", async ({ page }) => {
   await page.waitForSelector('svg[role="grid"]');
   await expect(page.getByText("Selected month: August 2024")).toBeVisible();
 });
+
+test.describe("a Bulgarian browser", () => {
+  test.use({ locale: "bg-BG" });
+
+  test("opens in Bulgarian until the switch says otherwise", async ({ page, context }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("lang", "bg");
+    await expect(page.getByRole("button", { name: "Прогноза", exact: true })).toBeVisible();
+    await context.addCookies([{ name: "emerge-locale", value: "en", url: page.url() }]);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("button", { name: "Forecast", exact: true })).toBeVisible();
+  });
+});
+
+test.describe("a visitor in Bulgaria with an English browser", () => {
+  test.use({ locale: "en-GB", extraHTTPHeaders: { "x-vercel-ip-country": "BG" } });
+
+  test("opens in Bulgarian", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("lang", "bg");
+  });
+});
+
+test.describe("an English browser elsewhere", () => {
+  test.use({ locale: "en-US", extraHTTPHeaders: { "x-vercel-ip-country": "DE" } });
+
+  test("opens in English", async ({ page }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
+});
