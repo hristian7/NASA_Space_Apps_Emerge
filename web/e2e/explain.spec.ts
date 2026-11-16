@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { readData } from "./data";
 
 interface Scorecard {
+  /** The year the shipped model was tested on; the page shows that year. */
+  test_year: number;
   scopes: Record<"europe" | "world", { years: Record<string, { selections: { forest_wildland: { pooled: { methods: Record<string, { capture_rate: number }> } } } }> }>;
 }
 
@@ -9,7 +11,7 @@ const pct = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 test("the How it works page shows the hold-out bars from the scorecard and shares by section", async ({ page }) => {
   const card = readData<Scorecard>("risk/scorecard.json");
-  const world = card.scopes.world.years["2025"].selections.forest_wildland.pooled.methods;
+  const world = card.scopes.world.years[String(card.test_year)].selections.forest_wildland.pooled.methods;
 
   await page.goto("/how-it-works", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveTitle(/How Emerge works/);

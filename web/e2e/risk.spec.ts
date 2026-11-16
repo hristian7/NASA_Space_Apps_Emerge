@@ -31,10 +31,10 @@ test('example outlook supports days, regions, map picks, probability and history
  const weekCard=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/scorecard.json'),'utf8'));
  const lead4=weekCard.week.leads['4'].scopes.world.selections.forest_wildland.pooled.methods;
  const percent=(n:number)=>new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(n);
- await expect(page.getByText(`Day 4 ahead: ranked by the model. It caught ${percent(lead4.model.capture_rate)} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
+ await expect(page.getByText(`Day 4 ahead: ranked by model version 2. It caught ${percent(lead4.model.capture_rate)} of new fires in ${weekCard.week.test_year} worldwide, forest and wildland [V].`)).toBeVisible();
  await page.getByRole('button',{name:'2026-11-17',exact:true}).click();
  const lead5=weekCard.week.leads['5'].scopes.world.selections.forest_wildland.pooled.methods;
- await expect(page.getByText(`Day 5 ahead: ranked by fire history. It caught ${percent(lead5.history.capture_rate)} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
+ await expect(page.getByText(`Day 5 ahead: ranked by fire history. It caught ${percent(lead5.history.capture_rate)} of new fires in ${weekCard.week.test_year} worldwide, forest and wildland [V].`)).toBeVisible();
  for (const width of [375,1280]) {
   await page.setViewportSize({width,height:1000});
   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
@@ -93,7 +93,7 @@ test('real week uses its exported ranking and measured score',async({page},testI
  expect(week.ranking[day]).toBe('model');
  const score=card.week.leads[String(lead)].scopes.world.selections.forest_wildland.pooled.methods.model.capture_rate;
  const percent=new Intl.NumberFormat('en',{style:'percent',maximumFractionDigits:1}).format(score);
- await expect(page.getByText(`Day ${lead} ahead: ranked by the model. It caught ${percent} of new fires in 2025 worldwide, forest and wildland [V].`)).toBeVisible();
+ await expect(page.getByText(`Day ${lead} ahead: ranked by model version 2. It caught ${percent} of new fires in ${card.week.test_year} worldwide, forest and wildland [V].`)).toBeVisible();
  await expect(page.locator('.risk-list > li').first()).toBeVisible();
  const fwi=new Intl.NumberFormat('en',{maximumFractionDigits:1}).format(week.regions['BG-01'][day][0].inputs.fwi);
  await expect(page.locator('.risk-list > li').first()).toContainText(`NASA fire-weather index: ${fwi}`);
@@ -150,15 +150,25 @@ test('Bulgarian outlook and placeholder keep the same controls and fit a phone',
 
 
 test('farmland region switches to all vegetation and stale forecasts use dates',async({page})=>{
- await page.clock.setFixedTime(new Date('2026-11-17T12:00:00'));
+ // The published files change every day, so the dates and the region come from them.
+ const meta=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/meta.json'),'utf8'));
+ const bgr=JSON.parse(readFileSync(join(process.cwd(),'public/data/risk/latest/BGR.json'),'utf8'));
+ const last:string=meta.days.tomorrow;
+ const farmOnly=Object.keys(bgr.all_vegetation??{}).sort().find(id=>(bgr.regions[id]?.[last]??[]).length===0&&(bgr.all_vegetation[id]?.[last]??[]).some((spot:{fire_type:string})=>spot.fire_type==='farmland'));
+ expect(farmOnly,'a Bulgarian region with farmland spots and no forest ones').toBeDefined();
+ const spots=[...bgr.all_vegetation[farmOnly!][last]].sort((a:{rank:number},b:{rank:number})=>a.rank-b.rank).slice(0,10);
+ // Two days after the last published day, so the outlook is stale.
+ const later=new Date(Date.parse(`${last}T12:00:00Z`)+2*86400000);
+ await page.clock.setFixedTime(later);
  await page.goto('/risk');
  await page.getByLabel('Country',{exact:true}).selectOption('BGR');
- await page.getByLabel('Region',{exact:true}).selectOption('BG-03');
+ await page.getByLabel('Region',{exact:true}).selectOption(farmOnly!);
  await expect(page.getByText('No forest or wildland spots are available in this region for this date.')).toBeVisible();
- await expect(page.getByText('Forecast made for 2026-11-15; not updated since')).toBeVisible();
+ await expect(page.getByText(`Forecast made for ${last}; not updated since`)).toBeVisible();
  await expect(page.getByRole('button',{name:'Tomorrow',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Show all vegetation fires'}).click();
  await expect(page.getByRole('button',{name:'All vegetation fires',exact:true})).toHaveAttribute('aria-pressed','true');
- await expect(page.locator('.risk-list > li')).toHaveCount(4);
- await expect(page.locator('.risk-list > li').first()).toContainText('farmland');
+ await expect(page.locator('.risk-list > li')).toHaveCount(spots.length);
+ const fuel:Record<string,string>={forest:'forest',farmland:'farmland',grass_shrub:'grass and shrubs'};
+ await expect(page.locator('.risk-list > li').first()).toContainText(fuel[spots[0].fire_type]);
 });

@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { formRows, formText } from "../src/lib/ui/sources";
+
+// The page renders the same register the NASA form rows come from.
+const nasaRows = formRows("nasa");
+const otherGroups = new Set(formRows("other").map((row) => row.group)).size;
 
 test("the data sources page lists NASA data first and copies it for the form", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -7,14 +12,15 @@ test("the data sources page lists NASA data first and copies it for the form", a
   await expect(page.locator('.info-tab[aria-current="page"]')).toHaveText("Data sources");
 
   const nasa = page.locator('section[data-section="nasa"]');
-  await expect(nasa.locator(".ds-card")).toHaveCount(14);
-  await expect(page.locator('section[data-section="other"] .ds-sub')).toHaveCount(4);
+  await expect(nasa.locator(".ds-card")).toHaveCount(nasaRows.length);
+  await expect(page.locator('section[data-section="other"] .ds-sub')).toHaveCount(otherGroups);
 
   await nasa.getByRole("button", { name: "Copy for the NASA form" }).click();
   await expect(nasa.getByRole("button", { name: "Copied" })).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   const lines = copied.split("\n");
-  expect(lines).toHaveLength(14);
+  expect(lines).toHaveLength(nasaRows.length);
+  expect(copied).toBe(formText(nasaRows));
   expect(lines[0]).toBe("NASA FIRMS archive: MODIS C6.1 and VIIRS 375 m fire detections\thttps://firms.modaps.eosdis.nasa.gov/country/");
 
   const width = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
