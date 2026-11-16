@@ -68,38 +68,47 @@ def ensure_seed(data):
 def stage(data, stage_dir, previous_day, day):
     """Compute v3 for `day` inside the staging folder; None keeps v2.
 
-    Returns the combined two-day predictions when the previous day also has v3,
-    so the export can switch only when both published days come from v3.
+    Returns two-day v3 predictions (previous day and new day). On the first v3
+    day the previous, already published day is computed here too.
     """
     import v3_live
     if not ensure_seed(data):
         return None
+    previous = data / 'predictions_live_v3.parquet'
+    previous_weather = data / LIVE_WEATHER / f'{previous_day}.parquet'
+    con = duckdb.connect()
+    expected = con.execute('SELECT count(*) FROM read_parquet(?)', [str(stage_dir / 'grid_0.25.parquet')]).fetchone()[0]
+    has_previous = previous.exists() and previous_weather.exists() and con.execute(
+        'SELECT count(*) FROM read_parquet(?) WHERE day=?', [str(previous), previous_day]).fetchone()[0] == expected
     try:
-        info = v3_live.prepare_day(day, data, stage_dir)
+        state_dir = data
+        if not has_previous:
+            # First v3 day: compute the already published previous day too, so
+            # both days can switch at once. Its inputs are staged for the export.
+            v3_live.prepare_day(previous_day, data, stage_dir)
+            previous = stage_dir / 'previous_predictions_v3.parquet'
+            v3_live.predict_day(previous_day, data, stage_dir, previous)
+            previous_weather = stage_dir / 'v3' / 'weather_0.25' / f'{previous_day}.parquet'
+            state_dir = stage_dir
+        info = v3_live.prepare_day(day, state_dir, stage_dir)
         new = stage_dir / 'new_predictions_v3.parquet'
         v3_live.predict_day(day, data, stage_dir, new)
     except (v3_live.WeatherUnavailable, OSError, ValueError, subprocess.CalledProcessError,
             urllib.error.URLError) as error:
         print(f'{day}: model v3 unavailable ({error}); version 2 stays in use', flush=True)
         return None
-    con = duckdb.connect()
-    expected = con.execute('SELECT count(*) FROM read_parquet(?)', [str(stage_dir / 'grid_0.25.parquet')]).fetchone()[0]
     rows, available = con.execute('SELECT count(*), count(p) FROM read_parquet(?) WHERE day=?', [str(new), day]).fetchone()
-    if rows != expected or not available:
+    previous_rows = con.execute('SELECT count(*) FROM read_parquet(?) WHERE day=?', [str(previous), previous_day]).fetchone()[0]
+    if rows != expected or not available or previous_rows != expected:
         print(f'{day}: model v3 output incomplete ({rows} rows, {available} with a value); version 2 stays in use', flush=True)
         return None
     combined = stage_dir / 'predictions_live_v3.parquet'
-    previous = data / 'predictions_live_v3.parquet'
-    previous_weather = data / LIVE_WEATHER / f'{previous_day}.parquet'
-    has_previous = previous.exists() and previous_weather.exists() and con.execute(
-        'SELECT count(*) FROM read_parquet(?) WHERE day=?', [str(previous), previous_day]).fetchone()[0] == expected
-    if has_previous:
-        con.execute('''COPY (SELECT * FROM read_parquet(?) WHERE day=? UNION ALL BY NAME SELECT * FROM read_parquet(?))
-                       TO ? (FORMAT parquet, COMPRESSION zstd)''', [str(previous), previous_day, str(new), str(combined)])
-        shutil.copyfile(previous_weather, stage_dir / 'v3' / 'weather_0.25' / previous_weather.name)
-    else:
-        shutil.copyfile(new, combined)
-    return {'day': day, 'combined': combined, 'new': new, 'both_days': has_previous, **info}
+    con.execute('''COPY (SELECT * FROM read_parquet(?) WHERE day=? UNION ALL BY NAME SELECT * FROM read_parquet(?))
+                   TO ? (FORMAT parquet, COMPRESSION zstd)''', [str(previous), previous_day, str(new), str(combined)])
+    target = stage_dir / 'v3' / 'weather_0.25' / previous_weather.name
+    if previous_weather != target:
+        shutil.copyfile(previous_weather, target)
+    return {'day': day, 'previous_day': previous_day, 'combined': combined, 'new': new, 'both_days': True, **info}
 
 
 def save(data, stage_dir, result):
@@ -109,7 +118,8 @@ def save(data, stage_dir, result):
     shutil.copyfile(stage_dir / 'v3_last_wet.parquet', data / 'v3_last_wet.parquet')
     weather = data / LIVE_WEATHER
     weather.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(stage_dir / 'v3' / 'weather_0.25' / f'{day}.parquet', weather / f'{day}.parquet')
+    for kept in (result['previous_day'], day):
+        shutil.copyfile(stage_dir / 'v3' / 'weather_0.25' / f'{kept}.parquet', weather / f'{kept}.parquet')
     for old in sorted(weather.glob('*.parquet'))[:-KEEP_WEATHER_DAYS]:
         old.unlink()
     shadow = data / SHADOW
