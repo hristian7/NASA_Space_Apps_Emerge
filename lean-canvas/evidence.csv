@@ -1,0 +1,61 @@
+id,topic,claim,value,unit,period,source,url,tag,checked
+P1,problem,EU burned area record season,1079538,ha,2025,EU Joint Research Centre,https://joint-research-centre.ec.europa.eu/jrc-news-and-updates/2025-was-eus-most-destructive-wildfire-season-record-2026-03-31_en,V,2026-11-15
+P2,problem,People displaced by fires in France and Spain,300000+,people,2026-07,AP via PBS,https://www.pbs.org/newshour/world/historic-wildfires-in-france-and-spain-have-forced-hundreds-of-thousands-of-people-to-evacuate-heres-what-to-know,V,2026-11-15
+P3,problem,US area burned year to date,9484195,acres,2026-01-01..2026-11-13,NIFC,https://www.nifc.gov/fire-information/nfn,V,2026-11-15
+P4,problem,US area burned same date previous year,4899305,acres,2025-01-01..2025-11-13,NIFC,https://www.nifc.gov/fire-information/nfn,V,2026-11-15
+P5,problem,US record year (2026 YTD ranks 5th since 1983),10125149,acres,2015,NIFC,https://www.nifc.gov/fire-information/statistics/wildfires,V,2026-11-15
+P6,problem,Los Angeles fires deaths,31,people,2025-01,AP via PBS (Jan 2026; an Apr 2025 count was 30),https://www.pbs.org/newshour/nation/a-year-after-the-la-wildfire-disaster-key-numbers-show-how-it-unfolded-and-the-toll-left-behind,V,2026-11-15
+P7,problem,Los Angeles fires insured loss,40,USD bn,2025-01,Munich Re (also Swiss Re),https://www.swissre.com/press-release/2025-marks-sixth-year-insured-natural-catastrophe-losses-exceed-usd-100-billion-finds-swiss-re-institute/f710c271-58c8-4c48-9004-05203634d1e0,V,2026-11-18
+P8,problem,Los Angeles fires total loss,53,USD bn,2025-01,Munich Re 2025 natural catastrophe release,https://www.munichre.com,V,2026-11-18
+P9,problem,Canada evacuated in record season,230000+,people,2023,Natural Resources Canada,https://natural-resources.canada.ca/forest-forestry/wildland-fires/forest-fires,V,2026-11-15
+P10,problem,Extreme wildfire frequency increase,2.2,x,2003-2023,Cunningham et al. 2024 Nature Ecology & Evolution (paper not opened),https://doi.org/10.1038/s41559-024-02452-2,D,2026-11-15
+P11,problem,Deaths per year from landscape-fire smoke,1530000,people/year,2000-2019 average,Lancet 2024 via PubMed,https://pubmed.ncbi.nlm.nih.gov/39615506/,D,2026-11-18
+P12,problem,VIIRS sees more fire than MODIS (world fire cell-days),2.7,x,2013-2023,Emerge pipeline,../docs/research/first-run-bulgaria-usa.md,V,2026-11-14
+P13,problem,Bulgaria forest fires reported,546,fires,2025,Executive Forest Agency 2025 report p.35,https://www.iag.bg/data/docs/Doklad25_01str_final_08.05.2026.pdf,V,2026-11-14
+P15,problem,Global burned area trend (falling; mainly savanna to farmland),about -25,%,1998-2015,Andela et al. 2017 Science (not re-opened),https://doi.org/10.1126/science.aal4108,D,2026-11-18
+P14,problem,Bulgaria forest fire causes: negligence share,57-66,%,2021-2025,Executive Forest Agency annual reports,../docs/research/reported-fires-bg-effis.md,V,2026-11-15
+U1,utilities,California investor-owned utilities wildfire mitigation spend,40+,USD bn,2019-2024,California Assembly (SB 254 report p.55),https://autl.assembly.ca.gov/media/1498,V,2026-11-18
+U2,utilities,California investor-owned utilities projected mitigation spend,9,USD bn/year,to 2028,California Assembly (SB 254 report p.55),https://autl.assembly.ca.gov/media/1498,V,2026-11-18
+U3,utilities,PG&E wildfire liabilities at 2019 bankruptcy,30,USD bn,2019,PG&E SEC 10-K / secondary,https://www.sec.gov/Archives/edgar/data/1004980/000100498020000009/pcg-20191231.htm,D,2026-11-18
+U4,utilities,California Wildfire Fund (AB 1054),21,USD bn,2019,CPUC,https://docs.cpuc.ca.gov/PublishedDocs/Published/G000/M338/K382/338382613.PDF,D,2026-11-18
+U5,utilities,Maui wildfire global settlement,4.04,USD bn,2024-08,Civil Beat,https://www.civilbeat.org/2024/08/hawaii-maui-county-heco-and-others-agree-to-pay-4-billion-to-wildfire-victims/,D,2026-11-18
+U6,utilities,SCE wildfire mitigation plan,6.2,USD bn,2026-2028,Edison International press release,https://www.businesswire.com/news/home/20250516702701/en,D,2026-11-18
+U7,utilities,PG&E uses Fire Potential Index for fast-trip settings and sends daily data to Technosylva,,,2022-2026,PG&E,https://www.pge.com/en/outages-and-safety/safety/community-wildfire-safety-program/enhanced-powerline-safety-settings.html,V,2026-11-18
+U8,utilities,Powercor most sensitive line settings on Total Fire Ban days,,,current,Powercor,https://www.powercor.com.au/network-planning-and-projects/network-safety/bushfire-mitigation/,V,2026-11-18
+I1,insurers,Spain wildfire insured loss,23,EUR m,2025,Howden Re (about 900 claims; about 400000 ha burned),https://www.howdenre.com/news-insights/europes-wildfire-risk-changing-what-insurers-and-reinsurers-need-know,V,2026-11-18
+I2,insurers,France wildfire total loss estimate,10-15,EUR bn,2026,Morningstar DBRS via press,https://beinsure.com/news/europe-wildfires-test-insurers-as-climate-losses-rise/,D,2026-11-18
+I3,insurers,Share of EU climate-catastrophe losses insured,25,%,1980-2024,EIOPA,https://eiopa.europa.eu/natcat-reality-check-2026-06-10_en,V,2026-11-18
+I4,insurers,Moody's RMS Europe models list wildfire,no,,2026,Moody's,https://www.moodys.com/web/en/us/insights/insurance/what-europe-record-wildfire-season-signals-to-the-insurance-market.html,V,2026-11-18
+I5,insurers,Pan-European wildfire hazard model for insurers (Skyblu via Addresscloud),20,m resolution,2026-05,Addresscloud,https://www.addresscloud.com/blog/addresscloud-adds-skyblus-high-resolution-european-wildfire-model-as-climate-risk-intensifies,D,2026-11-18
+G1,governments,Greece AIGIS civil-protection programme,2077494365,EUR,,Greek civil protection,https://aspida.civilprotection.gov.gr/?p=2423,V,2026-11-18
+G2,governments,Greece AIGIS share for warning and prevention,346,EUR m,,secondary,,D,2026-11-18
+G3,governments,Canary Islands fire geo-information contract,22,EUR m,2026,TEDAE,https://tedae.org/espacio/telespazio-iberica-gana-un-contrato-de-geoinformacion-de-22-millones-en-canarias-para-luchar-contra-los-incendios-con-drones-y-satelite,D,2026-11-18
+G4,governments,EFFIS and GWIS data licence,CC BY 4.0,,current,EFFIS,https://forest-fire.emergency.copernicus.eu/about-effis/data-license,V,2026-11-18
+F1,carbon,Share of California offset buffer pool used by fires,about 1/5,,under 10 years,Badgley et al. 2022 Frontiers,https://www.frontiersin.org/articles/10.3389/ffgc.2022.930426,V,2026-11-18
+F2,carbon,Verra AFOLU Non-Permanence Risk Tool scores fire as natural risk,v4.2,,2023-10,Verra,https://verra.org/documents/afolu-non-permanence-risk-tool-v4-2,V,2026-11-18
+C1,competition,Pano AI total raised,89,USD m,as of 2025-06,Insurance Journal,https://amp.insurancejournal.com/news/west/2025/06/20/828412.htm,D,2026-11-18
+C2,competition,Pano AI price per camera,50000,USD/year,2026-05,AP estimate,https://www.wsls.com/tech/2026/05/01/states-across-the-wildfire-prone-western-us-are-using-ai-for-early-detection/,D,2026-11-18
+C3,competition,OroraTech Series B total,37,EUR m,2025-05,OroraTech,https://ororatech.com/resources/news-blog/ororatech-extends-its-series-b-to-euro37m-with-investments-from-two-leading-european-banks,V,2026-11-18
+C4,competition,Overstory Series B,43,USD m,2025-11,Overstory,https://www.overstory.com/blog/series-b-announcement,V,2026-11-18
+C5,competition,Kettle Series A,25,USD m,2021-11,TechCrunch,https://techcrunch.com/2021/11/19/kettle-books-25m-for-its-reinsurance-platform-against-fire-and-other-catastrophes,V,2026-11-18
+C6,competition,Technosylva utilities and agencies served,25+,customers,2025,T&D World,https://tdworld.com/wildfire/news/55311358/new-technology-combines-satellite-data-and-simulations-to-reduce-wildfire-threats-and-power-shutoffs,D,2026-11-18
+C7,competition,Muon Space Series C (FireSat),250,USD m,2026-08,Satellite Today,https://www.satellitetoday.com/finance/2026/08/20/muon-space-raises-250m-series-c-to-build-large-scale-constellations/,D,2026-11-18
+C8,competition,FireSight PR-AUC Greece FWI to model,0.51 -> 19.93,%,3-7 day lead,NeurIPS 2023 workshop paper,https://ccai-papers.s3.us-east-1.amazonaws.com/neurips2023/55/paper.pdf,V,2026-11-18
+C9,competition,WISP next-day clusters within 5 km,54.1,%,2026,arXiv 2605.10298,https://arxiv.org/abs/2605.10298,V,2026-11-18
+M1,model,Emerge v3 new fires in top 5 per region (world),21.4,%,2026-01-01..2026-10-31,Emerge scorecard,../web/public/data/risk/scorecard.json,V,2026-11-18
+M2,model,NASA fire-weather index same test (world),11.5,%,2026-01-01..2026-10-31,Emerge scorecard,../web/public/data/risk/scorecard.json,V,2026-11-18
+M3,model,Emerge v3 new fires in top 5 per region (Europe),57.9,%,2026-01-01..2026-10-31,Emerge scorecard,../web/public/data/risk/scorecard.json,V,2026-11-18
+M4,model,NASA fire-weather index same test (Europe),43.6,%,2026-01-01..2026-10-31,Emerge scorecard,../web/public/data/risk/scorecard.json,V,2026-11-18
+M5,model,Alarm precision top 1000 spots a day (v3),7.04,%,2026-01-01..2026-10-31,v3 test report,../specs/plan-3-model-inputs/v3-test-report.md,V,2026-11-18
+M6,model,PR-AUC v3 world (estimate from 3 threshold points),about 4,%,2026,our estimate; base rate 0.59%,,U,2026-11-18
+S1,market,US utilities with wildfire mitigation plans,170,utilities,2025,PNNL database via NCPA slide,https://wildfire.pnnl.gov/mitigationPlans/content/analysis/Laws%20and%20Legislation%20for%20WMPs.pdf,D,2026-11-18
+S2,market,EU electricity distribution system operators,2570,DSOs,2025,EU DSO Entity,https://eudsoentity.eu/wp-content/uploads/2025/09/KS-Page-Infographics-Macrocategories-Connecting-and-Empowering-Customers.pdf,V,2026-11-18
+S3,market,Fire-prone utilities targeted (US+EU+AU+CA/CL),260,utilities,2026,our count,,U,2026-11-18
+S4,market,Fire-exposed insurers and reinsurers targeted,180,companies,2026,our count,,U,2026-11-18
+S5,market,Fire-prone government regions targeted,80,regions,2026,our count,,U,2026-11-18
+S6,market,Forest-carbon projects targeted,500,projects,2026,our count (Verra AFOLU about 600 D; California compliance about 80 U),,U,2026-11-18
+S7,market,Reachable market (SAM),54,EUR m/year,2026,our estimate,,U,2026-11-18
+S8,market,3-year revenue goal (SOM),1.8,EUR m/year,2029,our estimate,,U,2026-11-18
+L1,licences,Open-Meteo free API commercial use,non-commercial only,,current,Open-Meteo terms,https://open-meteo.com/en/terms,V,2026-11-18
+L2,licences,Zenodo MCD12Q1 mosaic licence,CC BY-SA 4.0,,current,Zenodo record 8367523,https://zenodo.org/records/8367523,V,2026-11-18
+L3,licences,GRIP4 roads licence,CC0,,current,GLOBIO,https://www.globio.info/download-grip-dataset,V,2026-11-18

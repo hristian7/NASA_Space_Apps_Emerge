@@ -39,7 +39,7 @@ The plan aims for 80 to 90%. We do not set a percentage goal, for three reasons.
 
 1. **Our number depends on region size.** In a region with few squares, picking 5 at random already catches many fires: random reaches 39.4% in Europe `[V]`. Smaller regions would push every method towards 100% and mean nothing.
 2. **Published 80 to 90% figures measure something else.** F1 scores of 81% (Mesogeos models) and 80.6 to 87.9% (the Athens study) come from test sets with fixed shares of fire and no-fire samples, built around large fires `[D]`. Real days are almost all no-fire, so these scores do not carry over. ROC-AUC values of 77 to 90% give credit for millions of easy no-fire squares `[D]`.
-3. **Strict measures are much lower everywhere.** OroraTech's ignition models reach 7.8 to 25% PR-AUC across four regions `[V]`. WISP, the research model closest to our task, places 54.1% of next-day fire clusters within 5 km `[V]`.
+3. **Strict measures are much lower everywhere.** OroraTech's ignition models reach 7.8 to 25% PR-AUC across four regions `[V]` *(18 Nov: could not re-find this at the source; the closest paper, FireSight by OroraTech and LMU, reports three regions: FWI → model PR-AUC Australia 0.39% → 3.6%, Brazil 6.24% → 11.75%, Greece 0.51% → 19.93% `[V]`; see [`../../lean-canvas/competition/README.md`](../../lean-canvas/competition/README.md). Our own PR-AUC script: `pipeline/risk/prauc_2026.py`)*. WISP, the research model closest to our task, places 54.1% of next-day fire clusters within 5 km `[V]`.
 
 Our goal stays as registered: beat history and the NASA index with an interval that excludes zero, and publish the reliability chart.
 

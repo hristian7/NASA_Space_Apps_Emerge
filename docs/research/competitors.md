@@ -2,6 +2,8 @@
 
 Checked on 14 Nov 2026 from public pages. Tags: `[V]` seen on the tool's own page or an official source, `[D]` from a dated or secondary source (may have changed), `[U]` our reading.
 
+*18 Nov 2026: commercial and prediction competitors (Technosylva, OroraTech, Pano AI, insurance catastrophe models, European wildfire scores) and the accuracy comparison are in [`../../lean-canvas/competition/README.md`](../../lean-canvas/competition/README.md). This file covers fire-calendar and harmonization tools.*
+
 ## The short answer
 
 **Nobody publishes one comparable MODIS + VIIRS hotspot record and lets you ask "is this unusual?" for any point or drawn area on Earth.** `[U]`

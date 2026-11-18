@@ -2,6 +2,8 @@
 
 Inputs: the live app (checked 13:00), the repo (scorecard, validation, submission draft, roadmap), and 3 time-boxed research agents reading official sources. Tags: `[V]` verified at a primary source or repo file, `[D]` directional, `[U]` our judgement.
 
+**Outcome (18 Nov 2026):** Emerge took 2nd place at the Sofia local round `[V]` (organiser's email, week of 16 Nov); global nominees are announced 3 Dec 2026.
+
 ## Summary
 
 | | Now | After today's top fixes (≈5 h) | After the model roadmap (post-event) |

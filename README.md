@@ -7,9 +7,11 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 ## Status
 
 - **Live:** [Emerge](https://emergefire.app), with the historical fire calendar, area selection, comparisons and proof page. The record runs from Nov 2000 to 14 Nov 2026 `[V]`; national reports and satellite estimates are labelled separately.
-- **Risk outlook:** unofficial next-day rankings and point scores use published static predictions for 14 and 15 Nov 2026 `[V]`. The proof page reports the 2025 hold-out against history, the NASA fire-weather index and random ranking `[V]`. The week outlook is fire-weather-only and unscored `[V]`; the daily log is only starting.
+- **Risk outlook:** model v3 (LightGBM; fire weather, fire history, recent fires, land type, plus people and NOAA GFS weather) publishes unofficial forecasts for today and tomorrow every day `[V]`. On its frozen test (1 Jan to 31 Oct 2026) its top 5 squares per region caught 21.4% of new fires worldwide, against 17.2% for history, 11.5% for the NASA fire-weather index and 10.9% for random `[V]` ([v3 test report](specs/plan-3-model-inputs/v3-test-report.md)). The week outlook uses version 2 and is scored by lead day on 2025 `[V]`. *(Updated 18 Nov; replaces the 15 Nov static-forecast status.)*
 - **Map and forecast:** fire history, rain, wind, temperature, soil moisture, greenness and land type layers, with point weather forecasts and NASA POWER trends `[V]`. Greenness is displayed, not used by the risk model `[V]`.
 - **Limits:** the risk grid is 0.25 degrees `[V]`, some city squares are overstated, and this research prototype is not an official warning. The historical chance-of-fire measure remains unscored `[V]`.
+
+- **Outcome:** 2nd place at the Sofia local round `[V]` (organiser's email, week of 16 Nov 2026); the team was invited to the local Startup award. Business research: [`lean-canvas/`](lean-canvas/README.md).
 
 ## Read first
 
@@ -19,6 +21,7 @@ Team project for the [official challenge](https://www.spaceappschallenge.org/202
 | [`specs/specification.md`](specs/specification.md) | **The build spec:** scope, data, design, tests, order of work, open decisions |
 | [`specs/plan-2-fire-risk/overview.md`](specs/plan-2-fire-risk/overview.md) | **Plan 2 in one page:** next-day fire risk per region, worldwide |
 | [`specs/plan-2-fire-risk/specification.md`](specs/plan-2-fire-risk/specification.md) | **Plan 2 build spec:** data sources (checked 14 Nov), engine, scorecard, screens, file contract, tests, order of work |
+| [`lean-canvas/README.md`](lean-canvas/README.md) | **Emerge as a startup:** Lean Canvas, customers, competitors, market size, pricing and the Startup award answers (business research only) |
 | [`docs/research/firefighter-interview.md`](docs/research/firefighter-interview.md) | Interview with a Bulgarian firefighter, the source of plan 2 |
 | [`docs/challenge-brief.md`](docs/challenge-brief.md) | NASA's challenge text (source of truth) |
 | [`docs/data-sources-master.md`](docs/data-sources-master.md) | **All data sources in one register:** in use, in development, planned, future; ranked by value for fire prediction. Add new sources here |
