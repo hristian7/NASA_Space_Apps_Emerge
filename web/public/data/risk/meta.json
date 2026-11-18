@@ -2,7 +2,7 @@
   "engine_ready": true,
   "example": false,
   "model_version": "lightgbm-v3",
-  "made_at": "2026-11-17T07:58:53.685072Z",
+  "made_at": "2026-11-18T07:53:26.706945Z",
   "grid_g": 0.25,
   "level_bands": [
     0.01,
@@ -20,25 +20,25 @@
     38
   ],
   "days": {
-    "today": "2026-11-17",
-    "tomorrow": "2026-11-18"
+    "today": "2026-11-18",
+    "tomorrow": "2026-11-19"
   },
-  "fire_weather_run": "2026-11-15",
+  "fire_weather_run": "2026-11-16",
   "sources": [
     {
       "name": "NASA GFWED lead +3 forecast for today",
-      "url": "https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/2026111400/FWI.GEOS-5.Daily.Default.2026111400.20261117.nc",
-      "date": "2026-11-14"
-    },
-    {
-      "name": "NASA GFWED lead +3 forecast for tomorrow",
       "url": "https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/2026111500/FWI.GEOS-5.Daily.Default.2026111500.20261118.nc",
       "date": "2026-11-15"
     },
     {
+      "name": "NASA GFWED lead +3 forecast for tomorrow",
+      "url": "https://portal.nccs.nasa.gov/datashare/GlobalFWI/v2.0/fwiCalcs.GEOS-5/Default/GEOS-5/2026/2026111600/FWI.GEOS-5.Daily.Default.2026111600.20261119.nc",
+      "date": "2026-11-16"
+    },
+    {
       "name": "NASA FIRMS NOAA-20 detections",
       "url": "https://firms.modaps.eosdis.nasa.gov/",
-      "date": "2026-11-16"
+      "date": "2026-11-17"
     },
     {
       "name": "MODIS MCD12Q1 2021 land class mosaic, CC BY-SA 4.0",
@@ -53,7 +53,7 @@
     {
       "name": "NOAA GFS 00 UTC forecast run of D-2 (NOAA Open Data Dissemination)",
       "url": "https://registry.opendata.aws/noaa-gfs-bdp-pds/",
-      "date": "2026-11-16"
+      "date": "2026-11-17"
     },
     {
       "name": "NASA SEDAC GPW v4.11 population density 2020, CC BY 4.0",
@@ -74,8 +74,8 @@
   "v3": {
     "mode": "on",
     "shown": true,
-    "computed_for": "2026-11-18",
-    "gfs_run": "2026-11-16",
+    "computed_for": "2026-11-19",
+    "gfs_run": "2026-11-17",
     "missed_rain_runs": []
   }
 }
