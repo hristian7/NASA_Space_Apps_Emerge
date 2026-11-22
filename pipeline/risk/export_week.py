@@ -159,11 +159,17 @@ def export(grid, forecasts, run, out):
     if not countries:
         raise ValueError('No countries have available ranked spots')
     land = {'spot_id': grid['spot_id'].to_pylist(), 'country': grid['country'].to_pylist()}
-    for day, values, _history, _predictions, _method in forecasts:
+    for day, values, _history, _predictions, method in forecasts:
         fwi = values.to_pylist() if hasattr(values, 'to_pylist') else list(values)
         for spot_id, country, value in zip(land['spot_id'], land['country'], fwi):
-            if country in countries and value is not None and np.isfinite(value):
-                countries[country].setdefault('fwi', {}).setdefault(day.isoformat(), []).append([spot_id, round(float(value), 1)])
+            if not country or value is None or not np.isfinite(value):
+                continue
+            # A country with no ranked spot that day still needs its fire weather for any clicked point.
+            result = countries.setdefault(country, {'country': country, 'run_date': run_day.isoformat(), 'days': [], 'ranking': {}, 'regions': {}})
+            if day.isoformat() not in result['days']:
+                result['days'].append(day.isoformat())
+                result['ranking'].setdefault(day.isoformat(), method)
+            result.setdefault('fwi', {}).setdefault(day.isoformat(), []).append([spot_id, round(float(value), 1)])
     out.mkdir(parents=True, exist_ok=True)
     for country, obj in countries.items():
         (out / f'{country}.json').write_text(json.dumps(obj, separators=(',', ':'), allow_nan=False) + '\n')

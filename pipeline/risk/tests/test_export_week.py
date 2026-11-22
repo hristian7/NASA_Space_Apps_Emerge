@@ -88,3 +88,19 @@ def test_live_model_uses_cutoff_safe_history(tmp_path):
     assert row['days_since_last_fire'] == 5
     assert predictions.num_rows == 5
     assert predictions['p'].to_pylist() == [.5] * 5
+
+
+def test_country_without_ranked_spots_still_gets_its_fire_weather(tmp_path):
+    grid = pa.table({'spot_id': [1, 2, 3, 4, 5, 6], 'lat': [42.] * 5 + [64.], 'lon': [23.] * 5 + [-19.],
+                     'precision_radius_km': [17.] * 6, 'region_id': ['BG-01'] * 5 + ['IS-1'],
+                     'country': ['BGR'] * 5 + ['ISL'],
+                     'fuel_class': ['forest', 'shrub_grass', 'forest', 'farmland', 'forest', None]})
+    history = pa.table({'spot_id': [1, 2, 3, 4, 5, 6], 'hist_p': [.9, .3, .2, 1., .1, None]})
+    day = dt.date(2026, 11, 23)
+    out = tmp_path / 'week'
+    result = export(grid, [(day, pa.array([10., 9., 8., 99., None, 4.25]), history, None, 'history')], '2026111900', out)
+    assert result['ISL']['regions'] == {}
+    assert result['ISL']['days'] == ['2026-11-23']
+    assert result['ISL']['fwi']['2026-11-23'] == [[6, 4.2]] or result['ISL']['fwi']['2026-11-23'] == [[6, 4.3]]
+    assert (out / 'ISL.json').exists()
+    assert [6, 4.2] not in result['BGR']['fwi']['2026-11-23'] and [6, 4.3] not in result['BGR']['fwi']['2026-11-23']
