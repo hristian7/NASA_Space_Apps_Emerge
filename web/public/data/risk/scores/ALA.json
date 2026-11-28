@@ -1,1 +1,1 @@
-{"grid_g":0.25,"columns":["spot_id","p","level","usual","fwi"],"days":{"2026-11-26":[[172159,null,null,0.0002,null]],"2026-11-27":[[172159,null,null,0.0002,null]]},"context_corrections":{"2026-11-26":{},"2026-11-27":{}}}
+{"grid_g":0.25,"columns":["spot_id","p","level","usual","fwi"],"days":{"2026-11-28":[[172159,null,null,0.0002,null]],"2026-11-29":[[172159,null,null,0.0002,null]]},"context_corrections":{"2026-11-28":{},"2026-11-29":{}}}
